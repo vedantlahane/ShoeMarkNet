@@ -2,7 +2,7 @@ import React from "react";
 import SocialLink from "./utils/SocialLink";
 
 const Home = ({
-  homeapi: { title, subtitle, btntext, img, sociallinks, videos },
+  homeapi: { title, subtitle, btntext, img, sociallinks,},// homeapi is the prop that is passed from the Home component in the App.js file
 }) => {
   return (
     <>
@@ -18,6 +18,7 @@ const Home = ({
             </h1>
             <button
               type="button"
+              onClick={() => window.location.href = '/explore'}
               className="button-theme bg-slate-200  shadow-slate-200 rounded-xl my-5"
             >
               {btntext}
@@ -41,7 +42,7 @@ const Home = ({
             <img
               src={img}
               alt="hero-img/img"
-              className="w-auto h-[45vh] lg:h-[35vh] md:h-[31vh] sm:h-[21vh] xsm:h-[19vh] transitions-theme rotate-[12deg] hover:rotate-0 cursor-pointer object-fill filter drop-shadow-2xl"//object-fill is used to fill the image in the container without stretching it, 
+              className="w-auto h-[45vh] lg:h-[35vh] md:h-[31vh] sm:h-[21vh] xsm:h-[19vh] transitions-theme rotate-[12deg] hover:rotate-0 cursor-pointer object-fill filter drop-shadow-2xl"
             />
           </div>
         </div>

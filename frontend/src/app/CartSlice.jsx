@@ -1,16 +1,16 @@
-import { createSlice } from "@reduxjs/toolkit";
-import toast from "react-hot-toast";
+import { createSlice } from "@reduxjs/toolkit";// createSlice is a function that accepts an initial state, an object full of reducer functions, and a "slice name", and automatically generates action creators and action types that correspond to the reducers and state.
+import toast from "react-hot-toast";// react-hot-toast is a library that provides a simple way to add notifications to your React app.
 
-const initialState = {
-  cartState: false,
-  cartItems: localStorage.getItem("cart")
-    ? JSON.parse(localStorage.getItem("cart"))
+const initialState = { //initialState is an object that contains the initial state of the application.
+  cartState: false,//cartState is a boolean value that is used to show or hide the cart.
+  cartItems: localStorage.getItem("cart")//cartItems is an array that contains the items in the cart.
+    ? JSON.parse(localStorage.getItem("cart"))//JSON.parse() method is used to parse a JSON string and convert it into a JavaScript object.
     : [], // Let Suppose Database
   cartTotalAmount: 0,
   cartTotalQantity: 0,
 };
 
-const CartSlice = createSlice({
+const CartSlice = createSlice({//CartSlice is a slice that contains the initial state, reducers, and actions for the cart.
   initialState,
   name: "cart",
   reducers: {
@@ -50,7 +50,7 @@ const CartSlice = createSlice({
       toast.success(`${action.payload.title} Removed From Cart`);
     },
 
-    setIncreaseItemQTY: (state, action) => {
+    setIncreaseItemQTY: (state, action) => {//setIncreaseItemQTY is a reducer function that increases the quantity of an item in the cart.
       const itemIndex = state.cartItems.findIndex(
         (item) => item.id === action.payload.id
       );
