@@ -37,11 +37,12 @@ return (
         }>
           <nav className='flex items-center justify-between nike-container'>
                 <a href='/' className='flex items-center'>
-                     <img
+                    <span>ShoeMarkNet</span>
+                     {/* <img
                           src={logo}
                           alt="logo/img"
                           className={`w-20 h-15 brightness-0`}
-                     />
+                     /> */}
                 </a>
                 <ul className='flex items-center justify-center gap-2'>
                      <li className='grid items-center'
