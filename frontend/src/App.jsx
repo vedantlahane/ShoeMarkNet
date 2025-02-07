@@ -4,7 +4,7 @@ import { Cart, Home, Footer, Sales, Navbar } from "./components";
 import Explore from "./components/Explore.jsx";
 import Story from "./components/Story.jsx";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { getApiBaseUrl } from './utils/api';
+import { getApiBaseUrl } from "./components/utils/api";
 
 const App = () => {
   const [backendData, setBackendData] = useState(null);
