@@ -15,6 +15,7 @@ const App = () => {
       try {
         setIsLoading(true);
         const data = await fetchData();
+        // Data already has transformed image URLs
         setBackendData(data);
       } catch (error) {
         console.error("Error fetching backend data:", error);
