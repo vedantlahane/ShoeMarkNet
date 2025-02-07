@@ -9,13 +9,22 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Updated CORS configuration
+// Updated CORS configuration with all necessary headers
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'], // Add Vite's default port
+  origin: [
+    'https://shoe-mark-net.vercel.app',
+    'https://shoe-mark-net-git-main-vedantlahanes-projects.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'Authorization'],
+  exposedHeaders: ['Access-Control-Allow-Origin']
 }));
+
+// Pre-flight requests
+app.options('*', cors());
 
 // Middleware
 app.use(express.json());
