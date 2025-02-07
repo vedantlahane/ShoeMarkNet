@@ -27,7 +27,7 @@ const Footer = ({ footerAPI: { titles, links, img } }) => {
           </div>
           {img && (
             <div className="flex justify-center my-4">
-              <img src={`http://localhost:5000/${img}`} alt="Footer Logo" className="h-10" />
+              <img src={`${apiBaseUrl}/${img}`}  alt="Footer Logo" className="h-10" />
             </div>
           )}
           <div className='mt-5 text-center'>
