@@ -1,6 +1,8 @@
 import React from "react";
 import { useDispatch } from "react-redux";//useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
 
+import { getApiBaseUrl } from "../../utils/api";
+
 import { StarIcon, ShoppingBagIcon } from "@heroicons/react/24/solid";
 import { setAddItemToCart, setOpenCart } from "../../app/CartSlice";
 
@@ -16,6 +18,8 @@ const Item = ({
   rating,
   price,
 }) => {
+
+  const apiBaseUrl = getApiBaseUrl();//apiBaseUrl is the base URL of the API
   //   console.log(id)
   const dispatch = useDispatch();//useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
 

@@ -4,17 +4,13 @@ import { Cart, Home, Footer, Sales, Navbar } from "./components";
 import Explore from "./components/Explore.jsx";
 import Story from "./components/Story.jsx";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { getApiBaseUrl } from '../utils/api';
 
 const App = () => {
   const [backendData, setBackendData] = useState(null);
-  
-  // Choose API URL based on environment
-  const apiBaseUrl = import.meta.env.MODE === 'production' 
-    ? import.meta.env.VITE_API_URL_PROD 
-    : import.meta.env.VITE_API_URL_DEV;
+  const apiBaseUrl = getApiBaseUrl();
 
   useEffect(() => {
-    // Use the environment-specific URL
     axios
       .get(`${apiBaseUrl}/api/data`)
       .then((response) => {

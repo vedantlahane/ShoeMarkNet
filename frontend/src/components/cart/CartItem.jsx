@@ -6,6 +6,8 @@ import { setDecreaseItemQTY, setIncreaseItemQTY, setRemoveItemFromCart } from ".
 const CartItem = ({ item: { id, title, text, img, color, shadow, price, cartQuantity } }) => {
   const dispatch = useDispatch();
 
+  const apiBaseUrl = getApiBaseUrl();
+
   const onRemoveItem = () => {
     dispatch(setRemoveItemFromCart({ id, title, text, img, color, shadow, price, cartQuantity }))
   }

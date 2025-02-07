@@ -1,9 +1,12 @@
 import React from "react";
 import SocialLink from "./utils/SocialLink";
+import { getApiBaseUrl } from "../utils/api";
 
 const Home = ({
   homeapi: { title, subtitle, btntext, img, sociallinks,},// homeapi is the prop that is passed from the Home component in the App.js file
+  
 }) => {
+  const apiBaseUrl = getApiBaseUrl();
   return (
     <>
       <div className="relative h-auto w-auto flex flex-row">

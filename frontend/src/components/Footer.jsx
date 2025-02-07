@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-
+import { getApiBaseUrl } from '../utils/api'
 const Footer = ({ footerAPI: { titles, links, img } }) => {
   const [year, setYear] = useState(null)
   
@@ -7,7 +7,9 @@ const Footer = ({ footerAPI: { titles, links, img } }) => {
       setYear(new Date().getFullYear())
   }, [])
   
+  const apiBaseUrl = getApiBaseUrl();
   return (
+  
     <>
       <footer className='bg-theme pt-7 pb-5 mt-10'>
         <div className='nike-container text-slate-200'>
