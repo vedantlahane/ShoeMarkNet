@@ -16,7 +16,12 @@ const App = () => {
   useEffect(() => {
     // Use the environment-specific URL
     axios
-      .get(`${apiBaseUrl}/api/data`)
+      .get(`${apiBaseUrl}/api/data`, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
       .then((response) => {
         setBackendData(response.data);
       })
