@@ -14,6 +14,9 @@ export const getApiBaseUrl = () => import.meta.env.VITE_API_URL;
 export const fetchData = async () => {
   try {
     const response = await api.get('/api/data');
+    if (!response.data) {
+      throw new Error('No data received from the server');
+    }
     return response.data;
   } catch (error) {
     console.error('API Error:', error);

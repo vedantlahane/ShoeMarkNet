@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { Cart, Home, Footer, Sales, Navbar } from "./components";
 import Explore from "./components/Explore.jsx";
 import Story from "./components/Story.jsx";
@@ -8,38 +7,60 @@ import { fetchData } from './utils/api';
 
 const App = () => {
   const [backendData, setBackendData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchData()
-      .then(data => setBackendData(data))
-      .catch(error => console.error("Error fetching backend data:", error));
+      .then(data => {
+        // Validate required data properties
+        if (!data.homeapi || !data.popularsales || !data.toprateslaes || !data.footerAPI) {
+          throw new Error('Invalid data structure received from server');
+        }
+        setBackendData(data);
+      })
+      .catch(error => {
+        console.error("Error fetching backend data:", error);
+        setError(error.message);
+      });
   }, []);
 
-  // If backendData is not loaded yet, you can display a loading state or spinner.
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="p-4 bg-red-50 border border-red-500 rounded">
+          <h2 className="text-red-700">Error loading data: {error}</h2>
+        </div>
+      </div>
+    );
+  }
+
   if (!backendData) {
     return (
-      <div style={{ padding: "1rem", backgroundColor: "#f4f4f4" }}>
-        <h2>Loading backend data...</h2>
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="p-4">
+          <h2 className="text-xl font-semibold">Loading data...</h2>
+        </div>
       </div>
     );
   }
 
   return (
     <Router>
-      {/* Navigation components */}
       <Navbar />
       <Cart />
-
-      {/* Application routing */}
+      
       <Routes>
         <Route
           path="/"
           element={
             <main>
-              {/* Pass backend data to your components */}
-              <Home homeapi={backendData.homeapi} />
-              <Sales endpoint={backendData.popularsales} ifExists />
-              <Sales endpoint={backendData.toprateslaes} />
+              {backendData.homeapi && <Home homeapi={backendData.homeapi} />}
+              {backendData.popularsales && (
+                <Sales endpoint={backendData.popularsales} ifExists />
+              )}
+              {backendData.toprateslaes && (
+                <Sales endpoint={backendData.toprateslaes} />
+              )}
             </main>
           }
         />
@@ -47,7 +68,9 @@ const App = () => {
           path="/explore"
           element={
             <div>
-              <Explore endpoint={backendData.toprateslaes} />
+              {backendData.toprateslaes && (
+                <Explore endpoint={backendData.toprateslaes} />
+              )}
             </div>
           }
         />
@@ -55,20 +78,13 @@ const App = () => {
           path="/story"
           element={
             <div>
-              <Story story={backendData.story} />
+              {backendData.story && <Story story={backendData.story} />}
             </div>
           }
         />
       </Routes>
 
-      {/* Footer receives the backend's footer API data */}
-      <Footer footerAPI={backendData.footerAPI} />
-
-      {/* For debugging or demonstration, you can show the entire backend data */}
-      <div style={{ padding: "1rem", backgroundColor: "#f4f4f4" }}>
-        <h2>Backend Data (Complete)</h2>
-        <pre>{JSON.stringify(backendData, null, 2)}</pre>
-      </div>
+      {backendData.footerAPI && <Footer footerAPI={backendData.footerAPI} />}
     </Router>
   );
 };
