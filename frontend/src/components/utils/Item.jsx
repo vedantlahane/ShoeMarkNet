@@ -89,7 +89,7 @@ const Item = ({
           }`}
         >
           <img
-            src={`${apiBaseUrl}`} //apiBaseUrl is the base URL of the API
+            src={`${apiBaseUrl}/${img}`} //apiBaseUrl is the base URL of the API
             alt={`img/item-img/${id}`}
             className={`transitions-theme hover:-rotate-12 ${
               ifExists

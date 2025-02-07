@@ -9,7 +9,7 @@ export const getImageUrl = (imagePath) => {
   // If the image path is already a full URL, return it as is
   if (imagePath.startsWith('http')) return imagePath;
   // Otherwise, combine it with the API base URL
-  return `${API_BASE_URL}/${imagePath}`;
+  return `${API_BASE_URL}${imagePath}`;
 };
 
 const api = axios.create({
