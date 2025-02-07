@@ -4,7 +4,7 @@ import { Cart, Home, Footer, Sales, Navbar } from "./components";
 import Explore from "./components/Explore.jsx";
 import Story from "./components/Story.jsx";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { getApiBaseUrl } from "./components/utils/api";
+import { getApiBaseUrl } from "./utils/api";
 
 const App = () => {
   const [backendData, setBackendData] = useState(null);
@@ -16,6 +16,7 @@ const App = () => {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         }
       })
       .then((response) => {
