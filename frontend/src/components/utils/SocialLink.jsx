@@ -1,12 +1,12 @@
 import React from 'react'
-import { getApiBaseUrl } from '../../utils/api'
+import { getApiBaseUrl, getImageUrl } from '../../utils/api'
 
 const SocialLink = ({ icon }) => {
-  const apiBaseUrl = getApiBaseUrl();
+  const getImageUrl = getApiBaseUrl()
   return (
    <>
       <img
-        src={`${apiBaseUrl}/${icon}`} 
+        src={`${getImageUrl}/${icon}`} 
         alt="icon/social"
         className="w-8 h-8 flex items-center cursor-pointer md:w-6 md:h-6 sm:w-5 sm:h-5 transition-all duration-200 hover:scale-110"
       />

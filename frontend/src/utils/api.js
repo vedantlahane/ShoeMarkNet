@@ -4,51 +4,47 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const getApiBaseUrl = () => API_BASE_URL;
 
-export const getImageUrl = (imagePath) => {
-  if (!imagePath) return '';
-  // If the image path is already a full URL, return it as is
-  if (imagePath.startsWith('http')) return imagePath;
-  // Otherwise, combine it with the API base URL
-  return `${API_BASE_URL}${imagePath}`;
-};
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
-});
-
-// Validate the data structure
+// Validation function
 const validateData = (data) => {
   const requiredFields = ['homeapi', 'popularsales', 'toprateslaes', 'footerAPI'];
-  const missingFields = requiredFields.filter(field => !data[field]);
   
-  if (missingFields.length > 0) {
-    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      throw new Error(`Missing required field: ${field}`);
+    }
   }
   
   return data;
 };
 
-export const fetchData = async () => {
-  try {
-    const response = await api.get('/api/data');
-    
-    if (!response.data) {
-      throw new Error('No data received from server');
-    }
-    
-    // Transform image URLs in the response data
-    const transformedData = transformImageUrls(response.data);
-    return transformedData;
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
+// Updated getImageUrl function to handle URLs correctly
+export const getImageUrl = (imagePath) => {
+  if (!imagePath) return '';
+
+  // If path is already a full URL, return it as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
   }
+
+  // Remove any existing "assets/" or leading slashes
+  const cleanPath = imagePath
+    .replace(/^http.*\/\/[^/]+\/?/i, '')     // Remove any domain prefix (e.g., http://localhost:5000)
+    .replace(/^\/+/, '')                     // Remove leading slashes
+    .replace(/^assets\//, '');               // Remove leading "assets/"
+
+  // Combine with API base URL and "/assets/"
+  return `/assets/${cleanPath}`;
 };
+
+// Updated axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: false, // Prevent CORS preflight
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
 
 // Helper function to transform image URLs in the data
 const transformImageUrls = (data) => {
@@ -72,4 +68,20 @@ const transformImageUrls = (data) => {
   };
 
   return transform(data);
+};
+
+export const fetchData = async () => {
+  try {
+    const response = await api.get('/api/data');
+    
+    if (!response.data) {
+      throw new Error('No data received from server');
+    }
+    
+    const validatedData = validateData(response.data);
+    return transformImageUrls(validatedData);
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
 };

@@ -17,10 +17,9 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:3000'
   ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'Authorization'],
-  exposedHeaders: ['Access-Control-Allow-Origin']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept'],
+  credentials: false // Changed to false to avoid CORS preflight
 }));
 
 // Pre-flight requests
@@ -31,6 +30,9 @@ app.use(express.json());
 
 // Serve static assets from the "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Ensure static files are served correctly
+app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 
 // Database connection
 dbConfig();

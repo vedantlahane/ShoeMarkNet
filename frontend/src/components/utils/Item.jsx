@@ -1,7 +1,7 @@
 import React from "react";
-import { useDispatch } from "react-redux";//useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
+import { useDispatch } from "react-redux"; //useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
 
-import { getApiBaseUrl } from "../../utils/api";
+import { getApiBaseUrl, getImageUrl } from "../../utils/api";
 
 import { StarIcon, ShoppingBagIcon } from "@heroicons/react/24/solid";
 import { setAddItemToCart, setOpenCart } from "../../app/CartSlice";
@@ -18,22 +18,23 @@ const Item = ({
   rating,
   price,
 }) => {
+  const getImageUrl = getApiBaseUrl(); //getApiBaseUrl is a function that returns the base URL of the API
+  const dispatch = useDispatch(); //useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
 
-  const apiBaseUrl = getApiBaseUrl();//apiBaseUrl is the base URL of the API
-  //   console.log(id)
-  const dispatch = useDispatch();//useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
-
-  const onAddToCart = () => {//onAddToCart function is used to add an item to the cart.
+  const onAddToCart = () => {
+    //onAddToCart function is used to add an item to the cart.
     const item = { id, title, text, img, color, shadow, price };
 
-    dispatch(setAddItemToCart(item));//setAddItemToCart is a reducer function that adds an item to the cart.
+    dispatch(setAddItemToCart(item)); //setAddItemToCart is a reducer function that adds an item to the cart.
   };
 
   const onCartToggle = () => {
-    dispatch(setOpenCart({
-        cartState: true
-    }))
-}
+    dispatch(
+      setOpenCart({
+        cartState: true,
+      })
+    );
+  };
 
   return (
     <>
@@ -56,13 +57,13 @@ const Item = ({
 
           <div className="flex items-center justify-between w-28 my-2">
             <div className="flex items-center bg-white/80  px-1 rounded blur-effect-theme">
-              <h1 className="text-black text-sm font-medium">&#8377; {price}</h1>
+              <h1 className="text-black text-sm font-medium">
+                &#8377; {price}
+              </h1>
             </div>
             <div className="flex items-center gap-1">
               <StarIcon className="icon-style w-5 h-5 md:w-4 md:h-4 brightness-0" />
-              <h1 className="md:text-sm font-normal text-black">
-                {rating}
-              </h1>
+              <h1 className="md:text-sm font-normal text-black">{rating}</h1>
             </div>
           </div>
 
@@ -70,14 +71,17 @@ const Item = ({
             <button
               type="button"
               className="bg-white/90 blur-effect-theme button-theme p-0.5 shadow black-200"
-              onClick={()=> onAddToCart()}
+              onClick={() => onAddToCart()}
             >
               <ShoppingBagIcon className="icon-style text-slate-900" />
             </button>
             <button
               type="button"
               className="bg-white/90 blur-effect-theme button-theme px-2 py-1 shadow black-200 text-sm text-black"
-              onClick={()=> {onAddToCart(); onCartToggle();}}// onAddToCart() and onCartToggle() are called when the button is clicked  
+              onClick={() => {
+                onAddToCart();
+                onCartToggle();
+              }} // onAddToCart() and onCartToggle() are called when the button is clicked
             >
               {btn}
             </button>
@@ -89,7 +93,7 @@ const Item = ({
           }`}
         >
           <img
-            src={`${apiBaseUrl}/${img}`} //apiBaseUrl is the base URL of the API
+            src={`${getImageUrl}/${img}`} //apiBaseUrl is the base URL of the API
             alt={`img/item-img/${id}`}
             className={`transitions-theme hover:-rotate-12 ${
               ifExists
