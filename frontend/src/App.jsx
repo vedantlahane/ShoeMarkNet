@@ -6,20 +6,24 @@ import Story from "./components/Story.jsx";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 const App = () => {
-  // State to hold the fetched backend data
   const [backendData, setBackendData] = useState(null);
+  
+  // Choose API URL based on environment
+  const apiBaseUrl = import.meta.env.MODE === 'production' 
+    ? import.meta.env.VITE_API_URL_PROD 
+    : import.meta.env.VITE_API_URL_DEV;
 
   useEffect(() => {
-    // Fetch data from the backend on component mount
+    // Use the environment-specific URL
     axios
-      .get("http://localhost:5000/api/data")
+      .get(`${apiBaseUrl}/api/data`)
       .then((response) => {
         setBackendData(response.data);
       })
       .catch((error) => {
         console.error("Error fetching backend data:", error);
       });
-  }, []);
+  }, [apiBaseUrl]);
 
   // If backendData is not loaded yet, you can display a loading state or spinner.
   if (!backendData) {
