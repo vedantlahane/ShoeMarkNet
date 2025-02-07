@@ -4,28 +4,16 @@ import { Cart, Home, Footer, Sales, Navbar } from "./components";
 import Explore from "./components/Explore.jsx";
 import Story from "./components/Story.jsx";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { getApiBaseUrl } from "./utils/api";
+import { fetchData } from './utils/api';
 
 const App = () => {
   const [backendData, setBackendData] = useState(null);
-  const apiBaseUrl = getApiBaseUrl();
 
   useEffect(() => {
-    axios
-      .get(`${apiBaseUrl}/api/data`, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        }
-      })
-      .then((response) => {
-        setBackendData(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching backend data:", error);
-      });
-  }, [apiBaseUrl]);
+    fetchData()
+      .then(data => setBackendData(data))
+      .catch(error => console.error("Error fetching backend data:", error));
+  }, []);
 
   // If backendData is not loaded yet, you can display a loading state or spinner.
   if (!backendData) {

@@ -1,1 +1,22 @@
-export const getApiBaseUrl = () => {  return import.meta.env.MODE === 'production'    ? import.meta.env.VITE_API_URL_PROD    : import.meta.env.VITE_API_URL_DEV;};
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
+
+export const getApiBaseUrl = () => import.meta.env.VITE_API_URL;
+
+export const fetchData = async () => {
+  try {
+    const response = await api.get('/api/data');
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
