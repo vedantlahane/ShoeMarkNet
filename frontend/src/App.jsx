@@ -8,33 +8,27 @@ import { fetchData } from './utils/api';
 const App = () => {
   const [backendData, setBackendData] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchData()
-      .then(data => {
-        // Validate required data properties
-        if (!data.homeapi || !data.popularsales || !data.toprateslaes || !data.footerAPI) {
-          throw new Error('Invalid data structure received from server');
-        }
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchData();
         setBackendData(data);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error("Error fetching backend data:", error);
         setError(error.message);
-      });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="p-4 bg-red-50 border border-red-500 rounded">
-          <h2 className="text-red-700">Error loading data: {error}</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (!backendData) {
+  // Loading state
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="p-4">
@@ -44,6 +38,24 @@ const App = () => {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="p-4 bg-red-50 border border-red-500 rounded">
+          <h2 className="text-red-700">Error: {error}</h2>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render main content only when data is available
   return (
     <Router>
       <Navbar />
@@ -54,13 +66,9 @@ const App = () => {
           path="/"
           element={
             <main>
-              {backendData.homeapi && <Home homeapi={backendData.homeapi} />}
-              {backendData.popularsales && (
-                <Sales endpoint={backendData.popularsales} ifExists />
-              )}
-              {backendData.toprateslaes && (
-                <Sales endpoint={backendData.toprateslaes} />
-              )}
+              <Home homeapi={backendData.homeapi} />
+              <Sales endpoint={backendData.popularsales} ifExists />
+              <Sales endpoint={backendData.toprateslaes} />
             </main>
           }
         />
@@ -68,9 +76,7 @@ const App = () => {
           path="/explore"
           element={
             <div>
-              {backendData.toprateslaes && (
-                <Explore endpoint={backendData.toprateslaes} />
-              )}
+              <Explore endpoint={backendData.toprateslaes} />
             </div>
           }
         />
@@ -78,13 +84,13 @@ const App = () => {
           path="/story"
           element={
             <div>
-              {backendData.story && <Story story={backendData.story} />}
+              <Story story={backendData.story} />
             </div>
           }
         />
       </Routes>
 
-      {backendData.footerAPI && <Footer footerAPI={backendData.footerAPI} />}
+      <Footer footerAPI={backendData.footerAPI} />
     </Router>
   );
 };
