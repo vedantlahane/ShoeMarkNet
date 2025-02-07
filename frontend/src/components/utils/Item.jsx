@@ -85,7 +85,7 @@ const Item = ({
           }`}
         >
           <img
-            src={img}
+            src={`http://localhost:5000/${img}`}
             alt={`img/item-img/${id}`}
             className={`transitions-theme hover:-rotate-12 ${
               ifExists

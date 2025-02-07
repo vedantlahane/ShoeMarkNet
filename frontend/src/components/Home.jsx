@@ -40,7 +40,7 @@ const Home = ({
           </div>
           <div className="flex items-center">
             <img
-              src={img}
+              src={`http://localhost:5000/${img}`} 
               alt="hero-img/img"
               className="w-auto h-[45vh] lg:h-[35vh] md:h-[31vh] sm:h-[21vh] xsm:h-[19vh] transitions-theme rotate-[12deg] hover:rotate-0 cursor-pointer object-fill filter drop-shadow-2xl"
             />

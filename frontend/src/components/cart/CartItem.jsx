@@ -22,7 +22,7 @@ const CartItem = ({ item: { id, title, text, img, color, shadow, price, cartQuan
       <div className="flex items-center justify-between w-full px-5">
         <div className="flex items-center gap-5">
           <div className={`bg-gradient-to-b ${color} ${shadow} relative rounded p-3 hover:scale-105 transition-all duration-75 ease-in-out grid items-center`}>
-            <img src={img} alt={`img/cart-item/${id}`} className="w-36 h-auto object-fill lg:w-28" />
+            <img src={`http://localhost:5000/${img}`}  alt={`img/cart-item/${id}`} className="w-36 h-auto object-fill lg:w-28" />
             <div className='absolute right-1 top-1 blur-theme-effect bg-white/80 text-black text-xs px-1 rounded'>&#8377; {price}</div>
           </div>
           <div className="grid items-center gap-4">
