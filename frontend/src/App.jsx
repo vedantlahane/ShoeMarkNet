@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Cart, Home, Footer, Sales, Navbar } from "./components";
 import Explore from "./components/Explore.jsx";
 import Story from "./components/Story.jsx";
+import WorkInProgress from "./components/utils/WorkInProgress.jsx";
 
 const App = () => {
   const [backendData, setBackendData] = useState(null);
@@ -61,6 +62,7 @@ const App = () => {
     <Router>
       <Navbar />
       <Cart />
+      <WorkInProgress />
       <Routes>
         <Route
           path="/"
