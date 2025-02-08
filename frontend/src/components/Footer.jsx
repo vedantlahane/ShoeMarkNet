@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getApiBaseUrl } from '../utils/api'
+
 const Footer = ({ footerAPI: { titles, links, img } }) => {
   const [year, setYear] = useState(null)
   
@@ -7,7 +7,10 @@ const Footer = ({ footerAPI: { titles, links, img } }) => {
       setYear(new Date().getFullYear())
   }, [])
   
-  const getImageUrl = getApiBaseUrl();
+  const apiBaseUrl = import.meta.env.MODE === 'production' 
+  ? import.meta.env.VITE_API_URL_PROD 
+  : import.meta.env.VITE_API_URL_DEV;
+
   return (
   
     <>
@@ -29,7 +32,7 @@ const Footer = ({ footerAPI: { titles, links, img } }) => {
           </div>
           {img && (
             <div className="flex justify-center my-4">
-              <img src={`${getImageUrl}/${img}`}  alt="Footer Logo" className="h-10" />
+              <img src={`${apiBaseUrl}/${img}`}  alt="Footer Logo" className="h-10" />
             </div>
           )}
           <div className='mt-5 text-center'>

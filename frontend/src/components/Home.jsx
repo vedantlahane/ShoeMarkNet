@@ -1,12 +1,15 @@
 import React from "react";
 import SocialLink from "./utils/SocialLink";
-import { getApiBaseUrl } from "../utils/api";
+
 
 const Home = ({
   homeapi: { title, subtitle, btntext, img, sociallinks,},// homeapi is the prop that is passed from the Home component in the App.js file
   
 }) => {
-  const getImageUrl = getApiBaseUrl();
+  const apiBaseUrl = import.meta.env.MODE === 'production' 
+  ? import.meta.env.VITE_API_URL_PROD 
+  : import.meta.env.VITE_API_URL_DEV;
+
   return (
     <>
       <div className="relative h-auto w-auto flex flex-row">
@@ -43,7 +46,7 @@ const Home = ({
           </div>
           <div className="flex items-center">
             <img
-              src={`${getImageUrl}/${img}`} 
+              src={`${apiBaseUrl}/${img}`} 
               alt="hero-img/img"
               className="w-auto h-[45vh] lg:h-[35vh] md:h-[31vh] sm:h-[21vh] xsm:h-[19vh] transitions-theme rotate-[12deg] hover:rotate-0 cursor-pointer object-fill filter drop-shadow-2xl"
             />

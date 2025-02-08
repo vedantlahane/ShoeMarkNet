@@ -1,8 +1,5 @@
 import React from "react";
 import { useDispatch } from "react-redux"; //useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
-
-import { getApiBaseUrl, getImageUrl } from "../../utils/api";
-
 import { StarIcon, ShoppingBagIcon } from "@heroicons/react/24/solid";
 import { setAddItemToCart, setOpenCart } from "../../app/CartSlice";
 
@@ -18,7 +15,7 @@ const Item = ({
   rating,
   price,
 }) => {
-  const getImageUrl = getApiBaseUrl(); //getApiBaseUrl is a function that returns the base URL of the API
+
   const dispatch = useDispatch(); //useDispatch hook is used to dispatch actions in the redux store. it  means that you can dispatch actions to the store from any component in your application. dispatch is a function that takes an action object as an argument and sends it to the store.
 
   const onAddToCart = () => {
@@ -27,6 +24,11 @@ const Item = ({
 
     dispatch(setAddItemToCart(item)); //setAddItemToCart is a reducer function that adds an item to the cart.
   };
+
+  const apiBaseUrl = import.meta.env.MODE === 'production' 
+  ? import.meta.env.VITE_API_URL_PROD 
+  : import.meta.env.VITE_API_URL_DEV;
+
 
   const onCartToggle = () => {
     dispatch(
@@ -93,7 +95,7 @@ const Item = ({
           }`}
         >
           <img
-            src={`${getImageUrl}/${img}`} //apiBaseUrl is the base URL of the API
+            src={`${apiBaseUrl}/${img}`} //apiBaseUrl is the base URL of the API
             alt={`img/item-img/${id}`}
             className={`transitions-theme hover:-rotate-12 ${
               ifExists

@@ -1,9 +1,11 @@
 import React from 'react';
 import { PlayIcon } from "@heroicons/react/24/solid";
 
-
 const Clips = ({ clip, imgsrc }) => {
-  const apiBaseUrl = getApiBaseUrl();
+  const apiBaseUrl = import.meta.env.MODE === 'production' 
+  ? import.meta.env.VITE_API_URL_PROD 
+  : import.meta.env.VITE_API_URL_DEV;
+
   return (
    <>
       <div className='relative h-28 w-32 rounded-xl overflow-hidden group cursor-pointer transition-all duration-300 lg:w-28 md:w-24 sm:w-16 lg:h-24 md:h-20 sm:h-14'>
