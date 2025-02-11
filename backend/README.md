@@ -5,18 +5,24 @@ This is a simple MERN (MongoDB, Express, React, Node.js) stack project that demo
 ## Project Structure
 
 ```
-mern-backend
+ShoeMarkNet/backend
 ├── config
-│   └── db.js                # Database configuration and connection logic
+│   └── db.config.js         # Database configuration
 ├── controllers
-│   └── userController.js     # User-related request handlers
+│   └── userController.js   # User management controllers
+├── data
+│   └── data.js
 ├── models
-│   └── user.js               # User model definition
+│   └── user.js     
+│   └── data.js     
 ├── routes
-│   └── userRoutes.js         # User routes setup
-├── app.js                    # Entry point of the application
-├── package.json              # Project dependencies and scripts
-└── README.md                 # Project documentation
+│   └── dataRoutes.js     
+│   └── userRoutes.js   
+
+---public/assets
+├── app.js                  # Main application entry point
+├── package.json           # Project dependencies
+└── README.md             # Project documentation
 ```
 
 ## Installation
