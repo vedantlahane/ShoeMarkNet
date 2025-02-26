@@ -1,0 +1,38 @@
+{
+  "title": "Popular Sales",
+  "items": [
+    {
+      "id": "0p0x1",
+      "title": "Nike Air Jordan's 1",
+      "text": "Men's Basketball Shoes",
+      "rating": "4.9",
+      "btn": "Buy Now",
+      "img": "/assets/hero.png",
+      "price": "200",
+      "color": "rgb(153, 155, 160)",
+      "shadow": "shadow-lg shadow-black-700"
+    },
+    {
+      "id": "0p0x2",
+      "title": "Adidas Superstar",
+      "text": "Men's Running Shoes",
+      "rating": "4.5",
+      "btn": "Buy Now",
+      "img": "/assets/Addidas.png",
+      "price": "200",
+      "color": "rgb(153, 155, 160)",
+      "shadow": "shadow-lg shadow-black-700"
+    },
+    {
+      "id": "0p0x3",
+      "title": "Puma RS-X Reinvention",
+      "text": "Men's Running Shoes",
+      "rating": "5+",
+      "btn": "Buy Now",
+      "img": "/assets/rsx.png",
+      "price": "200",
+      "color": "rgb(153, 155, 160)",
+      "shadow": "shadow-lg shadow-black-700"
+    }
+  ]
+}

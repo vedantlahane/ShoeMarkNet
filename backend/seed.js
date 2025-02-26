@@ -1,30 +1,73 @@
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
+// seed.js
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 dotenv.config();
 
-const dbConfig = require("./config/db"); // Your database connection function
-const Data = require("./models/data");     // The data model you created
-const dataToImport = require("./data/data"); // The Node-friendly data file
+// Import Mongoose models
+const Homeapi = require('./models/homeapi');
+const Popularsales = require('./models/popularsales');
+const Highlight = require('./models/highlight');
+const Sneaker = require('./models/sneaker');
+const Topratesales = require('./models/topratesales');
+const Story = require('./models/story');
+const FooterAPI = require('./models/footerAPI');
+const User = require('./models/user');
 
-// Connect to the database
-dbConfig();
+// Import data files
+const homeapiData = require('./data/homeapi.json');
+const popularsalesData = require('./data/popularsales.json');
+const highlightData = require('./data/highlight.json');
+const sneakerData = require('./data/sneaker.json');
+const topratesalesData = require('./data/topratesales.json');
+const storyData = require('./data/story.json');
+const footerAPIData = require('./data/footerAPI.json');
+const userData = require('./data/user.json');
 
-const importData = async () => {
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/shoemarknet';
+
+// Connect to MongoDB
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('MongoDB connected!');
+    seedData();
+  })
+  .catch((err) => {
+    console.error('Connection error:', err);
+  });
+
+// Seed function
+async function seedData() {
   try {
-    // Remove any existing data (optional)
-    await Data.deleteMany({});
-    console.log("Existing data cleared");
+    console.log('Seeding data...');
 
-    // Create a new document with your data
-    const newData = new Data(dataToImport);
-    await newData.save();
+    // Clear existing data to avoid duplicates
+    await Homeapi.deleteMany({});
+    await Popularsales.deleteMany({});
+    await Highlight.deleteMany({});
+    await Sneaker.deleteMany({});
+    await Topratesales.deleteMany({});
+    await Story.deleteMany({});
+    await FooterAPI.deleteMany({});
+    await User.deleteMany({});
 
-    console.log("Data imported successfully");
-    process.exit();
+    // Insert new data
+    await Homeapi.create(homeapiData);
+    await Popularsales.insertMany(popularsalesData);
+    await Highlight.create(highlightData);
+    await Sneaker.insertMany(sneakerData);
+    await Topratesales.insertMany(topratesalesData);
+    await Story.insertMany(storyData);
+    await FooterAPI.create(footerAPIData);
+    await User.insertMany(userData);
+
+    console.log('Data seeded successfully!');
   } catch (error) {
-    console.error("Error importing data:", error);
-    process.exit(1);
+    console.error('Error seeding data:', error);
+  } finally {
+    mongoose.connection.close();
   }
-};
-
-importData();
+}

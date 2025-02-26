@@ -1,0 +1,25 @@
+{
+  "title": "Top Stories",
+  "news": [
+    {
+      "title": "Jayson Tatum Debuts",
+      "text": "Jordan Brand's signature model for the past few years, Jayson Tatum will be dawning the Air Jordan 37 this season before potentially getting his first signature sneaker.",
+      "img": "https://sneakernews.com/wp-content/uploads/2022/09/air-jordan-37-low.jpg",
+      "url": "https://sneakernews.com/2022/09/14/air-jordan-37-low/",
+      "like": "3/5",
+      "time": "11 Mins",
+      "by": "Jared Ebanks",
+      "btn": "Read More"
+    },
+    {
+      "title": "Bro’s Nike Zoom Freak 4",
+      "text": "The upcoming take on the Zoom Freak 4 draws inspiration from Thanksgiving, using orange and brown for a holiday vibe.",
+      "img": "https://sneakernews.com/wp-content/uploads/2022/09/nike-zoom-freak-4.jpg",
+      "url": "https://sneakernews.com/2022/09/14/nike-zoom-freak-4/",
+      "like": "5/5",
+      "time": "41 Mins",
+      "by": "Michael Le",
+      "btn": "Read More"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Get Your Kicks Now",
+  "subtitle": "Latest Sport Shoes",
+  "img": "/assets/sneaker.png",
+  "btntext": "Explore Product",
+  "videos": [
+    { "imgsrc": "/assets/video/vcover1.jpg", "clip": "/assets/video/gif3.mp4" },
+    { "imgsrc": "/assets/video/vcover2.jpg", "clip": "/assets/video/gif3.mp4" },
+    { "imgsrc": "/assets/video/vcover3.jpg", "clip": "/assets/video/gif3.mp4" }
+  ],
+  "sociallinks": [
+    { "icon": "/assets/facebook.svg" },
+    { "icon": "/assets/messenger.svg" },
+    { "icon": "/assets/instagram.svg" },
+    { "icon": "/assets/twitter.svg" },
+    { "icon": "/assets/youtube.svg" }
+  ]
+}

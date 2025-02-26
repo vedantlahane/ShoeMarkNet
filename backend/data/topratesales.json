@@ -1,0 +1,38 @@
+{
+  "title": "Top Rated Sales",
+  "items": [
+    {
+      "id": "0M0x1",
+      "title": "Nike Air Low Premium",
+      "text": "MEN Running Shoes",
+      "rating": "5+",
+      "btn": "Buy Now",
+      "img": "/assets/product7.png",
+      "price": "150",
+      "color": "rgb(153, 155, 160)",
+      "shadow": "shadow-lg shadow-black-700"
+    },
+    {
+      "id": "0M0x2",
+      "title": "Nike Air Force Green",
+      "text": "MEN Running Shoes",
+      "rating": "5+",
+      "btn": "Buy Now",
+      "img": "/assets/product2.png",
+      "price": "150",
+      "color": "rgb(153, 155, 160)",
+      "shadow": "shadow-lg shadow-black-700"
+    },
+    {
+      "id": "0M0x3",
+      "title": "Nike Adapt BB Rose",
+      "text": "MEN Running Shoes",
+      "rating": "5+",
+      "btn": "Buy Now",
+      "img": "/assets/product3.png",
+      "price": "150",
+      "color": "rgb(153, 155, 160)",
+      "shadow": "shadow-lg shadow-black-700"
+    }
+  ]
+}
