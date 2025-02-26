@@ -7,7 +7,13 @@ import Story from "./components/Story.jsx";
 import WorkInProgress from "./components/utils/WorkInProgress.jsx";
 
 const App = () => {
-  const [backendData, setBackendData] = useState(null);
+  const [backendData, setBackendData] = useState({
+    homeapi: null,
+    popularsales: null,
+    toprateslaes: null,
+    story: null,
+    footerAPI: null,
+  });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,8 +26,27 @@ const App = () => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${apiBaseUrl}/api/data`);
-        setBackendData(response.data);
+        const [
+          homeapiRes,
+          popularsalesRes,
+          toprateslaesRes,
+          storyRes,
+          footerAPIRes,
+        ] = await Promise.all([
+          axios.get(`${apiBaseUrl}/api/data/homeapi`),
+          axios.get(`${apiBaseUrl}/api/data/popularsales`),
+          axios.get(`${apiBaseUrl}/api/data/topratesales`),
+          axios.get(`${apiBaseUrl}/api/data/story`),
+          axios.get(`${apiBaseUrl}/api/data/footerapi`)
+        ]);
+
+        setBackendData({
+          homeapi: homeapiRes.data,
+          popularsales: popularsalesRes.data,
+          toprateslaes: toprateslaesRes.data,
+          story: storyRes.data,
+          footerAPI: footerAPIRes.data,
+        });
       } catch (err) {
         console.error("Error fetching backend data:", err);
         setError(err.message);
@@ -29,6 +54,7 @@ const App = () => {
         setIsLoading(false);
       }
     };
+
     loadData();
   }, [apiBaseUrl]);
 
