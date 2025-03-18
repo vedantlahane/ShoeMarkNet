@@ -36,7 +36,7 @@
    
   /* Theme-Colors */
   .bg-theme {
-    background-image: linear-gradient( 0.2deg,  rgb(13, 38, 78) 4.8%, rgb(204, 210, 224) 85.5% );
+    background-image: linear-gradient( 0.2deg,  rgb(13, 38, 78) 4.8%, rgb(204, 210, 224) 85.5% );/*#0D264E, #CCD2E0*/
   }
   .bg-theme-cart {
     @apply bg-gradient-to-b from-slate-900 to-gray-900 shadow-sm shadow-gray-900;
@@ -83,8 +83,8 @@
     transform: translateX(0px);
   }
   .closeCart {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateX(30px);
+    opacity: 0; /* Makes the element fully transparent */
+    visibility: hidden; /* Hides the element from the layout, making it not interactable */
+    transform: translateX(30px); /* Moves the element 30 pixels to the right along the X-axis */
   }
 }

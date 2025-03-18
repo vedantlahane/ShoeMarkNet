@@ -5,6 +5,13 @@ import { Cart, Home, Footer, Sales, Navbar } from "./components";
 import Explore from "./components/Explore.jsx";
 import Story from "./components/Story.jsx";
 import WorkInProgress from "./components/utils/WorkInProgress.jsx";
+import AdminLayout from "./components/admin/AdminLayout";
+
+import Dashboard from "./components/admin/Dashboard";
+
+import Orders from "./components/admin/Orders";
+
+import Products from "./components/admin/Products";
 
 const App = () => {
   const [backendData, setBackendData] = useState({
@@ -18,7 +25,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const apiBaseUrl =
-    import.meta.env.MODE === 'production'
+    import.meta.env.MODE === "production"
       ? import.meta.env.VITE_API_URL_PROD
       : import.meta.env.VITE_API_URL_DEV;
 
@@ -37,7 +44,7 @@ const App = () => {
           axios.get(`${apiBaseUrl}/api/data/popularsales`),
           axios.get(`${apiBaseUrl}/api/data/topratesales`),
           axios.get(`${apiBaseUrl}/api/data/story`),
-          axios.get(`${apiBaseUrl}/api/data/footerapi`)
+          axios.get(`${apiBaseUrl}/api/data/footerapi`),
         ]);
 
         setBackendData({
@@ -116,7 +123,15 @@ const App = () => {
             </div>
           }
         />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+
+          <Route path="orders" element={<Orders />} />
+
+          <Route path="products" element={<Products />} />
+        </Route>
       </Routes>
+
       <Footer footerAPI={backendData.footerAPI} />
     </Router>
   );

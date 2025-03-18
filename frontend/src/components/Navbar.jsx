@@ -37,7 +37,7 @@ return (
         }>
           <nav className='flex items-center justify-between nike-container'>
                 <a href='/' className='flex items-center'>
-                    <span>ShoeMarkNet</span>
+                    <span className='text-l font-medium'>ShoeMarkNet</span>
                      {/* <img
                           src={logo}
                           alt="logo/img"
