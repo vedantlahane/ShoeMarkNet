@@ -22,7 +22,11 @@ const RegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/data/auth/register', formData);
+    const apiBaseUrl = import.meta.env.MODE === "production"
+        ? import.meta.env.VITE_API_URL_PROD
+        : import.meta.env.VITE_API_URL_DEV;
+      
+      const response = await axios.post(`${apiBaseUrl}/api/data/auth/register`, formData);
       setMessage('Registration successful!');
       localStorage.setItem('token', response.data.token);
       console.log('User registered:', response.data.user);
@@ -33,9 +37,9 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      {message && <p>{message}</p>}
+    <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-2xl font-bold text-center mb-4">Register</h2>
+      {message && <p className="text-center text-green-600 mb-4">{message}</p>}
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -44,8 +48,8 @@ const RegistrationForm = () => {
           value={formData.name}
           onChange={handleChange}
           required
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
-        <br/>
         <input
           type="email"
           name="email"
@@ -53,8 +57,8 @@ const RegistrationForm = () => {
           value={formData.email}
           onChange={handleChange}
           required
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
-        <br/>
         <input
           type="text"
           name="phone"
@@ -62,8 +66,8 @@ const RegistrationForm = () => {
           value={formData.phone}
           onChange={handleChange}
           required
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
-        <br/>
         <input
           type="password"
           name="password"
@@ -71,16 +75,25 @@ const RegistrationForm = () => {
           value={formData.password}
           onChange={handleChange}
           required
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
-        <br/>
-        <select name="source" value={formData.source} onChange={handleChange}>
+        <select
+          name="source"
+          value={formData.source}
+          onChange={handleChange}
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
+        >
           <option value="web">Web</option>
           <option value="email">Email</option>
           <option value="social media">Social Media</option>
           <option value="referral">Referral</option>
         </select>
-        <br/>
-        <button type="submit">Register</button>
+        <button
+          type="submit"
+          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Register
+        </button>
       </form>
     </div>
   );

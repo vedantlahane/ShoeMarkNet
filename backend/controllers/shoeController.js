@@ -1,135 +1,163 @@
+const Shoe = require('../models/Shoe'); // Note: Capitalized 'S' in Shoe to match the new model name
 
-const Shoe = require('../models/shoe');
-
-// Get all shoes with optional pagination
+// Get all shoes with pagination and sorting
 exports.getAllShoes = async (req, res) => {
-try {
-// Optional: Add pagination if you expect many shoes.
-// Defaults: page = 1, limit = 10 (can be adjusted via query parameters)
-const page = parseInt(req.query.page) || 1;
-const limit = parseInt(req.query.limit) || 10;
-const skip = (page - 1) * limit;
+  try {
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-const shoes = await Shoe.find().skip(skip).limit(limit);
+    // Sorting
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
 
-res.json(shoes);
+    // Populate referenced fields
+    const shoes = await Shoe.find()
+      .populate('brand', 'name')
+      .populate('category', 'name')
+      .populate('colors', 'name')
+      .skip(skip)
+      .limit(limit)
+      .sort({ [sortBy]: sortOrder });
 
-} catch (err) {
-console.error("Error fetching shoes:", err);
-res.status(500).json({ message: 'Error fetching shoes' });
-}
+    // Calculate total number of shoes for pagination metadata
+    const totalShoes = await Shoe.countDocuments();
+
+    res.json({
+      shoes,
+      currentPage: page,
+      totalPages: Math.ceil(totalShoes / limit),
+      totalShoes
+    });
+  } catch (err) {
+    console.error("Error fetching shoes:", err);
+    res.status(500).json({ message: 'Error fetching shoes' });
+  }
 };
 
-// Get a single shoe by ID
+// Get a single shoe by ID with populated fields
 exports.getShoeById = async (req, res) => {
-try {
-const shoe = await Shoe.findById(req.params.id);
-if (!shoe) {
-return res.status(404).json({ message: 'Shoe not found' });
-}
-res.json(shoe);
-} catch (err) {
-console.error("Error fetching shoe:", err);
-res.status(500).json({ message: 'Error fetching shoe' });
-}
+  try {
+    const shoe = await Shoe.findById(req.params.id)
+      .populate('brand', 'name')
+      .populate('category', 'name')
+      .populate('colors', 'name');
+
+    if (!shoe) {
+      return res.status(404).json({ message: 'Shoe not found' });
+    }
+    res.json(shoe);
+  } catch (err) {
+    console.error("Error fetching shoe:", err);
+    res.status(500).json({ message: 'Error fetching shoe' });
+  }
 };
 
-// Search shoes by name (case-insensitive)
+// Search shoes by name (case-insensitive) with pagination
 exports.searchShoes = async (req, res) => {
-try {
-const searchQuery = req.query.search;
-if (!searchQuery) {
-return res.status(400).json({ message: 'Missing search query' });
-}
-const shoes = await Shoe.find({
-name: { regex:searchQuery,regex:searchQuery,options: 'i' }
-});
-res.json(shoes);
-} catch (err) {
-console.error("Error searching shoes:", err);
-res.status(500).json({ message: 'Error searching shoes' });
-}
+  try {
+    const searchQuery = req.query.search;
+    if (!searchQuery) {
+      return res.status(400).json({ message: 'Missing search query' });
+    }
+
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const shoes = await Shoe.find({
+      $text: { $search: searchQuery }
+    })
+      .populate('brand', 'name')
+      .populate('category', 'name')
+      .populate('colors', 'name')
+      .skip(skip)
+      .limit(limit);
+
+    // Calculate total number of matching shoes
+    const totalShoes = await Shoe.countDocuments({
+      $text: { $search: searchQuery }
+    });
+
+    res.json({
+      shoes,
+      currentPage: page,
+      totalPages: Math.ceil(totalShoes / limit),
+      totalShoes
+    });
+  } catch (err) {
+    console.error("Error searching shoes:", err);
+    res.status(500).json({ message: 'Error searching shoes' });
+  }
 };
 
-// Filter shoes based on multiple criteria
+// Filter shoes based on multiple criteria with pagination
 exports.filterShoes = async (req, res) => {
-try {
-// Destructure query parameters (all optional)
-const { search, minPrice, maxPrice, size, color, category, rating } = req.query;
+  try {
+    // Destructure query parameters (all optional)
+    const { search, minPrice, maxPrice, size, color, category, rating, sortBy, sortOrder } = req.query;
 
-// Build query object dynamically
+    // Build query object dynamically
+    let query = {};
 
-let query = {};
+    if (search) {
+      query.$text = { $search: search };
+    }
 
+    if (minPrice && maxPrice) {
+      query.price = { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) };
+    } else if (minPrice) {
+      query.price = { $gte: parseFloat(minPrice) };
+    } else if (maxPrice) {
+      query.price = { $lte: parseFloat(maxPrice) };
+    }
 
-if (search) {
+    if (size) {
+      query['sizes.size'] = size;
+    }
 
-  query.name = { $regex: search, $options: 'i' };
+    if (color) {
+      query.colors = { $in: [color] };
+    }
 
-}
+    if (category) {
+      query.category = category;
+    }
 
+    if (rating) {
+      query.rating = { $gte: parseFloat(rating) };
+    }
 
-if (minPrice && maxPrice) {
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-  query.price = {
+    // Sorting
+    const sort = sortBy ? { [sortBy]: sortOrder === 'desc' ? -1 : 1 } : { createdAt: -1 };
 
-    $gte: parseFloat(minPrice),
+    // Execute query with population, pagination, and sorting
+    const shoes = await Shoe.find(query)
+      .populate('brand', 'name')
+      .populate('category', 'name')
+      .populate('colors', 'name')
+      .skip(skip)
+      .limit(limit)
+      .sort(sort);
 
-    $lte: parseFloat(maxPrice)
+    // Calculate total number of matching shoes
+    const totalShoes = await Shoe.countDocuments(query);
 
-  };
-
-} else if (minPrice) {
-
-  query.price = { $gte: parseFloat(minPrice) };
-
-} else if (maxPrice) {
-
-  query.price = { $lte: parseFloat(maxPrice) };
-
-}
-
-
-if (size) {
-
-  // Assumes that shoe sizes are stored inside an array of objects under 'sizes'
-
-  query['sizes.size'] = size;
-
-}
-
-
-if (color) {
-
-  // Matches if any one of the colors field contains the given value
-
-  query.colors = { $in: [color] };
-
-}
-
-
-if (category) {
-
-  query.category = category;
-
-}
-
-
-if (rating) {
-
-  // Ensure rating is a number. This finds shoes with rating greater than or equal to the given value.
-
-  query.rating = { $gte: parseFloat(rating) };
-
-}
-
-
-const shoes = await Shoe.find(query);
-
-res.json(shoes);
-
-} catch (err) {
-console.error("Error filtering shoes:", err);
-res.status(500).json({ message: 'Error filtering shoes' });
-}
+    res.json({
+      shoes,
+      currentPage: page,
+      totalPages: Math.ceil(totalShoes / limit),
+      totalShoes
+    });
+  } catch (err) {
+    console.error("Error filtering shoes:", err);
+    res.status(500).json({ message: 'Error filtering shoes' });
+  }
 };

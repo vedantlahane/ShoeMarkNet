@@ -1,4 +1,4 @@
-const Shoe = require('../../models/shoe');  // Your existing Shoe model
+const Shoe = require('../../models/Shoe');  // Your existing Shoe model
 const Order = require('../../models/order'); // You'll need to create this
 
 exports.getDashboardStats = async (req, res) => {

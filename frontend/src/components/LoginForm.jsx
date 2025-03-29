@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const LoginForm = () => {
   const [credentials, setCredentials] = useState({
@@ -19,7 +20,7 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/data/auth/login', credentials);
+      const response = await axios.post('http://localhost:5000/api/data/auth/login', credentials);
       setMessage('Login successful!');
       localStorage.setItem('token', response.data.token);
       console.log('Logged in user:', response.data.user);
@@ -30,9 +31,9 @@ const LoginForm = () => {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      {message && <p>{message}</p>}
+    <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-2xl font-bold text-center mb-4">Login</h2>
+      {message && <p className="text-center text-green-600 mb-4">{message}</p>}
       <form onSubmit={handleSubmit}>
         <input
           type="email"
@@ -41,8 +42,8 @@ const LoginForm = () => {
           value={credentials.email}
           onChange={handleChange}
           required
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
-        <br/>
         <input
           type="password"
           name="password"
@@ -50,10 +51,18 @@ const LoginForm = () => {
           value={credentials.password}
           onChange={handleChange}
           required
+          className="w-full p-2 mb-4 border border-gray-300 rounded"
         />
-        <br/>
-        <button type="submit">Login</button>
+        <button
+          type="submit"
+          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Login
+        </button>
       </form>
+      <p className="text-center mt-4">
+        New user? <Link to="/register" className="text-blue-500 hover:underline">Register here</Link>
+      </p>
     </div>
   );
 };

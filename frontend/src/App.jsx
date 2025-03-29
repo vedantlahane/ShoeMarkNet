@@ -2,78 +2,60 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Cart, Home, Footer, Sales, Navbar } from "./components";
-import Explore from "./components/Explore.jsx";
-import Story from "./components/Story.jsx";
-import WorkInProgress from "./components/utils/WorkInProgress.jsx";
+import Explore from "./components/Explore";
+import WorkInProgress from "./components/utils/WorkInProgress";
 import AdminLayout from "./components/admin/AdminLayout";
-
 import Dashboard from "./components/admin/Dashboard";
-
 import Orders from "./components/admin/Orders";
-
 import Products from "./components/admin/Products";
+import LoginForm from "./components/LoginForm";
+import RegistrationForm from "./components/RegistrationForm";
+import ProtectedRoute from "./components/utils/ProtectedRoute";
+import ShoeDetail from "./components/ShoeDetail";
 
 const App = () => {
   const [backendData, setBackendData] = useState({
     homeapi: null,
     popularsales: null,
-    toprateslaes: null,
-    story: null,
+    topratesales: null,
     footerAPI: null,
   });
   const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const apiBaseUrl =
-    import.meta.env.MODE === "production"
-      ? import.meta.env.VITE_API_URL_PROD
-      : import.meta.env.VITE_API_URL_DEV;
+  const apiBaseUrl = import.meta.env.MODE === "production"
+    ? import.meta.env.VITE_API_URL_PROD
+    : import.meta.env.VITE_API_URL_DEV;
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true);
         const [
           homeapiRes,
           popularsalesRes,
-          toprateslaesRes,
-          storyRes,
+          topratesalesRes,
           footerAPIRes,
         ] = await Promise.all([
           axios.get(`${apiBaseUrl}/api/data/homeapi`),
           axios.get(`${apiBaseUrl}/api/data/popularsales`),
           axios.get(`${apiBaseUrl}/api/data/topratesales`),
-          axios.get(`${apiBaseUrl}/api/data/story`),
           axios.get(`${apiBaseUrl}/api/data/footerapi`),
         ]);
 
-        setBackendData({
+        setBackendData(prevData => ({
+          ...prevData,
           homeapi: homeapiRes.data,
           popularsales: popularsalesRes.data,
-          toprateslaes: toprateslaesRes.data,
-          story: storyRes.data,
+          topratesales: topratesalesRes.data,
           footerAPI: footerAPIRes.data,
-        });
+        }));
       } catch (err) {
         console.error("Error fetching backend data:", err);
         setError(err.message);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     loadData();
   }, [apiBaseUrl]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="p-4">
-          <h2 className="text-xl font-semibold">Loading data...</h2>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -91,48 +73,80 @@ const App = () => {
     );
   }
 
+  const isHomeDataLoaded = backendData.homeapi !== null;
+  const isSalesDataLoaded = backendData.popularsales !== null && backendData.topratesales !== null;
+  const isFooterDataLoaded = backendData.footerAPI !== null;
+
   return (
     <Router>
       <Navbar />
       <Cart />
       <WorkInProgress />
       <Routes>
+        {/* Home route is public */}
         <Route
           path="/"
           element={
             <main>
-              <Home homeapi={backendData.homeapi} />
-              <Sales endpoint={backendData.popularsales} ifExists />
-              <Sales endpoint={backendData.toprateslaes} />
+              {isHomeDataLoaded ? (
+                <Home homeapi={backendData.homeapi} />
+              ) : (
+                <div>Loading Home...</div>
+              )}
+              {isSalesDataLoaded ? (
+                <>
+                  <Sales endpoint={backendData.popularsales} ifExists />
+                  <Sales endpoint={backendData.topratesales} />
+                </>
+              ) : (
+                <div>Loading Sales...</div>
+              )}
             </main>
           }
         />
+        {/* Protected Shoe Detail Route */}
+        <Route
+          path="/shoe/:id"
+          element={
+            <ProtectedRoute>
+              <ShoeDetail />
+            </ProtectedRoute>
+          }
+        />
+        {/* Other protected routes */}
         <Route
           path="/explore"
           element={
-            <div>
-              <Explore endpoint={backendData.toprateslaes} />
-            </div>
+            <ProtectedRoute>
+              {isSalesDataLoaded ? (
+                <Explore endpoint={backendData.topratesales} />
+              ) : (
+                <div>Loading Explore...</div>
+              )}
+            </ProtectedRoute>
           }
         />
         <Route
-          path="/story"
+          path="/admin/*"
           element={
-            <div>
-              <Story story={backendData.story} />
-            </div>
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
           }
-        />
-        <Route path="/admin" element={<AdminLayout />}>
+        >
           <Route index element={<Dashboard />} />
-
           <Route path="orders" element={<Orders />} />
-
           <Route path="products" element={<Products />} />
         </Route>
+        {/* Public Authentication Routes */}
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegistrationForm />} />
       </Routes>
-
-      <Footer footerAPI={backendData.footerAPI} />
+      {isFooterDataLoaded ? (
+        <Footer footerAPI={backendData.footerAPI} />
+      ) : (
+        <div>Loading Footer...</div>
+      )}
     </Router>
   );
 };
