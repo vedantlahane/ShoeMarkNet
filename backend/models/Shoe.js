@@ -11,7 +11,7 @@ const ShoeSchema = new mongoose.Schema({
   tags: [{ type: String }], // Search-friendly keywords
   isNewArrival: { type: Boolean, default: false }, // New product flag
   featured: { type: Boolean, default: false }, // Featured product flag
-  sku: { type: String, unique: true }, // Unique SKU for inventory
+  sku: { type: String, unique: true }, // Unique SKU for inventory, sku is a common identifier for products ex: 'SNEAKER-1234'
 
   variants: [{
     color: { type: String, required: true },
