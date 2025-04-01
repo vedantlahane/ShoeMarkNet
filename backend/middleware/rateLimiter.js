@@ -1,5 +1,10 @@
-const rateLimit = require('express-rate-limit'); // Import rate limiting middleware
-const limiter = rateLimit({//rateLimit is a middleware function that limits repeated requests to APIs
-    windowMs: 15 * 60 * 1000, // 15-minute window, windowMs is a configuration option that specifies the time frame for which the maximum number of requests is allowed
-    max: 100 // Allow only 100 requests per IP per window
-  });
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  message: 'Too many requests from this IP, please try again later.',
+});
+
+// Apply to all requests
+module.exports = limiter;
