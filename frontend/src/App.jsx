@@ -1,43 +1,43 @@
 // src/App.jsx
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Provider, useDispatch } from 'react-redux';
 import store from './redux/store';
-import AppRoutes from './routes/AppRoutes';
+import { fetchCart } from './redux/slices/cartSlice';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
-import { useAuth } from './hooks/useAuth';
+import Home from './pages/Home';
+import NotFound from './pages/NotFound';
 
-// Wrapper component to use hooks
+// Separated component to use Redux hooks (inside Provider)
 const AppContent = () => {
-  const { isAuthenticated, fetchUserProfile } = useAuth();
-  
-  // Load user profile on app initialization if token exists
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserProfile();
-    }
-  }, [isAuthenticated, fetchUserProfile]);
+    dispatch(fetchCart());
+  }, [dispatch]);
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
-        <AppRoutes />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          {/* Add other routes here */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </main>
       <Footer />
     </div>
   );
 };
 
-const App = () => {
-  return (
-    <Provider store={store}>
-      <Router>
-        <AppContent />
-      </Router>
-    </Provider>
-  );
-};
+const App = () => (
+  <Provider store={store}>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  </Provider>
+);
 
 export default App;

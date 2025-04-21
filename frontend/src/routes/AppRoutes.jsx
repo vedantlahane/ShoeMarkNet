@@ -1,18 +1,18 @@
 // src/routes/AppRoutes.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Home from '../pages/Home';
+// import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Profile from '../pages/Profile';
-import NotFound from '../pages/NotFound';
+// import NotFound from '../pages/NotFound';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Home />} />
+      {/* <Route path="/" element={<Home />} /> */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       
@@ -23,7 +23,7 @@ const AppRoutes = () => {
       </Route>
       
       {/* 404 Route */}
-      <Route path="*" element={<NotFound />} />
+      {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>
   );
 };
