@@ -1,12 +1,15 @@
-// src/components/common/ProtectedRoute.jsx
+// src/components/common/AdminRoute.jsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-const ProtectedRoute = ({ children }) => {
+const AdminRoute = ({ children }) => {
   const location = useLocation();
   const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
   
+  // Check if the user has admin role
+  const isAdmin = user?.role === 'admin';
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -22,12 +25,16 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Redirect to login with return path
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} state={{ from: location }} replace />;
   }
 
-  // If authenticated, render the children
+  if (!isAdmin) {
+    // If user is not an admin, redirect to home
+    return <Navigate to="/" replace />;
+  }
+
+  // If user is authenticated and has admin role, render the children
   return children;
 };
 
-export default ProtectedRoute;
+export default AdminRoute;
