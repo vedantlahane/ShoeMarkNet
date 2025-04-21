@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import cartService from '../../services/cartService';
 
+// Fetch cart items
 export const fetchCart = createAsyncThunk(
   'cart/fetchCart',
   async (_, { rejectWithValue }) => {
@@ -13,6 +14,7 @@ export const fetchCart = createAsyncThunk(
   }
 );
 
+// Add item to cart
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
   async ({ productId, quantity }, { rejectWithValue }) => {
@@ -20,6 +22,30 @@ export const addToCart = createAsyncThunk(
       return await cartService.addToCart(productId, quantity);
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to add to cart' });
+    }
+  }
+);
+
+// Update cart item quantity
+export const updateCartItem = createAsyncThunk(
+  'cart/updateCartItem',
+  async ({ itemId, quantity }, { rejectWithValue }) => {
+    try {
+      return await cartService.updateCartItem(itemId, quantity);
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to update cart item' });
+    }
+  }
+);
+
+// Remove item from cart
+export const removeFromCart = createAsyncThunk(
+  'cart/removeFromCart',
+  async (itemId, { rejectWithValue }) => {
+    try {
+      return await cartService.removeFromCart(itemId);
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to remove item from cart' });
     }
   }
 );
@@ -64,9 +90,38 @@ const cartSlice = createSlice({
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      
+      // Update Cart Item
+      .addCase(updateCartItem.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateCartItem.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(updateCartItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Remove from Cart
+      .addCase(removeFromCart.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(removeFromCart.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(removeFromCart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
+
+// Export a selector to get cart items
+export const getCart = (state) => state.cart.items;
 
 export const { clearCartError } = cartSlice.actions;
 export default cartSlice.reducer;

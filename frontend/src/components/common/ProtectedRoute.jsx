@@ -1,33 +1,24 @@
 // src/components/common/ProtectedRoute.jsx
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import Loader from './Loader';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const location = useLocation();
   const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
   
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div 
-          className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
-          role="status"
-          aria-label="Loading"
-        >
-          <span className="sr-only">Loading...</span>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
-
+  
   if (!isAuthenticated) {
     // Redirect to login with return path
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} state={{ from: location }} replace />;
   }
-
-  // If authenticated, render the children
-  return children;
+  
+  // If authenticated, render the child routes
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

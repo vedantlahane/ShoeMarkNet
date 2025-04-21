@@ -25,6 +25,28 @@ export const fetchCategories = createAsyncThunk(
   }
 );
 
+export const fetchProductById = createAsyncThunk(
+  'product/fetchProductById',
+  async (id, { rejectWithValue }) => {
+    try {
+      return await productService.getProductById(id);
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch product details' });
+    }
+  }
+);
+
+export const createReview = createAsyncThunk(
+  'product/createReview',
+  async ({ productId, reviewData }, { rejectWithValue }) => {
+    try {
+      return await productService.createReview(productId, reviewData);
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to submit review' });
+    }
+  }
+);
+
 const initialState = {
   featuredProducts: [],
   categories: [],
@@ -66,6 +88,37 @@ const productSlice = createSlice({
         state.categories = action.payload;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Single Product
+      .addCase(fetchProductById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.product = action.payload;
+      })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Create Review
+      .addCase(createReview.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createReview.fulfilled, (state, action) => {
+        state.loading = false;
+        // If the current product is being reviewed, update its reviews
+        if (state.product && state.product._id === action.payload.productId) {
+          state.product.reviews = action.payload.reviews;
+          state.product.rating = action.payload.rating;
+          state.product.numReviews = action.payload.numReviews;
+        }
+      })
+      .addCase(createReview.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

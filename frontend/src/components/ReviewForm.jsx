@@ -1,6 +1,7 @@
 // src/components/ReviewForm.jsx
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { FaStar } from 'react-icons/fa';
 import { createReview } from '../redux/slices/productSlice';
 
@@ -57,6 +58,7 @@ const ReviewForm = ({ productId }) => {
         // Reset form on success
         setRating(0);
         setComment('');
+        setHoveredRating(0);
         setSuccess('Your review has been submitted successfully!');
         
         // Clear success message after 3 seconds
@@ -64,9 +66,14 @@ const ReviewForm = ({ productId }) => {
           setSuccess('');
         }, 3000);
       } else {
-        setError(resultAction.error.message || 'Failed to submit review');
+        // Handle rejected action
+        const errorMessage = resultAction.payload?.message || 
+                            resultAction.error?.message || 
+                            'Failed to submit review';
+        setError(errorMessage);
       }
     } catch (err) {
+      console.error('Review submission error:', err);
       setError('An error occurred while submitting your review');
     }
   };
@@ -77,52 +84,55 @@ const ReviewForm = ({ productId }) => {
       
       {!user ? (
         <p className="text-gray-600 mb-4">
-          Please <a href="/login" className="text-blue-500 hover:underline">sign in</a> to write a review.
+          Please <Link to="/login" className="text-blue-500 hover:underline">sign in</Link> to write a review.
         </p>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-label="Review submission form">
           {/* Error message */}
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+              <span className="block">{error}</span>
             </div>
           )}
           
           {/* Success message */}
           {success && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-              {success}
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="status">
+              <span className="block">{success}</span>
             </div>
           )}
           
           {/* Rating selection */}
           <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">Rating</label>
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  className="focus:outline-none mr-1"
-                  onMouseEnter={() => handleStarHover(star)}
-                  onMouseLeave={() => handleStarHover(0)}
-                  onClick={() => handleStarClick(star)}
-                  aria-label={`${star} Star${star !== 1 ? 's' : ''}`}
-                >
-                  <FaStar
-                    size={24}
-                    className={`${
-                      star <= (hoveredRating || rating)
-                        ? 'text-yellow-400'
-                        : 'text-gray-300'
-                    } transition-colors duration-150`}
-                  />
-                </button>
-              ))}
-              <span className="ml-2 text-gray-600">
-                {rating > 0 ? `${rating} star${rating !== 1 ? 's' : ''}` : 'Select a rating'}
-              </span>
-            </div>
+            <fieldset>
+              <legend className="block text-gray-700 font-medium mb-2">Rating</legend>
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className="focus:outline-none focus:ring-2 focus:ring-blue-500 mr-1"
+                    onMouseEnter={() => handleStarHover(star)}
+                    onMouseLeave={() => handleStarHover(0)}
+                    onClick={() => handleStarClick(star)}
+                    aria-label={`${star} Star${star !== 1 ? 's' : ''}`}
+                    aria-pressed={rating === star}
+                  >
+                    <FaStar
+                      size={24}
+                      className={`${
+                        star <= (hoveredRating || rating)
+                          ? 'text-yellow-400'
+                          : 'text-gray-300'
+                      } transition-colors duration-150`}
+                    />
+                  </button>
+                ))}
+                <span className="ml-2 text-gray-600" aria-live="polite">
+                  {rating > 0 ? `${rating} star${rating !== 1 ? 's' : ''}` : 'Select a rating'}
+                </span>
+              </div>
+            </fieldset>
           </div>
           
           {/* Comment input */}
@@ -138,7 +148,12 @@ const ReviewForm = ({ productId }) => {
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share your experience with this product..."
               required
+              minLength="5"
+              aria-describedby="commentHint"
             ></textarea>
+            <p id="commentHint" className="text-sm text-gray-500 mt-1">
+              Please provide at least 5 characters
+            </p>
           </div>
           
           {/* Submit button */}
@@ -150,6 +165,7 @@ const ReviewForm = ({ productId }) => {
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             } transition-colors duration-150`}
+            aria-busy={loading}
           >
             {loading ? 'Submitting...' : 'Submit Review'}
           </button>
