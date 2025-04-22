@@ -1,17 +1,29 @@
 const express = require('express');
-const { createOrder, getUserOrders, updateOrderStatus } = require('../controllers/orderController');
+const {
+  createOrder,
+  getUserOrders,
+  getOrderById,
+  updateOrderPayment,
+  cancelOrder,
+  getAllOrders,
+  updateOrderStatus,
+  deleteOrder
+} = require('../controllers/orderController');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 
-// Route to create a new order (User must be authenticated)
+// User routes (protected)
 router.post('/', authMiddleware, createOrder);
-
-// Route to get all orders for the logged-in user (protected)
 router.get('/', authMiddleware, getUserOrders);
+router.get('/:orderId', authMiddleware, getOrderById);
+router.put('/:orderId/pay', authMiddleware, updateOrderPayment);
+router.put('/:orderId/cancel', authMiddleware, cancelOrder);
 
-// Route to update order status (Admin only)
-router.put('/status', authMiddleware, adminMiddleware, updateOrderStatus);
+// Admin routes
+router.get('/admin/all', authMiddleware, adminMiddleware, getAllOrders);
+router.put('/admin/:orderId', authMiddleware, adminMiddleware, updateOrderStatus);
+router.delete('/admin/:orderId', authMiddleware, adminMiddleware, deleteOrder);
 
 module.exports = router;

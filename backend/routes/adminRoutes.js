@@ -1,11 +1,35 @@
 const express = require('express');
-// Import any admin-specific controller functions if needed
+const {
+  getDashboardStats,
+  getSalesReport,
+  getInventoryReport,
+  getCustomerAnalytics,
+  getLeadScoreData,
+  updateSettings,
+  createCampaign,
+  getCampaigns,
+  deleteCampaign,
+  updateCampaign
+} = require('../controllers/adminController');
+const authMiddleware = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 
-// Example admin route to get all users (Admin only)
-// router.get('/users', authMiddleware, adminMiddleware, getAllUsers);
+// All admin routes require authentication and admin privileges
+router.use(authMiddleware, adminMiddleware);
 
-// Additional admin routes can be added here
+router.get('/dashboard', getDashboardStats);
+router.get('/reports/sales', getSalesReport);
+router.get('/reports/inventory', getInventoryReport);
+router.get('/analytics/customers', getCustomerAnalytics);
+router.get('/leads', getLeadScoreData);
+router.put('/settings', updateSettings);
+
+// Campaign routes
+router.get('/campaigns', getCampaigns);
+router.post('/campaigns', createCampaign);
+router.put('/campaigns/:id', updateCampaign);
+router.delete('/campaigns/:id', deleteCampaign);
 
 module.exports = router;

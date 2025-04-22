@@ -2,32 +2,34 @@ const express = require('express');
 const {
   createProduct,
   getAllProducts,
+  getFeaturedProducts,
   getProductById,
   updateProduct,
   deleteProduct,
-  addToCart,
+  createProductReview,
+  getProductReviews,
+  updateProductReview,
+  deleteProductReview
 } = require('../controllers/productController');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 
-// Route to create a new product (Admin only)
-router.post('/', authMiddleware, adminMiddleware, createProduct);
-
-// Route to get all products
+// Public routes
 router.get('/', getAllProducts);
-
-// Route to get a single product by ID
+router.get('/featured', getFeaturedProducts);
 router.get('/:id', getProductById);
+router.get('/:id/reviews', getProductReviews);
 
-// Route to update a product (Admin only)
+// Protected routes
+router.post('/', authMiddleware, adminMiddleware, createProduct);
 router.put('/:id', authMiddleware, adminMiddleware, updateProduct);
-
-// Route to delete a product (Admin only)
 router.delete('/:id', authMiddleware, adminMiddleware, deleteProduct);
 
-// Route to add product to cart (User must be authenticated)
-router.post('/cart', authMiddleware, addToCart);
+// Review routes
+router.post('/:id/reviews', authMiddleware, createProductReview);
+router.put('/:id/reviews/:reviewId', authMiddleware, updateProductReview);
+router.delete('/:id/reviews/:reviewId', authMiddleware, deleteProductReview);
 
 module.exports = router;
