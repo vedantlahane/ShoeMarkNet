@@ -1,48 +1,68 @@
 // src/redux/slices/productSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import productService from '../../services/productService';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import productService from "../../services/productService";
 
 // Async thunks
 export const fetchFeaturedProducts = createAsyncThunk(
-  'product/fetchFeatured',
+  "product/fetchFeatured",
   async (_, { rejectWithValue }) => {
     try {
       return await productService.getFeaturedProducts();
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch featured products' });
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to fetch featured products" }
+      );
     }
   }
 );
 
 export const fetchCategories = createAsyncThunk(
-  'product/fetchCategories',
+  "product/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
       return await productService.getCategories();
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch categories' });
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to fetch categories" }
+      );
     }
   }
 );
 
 export const fetchProductById = createAsyncThunk(
-  'product/fetchProductById',
+  "product/fetchProductById",
   async (id, { rejectWithValue }) => {
     try {
       return await productService.getProductById(id);
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch product details' });
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to fetch product details" }
+      );
+    }
+  }
+);
+
+// Add this to your existing async thunks in productSlice.js
+export const fetchProducts = createAsyncThunk(
+  'product/fetchProducts',
+  async (filters = {}, { rejectWithValue }) => {
+    try {
+      return await productService.getProducts(filters);
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to fetch products' });
     }
   }
 );
 
 export const createReview = createAsyncThunk(
-  'product/createReview',
+  "product/createReview",
   async ({ productId, reviewData }, { rejectWithValue }) => {
     try {
       return await productService.createReview(productId, reviewData);
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to submit review' });
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to submit review" }
+      );
     }
   }
 );
@@ -57,7 +77,7 @@ const initialState = {
 };
 
 const productSlice = createSlice({
-  name: 'product',
+  name: "product",
   initialState,
   reducers: {
     clearProductError: (state) => {
@@ -78,7 +98,7 @@ const productSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       // Categories
       .addCase(fetchCategories.pending, (state) => {
         state.loading = true;
@@ -91,7 +111,20 @@ const productSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
+      // Add these cases to your existing extraReducers builder
+      .addCase(fetchProducts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload;
+      })
+      .addCase(fetchProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
       // Single Product
       .addCase(fetchProductById.pending, (state) => {
         state.loading = true;
@@ -104,7 +137,7 @@ const productSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       // Create Review
       .addCase(createReview.pending, (state) => {
         state.loading = true;
