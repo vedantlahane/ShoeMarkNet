@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchProducts } from '../redux/slices/productSlice';
 import { fetchOrders } from '../redux/slices/orderSlice';
-import { fetchUsers } from '../redux/slices/userSlice';
+import { fetchUsers } from '../redux/slices/authSlice';
 
 // Dashboard sections
 import DashboardOverview from '../components/admin/DashboardOverview';

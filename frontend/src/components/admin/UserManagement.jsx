@@ -1,7 +1,7 @@
 // src/components/admin/UserManagement.jsx
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUser, deleteUser } from '../../redux/slices/userSlice';
+import { updateUser, deleteUser } from '../../redux/slices/authSlice';
 
 const UserManagement = () => {
   const dispatch = useDispatch();

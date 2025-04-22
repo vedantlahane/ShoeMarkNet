@@ -2,7 +2,6 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import Loader from './Loader';
 
 const AdminRoute = () => {
   const location = useLocation();
@@ -10,7 +9,11 @@ const AdminRoute = () => {
   const isAdmin = user?.role === 'admin';
   
   if (loading) {
-    return <Loader />;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
   
   if (!isAuthenticated) {
@@ -22,7 +25,6 @@ const AdminRoute = () => {
     return <Navigate to="/" replace />;
   }
   
-  // If user is authenticated and has admin role, render the child routes
   return <Outlet />;
 };
 

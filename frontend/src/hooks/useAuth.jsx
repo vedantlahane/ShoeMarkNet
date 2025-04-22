@@ -1,33 +1,36 @@
-// src/hooks/useAuth.jsx
-import { useEffect } from 'react';
+// src/hooks/useAuth.js
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  registerUser, 
-  loginUser, 
-  fetchUserProfile, 
-  logout, 
-  clearError 
-} from '../redux/slices/authSlice';
+import { loginUser, registerUser, refreshToken, logout, clearError } from '../redux/slices/authSlice';
 
 export const useAuth = () => {
   const dispatch = useDispatch();
-  const { user, isAuthenticated, loading, error, token } = useSelector(
-    (state) => state.auth
-  );
+  const { user, isAuthenticated, loading, error } = useSelector(state => state.auth);
 
-  // Fetch user profile on mount if authenticated
-  useEffect(() => {
-    if (isAuthenticated && !user) {
-      dispatch(fetchUserProfile());
+  const login = async (credentials) => {
+    try {
+      await dispatch(loginUser(credentials)).unwrap();
+      return true;
+    } catch (err) {
+      return false;
     }
-  }, [isAuthenticated, user, dispatch]);
-
-  const register = (userData) => {
-    return dispatch(registerUser(userData));
   };
 
-  const login = (email, password) => {
-    return dispatch(loginUser({ email, password }));
+  const register = async (userData) => {
+    try {
+      await dispatch(registerUser(userData)).unwrap();
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const refresh = async (refreshTokenValue) => {
+    try {
+      await dispatch(refreshToken(refreshTokenValue)).unwrap();
+      return true;
+    } catch (err) {
+      return false;
+    }
   };
 
   const logoutUser = () => {
@@ -43,10 +46,10 @@ export const useAuth = () => {
     isAuthenticated,
     loading,
     error,
-    token,
-    register,
     login,
+    register,
+    refresh,
     logout: logoutUser,
-    clearError: clearAuthError,
+    clearError: clearAuthError
   };
 };

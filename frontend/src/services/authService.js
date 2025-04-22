@@ -1,37 +1,58 @@
 import api from "../utils/api";
 
-export const login = async (email, password) => {
-    const response = api.post('/auth/login', {email, password});
+// Login user
+const login = async (email, password) => {
+    const response = await api.post('/auth/login', {email, password});
     if(response.data.token){
         localStorage.setItem("token", response.data.token);
+        if(response.data.refreshToken) {
+            localStorage.setItem("refreshToken", response.data.refreshToken);
+        }
     }
     return response.data;
 };
 
-export const register = async (uiserData) => {
-    const response = api.post('auth/register',uiserData);
+// Register user
+const register = async (userData) => {
+    const response = await api.post('/auth/register', userData);
     if(response.data.token){
         localStorage.setItem("token", response.data.token);
+        if(response.data.refreshToken) {
+            localStorage.setItem("refreshToken", response.data.refreshToken);
+        }
     }
     return response.data;
-}
+};
 
-export const getPropile = async () => {
-    const response = api.get('auth/profile');
+// Get user profile
+const getProfile = async () => {
+    const response = await api.get('/auth/profile');
     return response.data;
-}
+};
 
-export const logout = () => {
+// Logout user
+const logoutUser = () => {
     localStorage.removeItem("token");
-}
+    localStorage.removeItem("refreshToken");
+};
 
-const refreshToken = async (refreshToken) => {
-    const response = await api.post('/auth/refresh-token', { refreshToken });
+// Refresh token
+const refreshToken = async (refreshTokenValue) => {
+    const response = await api.post('/auth/refresh-token', { refreshToken: refreshTokenValue });
+    return response.data;
+};
+const getAllUsers = async () => {
+    const response = await api.get('/admin/users');
     return response.data;
   };
-  const authService = {
-    // Existing methods...
+// Create a single authService object with all methods
+const authService = {
+    login,
+    register,
+    getProfile,
+    logoutUser,
     refreshToken,
-  };
-  
-  export default authService;
+    getAllUsers
+};
+
+export default authService;
