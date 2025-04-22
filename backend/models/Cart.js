@@ -3,21 +3,20 @@ const mongoose = require('mongoose');
 const CartSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   items: [{
-    shoe: { type: mongoose.Schema.Types.ObjectId, ref: 'Shoe', required: true },
-    color: { type: String, required: true }, // Selected color
-    size: { type: Number, required: true }, // Selected size
+    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, min: 1 },
-    priceAtTimeOfAdding: { type: Number, required: true }, // Store price at time of adding
-    discount: { type: Number, default: 0 }, // Store any applied discount
+    color: { type: String },
+    size: { type: Number },
+    price: { type: Number }, // Price at time of adding
   }],
+  totalPrice: { type: Number, default: 0 },
 }, { timestamps: true });
 
-// Virtual field to calculate total cart price
-CartSchema.virtual('totalPrice').get(function () {
-  return this.items.reduce((total, item) => {
-    const discountedPrice = item.priceAtTimeOfAdding - (item.discount || 0);
-    return total + discountedPrice * item.quantity;
+// Method to recalculate total price
+CartSchema.methods.calculateTotalPrice = function() {
+  this.totalPrice = this.items.reduce((total, item) => {
+    return total + (item.price * item.quantity);
   }, 0);
-});
+};
 
 module.exports = mongoose.model('Cart', CartSchema);
