@@ -2,20 +2,47 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const authMiddleware = async (req, res, next) => {
-  const token = req.headers.authorization && req.headers.authorization.startsWith('Bearer')
-    ? req.headers.authorization.split(' ')[1]
-    : null;
-
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized, no token provided' });
-  }
-
   try {
+    // Get token from header
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ message: 'No authentication token, access denied' });
+    }
+    
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password'); // Attach user info to request
-    next(); // Proceed to the next middleware or route handler
+    
+    // Find user by id
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Token is invalid or user does not exist' });
+    }
+    
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'User account is deactivated' });
+    }
+    
+    // Update last login time if it's been more than a day
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (!user.lastLogin || user.lastLogin < oneDayAgo) {
+      user.lastLogin = Date.now();
+      await user.save();
+    }
+    
+    // Add user to request
+    req.user = user;
+    next();
   } catch (error) {
-    res.status(401).json({ message: 'Unauthorized, invalid token' });
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token has expired' });
+    }
+    res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };
 

@@ -1,8 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const mongoose = require('mongoose');
+const path = require('path');
 const dotenv = require('dotenv');
+
+// Load environment variables
+dotenv.config();
+
+// Import database connection
+const connectDB = require('./utils/database');
 
 // Import routes
 const productRoutes = require('./routes/productRoutes');
@@ -16,16 +22,30 @@ const searchRoutes = require('./routes/searchRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 
-// Load environment variables
-dotenv.config();
+// Import middleware
+const { errorMiddleware, notFound } = require('./middleware/errorMiddleware');
+const { apiLimiter } = require('./middleware/rateLimitMiddleware');
+
+// Connect to MongoDB
+connectDB();
 
 // Initialize express app
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+}));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
+
+// Set static folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Apply rate limiting to all requests
+app.use(apiLimiter);
 
 // Routes
 app.use('/api/products', productRoutes);
@@ -39,26 +59,24 @@ app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reviews', reviewRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
-    message: err.message || 'Internal Server Error',
-    stack: process.env.NODE_ENV === 'development' ? err.stack : {}
-  });
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    // Start server
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
+// Error handling middleware
+app.use(notFound);
+app.use(errorMiddleware);
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.log(`Error: ${err.message}`);
+  // Close server & exit process
+  process.exit(1);
+});
