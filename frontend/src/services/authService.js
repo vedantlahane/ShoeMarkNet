@@ -41,6 +41,10 @@ const refreshToken = async (refreshTokenValue) => {
     const response = await api.post('/auth/refresh-token', { refreshToken: refreshTokenValue });
     return response.data;
 };
+const deleteUser = async (userId) => {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  };
 const getAllUsers = async () => {
     const response = await api.get('/admin/users');
     return response.data;
@@ -52,7 +56,8 @@ const authService = {
     getProfile,
     logoutUser,
     refreshToken,
-    getAllUsers
+    getAllUsers,
+    deleteUser,
 };
 
 export default authService;

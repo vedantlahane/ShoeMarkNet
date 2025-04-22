@@ -25,6 +25,18 @@ export const fetchOrderById = createAsyncThunk(
     }
   }
 );
+// Add this async thunk to your orderSlice.js file
+export const updateOrderStatus = createAsyncThunk(
+  'order/updateOrderStatus',
+  async ({ orderId, updates }, { rejectWithValue }) => {
+    try {
+      // You'll need to add this method to your orderService
+      return await orderService.updateOrderStatus(orderId, updates);
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to update order status' });
+    }
+  }
+);
 
 // Async thunk to create a new order
 export const createOrder = createAsyncThunk(
@@ -110,7 +122,31 @@ const orderSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+      // Add these cases to your extraReducers builder in orderSlice.js
+.addCase(updateOrderStatus.pending, (state) => {
+  state.loading = true;
+})
+.addCase(updateOrderStatus.fulfilled, (state, action) => {
+  state.loading = false;
+  state.success = true;
+  
+  // If the updated order is the currently selected order, update it
+  if (state.order && state.order._id === action.payload._id) {
+    state.order = action.payload;
+  }
+  
+  // Update the order in the orders array
+  if (state.orders.length > 0) {
+    state.orders = state.orders.map(order => 
+      order._id === action.payload._id ? action.payload : order
+    );
+  }
+})
+.addCase(updateOrderStatus.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
+
       // Pay Order
       .addCase(payOrder.pending, (state) => {
         state.loading = true;

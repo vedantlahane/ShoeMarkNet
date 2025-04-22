@@ -51,12 +51,18 @@ const cancelOrder = async (orderId) => {
   return response.data;
 };
 
+
+const updateOrderStatus = async (orderId, updates) => {
+  const response = await api.put(`/orders/${orderId}/status`, updates);
+  return response.data;
+};
 const orderService = {
   getUserOrders,
   getOrderById,
   createOrder,
   updateOrderPayment,
   cancelOrder,
+  updateOrderStatus,
 };
 
 export default orderService;

@@ -14,6 +14,20 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// Add this to your authSlice.js
+export const deleteUser = createAsyncThunk(
+  'auth/deleteUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      await authService.deleteUser(userId);
+      return userId; // Return the ID for the reducer to filter out the deleted user
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete user');
+    }
+  }
+);
+
+
 // Add a refresh token thunk
 export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
@@ -100,7 +114,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+      // Add these cases to your extraReducers builder in authSlice.js
+.addCase(deleteUser.pending, (state) => {
+  state.loading = true;
+})
+.addCase(deleteUser.fulfilled, (state, action) => {
+  state.loading = false;
+  // Remove the deleted user from the users array
+  state.users = state.users.filter(user => user._id !== action.payload);
+})
+.addCase(deleteUser.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
+
       // Add cases for register
     .addCase(registerUser.pending, (state) => {
       state.loading = true;
