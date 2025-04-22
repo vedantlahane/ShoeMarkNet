@@ -42,17 +42,46 @@ export const fetchProductById = createAsyncThunk(
   }
 );
 
-// Add this to your existing async thunks in productSlice.js
 export const fetchProducts = createAsyncThunk(
   'product/fetchProducts',
   async (filters = {}, { rejectWithValue }) => {
     try {
-      return await productService.getProducts(filters);
+      const response = await productService.getProducts(filters);
+      
+      // Check if response is an object but not an array
+      if (response && typeof response === 'object' && !Array.isArray(response)) {
+        // If response has a products property that is an array, return that
+        if (Array.isArray(response.products)) {
+          return response.products;
+        }
+        
+        // If response has a data property that is an array, return that
+        if (response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        
+        // If response is an object of products, convert to array
+        if (Object.keys(response).length > 0) {
+          return Object.keys(response).map(key => ({
+            _id: key,
+            ...response[key]
+          }));
+        }
+      }
+      
+      // If response is already an array, return it
+      if (Array.isArray(response)) {
+        return response;
+      }
+      
+      // Default to empty array if none of the above conditions are met
+      return [];
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to fetch products' });
     }
   }
 );
+
 
 export const createReview = createAsyncThunk(
   "product/createReview",

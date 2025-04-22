@@ -1,110 +1,65 @@
 // src/redux/slices/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import * as authService from '../../services/authService';
+import authService from '../../services/authService';
 
-// Async thunks
-export const registerUser = createAsyncThunk(
-  'auth/register',
-  async (userData, { rejectWithValue }) => {
+// Existing login and register thunks...
+
+// Add a refresh token thunk
+export const refreshToken = createAsyncThunk(
+  'auth/refreshToken',
+  async (refreshToken, { rejectWithValue }) => {
     try {
-      return await authService.register(userData);
+      return await authService.refreshToken(refreshToken);
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { message: 'Token refresh failed' });
     }
   }
 );
 
-export const loginUser = createAsyncThunk(
-  'auth/login',
-  async ({ email, password }, { rejectWithValue }) => {
-    try {
-      return await authService.login(email, password);
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-export const fetchUserProfile = createAsyncThunk(
-  'auth/profile',
-  async (_, { rejectWithValue }) => {
-    try {
-      return await authService.getProfile();
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-// Initial state
 const initialState = {
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  isAuthenticated: false,
   loading: false,
   error: null,
 };
 
-// Auth slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
     logout: (state) => {
-      authService.logout();
       state.user = null;
-      state.token = null;
       state.isAuthenticated = false;
-      state.error = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
     },
     clearError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
+    // Existing cases for login and register...
+    
+    // Add cases for token refresh
     builder
-      // Register cases
-      .addCase(registerUser.pending, (state) => {
+      .addCase(refreshToken.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(refreshToken.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = true;
-        state.token = action.payload.token;
+        // Update tokens in localStorage
+        localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
-      .addCase(registerUser.rejected, (state, action) => {
+      .addCase(refreshToken.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || { message: 'Registration failed' };
-      })
-      
-      // Login cases
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || { message: 'Login failed' };
-      })
-      
-      // Profile cases
-      .addCase(fetchUserProfile.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-      })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || { message: 'Failed to fetch profile' };
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload;
+        // Clear tokens from localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
       });
   },
 });

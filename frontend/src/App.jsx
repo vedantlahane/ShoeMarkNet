@@ -44,7 +44,6 @@ const App = () => {
             <Route path="products/:id" element={<ProductDetail />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
-
             {/* Protected user routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="profile" element={<Profile />} />
@@ -52,15 +51,22 @@ const App = () => {
               <Route path="cart" element={<Cart />} />
               <Route path="wishlist" element={<Wishlist />} />
             </Route>
-
-            {/* Admin routes */}
-            {/* <Route element={<AdminRoute />}>
-              <Route path="admin" element={<AdminDashboard />} />
-              <Route path="admin/products" element={<AdminDashboard section="products" />} />
-              <Route path="admin/orders" element={<AdminDashboard section="orders" />} />
-              <Route path="admin/users" element={<AdminDashboard section="users" />} />
-            </Route> */}
-
+            // In your AppRoutes.jsx or similar file
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route
+                path="/admin/products"
+                element={<AdminDashboard section="products" />}
+              />
+              <Route
+                path="/admin/orders"
+                element={<AdminDashboard section="orders" />}
+              />
+              <Route
+                path="/admin/users"
+                element={<AdminDashboard section="users" />}
+              />
+            </Route>
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />
           </Route>

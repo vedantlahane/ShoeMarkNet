@@ -25,3 +25,13 @@ export const logout = () => {
     localStorage.removeItem("token");
 }
 
+const refreshToken = async (refreshToken) => {
+    const response = await api.post('/auth/refresh-token', { refreshToken });
+    return response.data;
+  };
+  const authService = {
+    // Existing methods...
+    refreshToken,
+  };
+  
+  export default authService;
