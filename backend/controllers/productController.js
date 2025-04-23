@@ -3,15 +3,23 @@ const Review = require('../models/Review');
 const { updateLeadScore } = require('./leadScoreController');
 
 // Create a new product (Admin)
+// In your createProduct controller
 const createProduct = async (req, res) => {
   try {
+    // Remove empty category field if present
+    if (req.body.category === '') {
+      delete req.body.category;
+    }
+    
     const product = new Product(req.body);
     await product.save();
     res.status(201).json({ message: 'Product created successfully', product });
   } catch (error) {
+    console.error('Product creation error:', error);
     res.status(500).json({ message: 'Error creating product', error: error.message });
   }
 };
+
 
 // Get all products with optional filters
 const getAllProducts = async (req, res) => {

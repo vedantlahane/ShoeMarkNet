@@ -6,7 +6,7 @@ const ProductSchema = new mongoose.Schema({
   slug: { type: String, unique: true },
   description: { type: String, required: true },
   brand: { type: String, required: true },
-  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: false },
   price: { type: Number, required: true }, // Current selling price
   originalPrice: { type: Number }, // Original price before discount
   discountPercentage: { type: Number, default: 0 },
@@ -41,8 +41,14 @@ const ProductSchema = new mongoose.Schema({
   metaKeywords: [{ type: String }],
   
   // Tracking fields
-  sku: { type: String, unique: true },
-  barcode: { type: String },
+  sku: {
+    type: String,
+    unique: true,
+    default: function() {
+      // Generate a unique SKU based on other fields or a random string
+      return 'SKU-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    }
+  },
   weight: { type: Number }, // Weight in grams
   dimensions: {
     length: { type: Number },

@@ -89,15 +89,32 @@ const createReview = async (productId, reviewData) => {
  * @param {Object} productData - Product information
  * @returns {Promise<Object>} Created product
  */
+// Update the createProduct method in productService.js
 const createProduct = async (productData) => {
   try {
-    const response = await api.post('/products', productData);
+    // For debugging
+    console.log('Sending product data:', JSON.stringify(productData));
+    
+    // Clean up the data before sending
+    const cleanedData = { ...productData };
+    
+    // Remove empty arrays
+    if (cleanedData.images && cleanedData.images.length === 0) {
+      delete cleanedData.images;
+    }
+    
+    if (cleanedData.variants && cleanedData.variants.length === 0) {
+      delete cleanedData.variants;
+    }
+    
+    const response = await api.post('/products', cleanedData);
     return response.data;
   } catch (error) {
-    console.error('Error creating product:', error);
+    console.error('Error creating product:', error.response?.data || error.message);
     throw error;
   }
 };
+
 
 /**
  * Update an existing product (admin only)

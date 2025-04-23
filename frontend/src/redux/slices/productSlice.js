@@ -181,10 +181,14 @@ const productSlice = createSlice({
       .addCase(createProduct.pending, (state) => {
         state.loading = true;
       })
-      .addCase(createProduct.fulfilled, (state, action) => {
-        state.loading = false;
-        state.products.push(action.payload);
-      })
+      // Update the createProduct.fulfilled case in your productSlice.js
+.addCase(createProduct.fulfilled, (state, action) => {
+  state.loading = false;
+  // The backend returns { message, product }, so we need to extract the product
+  const newProduct = action.payload.product || action.payload;
+  state.products.push(newProduct);
+})
+
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
