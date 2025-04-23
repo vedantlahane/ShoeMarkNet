@@ -4,7 +4,10 @@ const User = require('../models/User');
 const updateLeadScore = async (userId, action) => {
   try {
     const user = await User.findById(userId);
-    if (!user) return;
+    if (!user) {
+      console.warn(`User ${userId} not found for lead score update`);
+      return;
+    }
 
     let scoreChange = 0;
 

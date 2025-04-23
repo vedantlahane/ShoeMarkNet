@@ -45,6 +45,11 @@ const deleteUser = async (userId) => {
     const response = await api.delete(`/admin/users/${userId}`);
     return response.data;
   };
+
+  const updateUser = async (id, userData) => {
+    const response = await api.put(`/admin/users/${id}`, userData);
+    return response.data;
+  };
 const getAllUsers = async () => {
     const response = await api.get('/admin/users');
     return response.data;
@@ -58,6 +63,7 @@ const authService = {
     refreshToken,
     getAllUsers,
     deleteUser,
+    updateUser
 };
 
 export default authService;

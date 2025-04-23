@@ -1,9 +1,8 @@
-// src/pages/Cart.jsx
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaTrash, FaArrowLeft } from 'react-icons/fa';
-import { getCart, updateCartItem, removeFromCart } from '../redux/slices/cartSlice';
+import { fetchCart, updateCartItem, removeFromCart } from '../redux/slices/cartSlice';
 import Loader from '../components/common/Loader';
 
 const Cart = () => {
@@ -13,7 +12,9 @@ const Cart = () => {
   const { user } = useSelector((state) => state.auth);
 
   // Calculate cart totals
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = Array.isArray(items) 
+    ? items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    : 0;
   const shipping = subtotal > 100 ? 0 : 10; // Free shipping for orders over $100
   const tax = subtotal * 0.07; // 7% tax
   const total = subtotal + shipping + tax;
@@ -21,7 +22,7 @@ const Cart = () => {
   useEffect(() => {
     // Fetch cart data when component mounts
     if (user) {
-      dispatch(getCart());
+      dispatch(fetchCart());
     }
   }, [dispatch, user]);
 
@@ -56,11 +57,14 @@ const Cart = () => {
     );
   }
 
+  // Ensure items is an array
+  const cartItems = Array.isArray(items) ? items : [];
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Your Shopping Cart</h1>
       
-      {items.length === 0 ? (
+      {cartItems.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-xl text-gray-600 mb-6">Your cart is empty</p>
           <Link to="/products" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -83,7 +87,7 @@ const Cart = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
+                  {cartItems.map((item) => (
                     <tr key={item._id} className="border-b">
                       <td className="py-4">
                         <div className="flex items-center">

@@ -13,6 +13,18 @@ export const loginUser = createAsyncThunk(
     }
   }
 );
+// Add this to your authSlice.js
+export const updateUser = createAsyncThunk(
+  'auth/updateUser',
+  async ({ id, userData }, { rejectWithValue }) => {
+    try {
+      // You'll need to add this method to your authService
+      return await authService.updateUser(id, userData);
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update user');
+    }
+  }
+);
 
 // Add this to your authSlice.js
 export const deleteUser = createAsyncThunk(
@@ -127,6 +139,28 @@ const authSlice = createSlice({
   state.loading = false;
   state.error = action.payload;
 })
+
+// Add these cases to your extraReducers builder in authSlice.js
+.addCase(updateUser.pending, (state) => {
+  state.loading = true;
+})
+.addCase(updateUser.fulfilled, (state, action) => {
+  state.loading = false;
+  // Update the user in the users array
+  const index = state.users.findIndex(user => user._id === action.payload._id);
+  if (index !== -1) {
+    state.users[index] = action.payload;
+  }
+  // If the updated user is the currently logged-in user, update that too
+  if (state.user && state.user._id === action.payload._id) {
+    state.user = action.payload;
+  }
+})
+.addCase(updateUser.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
+
 
       // Add cases for register
     .addCase(registerUser.pending, (state) => {

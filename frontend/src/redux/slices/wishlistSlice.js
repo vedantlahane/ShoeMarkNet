@@ -37,11 +37,29 @@ export const removeFromWishlist = createAsyncThunk(
   }
 );
 
+// Helper function to ensure items is an array
+const ensureArray = (items) => {
+  if (Array.isArray(items)) {
+    return items;
+  }
+  if (items && typeof items === 'object' && items.items && Array.isArray(items.items)) {
+    return items.items;
+  }
+  return [];
+};
+
 // Initial state with localStorage persistence
 const getInitialState = () => {
-  const items = localStorage.getItem('wishlist') 
-    ? JSON.parse(localStorage.getItem('wishlist')) 
-    : [];
+  let items = [];
+  try {
+    const storedItems = localStorage.getItem('wishlist');
+    if (storedItems) {
+      const parsedItems = JSON.parse(storedItems);
+      items = ensureArray(parsedItems);
+    }
+  } catch (error) {
+    console.error('Error parsing wishlist from localStorage:', error);
+  }
   
   return {
     items,
@@ -70,8 +88,8 @@ const wishlistSlice = createSlice({
       })
       .addCase(fetchWishlist.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
-        localStorage.setItem('wishlist', JSON.stringify(action.payload));
+        state.items = ensureArray(action.payload);
+        localStorage.setItem('wishlist', JSON.stringify(state.items));
       })
       .addCase(fetchWishlist.rejected, (state, action) => {
         state.loading = false;
@@ -84,8 +102,8 @@ const wishlistSlice = createSlice({
       })
       .addCase(addToWishlist.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
-        localStorage.setItem('wishlist', JSON.stringify(action.payload));
+        state.items = ensureArray(action.payload);
+        localStorage.setItem('wishlist', JSON.stringify(state.items));
         toast.success('Item added to wishlist');
       })
       .addCase(addToWishlist.rejected, (state, action) => {
@@ -100,8 +118,8 @@ const wishlistSlice = createSlice({
       })
       .addCase(removeFromWishlist.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
-        localStorage.setItem('wishlist', JSON.stringify(action.payload));
+        state.items = ensureArray(action.payload);
+        localStorage.setItem('wishlist', JSON.stringify(state.items));
         toast.success('Item removed from wishlist');
       })
       .addCase(removeFromWishlist.rejected, (state, action) => {

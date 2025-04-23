@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema({
   },
   phone: { type: String },
   password: { type: String, required: true },
-  source: { type: String, enum: ['web', 'email', 'social_media', 'referral'], default: 'web' },
+  source: { type: String, enum: ['web', 'email', 'social_media', 'referral','direct','other','facebook','instagram','google'], default: 'web' },
   score: { type: Number, default: 0 }, // Lead score
   profilePic: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
