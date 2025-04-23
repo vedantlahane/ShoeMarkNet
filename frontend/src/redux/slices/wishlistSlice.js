@@ -1,134 +1,122 @@
 // src/redux/slices/wishlistSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import wishlistService from '../../services/wishlistService';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
-// Async thunks
+// Get wishlist from localStorage
+const wishlistItems = localStorage.getItem('wishlist')
+  ? JSON.parse(localStorage.getItem('wishlist'))
+  : [];
+
+const initialState = {
+  items: wishlistItems,
+  totalItems: wishlistItems.length,
+  loading: false,
+  error: null,
+};
+
+// Fetch wishlist
 export const fetchWishlist = createAsyncThunk(
   'wishlist/fetchWishlist',
   async (_, { rejectWithValue }) => {
     try {
       return await wishlistService.getWishlist();
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch wishlist' });
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch wishlist'
+      );
     }
   }
 );
 
+// Add to wishlist
 export const addToWishlist = createAsyncThunk(
   'wishlist/addToWishlist',
   async (productId, { rejectWithValue }) => {
     try {
       return await wishlistService.addToWishlist(productId);
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to add to wishlist' });
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to add to wishlist'
+      );
     }
   }
 );
 
+// Remove from wishlist
 export const removeFromWishlist = createAsyncThunk(
   'wishlist/removeFromWishlist',
   async (productId, { rejectWithValue }) => {
     try {
-      return await wishlistService.removeFromWishlist(productId);
+      await wishlistService.removeFromWishlist(productId);
+      return productId;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to remove from wishlist' });
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to remove from wishlist'
+      );
     }
   }
 );
 
-// Helper function to ensure items is an array
-const ensureArray = (items) => {
-  if (Array.isArray(items)) {
-    return items;
-  }
-  if (items && typeof items === 'object' && items.items && Array.isArray(items.items)) {
-    return items.items;
-  }
-  return [];
-};
-
-// Initial state with localStorage persistence
-const getInitialState = () => {
-  let items = [];
-  try {
-    const storedItems = localStorage.getItem('wishlist');
-    if (storedItems) {
-      const parsedItems = JSON.parse(storedItems);
-      items = ensureArray(parsedItems);
-    }
-  } catch (error) {
-    console.error('Error parsing wishlist from localStorage:', error);
-  }
-  
-  return {
-    items,
-    loading: false,
-    error: null,
-  };
-};
-
 const wishlistSlice = createSlice({
   name: 'wishlist',
-  initialState: getInitialState(),
+  initialState,
   reducers: {
-    clearWishlistError: (state) => {
-      state.error = null;
-    },
-    resetWishlist: (state) => {
+    clearWishlist: (state) => {
       state.items = [];
+      state.totalItems = 0;
       localStorage.removeItem('wishlist');
     },
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Wishlist
+      // Fetch wishlist
       .addCase(fetchWishlist.pending, (state) => {
         state.loading = true;
       })
       .addCase(fetchWishlist.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = ensureArray(action.payload);
-        localStorage.setItem('wishlist', JSON.stringify(state.items));
+        state.items = action.payload;
+        state.totalItems = action.payload.length;
+        localStorage.setItem('wishlist', JSON.stringify(action.payload));
       })
       .addCase(fetchWishlist.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
       
-      // Add to Wishlist
+      // Add to wishlist
       .addCase(addToWishlist.pending, (state) => {
         state.loading = true;
       })
       .addCase(addToWishlist.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = ensureArray(action.payload);
-        localStorage.setItem('wishlist', JSON.stringify(state.items));
+        state.items = action.payload;
+        state.totalItems = action.payload.length;
+        localStorage.setItem('wishlist', JSON.stringify(action.payload));
         toast.success('Item added to wishlist');
       })
       .addCase(addToWishlist.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        toast.error(action.payload?.message || 'Failed to add to wishlist');
       })
       
-      // Remove from Wishlist
+      // Remove from wishlist
       .addCase(removeFromWishlist.pending, (state) => {
         state.loading = true;
       })
       .addCase(removeFromWishlist.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = ensureArray(action.payload);
+        state.items = state.items.filter(item => item._id !== action.payload);
+        state.totalItems = state.items.length;
         localStorage.setItem('wishlist', JSON.stringify(state.items));
-        toast.success('Item removed from wishlist');
       })
       .addCase(removeFromWishlist.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        toast.error(action.payload?.message || 'Failed to remove from wishlist');
       });
   },
 });
 
-export const { clearWishlistError, resetWishlist } = wishlistSlice.actions;
+export const { clearWishlist } = wishlistSlice.actions;
 export default wishlistSlice.reducer;

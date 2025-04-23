@@ -27,11 +27,19 @@ const getCart = async () => {
  * Add an item to the cart
  * @param {string} productId - The ID of the product to add
  * @param {number} quantity - The quantity to add
+ * @param {string} size - Optional size parameter
+ * @param {string} color - Optional color parameter
  * @returns {Promise<Array>} - Promise resolving to the updated cart items
  */
-const addToCart = async (productId, quantity) => {
+const addToCart = async (productId, quantity, size = null, color = null) => {
   try {
-    const response = await api.post('/cart', { productId, quantity });
+    const payload = { productId, quantity };
+    
+    // Add optional parameters if provided
+    if (size) payload.size = size;
+    if (color) payload.color = color;
+    
+    const response = await api.post('/cart', payload);
     
     // Handle different response structures
     if (response.data && Array.isArray(response.data)) {
@@ -56,6 +64,11 @@ const addToCart = async (productId, quantity) => {
  */
 const updateCartItem = async (itemId, quantity) => {
   try {
+    // Validate quantity
+    if (quantity < 1) {
+      throw new Error('Quantity must be at least 1');
+    }
+    
     const response = await api.put(`/cart/${itemId}`, { quantity });
     
     // Handle different response structures
@@ -97,11 +110,35 @@ const removeFromCart = async (itemId) => {
   }
 };
 
+/**
+ * Clear the entire cart
+ * @returns {Promise<Array>} - Promise resolving to an empty array
+ */
+const clearCart = async () => {
+  try {
+    const response = await api.delete('/cart');
+    
+    // Handle different response structures
+    if (response.data && Array.isArray(response.data)) {
+      return response.data;
+    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.items)) {
+      return response.data.items;
+    }
+    
+    // Default to empty array
+    return [];
+  } catch (error) {
+    console.error('Error clearing cart:', error);
+    throw error;
+  }
+};
+
 const cartService = {
   getCart,
   addToCart,
   updateCartItem,
   removeFromCart,
+  clearCart
 };
 
 export default cartService;

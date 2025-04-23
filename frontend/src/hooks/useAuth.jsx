@@ -1,55 +1,71 @@
 // src/hooks/useAuth.js
-import { useDispatch, useSelector } from 'react-redux';
-import { loginUser, registerUser, refreshToken, logout, clearError } from '../redux/slices/authSlice';
+import { useState, useEffect, useContext, createContext } from 'react';
+import api from '../utils/api';
+
+// Create a context for profile version
+const ProfileContext = createContext();
+
+export const ProfileProvider = ({ children }) => {
+  const [profileVersion, setProfileVersion] = useState(0);
+  
+  const refreshProfile = () => {
+    setProfileVersion(currentVersion => currentVersion + 1);
+  };
+  
+  return (
+    <ProfileContext.Provider value={{ profileVersion, refreshProfile }}>
+      {children}
+    </ProfileContext.Provider>
+  );
+};
 
 export const useAuth = () => {
-  const dispatch = useDispatch();
-  const { user, isAuthenticated, loading, error } = useSelector(state => state.auth);
-
-  const login = async (credentials) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { profileVersion, refreshProfile } = useContext(ProfileContext);
+  
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        const response = await api.get('/auth/profile');
+        setUser(response.data);
+        setError(null);
+      } catch (err) {
+        setError(err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [profileVersion]); // Re-fetch when profile version changes
+  
+  // Update user profile
+  const updateUserProfile = async ({ id, userData }) => {
     try {
-      await dispatch(loginUser(credentials)).unwrap();
-      return true;
+      const response = await api.put(`/users/${id}`, userData);
+      return response.data;
     } catch (err) {
-      return false;
+      throw err;
     }
   };
-
-  const register = async (userData) => {
-    try {
-      await dispatch(registerUser(userData)).unwrap();
-      return true;
-    } catch (err) {
-      return false;
-    }
-  };
-
-  const refresh = async (refreshTokenValue) => {
-    try {
-      await dispatch(refreshToken(refreshTokenValue)).unwrap();
-      return true;
-    } catch (err) {
-      return false;
-    }
-  };
-
-  const logoutUser = () => {
-    dispatch(logout());
-  };
-
-  const clearAuthError = () => {
-    dispatch(clearError());
-  };
-
+  
   return {
     user,
-    isAuthenticated,
     loading,
     error,
-    login,
-    register,
-    refresh,
-    logout: logoutUser,
-    clearError: clearAuthError
+    updateUserProfile,
+    refreshProfile
   };
 };
