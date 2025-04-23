@@ -51,13 +51,12 @@ const App = () => {
               <Route path="wishlist" element={<Wishlist />} />
             </Route>
             
-            {/* Admin routes */}
             <Route element={<AdminRoute />}>
-              <Route path="admin" element={<AdminDashboard />} />
-              <Route path="admin/products" element={<AdminDashboard section="products" />} />
-              <Route path="admin/orders" element={<AdminDashboard section="orders" />} />
-              <Route path="admin/users" element={<AdminDashboard section="users" />} />
-            </Route>
+    <Route path="/admin/*" element={<AdminDashboard />} />
+    <Route path="/admin/products" element={<AdminDashboard section="products" />} />
+    <Route path="/admin/orders" element={<AdminDashboard section="orders" />} />
+    <Route path="/admin/users" element={<AdminDashboard section="users" />} />
+  </Route>
             
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />
