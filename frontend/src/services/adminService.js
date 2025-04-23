@@ -6,8 +6,13 @@ import api from '../utils/api';
  * @returns {Promise} - Promise resolving to dashboard statistics
  */
 const getDashboardStats = async () => {
-  const response = await api.get('/admin/dashboard');
-  return response.data;
+  try {
+    const response = await api.get('/admin/dashboard');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
+  }
 };
 
 /**
@@ -16,15 +21,20 @@ const getDashboardStats = async () => {
  * @returns {Promise} - Promise resolving to sales report data
  */
 const getSalesReport = async (filters = {}) => {
-  const queryParams = new URLSearchParams();
-  
-  // Add filters to query params
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value) queryParams.append(key, value);
-  });
-  
-  const response = await api.get(`/admin/reports/sales?${queryParams.toString()}`);
-  return response.data;
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add filters to query params
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const response = await api.get(`/admin/reports/sales?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching sales report:', error);
+    throw error;
+  }
 };
 
 /**
@@ -32,8 +42,13 @@ const getSalesReport = async (filters = {}) => {
  * @returns {Promise} - Promise resolving to inventory data
  */
 const getInventoryReport = async () => {
-  const response = await api.get('/admin/reports/inventory');
-  return response.data;
+  try {
+    const response = await api.get('/admin/reports/inventory');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching inventory report:', error);
+    throw error;
+  }
 };
 
 /**
@@ -42,15 +57,20 @@ const getInventoryReport = async () => {
  * @returns {Promise} - Promise resolving to customer analytics data
  */
 const getCustomerAnalytics = async (filters = {}) => {
-  const queryParams = new URLSearchParams();
-  
-  // Add filters to query params
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value) queryParams.append(key, value);
-  });
-  
-  const response = await api.get(`/admin/analytics/customers?${queryParams.toString()}`);
-  return response.data;
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add filters to query params
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const response = await api.get(`/admin/analytics/customers?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching customer analytics:', error);
+    throw error;
+  }
 };
 
 /**
@@ -58,8 +78,13 @@ const getCustomerAnalytics = async (filters = {}) => {
  * @returns {Promise} - Promise resolving to lead scoring data
  */
 const getLeadScoreData = async () => {
-  const response = await api.get('/admin/leads');
-  return response.data;
+  try {
+    const response = await api.get('/admin/leads');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching lead score data:', error);
+    throw error;
+  }
 };
 
 /**
@@ -68,8 +93,13 @@ const getLeadScoreData = async () => {
  * @returns {Promise} - Promise resolving to updated settings
  */
 const updateSettings = async (settings) => {
-  const response = await api.put('/admin/settings', settings);
-  return response.data;
+  try {
+    const response = await api.put('/admin/settings', settings);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    throw error;
+  }
 };
 
 /**
@@ -78,17 +108,67 @@ const updateSettings = async (settings) => {
  * @returns {Promise} - Promise resolving to the created campaign
  */
 const createCampaign = async (campaignData) => {
-  const response = await api.post('/admin/campaigns', campaignData);
-  return response.data;
+  try {
+    const response = await api.post('/admin/campaigns', campaignData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating campaign:', error);
+    throw error;
+  }
 };
 
 /**
  * Get all promotional campaigns
+ * @param {Object} filters - Optional filters for campaigns
  * @returns {Promise} - Promise resolving to an array of campaigns
  */
-const getCampaigns = async () => {
-  const response = await api.get('/admin/campaigns');
-  return response.data;
+const getCampaigns = async (filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add filters to query params
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const url = queryParams.toString() ? `/admin/campaigns?${queryParams.toString()}` : '/admin/campaigns';
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching campaigns:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a campaign
+ * @param {string} campaignId - ID of the campaign to update
+ * @param {Object} campaignData - Updated campaign data
+ * @returns {Promise} - Promise resolving to the updated campaign
+ */
+const updateCampaign = async (campaignId, campaignData) => {
+  try {
+    const response = await api.put(`/admin/campaigns/${campaignId}`, campaignData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating campaign ${campaignId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a campaign
+ * @param {string} campaignId - ID of the campaign to delete
+ * @returns {Promise} - Promise resolving to success message
+ */
+const deleteCampaign = async (campaignId) => {
+  try {
+    const response = await api.delete(`/admin/campaigns/${campaignId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting campaign ${campaignId}:`, error);
+    throw error;
+  }
 };
 
 const adminService = {
@@ -99,7 +179,9 @@ const adminService = {
   getLeadScoreData,
   updateSettings,
   createCampaign,
-  getCampaigns
+  getCampaigns,
+  updateCampaign,
+  deleteCampaign
 };
 
 export default adminService;

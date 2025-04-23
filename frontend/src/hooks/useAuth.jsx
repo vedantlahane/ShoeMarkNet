@@ -1,9 +1,12 @@
 // src/hooks/useAuth.js
-import { useState, useEffect, useContext, createContext } from 'react';
+import { useState, useEffect, createContext } from 'react';
 import api from '../utils/api';
 
-// Create a context for profile version
-const ProfileContext = createContext();
+// Create a context for profile version (keep this for components that need it)
+export const ProfileContext = createContext({
+  profileVersion: 0,
+  refreshProfile: () => {}
+});
 
 export const ProfileProvider = ({ children }) => {
   const [profileVersion, setProfileVersion] = useState(0);
@@ -19,11 +22,24 @@ export const ProfileProvider = ({ children }) => {
   );
 };
 
+// Global version counter for profile refreshes
+let globalProfileVersion = 0;
+const refreshGlobalProfile = () => {
+  globalProfileVersion++;
+  return globalProfileVersion;
+};
+
 export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { profileVersion, refreshProfile } = useContext(ProfileContext);
+  const [profileVersion, setProfileVersion] = useState(globalProfileVersion);
+  
+  // Function to refresh profile that doesn't depend on context
+  const refreshProfile = () => {
+    const newVersion = refreshGlobalProfile();
+    setProfileVersion(newVersion);
+  };
   
   // Fetch user data
   useEffect(() => {

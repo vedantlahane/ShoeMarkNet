@@ -6,8 +6,13 @@ import api from '../utils/api';
  * @returns {Promise} - Promise resolving to the user profile data
  */
 const getUserProfile = async () => {
-  const response = await api.get('/users/profile');
-  return response.data;
+  try {
+    const response = await api.get('/users/profile');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
 };
 
 /**
@@ -16,8 +21,13 @@ const getUserProfile = async () => {
  * @returns {Promise} - Promise resolving to the updated user profile
  */
 const updateUserProfile = async (userData) => {
-  const response = await api.put('/users/profile', userData);
-  return response.data;
+  try {
+    const response = await api.put('/users/profile', userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
 };
 
 /**
@@ -26,8 +36,13 @@ const updateUserProfile = async (userData) => {
  * @returns {Promise} - Promise resolving to success message
  */
 const changePassword = async (passwordData) => {
-  const response = await api.put('/users/password', passwordData);
-  return response.data;
+  try {
+    const response = await api.put('/users/password', passwordData);
+    return response.data;
+  } catch (error) {
+    console.error('Error changing password:', error);
+    throw error;
+  }
 };
 
 /**
@@ -35,8 +50,13 @@ const changePassword = async (passwordData) => {
  * @returns {Promise} - Promise resolving to an array of addresses
  */
 const getUserAddresses = async () => {
-  const response = await api.get('/users/addresses');
-  return response.data;
+  try {
+    const response = await api.get('/users/addresses');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user addresses:', error);
+    throw error;
+  }
 };
 
 /**
@@ -45,8 +65,13 @@ const getUserAddresses = async () => {
  * @returns {Promise} - Promise resolving to the updated addresses list
  */
 const addUserAddress = async (addressData) => {
-  const response = await api.post('/users/addresses', addressData);
-  return response.data;
+  try {
+    const response = await api.post('/users/addresses', addressData);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding user address:', error);
+    throw error;
+  }
 };
 
 /**
@@ -56,8 +81,13 @@ const addUserAddress = async (addressData) => {
  * @returns {Promise} - Promise resolving to the updated address
  */
 const updateUserAddress = async (addressId, addressData) => {
-  const response = await api.put(`/users/addresses/${addressId}`, addressData);
-  return response.data;
+  try {
+    const response = await api.put(`/users/addresses/${addressId}`, addressData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating address ${addressId}:`, error);
+    throw error;
+  }
 };
 
 /**
@@ -66,8 +96,48 @@ const updateUserAddress = async (addressId, addressData) => {
  * @returns {Promise} - Promise resolving to the updated addresses list
  */
 const deleteUserAddress = async (addressId) => {
-  const response = await api.delete(`/users/addresses/${addressId}`);
-  return response.data;
+  try {
+    const response = await api.delete(`/users/addresses/${addressId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting address ${addressId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Get user's order history
+ * @param {Object} filters - Optional filters for orders
+ * @returns {Promise} - Promise resolving to an array of orders
+ */
+const getUserOrders = async (filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const response = await api.get(`/users/orders?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update user notification preferences
+ * @param {Object} preferences - Notification preferences
+ * @returns {Promise} - Promise resolving to updated preferences
+ */
+const updateNotificationPreferences = async (preferences) => {
+  try {
+    const response = await api.put('/users/notifications', preferences);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
+    throw error;
+  }
 };
 
 /**
@@ -76,15 +146,18 @@ const deleteUserAddress = async (addressId) => {
  * @returns {Promise} - Promise resolving to an array of users
  */
 const getAllUsers = async (filters = {}) => {
-  const queryParams = new URLSearchParams();
-  
-  // Add filters to query params
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value) queryParams.append(key, value);
-  });
-  
-  const response = await api.get(`/users/admin?${queryParams.toString()}`);
-  return response.data;
+  try {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const response = await api.get(`/admin/users?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    throw error;
+  }
 };
 
 /**
@@ -94,8 +167,13 @@ const getAllUsers = async (filters = {}) => {
  * @returns {Promise} - Promise resolving to the updated user
  */
 const updateUser = async (userId, userData) => {
-  const response = await api.put(`/users/admin/${userId}`, userData);
-  return response.data;
+  try {
+    const response = await api.put(`/admin/users/${userId}`, userData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating user ${userId}:`, error);
+    throw error;
+  }
 };
 
 /**
@@ -104,8 +182,13 @@ const updateUser = async (userId, userData) => {
  * @returns {Promise} - Promise resolving to success message
  */
 const deleteUser = async (userId) => {
-  const response = await api.delete(`/users/admin/${userId}`);
-  return response.data;
+  try {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting user ${userId}:`, error);
+    throw error;
+  }
 };
 
 const userService = {
@@ -116,6 +199,8 @@ const userService = {
   addUserAddress,
   updateUserAddress,
   deleteUserAddress,
+  getUserOrders,
+  updateNotificationPreferences,
   getAllUsers,
   updateUser,
   deleteUser
