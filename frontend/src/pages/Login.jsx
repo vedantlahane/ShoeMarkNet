@@ -15,38 +15,29 @@ const Login = () => {
   
   // Get redirect path from URL query parameters or state
   const searchParams = new URLSearchParams(location.search);
-  const redirectPath = searchParams.get('redirect') || '/';
-
-
-useEffect(() => {
-  // If already authenticated, redirect based on role
-  if (isAuthenticated) {
-    if (redirectPath !== '/') {
-      navigate(redirectPath);
-    } else if (user?.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/');
-    }
-  }
-}, [isAuthenticated, navigate, redirectPath, user]);
-
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const redirectPath = searchParams.get('redirect');
   
-  try {
-    const result = await dispatch(loginUser({ email, password })).unwrap();
-    // Navigate to the appropriate page based on role
-    navigate(result.redirectTo || '/');
-  } catch (err) {
-    // Error handling is done in the Redux slice
+  // In Login.jsx
+useEffect(() => {
+  // If already authenticated, redirect to the intended destination
+  if (isAuthenticated) {
+    console.log('User authenticated, redirecting to:', redirectPath);
+    navigate(redirectPath);
   }
-};
-// In your Login component
-console.log('Auth state on login:', { isAuthenticated, user, redirectPath });
+}, [isAuthenticated, navigate, redirectPath]);
 
-
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      await dispatch(loginUser({ email, password })).unwrap();
+      // Successful login will trigger the useEffect above
+    } catch (err) {
+      // Error handling is done in the Redux slice
+    }
+  };
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">

@@ -11,7 +11,6 @@ const login = async (email, password) => {
     }
     return response.data;
 };
-
 // Register user
 const register = async (userData) => {
     const response = await api.post('/auth/register', userData);

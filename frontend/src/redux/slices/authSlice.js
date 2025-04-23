@@ -2,84 +2,65 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "../../services/authService";
 
-// Check for existing auth data in localStorage
-const getUserFromStorage = () => {
-  try {
-    const userData = localStorage.getItem('user');
-    return userData ? JSON.parse(userData) : null;
-  } catch (error) {
-    console.error('Error parsing user data from localStorage:', error);
-    return null;
-  }
-};
-
+// Create the loginUser async thunk
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await authService.login(credentials.email, credentials.password);
-      
-      // Return the response data along with a redirect path based on role
-      return {
-        ...response,
-        redirectTo: response.user.role === 'admin' ? '/admin' : '/'
-      };
+      return await authService.login(credentials.email, credentials.password);
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   }
 );
 
-
-// Register user async thunk
-export const registerUser = createAsyncThunk(
-  "auth/register",
-  async (userData, { rejectWithValue }) => {
-    try {
-      return await authService.register(userData);
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Registration failed");
+export const initAuth = createAsyncThunk(
+  "auth/init",
+  async (_, { dispatch }) => {
+    const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
+    
+    if (token) {
+      try {
+        // Get the user profile with the stored token
+        const userData = await authService.getProfile();
+        return { user: userData, token, refreshToken };
+      } catch (error) {
+        // If token is invalid, try refresh token
+        if (refreshToken) {
+          try {
+            return await authService.refreshToken(refreshToken);
+          } catch (refreshError) {
+            // If refresh fails, clear tokens
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            throw refreshError;
+          }
+        }
+        // If no refresh token or refresh failed
+        localStorage.removeItem("token");
+        throw error;
+      }
     }
+    return null;
   }
 );
-
-// Refresh token async thunk
-export const refreshToken = createAsyncThunk(
-  "auth/refreshToken",
-  async (refreshTokenValue, { rejectWithValue }) => {
-    try {
-      return await authService.refreshToken(refreshTokenValue);
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Token refresh failed");
-    }
-  }
-);
-
-// Fetch users async thunk (admin only)
-export const fetchUsers = createAsyncThunk(
-  "auth/fetchUsers",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await authService.getAllUsers();
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch users");
-    }
-  }
-);
-
-// Update user async thunk (admin only)
+// Add this to your authSlice.js
 export const updateUser = createAsyncThunk(
   "auth/updateUser",
   async ({ id, userData }, { rejectWithValue }) => {
     try {
+      // You'll need to add this method to your authService
       return await authService.updateUser(id, userData);
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to update user");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update user"
+      );
     }
   }
 );
 
-// Delete user async thunk (admin only)
+// Add this to your authSlice.js
 export const deleteUser = createAsyncThunk(
   "auth/deleteUser",
   async (userId, { rejectWithValue }) => {
@@ -87,19 +68,60 @@ export const deleteUser = createAsyncThunk(
       await authService.deleteUser(userId);
       return userId; // Return the ID for the reducer to filter out the deleted user
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to delete user");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete user"
+      );
     }
   }
 );
 
-// Initial state with localStorage persistence
+// Add a refresh token thunk
+export const refreshToken = createAsyncThunk(
+  "auth/refreshToken",
+  async (refreshToken, { rejectWithValue }) => {
+    try {
+      return await authService.refreshToken(refreshToken);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: "Token refresh failed" }
+      );
+    }
+  }
+);
+// Add this to your authSlice.js
+export const registerUser = createAsyncThunk(
+  "auth/register",
+  async (userData, { rejectWithValue }) => {
+    try {
+      return await authService.register(userData);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Registration failed"
+      );
+    }
+  }
+);
+
 const initialState = {
-  user: getUserFromStorage(),
+  user: null,
   users: [],
-  isAuthenticated: !!localStorage.getItem("token"),
+  isAuthenticated: false,
   loading: false,
   error: null,
 };
+// Add this to your authSlice.js
+export const fetchUsers = createAsyncThunk(
+  "auth/fetchUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await authService.getAllUsers();
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch users"
+      );
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -110,15 +132,14 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
     },
     clearError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
+    // Add cases for login
     builder
-      // Login cases
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -127,66 +148,16 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
-        // Store user data and tokens in localStorage
+        // Store tokens in localStorage
         localStorage.setItem("token", action.payload.token);
         localStorage.setItem("refreshToken", action.payload.refreshToken || "");
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      // Register cases
-      .addCase(registerUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        // Store user data and tokens in localStorage
-        localStorage.setItem("token", action.payload.token);
-        localStorage.setItem("refreshToken", action.payload.refreshToken || "");
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
-      })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // Refresh token cases
-      .addCase(refreshToken.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(refreshToken.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-        // Update user data if provided in the response
-        if (action.payload.user) {
-          state.user = action.payload.user;
-          localStorage.setItem("user", JSON.stringify(action.payload.user));
-        }
-        // Update tokens in localStorage
-        localStorage.setItem("token", action.payload.token);
-        localStorage.setItem("refreshToken", action.payload.refreshToken || "");
-      })
-      .addCase(refreshToken.rejected, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.error = action.payload;
-        // Clear tokens from localStorage
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
-      })
-
-      // Fetch users cases (admin)
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.loading = false;
@@ -197,10 +168,31 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update user cases (admin)
+      .addCase(initAuth.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.isAuthenticated = true;
+          state.user = action.payload.user;
+        }
+      })
+
+      
+      // Add these cases to your extraReducers builder in authSlice.js
+      .addCase(deleteUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteUser.fulfilled, (state, action) => {
+        state.loading = false;
+        // Remove the deleted user from the users array
+        state.users = state.users.filter((user) => user._id !== action.payload);
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Add these cases to your extraReducers builder in authSlice.js
       .addCase(updateUser.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(updateUser.fulfilled, (state, action) => {
         state.loading = false;
@@ -214,7 +206,6 @@ const authSlice = createSlice({
         // If the updated user is the currently logged-in user, update that too
         if (state.user && state.user._id === action.payload._id) {
           state.user = action.payload;
-          localStorage.setItem("user", JSON.stringify(action.payload));
         }
       })
       .addCase(updateUser.rejected, (state, action) => {
@@ -222,30 +213,49 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Delete user cases (admin)
-      .addCase(deleteUser.pending, (state) => {
+      // Add cases for register
+      .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(deleteUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Remove the deleted user from the users array
-        state.users = state.users.filter((user) => user._id !== action.payload);
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        // Store tokens in localStorage
+        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("refreshToken", action.payload.refreshToken || "");
       })
-      .addCase(deleteUser.rejected, (state, action) => {
+      .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
+
+    // Add cases for token refresh
+    builder
+      .addCase(refreshToken.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(refreshToken.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        // Update tokens in localStorage
+        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("refreshToken", action.payload.refreshToken);
+      })
+
+      
+      .addCase(refreshToken.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload;
+        // Clear tokens from localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+      });
   },
 });
-
-// Export selectors for consistent state access
-export const selectCurrentUser = (state) => state.auth.user;
-export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
-export const selectAuthLoading = (state) => state.auth.loading;
-export const selectAuthError = (state) => state.auth.error;
-export const selectUsers = (state) => state.auth.users;
-export const selectIsAdmin = (state) => state.auth.user?.role === 'admin';
 
 export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;

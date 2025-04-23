@@ -3,7 +3,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from "react-redux";
 import store from "./redux/store";
-
+import { useEffect } from "react";
+import { initAuth } from "./redux/slices/authSlice";
 // Layout
 import MainLayout from "./components/layouts/MainLayout";
 
@@ -28,6 +29,11 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminRoute from "./components/common/AdminRoute";
 
 const App = () => {
+  // In App.jsx
+useEffect(() => {
+  store.dispatch(initAuth());
+}, []);
+
   return (
     <Provider store={store}>
       <BrowserRouter>
@@ -51,12 +57,12 @@ const App = () => {
               <Route path="wishlist" element={<Wishlist />} />
             </Route>
             
-            <Route element={<AdminRoute />}>
-    <Route path="/admin/*" element={<AdminDashboard />} />
-    <Route path="/admin/products" element={<AdminDashboard section="products" />} />
-    <Route path="/admin/orders" element={<AdminDashboard section="orders" />} />
-    <Route path="/admin/users" element={<AdminDashboard section="users" />} />
-  </Route>
+            <Route path="/admin" element={<AdminRoute />}>
+  <Route index element={<AdminDashboard section="overview" />} />
+  <Route path="products" element={<AdminDashboard section="products" />} />
+  <Route path="orders" element={<AdminDashboard section="orders" />} />
+  <Route path="users" element={<AdminDashboard section="users" />} />
+</Route>
             
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />

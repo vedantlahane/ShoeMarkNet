@@ -1,18 +1,24 @@
-// src/components/admin/DashboardOverview.jsx
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-
+import { useEffect } from 'react';
 const DashboardOverview = () => {
   const { products } = useSelector(state => state.product);
   const { orders } = useSelector(state => state.order);
-  const { users } = useSelector(state => state.user);
+  const { users } = useSelector(state => state.auth); // Changed from state.user to state.auth
   
   // Calculate key metrics
   const totalRevenue = orders?.reduce((sum, order) => sum + order.totalPrice, 0) || 0;
   const pendingOrders = orders?.filter(order => !order.isDelivered).length || 0;
   const lowStockProducts = products?.filter(product => product.countInStock <= 5).length || 0;
-  
+
+  if (!products || !orders || !users) {
+    return <div>Loading dashboard data...</div>;
+  }
+  useEffect(() => {
+    console.log('Dashboard data:', { products, orders, users });
+  }, [products, orders, users]);
+    
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Dashboard Overview</h1>
