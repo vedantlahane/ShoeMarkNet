@@ -6,12 +6,13 @@ import { fetchFeaturedProducts, fetchCategories, clearProductError } from '../re
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/common/Loader';
 import { toast } from 'react-toastify'; // Assuming you use react-toastify
+import banner1 from  '/banner1.png';
 
 // Banner images with fallbacks
 const bannerImages = [
-  '/assets/images/banner1.jpg',
-  '/assets/images/banner2.jpg',
-  '/assets/images/banner3.jpg',
+  banner1,
+  '/banner2.png',
+  '/banner3.png',
 ].map(img => ({ src: img, alt: 'ShoeMarkNet Banner' }));
 
 // Fallback image for when category images are missing
@@ -90,15 +91,17 @@ const Home = () => {
     <div className="container mx-auto px-4 py-8">
       {/* Hero Banner Section */}
       <div className="relative h-[500px] mb-12 overflow-hidden rounded-xl shadow-lg">
-        <img 
-          src={currentBanner.src} 
-          alt={currentBanner.alt} 
-          className="w-full h-full object-cover transition-opacity duration-500"
-          onError={(e) => {
-            e.target.onerror = null; 
-            e.target.src = '/assets/images/default-banner.jpg';
-          }}
-        />
+      <img
+  src={currentBanner.src}
+  alt={currentBanner.alt}
+  style={{ width: '100%', height: 'auto' }}
+  onError={e => {
+    e.target.onerror = null;
+    e.target.src = '/assets/images/default-banner.jpg'; // Make sure this fallback exists in public/assets/images/
+  }}
+/>
+
+
         <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-white p-8">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 text-center">Step Into Style</h1>
           <p className="text-xl md:text-2xl mb-8 text-center max-w-2xl">
@@ -124,6 +127,7 @@ const Home = () => {
             />
           ))}
         </div>
+        <img src="/banner1.png" alt="Test" />
       </div>
 
       {/* Featured Products Section */}
@@ -203,7 +207,7 @@ const Home = () => {
           </div>
           <div className="md:w-1/2">
             <img 
-              src="/assets/images/new-arrivals.jpg" 
+              src="/banner1.png" 
               alt="New Arrivals" 
               className="rounded-lg shadow-lg"
               onError={(e) => {
