@@ -1,24 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
+
 const DashboardOverview = () => {
   const { products } = useSelector(state => state.product);
   const { orders } = useSelector(state => state.order);
-  const { users } = useSelector(state => state.auth); // Changed from state.user to state.auth
+  const { users } = useSelector(state => state.auth);
   
-  // Calculate key metrics
+  // Calculate key metrics only when data is available
   const totalRevenue = orders?.reduce((sum, order) => sum + order.totalPrice, 0) || 0;
   const pendingOrders = orders?.filter(order => !order.isDelivered).length || 0;
   const lowStockProducts = products?.filter(product => product.countInStock <= 5).length || 0;
 
-  if (!products || !orders || !users) {
-    return <div>Loading dashboard data...</div>;
-  }
+  // Only log once when all data is available
   useEffect(() => {
-    console.log('Dashboard data:', { products, orders, users });
+    if (products && orders && users) {
+      console.log('Dashboard data loaded');
+    }
   }, [products, orders, users]);
     
+  if (!products || !orders || !users) {
+    return <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <p className="ml-3">Loading dashboard data...</p>
+    </div>;
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Dashboard Overview</h1>
@@ -32,7 +39,7 @@ const DashboardOverview = () => {
         
         <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
           <h3 className="text-gray-500 text-sm font-medium">Total Products</h3>
-          <p className="text-2xl font-bold">{products?.length || 0}</p>
+          <p className="text-2xl font-bold">{products.length}</p>
         </div>
         
         <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
@@ -42,7 +49,7 @@ const DashboardOverview = () => {
         
         <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-500">
           <h3 className="text-gray-500 text-sm font-medium">Total Users</h3>
-          <p className="text-2xl font-bold">{users?.length || 0}</p>
+          <p className="text-2xl font-bold">{users.length}</p>
         </div>
       </div>
       
@@ -50,7 +57,7 @@ const DashboardOverview = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4">Recent Orders</h2>
-          {orders && orders.length > 0 ? (
+          {orders.length > 0 ? (
             <div className="space-y-4">
               {orders.slice(0, 5).map(order => (
                 <div key={order._id} className="flex justify-between items-center border-b pb-2">

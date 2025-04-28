@@ -14,7 +14,6 @@ const getDashboardStats = async () => {
     throw error;
   }
 };
-
 /**
  * Get sales reports with optional filters
  * @param {Object} filters - Filters for the report (date range, product category, etc.)
@@ -184,4 +183,4 @@ const adminService = {
   deleteCampaign
 };
 
-export default adminService;
+module.exports = adminService;

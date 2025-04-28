@@ -1,6 +1,5 @@
 // src/services/authService.js
 import api from "../utils/api";
-
 /**
  * Login user
  * @param {string} email - User email

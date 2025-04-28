@@ -1,38 +1,19 @@
+// src/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ message: 'No authentication token, access denied' });
-    }
-    
-    // Verify token
+    if (!token) return res.status(401).json({ message: 'No authentication token, access denied' });
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Find user by id
     const user = await User.findById(decoded.id).select('-password');
-    
-    if (!user) {
-      return res.status(401).json({ message: 'Token is invalid or user does not exist' });
+    if (!user) return res.status(401).json({ message: 'Token is invalid or user does not exist' });
+    if (user.status === 'inactive' || user.status === 'banned') {
+      return res.status(403).json({ message: 'User account is deactivated or banned' });
     }
-    
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(403).json({ message: 'User account is deactivated' });
-    }
-    
-    // Update last login time if it's been more than a day
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    if (!user.lastLogin || user.lastLogin < oneDayAgo) {
-      user.lastLogin = Date.now();
-      await user.save();
-    }
-    
-    // Add user to request
+    // Optionally update lastLogin
     req.user = user;
     next();
   } catch (error) {

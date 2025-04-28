@@ -487,7 +487,41 @@ const deleteCampaign = async (req, res) => {
     res.status(500).json({ message: 'Error deleting campaign', error: error.message });
   }
 };
-
+const getUsers = async (req, res) => {
+  try {
+    const { role, status, search } = req.query;
+    
+    // Build filter object
+    const filter = {};
+    
+    if (role) {
+      filter.role = role;
+    }
+    
+    if (status) {
+      filter.status = status;
+    }
+    
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const users = await User.find(filter)
+      .select('-password -resetPasswordToken -resetPasswordExpire')
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ 
+      message: 'Error fetching users', 
+      error: error.message 
+    });
+  }
+};
 module.exports = {
   getDashboardStats,
   getSalesReport,
@@ -498,5 +532,6 @@ module.exports = {
   createCampaign,
   getCampaigns,
   updateCampaign,
-  deleteCampaign
+  deleteCampaign,
+  getUsers
 };

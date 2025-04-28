@@ -11,7 +11,7 @@ const ProductSchema = new mongoose.Schema({
   originalPrice: { type: Number },
   discountPercentage: { type: Number, default: 0 },
   images: [{ type: String }],
-  countInStock: { type: Number, required: true, default: 0 }, // kept for legacy but use virtual now
+  countInStock: { type: Number, required: true, default: 0 },
   rating: { type: Number, default: 0, min: 0, max: 5 },
   numReviews: { type: Number, default: 0 },
   isFeatured: { type: Boolean, default: false, index: true },
@@ -72,7 +72,7 @@ ProductSchema.pre('save', async function(next) {
   next();
 });
 
-// Virtual to calculate discount price
+// Virtual field for discount price
 ProductSchema.virtual('discountPrice').get(function() {
   if (this.discountPercentage > 0) {
     return this.price - (this.price * this.discountPercentage / 100);
@@ -80,18 +80,15 @@ ProductSchema.virtual('discountPrice').get(function() {
   return this.price;
 });
 
-// Virtual to calculate total countInStock from variants
+// Virtual field to calculate total count in stock from variants
 ProductSchema.virtual('calculatedCountInStock').get(function() {
-  let total = 0;
-  this.variants.forEach(variant => {
-    variant.sizes.forEach(sizeObj => {
-      total += sizeObj.countInStock;
-    });
-  });
-  return total;
+  return this.variants.reduce((total, variant) => {
+    const sizeStock = variant.sizes?.reduce((sum, size) => sum + (size.countInStock || 0), 0) || 0;
+    return total + sizeStock;
+  }, 0);
 });
 
-// Virtual to populate reviews (assuming Review model references Product)
+// Virtual field to populate reviews (use .populate('reviews') in queries)
 ProductSchema.virtual('reviews', {
   ref: 'Review',
   localField: '_id',

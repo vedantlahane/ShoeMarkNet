@@ -1,49 +1,53 @@
-// src/components/admin/UserManagement.jsx
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUser, deleteUser } from '../../redux/slices/authSlice';
 
 const UserManagement = () => {
   const dispatch = useDispatch();
-  const { users, loading } = useSelector(state => state.user);
+  const { users, loading, error } = useSelector(state => state.auth);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Filter users based on search term
-  const filteredUsers = searchTerm
-    ? users?.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+
+  // Memoize the filtered users to prevent unnecessary recalculations
+  const filteredUsers = searchTerm && users
+    ? users.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : users;
-  
-  // Handle role update
-  const handleRoleUpdate = (userId, newRole) => {
+
+  const handleRoleUpdate = useCallback((userId, newRole) => {
     dispatch(updateUser({ id: userId, userData: { role: newRole } }));
-  };
-  
-  // Handle user deletion
-  const handleDeleteUser = (userId) => {
-    if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+  }, [dispatch]);
+
+  const handleDeleteUser = useCallback((userId) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
       dispatch(deleteUser(userId));
     }
-  };
+  }, [dispatch]);
+
+  if (loading) return <div className="flex justify-center items-center h-64">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <p className="ml-3">Loading users...</p>
+  </div>;
   
+  if (error) return <div className="bg-red-50 border-l-4 border-red-500 p-4 my-4">
+    <p className="text-red-700">Error: {error}</p>
+  </div>;
+
+  if (!users) return <div>No users found</div>;
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <div className="flex items-center">
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border rounded px-3 py-1 w-64"
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border rounded px-3 py-1 w-64"
+        />
       </div>
-      
-      {/* Users List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -56,49 +60,24 @@ const UserManagement = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers && filteredUsers.map(user => (
+            {filteredUsers.map(user => (
               <tr key={user._id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{user.email}</div>
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <select
                     value={user.role}
-                    onChange={(e) => handleRoleUpdate(user._id, e.target.value)}
-                    className={`text-sm rounded px-2 py-1 ${
-                      user.role === 'admin' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : 'bg-blue-100 text-blue-800'
-                    }`}
+                    onChange={e => handleRoleUpdate(user._id, e.target.value)}
+                    className="border rounded px-2 py-1"
                   >
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                   </select>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{user.leadScore || 0}</div>
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{user.leadScore || 0}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button 
-                    onClick={() => window.open(`/users/${user._id}`, '_blank')}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
-                  >
-                    View Details
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteUser(user._id)}
+                    onClick={() => handleDeleteUser(user._id)} 
                     className="text-red-600 hover:text-red-900"
                   >
                     Delete

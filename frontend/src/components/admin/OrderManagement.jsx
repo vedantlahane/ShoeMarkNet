@@ -1,8 +1,6 @@
-// src/components/admin/OrderManagement.jsx
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateOrderStatus } from '../../redux/slices/orderSlice';
-import { format } from 'date-fns';
 
 const OrderManagement = () => {
   const dispatch = useDispatch();
@@ -10,11 +8,18 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   
   // Format date for better readability
-  const formatDate = (dateString) => {
-    return format(new Date(dateString), 'PPP p');
-  };
+  const formatDate = useCallback((dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }, []);
   
-  // Filter orders based on selected status
+  // Filter orders based on selected status - memoized to prevent recalculation
   const filteredOrders = statusFilter === 'all' 
     ? orders 
     : statusFilter === 'paid' 
@@ -26,9 +31,16 @@ const OrderManagement = () => {
           : orders?.filter(order => !order.isDelivered);
   
   // Handle order status update
-  const handleStatusUpdate = (orderId, field, value) => {
+  const handleStatusUpdate = useCallback((orderId, field, value) => {
     dispatch(updateOrderStatus({ orderId, updates: { [field]: value } }));
-  };
+  }, [dispatch]);
+  
+  if (!orders) {
+    return <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <p className="ml-3">Loading orders...</p>
+    </div>;
+  }
   
   return (
     <div>
