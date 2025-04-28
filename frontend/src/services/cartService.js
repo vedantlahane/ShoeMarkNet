@@ -8,18 +8,25 @@ const getCart = async () => {
   try {
     const response = await api.get('/cart');
     
-    // Handle different response structures
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
+    // Handle different response structures from backend
+    if (response.data && Array.isArray(response.data.items)) {
+      return response.data.items;
+    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.cart?.items)) {
+      return response.data.cart.items;
     } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.items)) {
       return response.data.items;
+    } else if (response.data && typeof response.data === 'object' && response.data.cart) {
+      return response.data.cart.items || [];
+    } else if (response.data && Array.isArray(response.data)) {
+      return response.data;
     }
     
     // Default to empty array if response structure is unexpected
+    console.warn('Unexpected cart response structure:', response.data);
     return [];
   } catch (error) {
-    console.error('Error fetching cart:', error);
-    throw error;
+    console.error('Error fetching cart:', error.message || error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch cart data. Please try again.');
   }
 };
 
@@ -42,17 +49,20 @@ const addToCart = async (productId, quantity, size = null, color = null) => {
     const response = await api.post('/cart', payload);
     
     // Handle different response structures
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.items)) {
+    if (response.data && response.data.cart && Array.isArray(response.data.cart.items)) {
+      return response.data.cart.items;
+    } else if (response.data && Array.isArray(response.data.items)) {
       return response.data.items;
+    } else if (response.data && Array.isArray(response.data)) {
+      return response.data;
     }
     
     // Default to empty array if response structure is unexpected
+    console.warn('Unexpected addToCart response structure:', response.data);
     return [];
   } catch (error) {
-    console.error('Error adding to cart:', error);
-    throw error;
+    console.error('Error adding to cart:', error.message || error);
+    throw new Error(error.response?.data?.message || 'Failed to add item to cart. Please try again.');
   }
 };
 
@@ -72,17 +82,20 @@ const updateCartItem = async (itemId, quantity) => {
     const response = await api.put(`/cart/${itemId}`, { quantity });
     
     // Handle different response structures
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.items)) {
+    if (response.data && response.data.cart && Array.isArray(response.data.cart.items)) {
+      return response.data.cart.items;
+    } else if (response.data && Array.isArray(response.data.items)) {
       return response.data.items;
+    } else if (response.data && Array.isArray(response.data)) {
+      return response.data;
     }
     
     // Default to empty array if response structure is unexpected
+    console.warn('Unexpected updateCartItem response structure:', response.data);
     return [];
   } catch (error) {
-    console.error('Error updating cart item:', error);
-    throw error;
+    console.error('Error updating cart item:', error.message || error);
+    throw new Error(error.response?.data?.message || 'Failed to update cart item. Please try again.');
   }
 };
 
@@ -96,17 +109,20 @@ const removeFromCart = async (itemId) => {
     const response = await api.delete(`/cart/${itemId}`);
     
     // Handle different response structures
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.items)) {
+    if (response.data && response.data.cart && Array.isArray(response.data.cart.items)) {
+      return response.data.cart.items;
+    } else if (response.data && Array.isArray(response.data.items)) {
       return response.data.items;
+    } else if (response.data && Array.isArray(response.data)) {
+      return response.data;
     }
     
     // Default to empty array if response structure is unexpected
+    console.warn('Unexpected removeFromCart response structure:', response.data);
     return [];
   } catch (error) {
-    console.error('Error removing from cart:', error);
-    throw error;
+    console.error('Error removing from cart:', error.message || error);
+    throw new Error(error.response?.data?.message || 'Failed to remove item from cart. Please try again.');
   }
 };
 
@@ -116,20 +132,12 @@ const removeFromCart = async (itemId) => {
  */
 const clearCart = async () => {
   try {
-    const response = await api.delete('/cart');
-    
-    // Handle different response structures
-    if (response.data && Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.items)) {
-      return response.data.items;
-    }
-    
-    // Default to empty array
+    await api.delete('/cart');
+    // Backend returns a message, not cart data, so return empty array
     return [];
   } catch (error) {
-    console.error('Error clearing cart:', error);
-    throw error;
+    console.error('Error clearing cart:', error.message || error);
+    throw new Error(error.response?.data?.message || 'Failed to clear cart. Please try again.');
   }
 };
 

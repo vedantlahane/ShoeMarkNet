@@ -5,17 +5,14 @@ import { Link } from 'react-router-dom';
 import { fetchFeaturedProducts, fetchCategories, clearProductError } from '../redux/slices/productSlice';
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/common/Loader';
-import { toast } from 'react-toastify'; // Assuming you use react-toastify
-import banner1 from  '/banner1.png';
+import { toast } from 'react-toastify';
 
-// Banner images with fallbacks
 const bannerImages = [
-  banner1,
+  '/banner1.png',
   '/banner2.png',
   '/banner3.png',
 ].map(img => ({ src: img, alt: 'ShoeMarkNet Banner' }));
 
-// Fallback image for when category images are missing
 const fallbackCategoryImage = '/assets/images/category-placeholder.jpg';
 
 const Home = () => {
@@ -24,7 +21,7 @@ const Home = () => {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [isImagesLoaded, setIsImagesLoaded] = useState(false);
 
-  // Handle banner rotation with useCallback to prevent unnecessary re-renders
+  // Rotate banners
   const rotateBanner = useCallback(() => {
     setBannerIndex((prevIndex) => (prevIndex + 1) % bannerImages.length);
   }, []);
@@ -39,14 +36,12 @@ const Home = () => {
         ]);
         setIsImagesLoaded(true);
       } catch (err) {
-        // Toast notification for errors
         toast.error(err.message || 'Failed to load home page data');
       }
     };
 
     fetchData();
 
-    // Set up banner rotation
     const interval = setInterval(rotateBanner, 5000);
     return () => {
       clearInterval(interval);
@@ -62,24 +57,21 @@ const Home = () => {
     }
   }, [error, dispatch]);
 
-  // Safely get featured products
+  // Helpers
   const safelyGetFeaturedProducts = () => {
     if (!Array.isArray(featuredProducts)) return [];
-    return featuredProducts.filter(product => 
+    return featuredProducts.filter(product =>
       product && product._id && (product.images?.length > 0 || product.image)
     );
   };
 
-  // Safely get categories
   const safelyGetCategories = () => {
     if (!Array.isArray(categories)) return [];
     return categories.filter(category => category && category._id && category.name);
   };
 
-  // Get the current banner
   const currentBanner = bannerImages[bannerIndex];
 
-  // Show loading state
   if (loading && !isImagesLoaded) {
     return <Loader />;
   }
@@ -87,47 +79,40 @@ const Home = () => {
   const validFeaturedProducts = safelyGetFeaturedProducts();
   const validCategories = safelyGetCategories();
 
+  // Newsletter form handler
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    toast.info('Thank you for subscribing!');
+    // Integrate with backend/email service as needed
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Hero Banner Section */}
       <div className="relative h-[500px] mb-12 overflow-hidden rounded-xl shadow-lg">
-      <img
-  src={currentBanner.src}
-  alt={currentBanner.alt}
-  style={{ width: '100%', height: 'auto' }}
-  onError={e => {
-    e.target.onerror = null;
-    e.target.src = '/assets/images/default-banner.jpg'; // Make sure this fallback exists in public/assets/images/
-  }}
-/>
-
-
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-white p-8">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 text-center">Step Into Style</h1>
-          <p className="text-xl md:text-2xl mb-8 text-center max-w-2xl">
-            Discover the perfect pair for every occasion
-          </p>
-          <Link to="/products">
-            <button className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-              Shop Now
-            </button>
-          </Link>
-        </div>
+        <img
+          src={currentBanner.src}
+          alt={currentBanner.alt}
+          className="w-full h-full object-cover transition-transform duration-700"
+          onError={e => {
+            e.target.onerror = null;
+            e.target.src = '/banner2.png';
+          }}
+        />
         
         {/* Banner navigation dots */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
           {bannerImages.map((_, index) => (
             <button
               key={index}
               onClick={() => setBannerIndex(index)}
-              className={`w-3 h-3 rounded-full ${
+              className={`w-3 h-3 rounded-full border-2 border-white transition-colors duration-300 ${
                 index === bannerIndex ? 'bg-white' : 'bg-white bg-opacity-50'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
-        <img src="/banner1.png" alt="Test" />
       </div>
 
       {/* Featured Products Section */}
@@ -138,7 +123,6 @@ const Home = () => {
             View All
           </Link>
         </div>
-
         {validFeaturedProducts.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
             <p className="text-gray-500">No featured products available at the moment</p>
@@ -168,22 +152,22 @@ const Home = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {validCategories.map((category) => (
-              <Link 
-                to={`/products?category=${encodeURIComponent(category.name)}`} 
-                key={category._id} 
+              <Link
+                to={`/products?category=${encodeURIComponent(category.name)}`}
+                key={category._id}
                 className="relative h-64 rounded-lg overflow-hidden group shadow-md hover:shadow-xl transition-shadow duration-300"
               >
-                <img 
-                  src={category.image || fallbackCategoryImage} 
-                  alt={`${category.name} category`} 
+                <img
+                  src={category.image || fallbackCategoryImage}
+                  alt={`${category.name} category`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
-                    e.target.onerror = null; 
+                    e.target.onerror = null;
                     e.target.src = fallbackCategoryImage;
                   }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-                  <h3 className="text-white text-2xl font-bold">{category.name}</h3>
+                  <h3 className="text-white text-2xl font-bold drop-shadow">{category.name}</h3>
                 </div>
               </Link>
             ))}
@@ -200,18 +184,18 @@ const Home = () => {
               Check out our latest collection of premium footwear. Designed for comfort and style.
             </p>
             <Link to="/products?sort=newest">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-semibold shadow">
                 Shop Now
               </button>
             </Link>
           </div>
           <div className="md:w-1/2">
-            <img 
-              src="/banner1.png" 
-              alt="New Arrivals" 
-              className="rounded-lg shadow-lg"
+            <img
+              src="/banner1.png"
+              alt="New Arrivals"
+              className="rounded-lg shadow-lg w-full h-64 object-cover"
               onError={(e) => {
-                e.target.onerror = null; 
+                e.target.onerror = null;
                 e.target.src = '/assets/images/default-promotion.jpg';
               }}
             />
@@ -247,11 +231,11 @@ const Home = () => {
               <div className="flex items-center mb-4">
                 <div className="text-yellow-400 flex">
                   {[...Array(5)].map((_, i) => (
-                    <svg 
-                      key={i} 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      className="h-5 w-5" 
-                      viewBox="0 0 20 20" 
+                    <svg
+                      key={i}
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
                       fill={i < testimonial.rating ? "currentColor" : "none"}
                       stroke="currentColor"
                     >
@@ -284,7 +268,10 @@ const Home = () => {
           <p className="mb-6 max-w-2xl mx-auto">
             Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <form
+            className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+            onSubmit={handleNewsletterSubmit}
+          >
             <input
               type="email"
               placeholder="Your email address"
@@ -294,7 +281,7 @@ const Home = () => {
             />
             <button
               type="submit"
-              className="bg-white text-blue-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white"
+              className="bg-white text-blue-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white font-semibold"
             >
               Subscribe
             </button>
