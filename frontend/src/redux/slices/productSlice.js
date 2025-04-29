@@ -47,39 +47,7 @@ export const fetchProducts = createAsyncThunk(
   async (filters = {}, { rejectWithValue }) => {
     try {
       const response = await productService.getProducts(filters);
-
-      // Check if response is an object but not an array
-      if (
-        response &&
-        typeof response === "object" &&
-        !Array.isArray(response)
-      ) {
-        // If response has a products property that is an array, return that
-        if (Array.isArray(response.products)) {
-          return response.products;
-        }
-
-        // If response has a data property that is an array, return that
-        if (response.data && Array.isArray(response.data)) {
-          return response.data;
-        }
-
-        // If response is an object of products, convert to array
-        if (Object.keys(response).length > 0) {
-          return Object.keys(response).map((key) => ({
-            _id: key,
-            ...response[key],
-          }));
-        }
-      }
-
-      // If response is already an array, return it
-      if (Array.isArray(response)) {
-        return response;
-      }
-
-      // Default to empty array if none of the above conditions are met
-      return [];
+      return response.products; // Always return array of products
     } catch (error) {
       return rejectWithValue(
         error.response?.data || { message: "Failed to fetch products" }
@@ -88,13 +56,11 @@ export const fetchProducts = createAsyncThunk(
   }
 );
 
-// Add these async thunks to your productSlice.js file
-
 export const createProduct = createAsyncThunk(
   "product/createProduct",
   async (productData, { rejectWithValue }) => {
     try {
-      return await productService.createProduct(productData);
+      return await productService.createProduct(productData); // Returns product object
     } catch (error) {
       return rejectWithValue(
         error.response?.data || { message: "Failed to create product" }
@@ -107,7 +73,7 @@ export const updateProduct = createAsyncThunk(
   "product/updateProduct",
   async ({ id, productData }, { rejectWithValue }) => {
     try {
-      return await productService.updateProduct(id, productData);
+      return await productService.updateProduct(id, productData); // Returns product object
     } catch (error) {
       return rejectWithValue(
         error.response?.data || { message: "Failed to update product" }
@@ -115,7 +81,6 @@ export const updateProduct = createAsyncThunk(
     }
   }
 );
-
 export const deleteProduct = createAsyncThunk(
   "product/deleteProduct",
   async (id, { rejectWithValue }) => {
@@ -182,12 +147,10 @@ const productSlice = createSlice({
         state.loading = true;
       })
       // Update the createProduct.fulfilled case in your productSlice.js
-.addCase(createProduct.fulfilled, (state, action) => {
-  state.loading = false;
-  // The backend returns { message, product }, so we need to extract the product
-  const newProduct = action.payload.product || action.payload;
-  state.products.push(newProduct);
-})
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products.push(action.payload); // payload is product object
+      })
 
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
@@ -200,14 +163,10 @@ const productSlice = createSlice({
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
-        // Find and update the product in the array
-        const index = state.products.findIndex(
-          (p) => p._id === action.payload._id
-        );
+        const index = state.products.findIndex((p) => p._id === action.payload._id);
         if (index !== -1) {
           state.products[index] = action.payload;
         }
-        // If the updated product is the currently selected product, update it too
         if (state.product && state.product._id === action.payload._id) {
           state.product = action.payload;
         }

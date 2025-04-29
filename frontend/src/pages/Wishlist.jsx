@@ -1,4 +1,3 @@
-// src/pages/Wishlist.jsx
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,7 +5,7 @@ import { fetchWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice
 import { addToCart } from '../redux/slices/cartSlice';
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { FaShoppingCart, FaArrowLeft } from "react-icons/fa";
-import { toast } from 'react-toastify'; // Assuming you're using react-toastify
+import { toast } from 'react-toastify';
 
 const Wishlist = () => {
   const dispatch = useDispatch();
@@ -16,12 +15,10 @@ const Wishlist = () => {
   const [isRemoving, setIsRemoving] = useState(null);
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!isAuthenticated) {
       navigate('/login?redirect=/wishlist');
       return;
     }
-
     if (user) {
       dispatch(fetchWishlist());
     }
@@ -39,8 +36,8 @@ const Wishlist = () => {
     try {
       await dispatch(removeFromWishlist(productId)).unwrap();
       toast.success("Item removed from wishlist");
-    } catch (error) {
-      toast.error("Failed to remove item from wishlist");
+    } catch (err) {
+      toast.error(typeof err === 'string' ? err : "Failed to remove item from wishlist");
     } finally {
       setIsRemoving(null);
     }
@@ -56,8 +53,8 @@ const Wishlist = () => {
         image: product.images && product.images.length > 0 ? product.images[0] : null
       })).unwrap();
       toast.success(`${product.name} added to cart`);
-    } catch (error) {
-      toast.error("Failed to add item to cart");
+    } catch (err) {
+      toast.error(typeof err === 'string' ? err : "Failed to add item to cart");
     }
   };
 
@@ -73,7 +70,7 @@ const Wishlist = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <span className="block sm:inline">{error.message || 'Failed to load wishlist'}</span>
+          <span className="block sm:inline">{error || 'Failed to load wishlist'}</span>
           <button 
             onClick={() => dispatch(fetchWishlist())}
             className="mt-2 bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700"
@@ -85,7 +82,7 @@ const Wishlist = () => {
     );
   }
 
-  // Ensure items is an array
+  // Ensure items is always an array
   const wishlistItems = Array.isArray(items) ? items : [];
 
   return (

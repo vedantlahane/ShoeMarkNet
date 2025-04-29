@@ -2,9 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { addToCart } from '../redux/slices/cartSlice';
+// import { addToCart } from '../redux/slices/cartSlice';
 import { addToWishlist } from '../redux/slices/wishlistSlice';
-import { FaShoppingCart } from 'react-icons/fa';
+// import { FaShoppingCart } from 'react-icons/fa';
 import { CiHeart } from 'react-icons/ci';
 
 const ProductCard = ({ product }) => {
@@ -24,9 +24,9 @@ const ProductCard = ({ product }) => {
     return !isNaN(numPrice) ? numPrice.toFixed(2) : '0.00';
   };
 
-  const handleAddToCart = () => {
-    dispatch(addToCart({ productId: product._id, quantity: 1 }));
-  };
+  // const handleAddToCart = () => {
+  //   dispatch(addToCart({ productId: product._id, quantity: 1 }));
+  // };
 
   const handleAddToWishlist = () => {
     dispatch(addToWishlist(product._id));
@@ -91,7 +91,7 @@ const ProductCard = ({ product }) => {
         
         {/* Action Buttons */}
         <div className="flex space-x-2">
-          <button 
+          {/* <button 
             onClick={handleAddToCart} 
             disabled={product.countInStock === 0}
             className={`flex-1 flex items-center justify-center py-2 px-4 rounded ${
@@ -103,7 +103,7 @@ const ProductCard = ({ product }) => {
             <FaShoppingCart className="mr-2" />
             {product.countInStock === 0 ? 'Out of Stock' : 'Add to Cart'}
           </button>
-          
+           */}
           <button 
             onClick={handleAddToWishlist}
             disabled={isInWishlist}
