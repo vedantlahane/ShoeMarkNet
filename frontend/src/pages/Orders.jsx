@@ -1,64 +1,93 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchOrders, clearOrderError } from '../redux/slices/orderSlice';
 import Loader from '../components/common/Loader';
 import { format } from 'date-fns';
 import { FaSearch, FaEye, FaFileInvoice, FaTimesCircle } from 'react-icons/fa';
 
-const Orders = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  
-  // Add safety checks to prevent undefined errors
-  const orderState = useSelector(state => state.order);
-  const { orders = [], loading = false, error = null } = orderState || {};
-  
-  const authState = useSelector(state => state.auth);
-  const { user = null, isAuthenticated = false } = authState || {};
+// Dummy orders data
+const DUMMY_ORDERS = [
+  {
+    _id: 'ORD12345678',
+    createdAt: '2025-06-08T10:30:00Z',
+    totalPrice: 159.99,
+    status: 'Processing',
+    isPaid: true,
+    orderItems: [
+      { name: 'Running Shoes', qty: 1 },
+      { name: 'Socks', qty: 2 }
+    ],
+    shippingAddress: { fullName: 'Alice Doe' }
+  },
+  {
+    _id: 'ORD87654321',
+    createdAt: '2025-06-02T15:15:00Z',
+    totalPrice: 89.49,
+    status: 'Delivered',
+    isPaid: true,
+    orderItems: [
+      { name: 'Leather Loafers', qty: 1 }
+    ],
+    shippingAddress: { fullName: 'Bob Smith' }
+  },
+  {
+    _id: 'ORD11223344',
+    createdAt: '2025-05-28T09:00:00Z',
+    totalPrice: 45.00,
+    status: 'Cancelled',
+    isPaid: false,
+    orderItems: [
+      { name: 'Flip Flops', qty: 2 }
+    ],
+    shippingAddress: { fullName: 'Charlie Brown' }
+  }
+];
 
-  // State for filtering and pagination
+const Orders = () => {
+  const navigate = useNavigate();
+
+  // Simulate authentication (set to true for demo)
+  const isAuthenticated = true;
+  const user = { name: 'Demo User' };
+
+  // State for orders, loading, error, search, filter, pagination
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [ordersPerPage] = useState(5);
-  
+  const ordersPerPage = 5;
+
+  // Simulate fetching orders
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!isAuthenticated) {
       navigate('/login?redirect=/orders');
       return;
     }
-    
-    // Fetch orders if authenticated
-    dispatch(fetchOrders());
-    
-    // Clear any errors when component unmounts
-    return () => {
-      dispatch(clearOrderError());
-    };
-  }, [dispatch, isAuthenticated, navigate]);
+    setLoading(true);
+    setTimeout(() => {
+      setOrders(DUMMY_ORDERS);
+      setLoading(false);
+    }, 800);
+  }, [isAuthenticated, navigate]);
 
-  // Format date for better readability
+  // Format date for display
   const formatDate = (dateString) => {
     try {
       return format(new Date(dateString), 'PPP p');
-    } catch (error) {
+    } catch {
       return 'Invalid date';
     }
   };
-  
-  // Format price with currency
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
-  
-  // Get status badge class based on order status
+
+  // Format price
+  const formatPrice = (price) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+
+  // Status badge color
   const getStatusBadgeClass = (status) => {
-    switch(status?.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'processing':
         return 'bg-blue-100 text-blue-800';
       case 'shipped':
@@ -73,46 +102,49 @@ const Orders = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-  
-  // Filter orders based on search term and status
-  const filteredOrders = Array.isArray(orders) 
-    ? orders.filter(order => {
-        const matchesSearch = searchTerm === '' || 
-          order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (order.shippingAddress?.fullName || '').toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesStatus = filterStatus === 'all' || 
-          order.status?.toLowerCase() === filterStatus.toLowerCase();
-        
-        return matchesSearch && matchesStatus;
-      })
-    : [];
-    
-  // Get current orders for pagination
+
+  // Filter and search logic
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch =
+      searchTerm === '' ||
+      order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.shippingAddress?.fullName || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      filterStatus === 'all' ||
+      order.status?.toLowerCase() === filterStatus.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
+  // Pagination
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-  
-  // Change page
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  
-  // Handle retry on error
-  const handleRetry = () => {
-    dispatch(clearOrderError());
-    dispatch(fetchOrders());
+
+  // Dummy cancel order handler
+  const handleCancelOrder = (orderId) => {
+    setOrders(prev =>
+      prev.map(order =>
+        order._id === orderId ? { ...order, status: 'Cancelled' } : order
+      )
+    );
   };
 
-  if (loading && orders.length === 0) {
-    return <Loader />;
-  }
+  // Dummy invoice download
+  const handleDownloadInvoice = (orderId) => {
+    alert(`Invoice for order ${orderId} downloaded (dummy action).`);
+  };
+
+  if (loading) return <Loader />;
 
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
           <span className="block sm:inline">{error.message || 'Failed to load orders'}</span>
-          <button 
-            onClick={handleRetry}
+          <button
+            onClick={() => setError(null)}
             className="mt-2 bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700"
           >
             Try Again
@@ -125,7 +157,6 @@ const Orders = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Your Orders</h1>
-      
       {(!orders || orders.length === 0) ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,7 +186,6 @@ const Orders = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
             <select
               className="border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={filterStatus}
@@ -169,46 +199,35 @@ const Orders = () => {
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
-          
           {/* Orders List */}
           <div className="overflow-x-auto bg-white rounded-lg shadow">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order ID
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentOrders.map(order => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-gray-900">
                         #{order._id.substring(order._id.length - 8).toUpperCase()}
-                      </div>
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500">
                         {formatDate(order.createdAt)}
-                      </div>
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-gray-900">
                         {formatPrice(order.totalPrice)}
-                      </div>
+                      </span>
                       <div className="text-sm text-gray-500">
                         {order.orderItems?.length || 0} {order.orderItems?.length === 1 ? 'item' : 'items'}
                       </div>
@@ -224,7 +243,7 @@ const Orders = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link 
+                      <Link
                         to={`/orders/${order._id}`}
                         className="text-blue-600 hover:text-blue-900 mr-3"
                         title="View Order Details"
@@ -235,7 +254,7 @@ const Orders = () => {
                         <button
                           className="text-red-600 hover:text-red-900 mr-3"
                           title="Cancel Order"
-                          onClick={() => {/* Add cancel order functionality */}}
+                          onClick={() => handleCancelOrder(order._id)}
                         >
                           <FaTimesCircle className="inline-block" />
                         </button>
@@ -243,7 +262,7 @@ const Orders = () => {
                       <button
                         className="text-gray-600 hover:text-gray-900"
                         title="Download Invoice"
-                        onClick={() => {/* Add invoice download functionality */}}
+                        onClick={() => handleDownloadInvoice(order._id)}
                       >
                         <FaFileInvoice className="inline-block" />
                       </button>
@@ -253,7 +272,6 @@ const Orders = () => {
               </tbody>
             </table>
           </div>
-          
           {/* Pagination */}
           {filteredOrders.length > ordersPerPage && (
             <div className="flex justify-center mt-6">
@@ -262,14 +280,13 @@ const Orders = () => {
                   onClick={() => paginate(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className={`px-3 py-1 rounded-l-md ${
-                    currentPage === 1 
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                   }`}
                 >
                   Previous
                 </button>
-                
                 {[...Array(Math.ceil(filteredOrders.length / ordersPerPage)).keys()].map(number => (
                   <button
                     key={number + 1}
@@ -283,7 +300,6 @@ const Orders = () => {
                     {number + 1}
                   </button>
                 ))}
-                
                 <button
                   onClick={() => paginate(Math.min(Math.ceil(filteredOrders.length / ordersPerPage), currentPage + 1))}
                   disabled={currentPage === Math.ceil(filteredOrders.length / ordersPerPage)}
