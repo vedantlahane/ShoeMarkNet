@@ -7,8 +7,6 @@ const About = () => (
     <p className="text-lg text-gray-700 mb-4">
     </p>
     <p className="text-gray-600">
-      Founded in 2025, we are passionate about quality and customer satisfaction. 
-      Thank you for choosing us for your footwear needs!
     </p>
   </div>
 );
