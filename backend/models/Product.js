@@ -54,6 +54,12 @@ const ProductSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true, index: true },
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
+// Indexes for better performance
+ProductSchema.index({ name: 'text', description: 'text' }); // For text search
+ProductSchema.index({ brand: 1, category: 1 }); // For filtering
+ProductSchema.index({ price: 1, rating: -1 }); // For sorting
+ProductSchema.index({ slug: 1 }); // For URL lookups
+
 // Generate slug before saving
 ProductSchema.pre('save', async function(next) {
   if (this.isModified('name')) {
@@ -86,6 +92,15 @@ ProductSchema.virtual('calculatedCountInStock').get(function() {
     const sizeStock = variant.sizes?.reduce((sum, size) => sum + (size.countInStock || 0), 0) || 0;
     return total + sizeStock;
   }, 0);
+});
+
+// Virtual field for stock status
+ProductSchema.virtual('stockStatus').get(function() {
+  const totalStock = this.calculatedCountInStock || this.countInStock;
+  
+  if (totalStock === 0) return 'out-of-stock';
+  if (totalStock < 10) return 'low-stock';
+  return 'in-stock';
 });
 
 // Virtual field to populate reviews (use .populate('reviews') in queries)

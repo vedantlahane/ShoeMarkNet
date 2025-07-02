@@ -1,35 +1,47 @@
 const express = require('express');
+const router = express.Router();
 const {
   createProduct,
   getAllProducts,
   getFeaturedProducts,
+  getNewArrivals,
   getProductById,
+  getProductBySlug,
   updateProduct,
   deleteProduct,
-  createProductReview,
+  checkProductAvailability,
+  batchUpdatePrices,
+  batchUpdateStock,
   getProductReviews,
+  createProductReview,
   updateProductReview,
-  deleteProductReview
+  deleteProductReview,
+  getRelatedProducts,
+  searchProducts
 } = require('../controllers/productController');
-const authMiddleware = require('../middleware/authMiddleware');
-const adminMiddleware = require('../middleware/adminMiddleware');
-
-const router = express.Router();
+const { protect, admin } = require('../middleware/authMiddleware');
 
 // Public routes
 router.get('/', getAllProducts);
 router.get('/featured', getFeaturedProducts);
+router.get('/new-arrivals', getNewArrivals);
+router.get('/search', searchProducts);
+router.get('/slug/:slug', getProductBySlug);
 router.get('/:id', getProductById);
+router.get('/:id/related', getRelatedProducts);
 router.get('/:id/reviews', getProductReviews);
+router.post('/check-availability', checkProductAvailability);
 
 // Protected routes
-router.post('/', authMiddleware, adminMiddleware, createProduct);
-router.put('/:id', authMiddleware, adminMiddleware, updateProduct);
-router.delete('/:id', authMiddleware, adminMiddleware, deleteProduct);
+router.post('/:id/reviews', protect, createProductReview);
+router.put('/:id/reviews/:reviewId', protect, updateProductReview);
+router.delete('/:id/reviews/:reviewId', protect, deleteProductReview);
 
-// Review routes
-router.post('/:id/reviews', authMiddleware, createProductReview);
-router.put('/:id/reviews/:reviewId', authMiddleware, updateProductReview);
-router.delete('/:id/reviews/:reviewId', authMiddleware, deleteProductReview);
+// Admin routes
+router.post('/', protect, admin, createProduct);
+router.put('/:id', protect, admin, updateProduct);
+router.delete('/:id', protect, admin, deleteProduct);
+router.post('/batch-update-prices', protect, admin, batchUpdatePrices);
+router.post('/batch-update-stock', protect, admin, batchUpdateStock);
 
 module.exports = router;

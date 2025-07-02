@@ -1,13 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
 
 const AdminSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true,
-    trim: true
-  },
+  name: { type: String, required: true, trim: true },
   email: { 
     type: String, 
     required: true, 
@@ -16,16 +11,8 @@ const AdminSchema = new mongoose.Schema({
     trim: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
-  password: { 
-    type: String, 
-    required: true,
-    select: false // Don't include in queries by default
-  },
-  role: { 
-    type: String, 
-    enum: ['admin', 'superadmin'], 
-    default: 'admin' 
-  },
+  password: { type: String, required: true, select: false },
+  role: { type: String, enum: ['admin', 'superadmin'], default: 'admin' },
   permissions: {
     users: {
       read: { type: Boolean, default: false },
@@ -60,47 +47,44 @@ const AdminSchema = new mongoose.Schema({
       update: { type: Boolean, default: false }
     }
   },
-  status: { 
-    type: String, 
-    enum: ['active', 'suspended', 'inactive'], 
-    default: 'active' 
-  },
-  
-  // Security fields
+  status: { type: String, enum: ['active', 'suspended', 'inactive'], default: 'active' },
   loginAttempts: { type: Number, default: 0 },
   lockUntil: Date,
   lastLogin: Date,
   lastLoginIP: String,
   passwordChangedAt: Date,
   passwordExpiresAt: Date,
-  
-  // 2FA
   twoFactorSecret: { type: String, select: false },
   twoFactorEnabled: { type: Boolean, default: false },
-  
-  // Reset tokens
   resetPasswordToken: String,
   resetPasswordExpire: Date,
-  
-  // Additional info
   department: String,
   phoneNumber: String,
   avatar: String,
-  
-  // Created by
-  createdBy: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Admin' 
-  }
-}, { 
-  timestamps: true 
-});
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' }
+}, { timestamps: true });
 
 // Indexes
 AdminSchema.index({ email: 1 });
 AdminSchema.index({ status: 1 });
 AdminSchema.index({ role: 1 });
-AdminSchema.index({ 'permissions.users.read': 1 }); // Example permission index
+AdminSchema.index({ 'permissions.users.read': 1 });
 
-// Export
+// Password hash middleware
+AdminSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Password comparison method
+AdminSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
 module.exports = mongoose.model('Admin', AdminSchema);

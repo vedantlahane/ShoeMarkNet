@@ -14,16 +14,22 @@ const AddressSchema = new mongoose.Schema({
   addressType: { type: String, enum: ['shipping', 'billing', 'both'], default: 'both' }
 }, { timestamps: true });
 
-AddressSchema.index({ user: 1, isDefault: 1 }, { unique: true });
+// Ensure only one default address per user
+AddressSchema.index({ user: 1, isDefault: 1 }, { unique: true, partialFilterExpression: { isDefault: true } });
 
-AddressSchema.pre('save',async function(nex){
-  if(this.isDefault){
-    await mongoose.model.Address.updateMany(
-      { user: this.user, _id: { $ne:  this._id } },
-      { isDefault: false }
-    );
+// Pre-save hook to unset other defaults for the user
+AddressSchema.pre('save', async function(next) {
+  try {
+    if (this.isDefault) {
+      await mongoose.model('Address').updateMany(
+        { user: this.user, _id: { $ne: this._id }, isDefault: true },
+        { $set: { isDefault: false } }
+      );
+    }
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
-})
+});
 
 module.exports = mongoose.model('Address', AddressSchema);

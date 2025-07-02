@@ -9,8 +9,6 @@ const {
 const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
-
-// All cart routes require authentication
 router.use(authMiddleware);
 
 router.get('/', getCart);
