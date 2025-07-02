@@ -14,4 +14,16 @@ const AddressSchema = new mongoose.Schema({
   addressType: { type: String, enum: ['shipping', 'billing', 'both'], default: 'both' }
 }, { timestamps: true });
 
+AddressSchema.index({ user: 1, isDefault: 1 }, { unique: true });
+
+AddressSchema.pre('save',async function(nex){
+  if(this.isDefault){
+    await mongoose.model.Address.updateMany(
+      { user: this.user, _id: { $ne:  this._id } },
+      { isDefault: false }
+    );
+  }
+  next();
+})
+
 module.exports = mongoose.model('Address', AddressSchema);
