@@ -4,14 +4,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { FaStar } from 'react-icons/fa';
 import { createReview } from '../redux/slices/productSlice';
-import Rating from './Rating'; // Import the Rating component
+import Rating from './Rating';
 
 const ReviewForm = ({ productId }) => {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { loading, error: productError } = useSelector((state) => state.product);
   
-  // Form state
+  // Enhanced form state
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [error, setError] = useState('');
@@ -20,6 +20,15 @@ const ReviewForm = ({ productId }) => {
     rating: false,
     comment: false
   });
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [characterCount, setCharacterCount] = useState(0);
+  const [animateForm, setAnimateForm] = useState(false);
+
+  // Trigger animations
+  useEffect(() => {
+    setAnimateForm(true);
+  }, []);
 
   // Clear product errors when component unmounts
   useEffect(() => {
@@ -29,18 +38,20 @@ const ReviewForm = ({ productId }) => {
     };
   }, [dispatch]);
 
-  // Handle validation
+  // Enhanced validation with better UX
   const validateForm = () => {
     const errors = {};
     
     if (!rating) {
-      errors.rating = 'Please select a rating';
+      errors.rating = 'Please select a rating to share your experience';
     }
     
     if (!comment.trim()) {
-      errors.comment = 'Please enter a comment';
-    } else if (comment.trim().length < 5) {
-      errors.comment = 'Comment must be at least 5 characters';
+      errors.comment = 'Please share your thoughts about this product';
+    } else if (comment.trim().length < 10) {
+      errors.comment = 'Please provide a more detailed review (at least 10 characters)';
+    } else if (comment.trim().length > 500) {
+      errors.comment = 'Review is too long (maximum 500 characters)';
     }
     
     return errors;
@@ -51,35 +62,43 @@ const ReviewForm = ({ productId }) => {
     setTouched({ ...touched, [field]: true });
   };
 
-  // Handle rating change
+  // Enhanced rating change handler
   const handleRatingChange = (newRating) => {
     setRating(newRating);
     setTouched({ ...touched, rating: true });
     
     // Clear error when user selects a rating
-    if (error === 'Please select a rating') {
+    if (error.includes('rating')) {
       setError('');
+    }
+
+    // Auto-expand form when rating is selected
+    if (!isExpanded && newRating > 0) {
+      setIsExpanded(true);
     }
   };
 
-  // Handle comment change
+  // Enhanced comment change handler
   const handleCommentChange = (e) => {
     const value = e.target.value;
     setComment(value);
+    setCharacterCount(value.length);
     
     // Real-time validation for better UX
     if (touched.comment) {
       if (!value.trim()) {
-        setError('Please enter a comment');
-      } else if (value.trim().length < 5) {
-        setError('Comment must be at least 5 characters');
+        setError('Please share your thoughts about this product');
+      } else if (value.trim().length < 10) {
+        setError('Please provide a more detailed review (at least 10 characters)');
+      } else if (value.trim().length > 500) {
+        setError('Review is too long (maximum 500 characters)');
       } else {
         setError('');
       }
     }
   };
 
-  // Handle form submission with enhanced validation
+  // Enhanced form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -90,7 +109,6 @@ const ReviewForm = ({ productId }) => {
     const formErrors = validateForm();
     
     if (Object.keys(formErrors).length > 0) {
-      // Set the first error message
       setError(Object.values(formErrors)[0]);
       return;
     }
@@ -98,43 +116,41 @@ const ReviewForm = ({ productId }) => {
     setError('');
     
     try {
-      // Create review object
       const reviewData = {
         rating,
         comment: comment.trim()
       };
 
-      // Dispatch action to submit review
       const resultAction = await dispatch(createReview({ productId, reviewData }));
       
       if (createReview.fulfilled.match(resultAction)) {
         // Reset form on success
         setRating(0);
         setComment('');
+        setCharacterCount(0);
         setTouched({ rating: false, comment: false });
-        setSuccess('Your review has been submitted successfully! Thank you for your feedback.');
+        setIsExpanded(false);
+        setSuccess('🎉 Thank you! Your review has been submitted successfully and will help other customers make informed decisions.');
         
-        // Clear success message after 5 seconds
+        // Clear success message after 6 seconds
         setTimeout(() => {
           setSuccess('');
-        }, 5000);
+        }, 6000);
       } else {
-        // Handle rejected action with improved error extraction
         const errorMessage = resultAction.payload?.message || 
                             resultAction.error?.message || 
-                            'Failed to submit review. Please try again later.';
+                            'Unable to submit your review at this time. Please try again in a few moments.';
         setError(errorMessage);
       }
     } catch (err) {
       console.error('Review submission error:', err);
-      setError('An unexpected error occurred. Please try again later.');
+      setError('An unexpected error occurred while submitting your review. Please check your connection and try again.');
     }
   };
 
-  // Show validation errors when fields are touched
+  // Get field-specific errors
   const getFieldError = (field) => {
     if (!touched[field]) return null;
-    
     const formErrors = validateForm();
     return formErrors[field];
   };
@@ -142,115 +158,358 @@ const ReviewForm = ({ productId }) => {
   const ratingError = getFieldError('rating');
   const commentError = getFieldError('comment');
 
+  // Get rating labels for better UX
+  const getRatingLabel = (rating) => {
+    const labels = {
+      1: 'Poor - Not satisfied',
+      2: 'Fair - Below expectations',
+      3: 'Good - Meets expectations',
+      4: 'Very Good - Exceeds expectations',
+      5: 'Excellent - Outstanding product!'
+    };
+    return labels[rating] || 'Select a rating';
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h3 className="text-xl font-semibold mb-4">Write a Review</h3>
+    <div className="relative">
+      {/* Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 rounded-3xl"></div>
       
-      {!isAuthenticated ? (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4" role="alert">
-          <p className="text-center">
-            Please <Link to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`} className="font-medium text-blue-600 hover:underline">sign in</Link> to write a review.
+      {/* Floating Elements */}
+      <div className="absolute top-4 right-4 w-12 h-12 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute bottom-4 left-4 w-8 h-8 bg-gradient-to-r from-pink-400/20 to-red-400/20 rounded-full blur-lg animate-pulse" style={{ animationDelay: '2s' }}></div>
+
+      <div className={`relative bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl p-8 mb-8 transition-all duration-700 ${
+        animateForm ? 'animate-fade-in-up' : 'opacity-0'
+      }`}>
+        
+        {/* Enhanced Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl">
+            <i className="fas fa-star text-2xl text-white"></i>
+          </div>
+          <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            Share Your Experience
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            <i className="fas fa-heart mr-2 text-red-500"></i>
+            Help others discover this amazing product
           </p>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} aria-label="Review submission form" noValidate>
-          {/* Error message */}
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-              <span className="block sm:inline">{error}</span>
+        
+        {!isAuthenticated ? (
+          /* Enhanced Login Prompt */
+          <div className="bg-blue-500/20 backdrop-blur-lg border border-blue-300/50 rounded-3xl p-8 text-center">
+            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+              <i className="fas fa-user-circle text-3xl text-white"></i>
             </div>
-          )}
-          
-          {/* Success message */}
-          {success && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="status">
-              <span className="block sm:inline">{success}</span>
+            <h4 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-3">
+              Join Our Community
+            </h4>
+            <p className="text-blue-700 dark:text-blue-300 mb-6">
+              Please sign in to share your valuable feedback and help other customers make informed decisions.
+            </p>
+            <Link 
+              to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`}
+              className="inline-flex items-center bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-2xl"
+            >
+              <i className="fas fa-sign-in-alt mr-3"></i>
+              Sign In to Write Review
+              <i className="fas fa-arrow-right ml-3"></i>
+            </Link>
+            <p className="text-sm text-blue-600 dark:text-blue-400 mt-4">
+              <i className="fas fa-shield-alt mr-1"></i>
+              Secure & Protected Account Access
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8" aria-label="Review submission form" noValidate>
+            
+            {/* Enhanced Error Message */}
+            {error && (
+              <div className="bg-red-500/20 backdrop-blur-lg border border-red-300/50 rounded-3xl p-6 animate-shake">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <i className="fas fa-exclamation-triangle text-white"></i>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-red-800 dark:text-red-200 text-lg">Oops!</h5>
+                    <p className="text-red-700 dark:text-red-300">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Enhanced Success Message */}
+            {success && (
+              <div className="bg-green-500/20 backdrop-blur-lg border border-green-300/50 rounded-3xl p-6 animate-fade-in">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <i className="fas fa-check-circle text-white"></i>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-green-800 dark:text-green-200 text-lg">Success!</h5>
+                    <p className="text-green-700 dark:text-green-300">{success}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Enhanced Rating Selection */}
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-3xl p-8">
+              <fieldset>
+                <legend className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                  <i className="fas fa-star mr-3 text-yellow-500"></i>
+                  Rate This Product
+                  <span className="text-red-500 ml-2 text-lg">*</span>
+                </legend>
+                
+                {/* Custom Star Rating */}
+                <div className="flex items-center justify-center space-x-2 mb-6">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => handleRatingChange(star)}
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onMouseLeave={() => setHoveredRating(0)}
+                      className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
+                        star <= (hoveredRating || rating)
+                          ? 'bg-gradient-to-r from-yellow-400 to-orange-500 shadow-2xl'
+                          : 'bg-white/20 backdrop-blur-lg border border-white/30 hover:bg-white/30'
+                      }`}
+                    >
+                      <FaStar 
+                        className={`text-2xl transition-all duration-300 ${
+                          star <= (hoveredRating || rating) ? 'text-white' : 'text-gray-400'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Rating Label */}
+                <div className="text-center">
+                  <p className={`text-lg font-semibold transition-all duration-300 ${
+                    rating > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    {hoveredRating > 0 ? getRatingLabel(hoveredRating) : getRatingLabel(rating)}
+                  </p>
+                  {rating > 0 && (
+                    <div className="flex items-center justify-center mt-2">
+                      <div className="flex space-x-1">
+                        {[...Array(rating)].map((_, i) => (
+                          <div key={i} className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}></div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {ratingError && (
+                  <div className="mt-4 p-4 bg-red-500/20 backdrop-blur-lg border border-red-300/50 rounded-2xl">
+                    <p className="text-red-700 dark:text-red-300 text-center">
+                      <i className="fas fa-exclamation-circle mr-2"></i>
+                      {ratingError}
+                    </p>
+                  </div>
+                )}
+              </fieldset>
             </div>
-          )}
-          
-          {/* Rating selection using the Rating component */}
-          <div className="mb-6">
-            <fieldset>
-              <legend className="block text-gray-700 font-medium mb-2">Rating<span className="text-red-500">*</span></legend>
-              <Rating 
-                totalStars={5}
-                selectedStars={rating}
-                onRate={handleRatingChange}
-                size={28}
-                name="product-rating"
-                showLabel={true}
-                labelText="stars"
-              />
-              {ratingError && (
-                <p className="mt-1 text-sm text-red-600" id="rating-error">
-                  {ratingError}
-                </p>
+            
+            {/* Enhanced Comment Section */}
+            <div className={`bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 transition-all duration-500 ${
+              isExpanded || rating > 0 ? 'opacity-100 transform translate-y-0' : 'opacity-50 transform translate-y-4'
+            }`}>
+              <label htmlFor="comment" className="block text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                <i className="fas fa-comment-alt mr-3 text-blue-500"></i>
+                Share Your Thoughts
+                <span className="text-red-500 ml-2 text-lg">*</span>
+              </label>
+              
+              <div className="relative">
+                <textarea
+                  id="comment"
+                  name="comment"
+                  rows="6"
+                  className={`w-full px-6 py-4 bg-white/20 backdrop-blur-lg border ${
+                    commentError ? 'border-red-500/50' : 'border-white/30'
+                  } rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                    commentError ? 'focus:ring-red-500' : 'focus:ring-blue-400'
+                  } focus:border-transparent transition-all duration-200 resize-none`}
+                  value={comment}
+                  onChange={handleCommentChange}
+                  onBlur={() => handleBlur('comment')}
+                  placeholder="What did you love about this product? Share details that will help other customers..."
+                  aria-required="true"
+                  aria-invalid={!!commentError}
+                  aria-describedby={commentError ? "comment-error" : "comment-hint"}
+                />
+                
+                {/* Character Counter */}
+                <div className="absolute bottom-4 right-4 flex items-center space-x-2">
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    characterCount > 500 ? 'bg-red-100 text-red-700' :
+                    characterCount > 400 ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-blue-100 text-blue-700'
+                  }`}>
+                    {characterCount}/500
+                  </div>
+                </div>
+              </div>
+              
+              {commentError ? (
+                <div className="mt-4 p-4 bg-red-500/20 backdrop-blur-lg border border-red-300/50 rounded-2xl">
+                  <p className="text-red-700 dark:text-red-300">
+                    <i className="fas fa-exclamation-circle mr-2"></i>
+                    {commentError}
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4 p-4 bg-blue-500/20 backdrop-blur-lg border border-blue-300/50 rounded-2xl">
+                  <p className="text-blue-700 dark:text-blue-300 text-sm">
+                    <i className="fas fa-lightbulb mr-2"></i>
+                    <strong>Tips for a great review:</strong> Mention specific features, quality, comfort, and how the product met your expectations.
+                  </p>
+                </div>
               )}
-            </fieldset>
-          </div>
-          
-          {/* Comment input with improved accessibility */}
-          <div className="mb-6">
-            <label htmlFor="comment" className="block text-gray-700 font-medium mb-2">
-              Your Review<span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="comment"
-              name="comment"
-              rows="4"
-              className={`w-full px-3 py-2 border ${
-                commentError ? 'border-red-500' : 'border-gray-300'
-              } rounded-md focus:outline-none focus:ring-2 ${
-                commentError ? 'focus:ring-red-500' : 'focus:ring-blue-500'
-              } transition-colors`}
-              value={comment}
-              onChange={handleCommentChange}
-              onBlur={() => handleBlur('comment')}
-              placeholder="Share your experience with this product..."
-              aria-required="true"
-              aria-invalid={!!commentError}
-              aria-describedby={commentError ? "comment-error" : "comment-hint"}
-            ></textarea>
-            {commentError ? (
-              <p className="mt-1 text-sm text-red-600" id="comment-error">
-                {commentError}
-              </p>
-            ) : (
-              <p id="comment-hint" className="text-sm text-gray-500 mt-1">
-                Please provide at least 5 characters
-              </p>
-            )}
-          </div>
-          
-          {/* Submit button with improved states */}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-2 px-4 rounded-md font-medium ${
-              loading
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            } transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-            aria-busy={loading}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Submitting...
-              </span>
-            ) : (
-              'Submit Review'
-            )}
-          </button>
-          
-          <p className="text-sm text-gray-500 mt-3">
-            <span className="text-red-500">*</span> Required fields
-          </p>
-        </form>
-      )}
+            </div>
+            
+            {/* Review Guidelines */}
+            <div className="bg-purple-500/20 backdrop-blur-lg border border-purple-300/50 rounded-3xl p-6">
+              <h4 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-3">
+                <i className="fas fa-info-circle mr-2"></i>
+                Review Guidelines
+              </h4>
+              <ul className="text-purple-700 dark:text-purple-300 space-y-2 text-sm">
+                <li className="flex items-start">
+                  <i className="fas fa-check text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                  Be honest and specific about your experience
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-check text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                  Focus on the product's features and quality
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-check text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                  Keep language respectful and constructive
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-times text-red-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                  Avoid personal information or inappropriate content
+                </li>
+              </ul>
+            </div>
+            
+            {/* Enhanced Submit Button */}
+            <div className="text-center">
+              <button
+                type="submit"
+                disabled={loading || !rating || !comment.trim()}
+                className={`group relative px-12 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-blue-400/50 ${
+                  loading || !rating || !comment.trim()
+                    ? 'bg-gray-400/50 cursor-not-allowed text-gray-600'
+                    : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-2xl hover:scale-105 active:scale-95'
+                }`}
+                aria-busy={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>
+                    <span>Publishing Your Review...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center">
+                    <i className="fas fa-paper-plane mr-3 group-hover:animate-bounce"></i>
+                    <span>Publish Review</span>
+                    <i className="fas fa-arrow-right ml-3 group-hover:translate-x-1 transition-transform duration-200"></i>
+                  </span>
+                )}
+                
+                {/* Button Glow Effect */}
+                {!loading && rating && comment.trim() && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-300 -z-10"></div>
+                )}
+              </button>
+              
+              {/* Form Requirements */}
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center space-x-4">
+                  <span className="flex items-center">
+                    <span className="text-red-500 mr-1">*</span>
+                    Required fields
+                  </span>
+                  <span className="w-px h-4 bg-gray-300"></span>
+                  <span className="flex items-center">
+                    <i className="fas fa-shield-alt text-green-500 mr-2"></i>
+                    Your review is secure and verified
+                  </span>
+                </p>
+              </div>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Custom Styles */}
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        
+        .animate-fade-in-up {
+          animation: fade-in-up 0.8s ease-out;
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out;
+        }
+        
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+        
+        /* Custom scrollbar for textarea */
+        textarea::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        textarea::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb {
+          background: rgba(59, 130, 246, 0.5);
+          border-radius: 4px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb:hover {
+          background: rgba(59, 130, 246, 0.7);
+        }
+      `}</style>
     </div>
   );
 };

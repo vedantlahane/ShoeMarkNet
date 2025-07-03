@@ -14,6 +14,7 @@ const getDashboardStats = async () => {
     throw error;
   }
 };
+
 /**
  * Get sales reports with optional filters
  * @param {Object} filters - Filters for the report (date range, product category, etc.)
@@ -170,6 +171,30 @@ const deleteCampaign = async (campaignId) => {
   }
 };
 
+/**
+ * Get all users
+ * @param {Object} filters - Optional filters for users (e.g., role, status)
+ * @returns {Promise} - Promise resolving to an array of users
+ */
+const getUsers = async (filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    // Add filters to query params
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const url = queryParams.toString() ? `/admin/users?${queryParams.toString()}` : '/admin/users';
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+
 const adminService = {
   getDashboardStats,
   getSalesReport,
@@ -180,7 +205,8 @@ const adminService = {
   createCampaign,
   getCampaigns,
   updateCampaign,
-  deleteCampaign
+  deleteCampaign,
+  getUsers // Added this line
 };
 
 module.exports = adminService;
