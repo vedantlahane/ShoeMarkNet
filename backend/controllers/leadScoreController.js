@@ -1,9 +1,14 @@
+// controllers/leadScoreController.js
+
 const User = require('../models/User');
 
 // Function to update lead score
-const updateLeadScore = async (userId, action) => {
+const updateLeadScore = async (userId, action, options = {}) => {
   try {
-    const user = await User.findById(userId);
+    // Extract session if provided (for transaction support)
+    const { session } = options;
+    
+    const user = await User.findById(userId).session(session);
     if (!user) {
       console.warn(`User ${userId} not found for lead score update`);
       return;
@@ -42,11 +47,12 @@ const updateLeadScore = async (userId, action) => {
 
     // Update the user's lead score
     user.score += scoreChange;
-    await user.save();
+    await user.save({ session });
 
-    console.log(`Lead score updated for user ${userId}: ${scoreChange}`);
+    console.log(`Lead score updated for user ${userId}: ${scoreChange} (new score: ${user.score})`);
   } catch (error) {
     console.error('Error updating lead score:', error);
+    // Don't throw error to prevent breaking the main flow
   }
 };
 

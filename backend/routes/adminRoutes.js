@@ -13,12 +13,11 @@ const {
   getUsers,
 } = require('../controllers/adminController');
 const authMiddleware = require('../middleware/authMiddleware');
-const adminMiddleware = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 
 // All admin routes require authentication and admin privileges
-router.use(authMiddleware, adminMiddleware);
+router.use(authMiddleware.admin, authMiddleware.protect);
 
 router.get('/users', getUsers);
 router.get('/dashboard', getDashboardStats);

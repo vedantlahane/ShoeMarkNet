@@ -6,17 +6,17 @@ const {
   clearWishlist,
   checkProductInWishlist
 } = require('../controllers/wishlistController');
-const authMiddleware = require('../middleware/authMiddleware');
+const {protect} = require('../middleware/authMiddleware');
 const {
   validateProductId,
   validateProductParam,
   handleValidationErrors
-} = require('../middleware/validation');
+} = require('../middleware/validationMiddleware');
 
 const router = express.Router();
 
 // All wishlist routes require authentication
-router.use(authMiddleware);
+router.use(protect);
 
 // Get wishlist with pagination
 router.get('/', getWishlist);

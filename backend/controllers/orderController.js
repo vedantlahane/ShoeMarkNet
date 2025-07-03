@@ -221,7 +221,7 @@ const deleteOrder = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
     
-    await order.remove();
+    await order.deleteOne({ _id: req.params.orderId});
     
     res.status(200).json({ message: 'Order deleted successfully' });
   } catch (error) {
