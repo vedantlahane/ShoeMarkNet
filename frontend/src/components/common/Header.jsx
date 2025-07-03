@@ -7,6 +7,8 @@ import { logout } from '../../redux/slices/authSlice';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const dropdownRef = useRef(null);
   const { items } = useSelector((state) => state.cart);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -19,6 +21,16 @@ const Header = () => {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+  };
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDarkMode ? 'light' : 'dark');
   };
 
   const handleLogout = () => {
@@ -39,153 +51,373 @@ const Header = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
   const isAdmin = user?.role === 'admin';
+  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold text-blue-600">ShoeMarkNet</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-blue-600">Home</Link>
-            <Link to="/products" className="text-gray-700 hover:text-blue-600">Products</Link>
-            <Link to="/categories" className="text-gray-700 hover:text-blue-600">Categories</Link>
-            <Link to="/about" className="text-gray-700 hover:text-blue-600">About</Link>
-            <Link to="/contact" className="text-gray-700 hover:text-blue-600">Contact</Link>
-          </nav>
-
-          {/* Desktop Right Section */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* Search Icon */}
-            <Link to="/search" className="text-gray-700 hover:text-blue-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+    <>
+      {/* Enhanced Header */}
+      <header className="fixed top-0 w-full bg-white/10 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 z-40 transition-all duration-300">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo with enhanced animation */}
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="w-10 h-10 md:h-12 md:w-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 md:rounded-2xl rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
+                S
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-200">
+                ShoeMarkNet
+              </span>
             </Link>
-            
-            {/* Cart Icon with Counter */}
-            <Link to="/cart" className="text-gray-700 hover:text-blue-600 relative">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              {items.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {items.length}
-                </span>
-              )}
-            </Link>
-            
-            {/* User Account */}
-            {isAuthenticated ? (
-              <div className="relative" ref={dropdownRef}>
-                <button 
-                  onClick={toggleDropdown}
-                  className="flex items-center text-gray-700 hover:text-blue-600"
-                >
-                  <span className="mr-1">{user?.name?.split(' ')[0]}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {/* Dropdown */}
-                <div className={`absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 ${
-                  isDropdownOpen ? 'flex flex-col' : 'hidden'
-                } transition ease-in-out duration-200`}>
-                  <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</Link>
-                  <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Orders</Link>
-                  <Link to="/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Wishlist</Link>
-                  {isAdmin && (
-                    <Link to="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin Dashboard</Link>
-                  )}
-                  <button 
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link
+                to="/"
+                className="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 font-medium hover:scale-105 flex items-center"
+              >
+                <i className="fas fa-home mr-2"></i>Home
+              </Link>
+              <Link
+                to="/products"
+                className="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 font-medium hover:scale-105 flex items-center"
+              >
+                <i className="fas fa-box mr-2"></i>Products
+              </Link>
+              <Link
+                to="/categories"
+                className="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 font-medium hover:scale-105 flex items-center"
+              >
+                <i className="fas fa-th-large mr-2"></i>Categories
+              </Link>
+              <Link
+                to="/about"
+                className="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 font-medium hover:scale-105 flex items-center"
+              >
+                <i className="fas fa-info-circle mr-2"></i>About
+              </Link>
+              <Link
+                to="/contact"
+                className="nav-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 font-medium hover:scale-105 flex items-center"
+              >
+                <i className="fas fa-envelope mr-2"></i>Contact
+              </Link>
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center space-x-2 md:space-x-3">
+              {/* Search Button */}
+              <button
+                onClick={toggleSearch}
+                className="p-2 md:p-3 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200 hover:scale-105"
+              >
+                <i className="fas fa-search"></i>
+              </button>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 md:p-3 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200 hover:scale-105"
+              >
+                <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+              </button>
+
+              {/* Cart Button with Enhanced Animation */}
+              <Link
+                to="/cart"
+                className="relative p-2 md:p-3 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200 hover:scale-105"
+              >
+                <i className="fas fa-shopping-cart"></i>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center animate-pulse font-bold">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* User Account */}
+              {isAuthenticated ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={toggleDropdown}
+                    className="flex items-center space-x-2 p-2 md:p-3 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200 hover:scale-105"
                   >
-                    Logout
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <span className="hidden md:block font-medium">
+                      {user?.name?.split(' ')[0]}
+                    </span>
+                    <i className="fas fa-chevron-down text-xs"></i>
                   </button>
+
+                  {/* Enhanced Dropdown */}
+                  <div
+                    className={`absolute right-0 mt-2 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-2xl shadow-2xl py-2 z-50 transition-all duration-300 ${
+                      isDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
+                    }`}
+                  >
+                    {/* User Info */}
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                          {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">{user?.name}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <i className="fas fa-user mr-3 text-blue-500"></i>
+                        Profile Settings
+                      </Link>
+                      <Link
+                        to="/orders"
+                        className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <i className="fas fa-shopping-bag mr-3 text-green-500"></i>
+                        My Orders
+                      </Link>
+                      <Link
+                        to="/wishlist"
+                        className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <i className="fas fa-heart mr-3 text-pink-500"></i>
+                        Wishlist
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          to="/admin"
+                          className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <i className="fas fa-cog mr-3 text-purple-500"></i>
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsDropdownOpen(false);
+                        }}
+                        className="flex items-center w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200"
+                      >
+                        <i className="fas fa-sign-out-alt mr-3 text-red-500"></i>
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex space-x-2">
-                <Link to="/login">
-                  <button className="px-4 py-2 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50">
-                    Login
-                  </button>
-                </Link>
-                <Link to="/register">
-                  <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Register
-                  </button>
-                </Link>
-              </div>
-            )}
+              ) : (
+                <div className="flex space-x-2">
+                  <Link to="/login">
+                    <button className="px-4 py-2 text-sm bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-white/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:scale-105">
+                      <i className="fas fa-sign-in-alt mr-2"></i>
+                      Login
+                    </button>
+                  </Link>
+                  <Link to="/register">
+                    <button className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 hover:scale-105 shadow-lg">
+                      <i className="fas fa-user-plus mr-2"></i>
+                      Register
+                    </button>
+                  </Link>
+                </div>
+              )}
+
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={toggleMenu}
+                className="md:hidden p-2 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
+              >
+                <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+              </button>
+            </div>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button onClick={toggleMenu} className="text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+          {/* Enhanced Mobile Navigation */}
+          <div
+            className={`md:hidden mt-4 transition-all duration-300 overflow-hidden ${
+              isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl p-4">
+              <div className="flex flex-col space-y-2">
+                <Link
+                  to="/"
+                  className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <i className="fas fa-home mr-3 text-blue-500"></i>Home
+                </Link>
+                <Link
+                  to="/products"
+                  className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <i className="fas fa-box mr-3 text-purple-500"></i>Products
+                </Link>
+                <Link
+                  to="/categories"
+                  className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <i className="fas fa-th-large mr-3 text-pink-500"></i>Categories
+                </Link>
+                <Link
+                  to="/about"
+                  className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <i className="fas fa-info-circle mr-3 text-green-500"></i>About
+                </Link>
+                <Link
+                  to="/contact"
+                  className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <i className="fas fa-envelope mr-3 text-cyan-500"></i>Contact
+                </Link>
+
+                <div className="border-t border-white/20 dark:border-gray-700/20 my-3"></div>
+
+                <Link
+                  to="/cart"
+                  className="flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <i className="fas fa-shopping-cart mr-3 text-blue-500"></i>
+                    Shopping Cart
+                  </div>
+                  {cartItemCount > 0 && (
+                    <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full px-2 py-1 font-bold">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
+
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      to="/profile"
+                      className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <i className="fas fa-user mr-3 text-purple-500"></i>Profile
+                    </Link>
+                    <Link
+                      to="/orders"
+                      className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <i className="fas fa-shopping-bag mr-3 text-green-500"></i>Orders
+                    </Link>
+                    <Link
+                      to="/wishlist"
+                      className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <i className="fas fa-heart mr-3 text-pink-500"></i>Wishlist
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-cog mr-3 text-indigo-500"></i>Admin Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-white/20 rounded-xl transition-all duration-200"
+                    >
+                      <i className="fas fa-sign-out-alt mr-3 text-red-500"></i>Logout
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col space-y-2 pt-2">
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                      <button className="w-full px-4 py-3 text-sm bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-white/20 transition-all duration-200">
+                        <i className="fas fa-sign-in-alt mr-2"></i>Login
+                      </button>
+                    </Link>
+                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                      <button className="w-full px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200">
+                        <i className="fas fa-user-plus mr-2"></i>Register
+                      </button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Enhanced Search Modal */}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-all duration-300 ${
+          isSearchOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
+        onClick={() => setIsSearchOpen(false)}
+      >
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <div
+            className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl w-full max-w-2xl p-8 transform transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <i className="fas fa-search mr-2 text-blue-500"></i>Search Products
+              </h3>
+              <button
+                onClick={() => setIsSearchOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                <i className="fas fa-times text-gray-600 dark:text-gray-400"></i>
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search for shoes, brands, categories..."
+                className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+              <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <div className="mt-6 text-center text-gray-500 dark:text-gray-400">
+              <i className="fas fa-lightbulb mr-2"></i>
+              Start typing to search for products...
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white shadow-md">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link to="/" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Home</Link>
-            <Link to="/products" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Products</Link>
-            <Link to="/categories" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Categories</Link>
-            <Link to="/about" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">About</Link>
-            <Link to="/contact" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Contact</Link>
-            
-            <div className="border-t border-gray-200 my-2"></div>
-            
-            <Link to="/search" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Search</Link>
-            <Link to="/cart" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Cart ({items.length})</Link>
-            
-            {isAuthenticated ? (
-              <>
-                <Link to="/profile" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Profile</Link>
-                <Link to="/orders" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Orders</Link>
-                <Link to="/wishlist" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Wishlist</Link>
-                {isAdmin && (
-                  <Link to="/admin" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Admin Dashboard</Link>
-                )}
-                <button 
-                  onClick={handleLogout}
-                  className="block w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <div className="flex flex-col space-y-2 px-3 py-2">
-                <Link to="/login">
-                  <button className="w-full px-4 py-2 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50">
-                    Login
-                  </button>
-                </Link>
-                <Link to="/register">
-                  <button className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Register
-                  </button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </header>
+    </>
   );
 };
 
