@@ -321,7 +321,7 @@ const ReviewForm = ({ productId }) => {
             <div className={`bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 transition-all duration-500 ${
               isExpanded || rating > 0 ? 'opacity-100 transform translate-y-0' : 'opacity-50 transform translate-y-4'
             }`}>
-              <label htmlFor="comment" className="block text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <label htmlFor="comment" className="block text-xl font-bold text-gray-900 dark:text-white mb-6 items-center">
                 <i className="fas fa-comment-alt mr-3 text-blue-500"></i>
                 Share Your Thoughts
                 <span className="text-red-500 ml-2 text-lg">*</span>
