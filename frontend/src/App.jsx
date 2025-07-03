@@ -38,7 +38,11 @@ useEffect(() => {
     <Provider store={store}>
       <BrowserRouter>
         <Routes>
-          {/* Public routes */}
+          {/* Standalone routes for Login and Register */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Public routes wrapped by MainLayout */}
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="products" element={<Products />} />
@@ -46,8 +50,6 @@ useEffect(() => {
             <Route path="categories" element={<Category />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
             
             {/* Protected user routes */}
             <Route element={<ProtectedRoute />}>
@@ -57,12 +59,19 @@ useEffect(() => {
               <Route path="wishlist" element={<Wishlist />} />
             </Route>
             
+            {/* Admin routes - protected by AdminRoute */}
             <Route path="/admin" element={<AdminRoute />}>
-  <Route index element={<AdminDashboard section="overview" />} />
-  <Route path="products" element={<AdminDashboard section="products" />} />
-  <Route path="orders" element={<AdminDashboard section="orders" />} />
-  <Route path="users" element={<AdminDashboard section="users" />} />
-</Route>
+              <Route index element={<AdminDashboard section="overview" />} /> {/* Corresponds to /admin/dashboard */}
+              <Route path="products" element={<AdminDashboard section="products" />} />
+              <Route path="orders" element={<AdminDashboard section="orders" />} />
+              <Route path="users" element={<AdminDashboard section="users" />} /> {/* Corresponds to /admin/users */}
+              <Route path="reports/sales" element={<AdminDashboard section="reports-sales" />} /> {/* Corresponds to /admin/reports/sales */}
+              <Route path="reports/inventory" element={<AdminDashboard section="reports-inventory" />} /> {/* Corresponds to /admin/reports/inventory */}
+              <Route path="analytics/customers" element={<AdminDashboard section="analytics-customers" />} /> {/* Corresponds to /admin/analytics/customers */}
+              <Route path="leads" element={<AdminDashboard section="leads" />} /> {/* Corresponds to /admin/leads */}
+              <Route path="settings" element={<AdminDashboard section="settings" />} /> {/* Corresponds to /admin/settings */}
+              <Route path="campaigns" element={<AdminDashboard section="campaigns" />} /> {/* Corresponds to /admin/campaigns */}
+            </Route>
             
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />
