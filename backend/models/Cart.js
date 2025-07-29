@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const CartSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
-  sessionId: { type: String, index: true }, // For guest carts
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // index removed - explicit index below
+  sessionId: { type: String }, // For guest carts - index removed - explicit index below
 
   items: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },

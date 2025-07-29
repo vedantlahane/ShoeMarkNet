@@ -58,7 +58,7 @@ const ProductSchema = new mongoose.Schema({
 ProductSchema.index({ name: 'text', description: 'text' }); // For text search
 ProductSchema.index({ brand: 1, category: 1 }); // For filtering
 ProductSchema.index({ price: 1, rating: -1 }); // For sorting
-ProductSchema.index({ slug: 1 }); // For URL lookups
+// slug index is already created by unique: true
 
 // Generate slug before saving
 ProductSchema.pre('save', async function(next) {

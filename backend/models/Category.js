@@ -11,8 +11,8 @@ const CategorySchema = new mongoose.Schema({
   },
   slug: { 
     type: String, 
-    unique: true,
-    index: true
+    unique: true
+    // index: true removed - unique already creates an index
   },
   description: { 
     type: String,
@@ -36,8 +36,8 @@ const CategorySchema = new mongoose.Schema({
     default: 0 
   }, // Depth in hierarchy (0 = root)
   path: { 
-    type: String,
-    index: true 
+    type: String
+    // index: true removed - explicit index below handles this
   }, // Full path like "electronics/computers/laptops"
   
   // Display

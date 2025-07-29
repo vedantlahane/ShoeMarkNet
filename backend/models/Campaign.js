@@ -17,8 +17,8 @@ const CampaignSchema = new mongoose.Schema({
     type: String,
     unique: true,
     uppercase: true,
-    sparse: true, // Allows null values while maintaining uniqueness
-    index: true
+    sparse: true // Allows null values while maintaining uniqueness
+    // index: true removed - unique already creates an index
   },
   description: { 
     type: String,
@@ -242,7 +242,7 @@ const CampaignSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-CampaignSchema.index({ code: 1 });
+// code index is already created by unique: true
 CampaignSchema.index({ status: 1, isActive: 1 });
 CampaignSchema.index({ startDate: 1, endDate: 1 });
 CampaignSchema.index({ type: 1 });
