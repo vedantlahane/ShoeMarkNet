@@ -212,7 +212,20 @@ ShoeMarkNet/
 - `GET /api/wishlist` - Get user wishlist
 - `POST /api/wishlist` - Add item to wishlist
 
-## 🚀 Deployment
+## � Environment Setup
+
+### Database Setup
+1. Install MongoDB locally or use MongoDB Atlas
+2. Create a new database named `shoemarknet`
+3. Optional: Import sample data from `backend/data/` directory
+
+### Email Configuration
+Configure email settings in your backend `.env` file for:
+- User registration confirmation
+- Password reset functionality
+- Order confirmation emails
+
+## �🚀 Deployment
 
 ### Backend Deployment (Heroku/Railway)
 1. Set up production environment variables
@@ -248,7 +261,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Vedant Lahane**
 - GitHub: [@vedantlahane](https://github.com/vedantlahane)
-- Email: vedant.lahane@example.com
+- Email: vedant.lahane@gmail.com
 
 ## 🙏 Acknowledgments
 
@@ -267,10 +280,30 @@ For detailed documentation, please visit:
 
 ## 🐛 Support & Issues
 
+### Common Issues & Solutions
+
+**CORS Errors**: Ensure your frontend URL is added to the allowed origins in `backend/app.js`
+
+**Database Connection**: Verify your MongoDB URI is correct and the database is running
+
+**Environment Variables**: Double-check all required environment variables are set
+
+**Port Conflicts**: Make sure ports 5000 and 5173 are available
+
 If you encounter any issues or have questions:
 1. Check the [Issues](https://github.com/vedantlahane/ShoeMarkNet/issues) page
 2. Create a new issue with detailed description
 3. Contact the maintainers
+
+## 📈 Roadmap
+
+- [ ] Payment integration (Stripe, PayPal, Razorpay)
+- [ ] Real-time chat support
+- [ ] Mobile application (React Native)
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+- [ ] Inventory automation
+- [ ] Social media integration
 
 ---
 
