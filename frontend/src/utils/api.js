@@ -8,14 +8,12 @@ const API_CONFIG = {
   timeout: 15000, // 15 seconds timeout
   retryAttempts: 3,
   retryDelay: 1000, // Base delay for exponential backoff
-
-  
 };
 
 
 const api = axios.create({
   baseURL: API_CONFIG.baseURL,
-  timeout: API_CONFIG.timeout,
+  timeout: API_CONFIG.timeout,// Set the timeout for requests
 })
 
 

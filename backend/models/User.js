@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');// bcrypt for hashing passwords, what is does is that it takes a password and generates a hash that is stored in the database, when a user logs in, the entered password is hashed again and compared with the stored hash to verify the password
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema({
     required: true, 
     unique: true, 
     lowercase: true,
-    match: [/\S+@\S+\.\S+/, 'is invalid']
+    match: [/\S+@\S+\.\S+/, 'is invalid']// regular expression to validate email format
   },
   phone: { type: String },
   password: { type: String, required: true },
