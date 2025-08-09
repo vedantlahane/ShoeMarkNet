@@ -8,7 +8,7 @@ const { updateLeadScore } = require('./leadScoreController');
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
-  // Remove empty category field if present
+  // Remove the category field if it's an empty string to avoid validation errors
   if (req.body.category === '') {
     delete req.body.category;
   }
@@ -16,7 +16,7 @@ const createProduct = asyncHandler(async (req, res) => {
   const product = new Product(req.body);
   await product.save();
   
-  // Update category product count if category exists
+  // If a category was assigned, update the product count on the Category model
   if (product.category) {
     const category = await Category.findById(product.category);
     if (category) {
@@ -27,7 +27,7 @@ const createProduct = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'Product created successfully', product });
 });
 
-// @desc    Get all products with filters
+// @desc    Get all products with filters, sorting, and pagination
 // @route   GET /api/products
 // @access  Public
 const getAllProducts = asyncHandler(async (req, res) => {
@@ -46,7 +46,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     inStock
   } = req.query;
   
-  // Build filter object
+  // Build a filter object for the MongoDB query
   const filters = { isActive: true };
   
   if (category) filters.category = category;
@@ -55,7 +55,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
   if (isFeatured === 'true') filters.isFeatured = true;
   if (isNewArrival === 'true') filters.isNewArrival = true;
   
-  // Search across multiple fields
+  // Create a case-insensitive search query across multiple fields
   if (search) {
     filters.$or = [
       { name: new RegExp(search, 'i') },
@@ -64,19 +64,19 @@ const getAllProducts = asyncHandler(async (req, res) => {
     ];
   }
   
-  // Price range filter
+  // Add a price range filter
   if (minPrice || maxPrice) {
     filters.price = {};
     if (minPrice) filters.price.$gte = Number(minPrice);
     if (maxPrice) filters.price.$lte = Number(maxPrice);
   }
   
-  // Stock filter
+  // Filter for products that are in stock
   if (inStock === 'true') {
     filters.countInStock = { $gt: 0 };
   }
   
-  // Build sort object
+  // Build a sort object based on the query parameter
   let sortOption = {};
   if (sort) {
     const [field, order] = sort.split(':');
@@ -85,18 +85,18 @@ const getAllProducts = asyncHandler(async (req, res) => {
     sortOption = { createdAt: -1 }; // Default sort by newest
   }
   
-  // Calculate pagination
+  // Calculate pagination skip value
   const skip = (Number(page) - 1) * Number(limit);
   
-  // Execute query
+  // Execute the main query with filters, sorting, and pagination
   const products = await Product.find(filters)
     .populate('category', 'name slug')
     .sort(sortOption)
     .skip(skip)
     .limit(Number(limit))
-    .lean({ virtuals: true });
+    .lean({ virtuals: true }); // Use lean() for better performance, and virtuals to get computed fields
   
-  // Get total count for pagination
+  // Get the total count of documents matching the filters for pagination info
   const total = await Product.countDocuments(filters);
   
   res.status(200).json({
@@ -158,7 +158,7 @@ const getProductById = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
   
-  // If user is authenticated, update lead score
+  // If a user is authenticated, update their lead score
   if (req.user) {
     updateLeadScore(req.user.id, 'view_product');
   }
@@ -179,7 +179,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
   
-  // If user is authenticated, update lead score
+  // If a user is authenticated, update their lead score
   if (req.user) {
     updateLeadScore(req.user.id, 'view_product');
   }
@@ -187,10 +187,11 @@ const getProductBySlug = asyncHandler(async (req, res) => {
   res.status(200).json(product);
 });
 
-// @desc    Update product
+// @desc    Update a product by ID
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
+  // Find and update the product, returning the new document
   const product = await Product.findByIdAndUpdate(
     req.params.id, 
     req.body, 
@@ -205,7 +206,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Product updated successfully', product });
 });
 
-// @desc    Delete product
+// @desc    Delete a product by ID
 // @route   DELETE /api/products/:id
 // @access  Private/Admin
 const deleteProduct = asyncHandler(async (req, res) => {
@@ -216,16 +217,16 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
   
-  // Get category before deleting product
+  // Store category ID before deletion to update the category count later
   const categoryId = product.category;
   
-  // Delete product
+  // Delete the product document
   await Product.findByIdAndDelete(req.params.id);
   
-  // Also delete all reviews for this product
+  // Also delete all associated reviews
   await Review.deleteMany({ product: req.params.id });
   
-  // Update category product count
+  // Update the category's product count
   if (categoryId) {
     const category = await Category.findById(categoryId);
     if (category) {
@@ -249,7 +250,7 @@ const checkProductAvailability = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
   
-  // For products with variants
+  // Handle products with variants (colors, sizes)
   if (variantId && sizeId) {
     const variant = product.variants.id(variantId);
     if (!variant) {
@@ -264,7 +265,7 @@ const checkProductAvailability = asyncHandler(async (req, res) => {
     }
     
     const isAvailable = size.countInStock >= quantity;
-        return res.status(200).json({
+    return res.status(200).json({
       available: isAvailable,
       inStock: size.countInStock,
       requestedQuantity: quantity,
@@ -272,7 +273,7 @@ const checkProductAvailability = asyncHandler(async (req, res) => {
     });
   }
   
-  // For simple products
+  // Handle simple products without variants
   const isAvailable = product.countInStock >= quantity;
   
   res.status(200).json({
@@ -287,13 +288,14 @@ const checkProductAvailability = asyncHandler(async (req, res) => {
 // @route   POST /api/products/batch-update-prices
 // @access  Private/Admin
 const batchUpdatePrices = asyncHandler(async (req, res) => {
-  const { updates } = req.body; // Array of { productId, price, originalPrice? }
+  const { updates } = req.body; // Expects an array of { productId, price, originalPrice? }
   
   if (!Array.isArray(updates) || updates.length === 0) {
     res.status(400);
     throw new Error('Invalid updates array');
   }
   
+  // Create an array of bulk operations for efficient database updates
   const bulkOps = updates.map(update => {
     const updateData = { price: update.price };
     if (update.originalPrice) {
@@ -324,7 +326,7 @@ const batchUpdatePrices = asyncHandler(async (req, res) => {
 // @route   POST /api/products/batch-update-stock
 // @access  Private/Admin
 const batchUpdateStock = asyncHandler(async (req, res) => {
-  const { updates } = req.body; // Array of { productId, countInStock }
+  const { updates } = req.body; // Expects an array of { productId, countInStock }
   
   if (!Array.isArray(updates) || updates.length === 0) {
     res.status(400);
@@ -347,7 +349,7 @@ const batchUpdateStock = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get product reviews
+// @desc    Get product reviews with pagination
 // @route   GET /api/products/:id/reviews
 // @access  Public
 const getProductReviews = asyncHandler(async (req, res) => {
@@ -373,26 +375,26 @@ const getProductReviews = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Create product review
+// @desc    Create a new product review
 // @route   POST /api/products/:id/reviews
 // @access  Private
 const createProductReview = asyncHandler(async (req, res) => {
   const { rating, comment } = req.body;
   
-  // Validate rating
+  // Validate the provided rating
   if (!rating || rating < 1 || rating > 5) {
     res.status(400);
     throw new Error('Please provide a rating between 1 and 5');
   }
   
-  // Check if product exists
+  // Check if the product exists
   const product = await Product.findById(req.params.id);
   if (!product) {
     res.status(404);
     throw new Error('Product not found');
   }
   
-  // Check if user already reviewed this product
+  // Check if the user has already reviewed this product
   const alreadyReviewed = await Review.findOne({ 
     user: req.user.id, 
     product: req.params.id 
@@ -403,7 +405,7 @@ const createProductReview = asyncHandler(async (req, res) => {
     throw new Error('You have already reviewed this product');
   }
   
-  // Create review
+  // Create and save the new review
   const review = new Review({
     user: req.user.id,
     product: req.params.id,
@@ -413,7 +415,7 @@ const createProductReview = asyncHandler(async (req, res) => {
   
   await review.save();
   
-  // Update product rating
+  // Recalculate the product's average rating and number of reviews
   const allReviews = await Review.find({ product: req.params.id });
   const totalRating = allReviews.reduce((sum, item) => sum + item.rating, 0);
   
@@ -422,7 +424,7 @@ const createProductReview = asyncHandler(async (req, res) => {
   
   await product.save();
   
-  // Update lead score
+  // Update the user's lead score
   if (req.user) {
     updateLeadScore(req.user.id, 'add_review');
   }
@@ -430,7 +432,7 @@ const createProductReview = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'Review added successfully', review });
 });
 
-// @desc    Update product review
+// @desc    Update a product review
 // @route   PUT /api/products/:id/reviews/:reviewId
 // @access  Private
 const updateProductReview = asyncHandler(async (req, res) => {
@@ -442,7 +444,6 @@ const updateProductReview = asyncHandler(async (req, res) => {
     throw new Error('Please provide a rating between 1 and 5');
   }
   
-  // Find the review
   const review = await Review.findById(req.params.reviewId);
   
   if (!review) {
@@ -450,19 +451,19 @@ const updateProductReview = asyncHandler(async (req, res) => {
     throw new Error('Review not found');
   }
   
-  // Check if the review belongs to the user
+  // Ensure the authenticated user is the owner of the review
   if (review.user.toString() !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to update this review');
   }
   
-  // Update review
+  // Update the review fields
   review.rating = Number(rating) || review.rating;
   review.comment = comment || review.comment;
   
   await review.save();
   
-  // Update product rating
+  // Recalculate the product's average rating
   const product = await Product.findById(req.params.id);
   const allReviews = await Review.find({ product: req.params.id });
   const totalRating = allReviews.reduce((sum, item) => sum + item.rating, 0);
@@ -474,11 +475,10 @@ const updateProductReview = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Review updated successfully', review });
 });
 
-// @desc    Delete product review
+// @desc    Delete a product review
 // @route   DELETE /api/products/:id/reviews/:reviewId
 // @access  Private
 const deleteProductReview = asyncHandler(async (req, res) => {
-  // Find the review
   const review = await Review.findById(req.params.reviewId);
   
   if (!review) {
@@ -486,7 +486,7 @@ const deleteProductReview = asyncHandler(async (req, res) => {
     throw new Error('Review not found');
   }
   
-  // Check if the review belongs to the user or user is admin
+  // Ensure the user is either the review owner or an admin
   if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
     res.status(403);
     throw new Error('Not authorized to delete this review');
@@ -494,7 +494,7 @@ const deleteProductReview = asyncHandler(async (req, res) => {
   
   await Review.findByIdAndDelete(req.params.reviewId);
   
-  // Update product rating
+  // Recalculate the product's average rating and number of reviews
   const product = await Product.findById(req.params.id);
   const allReviews = await Review.find({ product: req.params.id });
   
@@ -503,6 +503,7 @@ const deleteProductReview = asyncHandler(async (req, res) => {
     product.rating = totalRating / allReviews.length;
     product.numReviews = allReviews.length;
   } else {
+    // If no reviews are left, reset rating and review count
     product.rating = 0;
     product.numReviews = 0;
   }
@@ -512,7 +513,7 @@ const deleteProductReview = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Review deleted successfully' });
 });
 
-// @desc    Get related products
+// @desc    Get related products based on category and brand
 // @route   GET /api/products/:id/related
 // @access  Public
 const getRelatedProducts = asyncHandler(async (req, res) => {
@@ -525,7 +526,7 @@ const getRelatedProducts = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
   
-  // Find products in the same category, excluding current product
+  // Find products in the same category, excluding the current product
   const relatedProducts = await Product.find({
     _id: { $ne: req.params.id },
     category: product.category,
@@ -535,12 +536,12 @@ const getRelatedProducts = asyncHandler(async (req, res) => {
     .limit(Number(limit))
     .lean({ virtuals: true });
   
-  // If not enough products in same category, add products from same brand
+  // If we don't have enough related products, add more from the same brand
   if (relatedProducts.length < limit) {
     const brandProducts = await Product.find({
       _id: { 
         $ne: req.params.id,
-        $nin: relatedProducts.map(p => p._id)
+        $nin: relatedProducts.map(p => p._id) // Avoid duplicates
       },
       brand: product.brand,
       isActive: true
@@ -555,7 +556,7 @@ const getRelatedProducts = asyncHandler(async (req, res) => {
   res.status(200).json(relatedProducts);
 });
 
-// @desc    Search products
+// @desc    Search products using a text index
 // @route   GET /api/products/search
 // @access  Public
 const searchProducts = asyncHandler(async (req, res) => {
@@ -566,15 +567,15 @@ const searchProducts = asyncHandler(async (req, res) => {
     throw new Error('Search query is required');
   }
   
-  // Use text search if text index is available
+  // Use MongoDB's text search feature, which requires a text index on the schema
   const products = await Product.find(
     { 
       $text: { $search: q },
       isActive: true 
     },
-    { score: { $meta: "textScore" } }
+    { score: { $meta: "textScore" } } // Include a textScore for sorting relevance
   )
-    .sort({ score: { $meta: "textScore" } })
+    .sort({ score: { $meta: "textScore" } }) // Sort by the relevance score
     .populate('category', 'name slug')
     .limit(Number(limit))
     .lean({ virtuals: true });
