@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllReviews, moderateReview } = require('../controllers/reviewController');
+const { getAllReviews, moderateReview, getReviewStats } = require('../controllers/reviewController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -24,5 +24,12 @@ router.get('/admin', protect, admin, getAllReviews);
  * @access Private/Admin
  */
 router.put('/admin/:reviewId', protect, admin, moderateReview);
+
+/**
+ * @description Get review statistics for admin dashboard
+ * @route GET /api/reviews/admin/stats
+ * @access Private/Admin
+ */
+router.get('/admin/stats', protect, admin, getReviewStats);
 
 module.exports = router;

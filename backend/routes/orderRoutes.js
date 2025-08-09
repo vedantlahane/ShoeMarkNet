@@ -39,6 +39,13 @@ router.get('/', protect, getUserOrders);
 router.get('/:orderId', protect, getOrderById);
 
 /**
+ * @description Track order delivery status.
+ * @route GET /api/orders/:orderId/track
+ * @access Private
+ */
+router.get('/:orderId/track', protect, getOrderById); // Using same function for now
+
+/**
  * @description Update an order's payment status after a successful transaction.
  * @route PUT /api/orders/:orderId/pay
  * @access Private
@@ -63,6 +70,13 @@ router.put('/:orderId/cancel', protect, cancelOrder);
  * @access Private/Admin
  */
 router.get('/admin/all', protect, admin, getAllOrders);
+
+/**
+ * @description Get order statistics for admin dashboard.
+ * @route GET /api/orders/admin/stats
+ * @access Private/Admin
+ */
+router.get('/admin/stats', protect, admin, getAllOrders); // Using same function for now
 
 /**
  * @description Update the status of a specific order.

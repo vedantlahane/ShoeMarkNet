@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Address = require('../models/Address');
+const SearchHistory = require('../models/SearchHistory');
 
 /**
  * @description Get the profile of the authenticated user.
@@ -302,6 +303,50 @@ const deleteUser = async (req, res) => {
   }
 };
 
+/**
+ * @description Get the authenticated user's search history with pagination.
+ * @route GET /api/users/search-history
+ * @access Private
+ */
+const getUserSearchHistory = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const searchHistory = await SearchHistory.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+    
+    const total = await SearchHistory.countDocuments({ user: req.user.id });
+    
+    res.status(200).json({
+      searchHistory,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching search history', error: error.message });
+  }
+};
+
+/**
+ * @description Clear the authenticated user's search history.
+ * @route DELETE /api/users/search-history
+ * @access Private
+ */
+const clearUserSearchHistory = async (req, res) => {
+  try {
+    await SearchHistory.deleteMany({ user: req.user.id });
+    res.status(200).json({ message: 'Search history cleared successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error clearing search history', error: error.message });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
@@ -312,5 +357,7 @@ module.exports = {
   deleteUserAddress,
   getAllUsers,
   updateUser,
-  deleteUser
+  deleteUser,
+  getUserSearchHistory,
+  clearUserSearchHistory
 };

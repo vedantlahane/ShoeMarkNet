@@ -9,7 +9,9 @@ const {
   deleteUserAddress,
   getAllUsers,
   updateUser,
-  deleteUser
+  deleteUser,
+  getUserSearchHistory,
+  clearUserSearchHistory
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -73,6 +75,20 @@ router.put('/addresses/:addressId', protect, updateUserAddress);
  * @access Private
  */
 router.delete('/addresses/:addressId', protect, deleteUserAddress);
+
+/**
+ * @description Get the authenticated user's search history with pagination.
+ * @route GET /api/users/search-history
+ * @access Private
+ */
+router.get('/search-history', protect, getUserSearchHistory);
+
+/**
+ * @description Clear the authenticated user's search history.
+ * @route DELETE /api/users/search-history
+ * @access Private
+ */
+router.delete('/search-history', protect, clearUserSearchHistory);
 
 // ====================================================================
 // ===================== PROTECTED ADMIN ROUTES =======================

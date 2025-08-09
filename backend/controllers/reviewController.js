@@ -87,7 +87,39 @@ const moderateReview = asyncHandler(async (req, res) => {
   res.json({ message: 'Review moderated successfully', review: review.toObject() });
 });
 
+// @desc    Get review statistics for admin dashboard
+// @route   GET /api/reviews/admin/stats
+// @access  Private/Admin
+const getReviewStats = asyncHandler(async (req, res) => {
+  const totalReviews = await Review.countDocuments();
+  const pendingReviews = await Review.countDocuments({ status: 'pending' });
+  const approvedReviews = await Review.countDocuments({ status: 'approved' });
+  const rejectedReviews = await Review.countDocuments({ status: 'rejected' });
+  
+  const averageRating = await Review.aggregate([
+    { $match: { status: 'approved' } },
+    { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+  ]);
+
+  // Recent reviews (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const recentReviews = await Review.countDocuments({ 
+    createdAt: { $gte: thirtyDaysAgo } 
+  });
+
+  res.json({
+    totalReviews,
+    pendingReviews,
+    approvedReviews,
+    rejectedReviews,
+    averageRating: averageRating.length > 0 ? averageRating[0].avgRating : 0,
+    recentReviews
+  });
+});
+
 module.exports = {
   getAllReviews,
-  moderateReview
+  moderateReview,
+  getReviewStats
 };

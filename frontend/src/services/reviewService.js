@@ -50,16 +50,51 @@ const deleteReview = async (productId, reviewId) => {
  * @param {Object} filters - Optional filters for reviews
  * @returns {Promise} - Promise resolving to an array of all reviews
  */
-const getAllReviews = async (filters = {}) => {
-  const queryParams = new URLSearchParams();
-  
-  // Add filters to query params
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value) queryParams.append(key, value);
-  });
-  
-  const response = await api.get(`/reviews/admin?${queryParams.toString()}`);
-  return response.data;
+// Get all reviews with admin access (with pagination and filters)
+export const getAllReviews = async (page = 1, limit = 10, status, sortBy = 'createdAt', order = 'desc') => {
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sortBy,
+      order
+    });
+    
+    if (status) {
+      params.append('status', status);
+    }
+    
+    const response = await api.get(`/reviews/admin?${params}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all reviews:', error);
+    throw error;
+  }
+};
+
+// Moderate a review (admin only) - approve, reject, or flag
+export const moderateReview = async (reviewId, status, moderationNote = '') => {
+  try {
+    const response = await api.put(`/reviews/admin/${reviewId}`, {
+      status,
+      moderationNote
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error moderating review:', error);
+    throw error;
+  }
+};
+
+// Get review statistics for admin dashboard
+export const getReviewStats = async () => {
+  try {
+    const response = await api.get('/reviews/admin/stats');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching review stats:', error);
+    throw error;
+  }
 };
 
 const reviewService = {
