@@ -33,7 +33,7 @@ const getWishlist = asyncHandler(async (req, res) => {
   }
 
   // Calculate total count for pagination
-  const total = wishlist.products.length;
+  const total = wishlist.products ? wishlist.products.length : 0;
   const pages = Math.ceil(total / parseInt(limit));
 
   // Find the wishlist again, but this time populate the products with pagination options
@@ -49,8 +49,11 @@ const getWishlist = asyncHandler(async (req, res) => {
       select: 'name price images description inStock rating'
     });
 
+  // Ensure we have a valid products array even after population
+  const products = wishlist && wishlist.products ? wishlist.products.filter(p => p !== null) : [];
+
   res.status(200).json({
-    products: wishlist.products,
+    products: products,
     pagination: {
       total,
       page: parseInt(page),

@@ -121,8 +121,16 @@ ProductSchema.virtual('discountPrice').get(function() {
 
 // Virtual field to sum up stock from all variants and sizes
 ProductSchema.virtual('calculatedCountInStock').get(function() {
+  // Handle case where variants might be undefined or empty
+  if (!this.variants || !Array.isArray(this.variants) || this.variants.length === 0) {
+    return this.countInStock || 0;
+  }
+  
   return this.variants.reduce((total, variant) => {
-    const sizeStock = variant.sizes?.reduce((sum, size) => sum + (size.countInStock || 0), 0) || 0;
+    if (!variant || !variant.sizes || !Array.isArray(variant.sizes)) {
+      return total;
+    }
+    const sizeStock = variant.sizes.reduce((sum, size) => sum + (size.countInStock || 0), 0) || 0;
     return total + sizeStock;
   }, 0);
 });

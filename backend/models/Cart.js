@@ -205,3 +205,7 @@ CartSchema.methods.clear = function() {
   this.calculateTotalPrice();
   return this.save();
 };
+
+// Create and export the Cart model
+const Cart = mongoose.model('Cart', CartSchema);
+module.exports = Cart;

@@ -23,14 +23,26 @@ const searchProducts = asyncHandler(async (req, res) => {
     throw new Error('Search query is required');
   }
   
-  // Build the main search filter to query against name, description, and brand
-  const searchFilter = {
-    $or: [
-      { name: new RegExp(q, 'i') },
-      { description: new RegExp(q, 'i') },
-      { brand: new RegExp(q, 'i') }
-    ]
-  };
+  // Build the main search filter using MongoDB text search if available
+  let searchFilter = {};
+  let useTextSearch = false;
+  
+  // Try to use MongoDB text search first
+  try {
+    searchFilter = {
+      $text: { $search: q }
+    };
+    useTextSearch = true;
+  } catch (error) {
+    // Fall back to regex search if text index is not available
+    searchFilter = {
+      $or: [
+        { name: new RegExp(q, 'i') },
+        { description: new RegExp(q, 'i') },
+        { brand: new RegExp(q, 'i') }
+      ]
+    };
+  }
   
   // Add additional filters from the query parameters
   if (category) searchFilter.category = category;
@@ -40,22 +52,32 @@ const searchProducts = asyncHandler(async (req, res) => {
     if (maxPrice) searchFilter.price.$lte = Number(maxPrice);
   }
   
-  // Build a sort object. Default is by relevance (which would need a text index on the schema)
+  // Build a sort object
   let sortOption = {};
   if (sort) {
     const [field, order] = sort.split(':');
     sortOption[field] = order === 'desc' ? -1 : 1;
+  } else if (useTextSearch) {
+    // Sort by text relevance if using text search
+    sortOption = { score: { $meta: 'textScore' } };
   } else {
-    // Note: To sort by text relevance, the Product model needs a text index.
-    // The `product-schema-comments` Canvas already has this.
-    sortOption = { relevanceScore: { $meta: 'textScore' } };
+    // Default sort for regex search
+    sortOption = { name: 1 };
   }
   
   // Calculate pagination values
   const skip = (Number(page) - 1) * Number(limit);
   
+  // Build the query
+  let query = Product.find(searchFilter);
+  
+  // Add text score projection if using text search
+  if (useTextSearch) {
+    query = query.select({ score: { $meta: 'textScore' } });
+  }
+  
   // Execute the search query
-  const products = await Product.find(searchFilter)
+  const products = await query
     .sort(sortOption)
     .skip(skip)
     .limit(Number(limit));

@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Review = require('../models/Review');
 const Category = require('../models/Category');
+const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 const { updateLeadScore } = require('./leadScoreController');
 
@@ -49,7 +50,31 @@ const getAllProducts = asyncHandler(async (req, res) => {
   // Build a filter object for the MongoDB query
   const filters = { isActive: true };
   
-  if (category) filters.category = category;
+  // Handle category filtering - support both ObjectId and category name
+  if (category) {
+    // Check if category is a valid ObjectId
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      filters.category = category;
+    } else {
+      // If not ObjectId, treat as category name and look up the ObjectId
+      const categoryDoc = await Category.findOne({ name: new RegExp(category, 'i') });
+      if (categoryDoc) {
+        filters.category = categoryDoc._id;
+      } else {
+        // If category name not found, return empty results
+        return res.status(200).json({
+          products: [],
+          pagination: {
+            total: 0,
+            page: parseInt(page),
+            pages: 0,
+            limit: parseInt(limit)
+          }
+        });
+      }
+    }
+  }
+  
   if (brand) filters.brand = brand;
   if (gender) filters.gender = gender;
   if (isFeatured === 'true') filters.isFeatured = true;
