@@ -90,11 +90,10 @@ const getAllProducts = asyncHandler(async (req, res) => {
   
   // Execute the main query with filters, sorting, and pagination
   const products = await Product.find(filters)
-    .populate('category', 'name slug')
     .sort(sortOption)
     .skip(skip)
     .limit(Number(limit))
-    .lean({ virtuals: true }); // Use lean() for better performance, and virtuals to get computed fields
+    .lean({ virtuals: true });
   
   // Get the total count of documents matching the filters for pagination info
   const total = await Product.countDocuments(filters);

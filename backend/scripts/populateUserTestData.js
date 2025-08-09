@@ -22,11 +22,9 @@ const populateUserTestData = async () => {
     const createdUsers = [];
     
     for (const userData of testUsers) {
-      // Hash password before creating user
-      const bcrypt = require('bcrypt');
-      const salt = await bcrypt.genSalt(10);
-      userData.password = await bcrypt.hash(userData.password, salt);
-      const user = new User(userData);
+      // Create a copy of userData to avoid modifying the original
+      const userDataCopy = { ...userData };
+      const user = new User(userDataCopy);
       const savedUser = await user.save();
       createdUsers.push(savedUser);
       console.log(`✅ Created user: ${savedUser.name} (${savedUser.email})`);
