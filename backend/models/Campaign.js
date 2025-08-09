@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
+/**
+ * @description Mongoose schema for the Campaign model.
+ * This schema is designed to handle complex marketing campaigns, including
+ * discounts, promotions, loyalty programs, and more. It includes fields for
+ * targeting, usage limits, budget management, and analytics.
+ */
 const CampaignSchema = new mongoose.Schema({
   // Basic Information
   name: { 
@@ -18,7 +25,6 @@ const CampaignSchema = new mongoose.Schema({
     unique: true,
     uppercase: true,
     sparse: true // Allows null values while maintaining uniqueness
-    // index: true removed - unique already creates an index
   },
   description: { 
     type: String,
@@ -32,7 +38,7 @@ const CampaignSchema = new mongoose.Schema({
     required: true 
   },
   
-  // Discount Configuration
+  // Discount Configuration (for 'discount' and 'promotion' types)
   discount: {
     type: { 
       type: String, 
@@ -53,7 +59,7 @@ const CampaignSchema = new mongoose.Schema({
     }
   },
   
-  // Bundle/BOGO Configuration
+  // Bundle/BOGO (Buy One Get One) Configuration
   bundleConfig: {
     buyQuantity: { type: Number, min: 1 },
     getQuantity: { type: Number, min: 0 },
@@ -72,7 +78,7 @@ const CampaignSchema = new mongoose.Schema({
     index: true
   },
   
-  // Scheduling (for recurring campaigns)
+  // Scheduling for recurring campaigns
   schedule: {
     isRecurring: { type: Boolean, default: false },
     frequency: { 
@@ -90,13 +96,13 @@ const CampaignSchema = new mongoose.Schema({
     }
   },
   
-  // Targeting
+  // Targeting specific user groups or demographics
   targetAudience: {
     segments: [{
       type: String,
       enum: ['all', 'new_users', 'existing_users', 'inactive_users', 'vip', 'subscribers']
     }],
-    userTags: [String], // Custom tags
+    userTags: [String], // Custom tags for advanced filtering
     minimumOrderCount: { type: Number, min: 0 },
     minimumLifetimeValue: { type: Number, min: 0 },
     specificUsers: [{ 
@@ -184,7 +190,7 @@ const CampaignSchema = new mongoose.Schema({
     max: 100
   }, // Higher priority campaigns apply first
   
-  // Stacking Rules
+  // Stacking Rules (e.g., can this campaign be combined with others?)
   stackingRules: {
     allowStacking: { type: Boolean, default: false },
     stackableWith: [{ 
@@ -241,15 +247,19 @@ const CampaignSchema = new mongoose.Schema({
   timestamps: true 
 });
 
+// ====================================================================
+// ========================= SCHEMA HOOKS & METHODS ===================
+// ====================================================================
+
 // Indexes for performance
-// code index is already created by unique: true
+// The 'code' index is already created by `unique: true`
 CampaignSchema.index({ status: 1, isActive: 1 });
 CampaignSchema.index({ startDate: 1, endDate: 1 });
 CampaignSchema.index({ type: 1 });
 CampaignSchema.index({ 'targetAudience.segments': 1 });
 CampaignSchema.index({ priority: -1 });
 
-// Compound indexes for common queries
+// Compound index for common queries to find active campaigns
 CampaignSchema.index({ 
   isActive: 1, 
   startDate: 1, 
@@ -257,14 +267,17 @@ CampaignSchema.index({
   status: 1 
 });
 
-// Text index for search
+// Text index for search functionality on key fields
 CampaignSchema.index({ 
   name: 'text', 
   description: 'text', 
   code: 'text' 
 });
 
-// Virtual for checking if campaign is currently valid
+/**
+ * @description Virtual field to check if a campaign is currently active and valid.
+ * This combines checks for `isActive`, `status`, dates, and usage limits.
+ */
 CampaignSchema.virtual('isCurrentlyValid').get(function() {
   const now = new Date();
   return this.isActive && 
@@ -275,62 +288,75 @@ CampaignSchema.virtual('isCurrentlyValid').get(function() {
          (!this.budget.totalBudget || this.budget.currentSpend < this.budget.totalBudget);
 });
 
-// Virtual for remaining budget
+/**
+ * @description Virtual field to calculate the remaining budget of the campaign.
+ */
 CampaignSchema.virtual('remainingBudget').get(function() {
   if (!this.budget.totalBudget) return null;
   return this.budget.totalBudget - this.budget.currentSpend;
 });
 
-// Virtual for usage percentage
+/**
+ * @description Virtual field to calculate the percentage of usage limit consumed.
+ */
 CampaignSchema.virtual('usagePercentage').get(function() {
   if (!this.usageLimits.totalUses) return null;
   return (this.usageLimits.currentUses / this.usageLimits.totalUses) * 100;
 });
 
-// Pre-save validation
+/**
+ * @description Pre-save hook for validation and auto-generation of data.
+ * It handles slug and code generation and updates the campaign status based on dates.
+ */
 CampaignSchema.pre('save', async function(next) {
   // Validate dates
   if (this.endDate && this.startDate && this.endDate < this.startDate) {
     return next(new Error('End date must be after start date'));
   }
   
-  // Generate slug if name is modified
+  // Generate slug if name is modified and slug is not already present
   if (this.isModified('name') && !this.slug) {
-    this.slug = this.name
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-');
+    this.slug = slugify(this.name, { lower: true, strict: true });
   }
   
-  // Generate code if not provided
+  // Generate a unique code if one is not provided and the campaign type is applicable
   if (!this.code && ['discount', 'promotion'].includes(this.type)) {
     this.code = await generateUniqueCode();
   }
   
-  // Update status based on dates
+  // Automatically update the campaign status based on the current date
   const now = new Date();
-  if (this.startDate > now) {
+  if (this.status === 'draft' && this.startDate <= now) {
+    this.status = 'active';
+  } else if (this.startDate > now) {
     this.status = 'scheduled';
   } else if (this.endDate < now) {
     this.status = 'completed';
-  } else if (this.isActive && this.status === 'scheduled') {
-    this.status = 'active';
   }
   
   next();
 });
 
-// Methods
+// ====================================================================
+// ========================== SCHEMA METHODS ==========================
+// ====================================================================
+
+/**
+ * @description Checks if a campaign can be used by a specific user.
+ * It verifies the campaign's validity and checks against user-specific usage limits.
+ * @param {string} userId - The ID of the user to check
+ * @returns {Promise<boolean>} - True if the user can use the campaign, false otherwise
+ */
 CampaignSchema.methods.canBeUsedBy = async function(userId) {
-  // Check if campaign is valid
+  // Check if the campaign is generally valid
   if (!this.isCurrentlyValid) return false;
   
-  // Check user targeting
+  // Check against specific user targeting
   if (this.targetAudience.specificUsers.length > 0) {
     if (!this.targetAudience.specificUsers.includes(userId)) return false;
   }
   
-  // Check usage limits
+  // Check if the user has reached their per-customer usage limit
   if (this.usageLimits.usesPerCustomer) {
     const userUses = this.usageHistory.filter(
       h => h.user.toString() === userId.toString()
@@ -342,6 +368,15 @@ CampaignSchema.methods.canBeUsedBy = async function(userId) {
   return true;
 };
 
+/**
+ * @description Records the usage of a campaign for a specific user and order.
+ * Updates usage counts, budget, and analytics.
+ * @param {string} userId - The ID of the user who used the campaign
+ * @param {string} orderId - The ID of the order where the campaign was applied
+ * @param {number} discountAmount - The amount discounted by the campaign
+ * @param {number} orderTotal - The total value of the order
+ * @returns {Promise<Document>} - The saved Campaign document
+ */
 CampaignSchema.methods.recordUsage = async function(userId, orderId, discountAmount, orderTotal) {
   this.usageLimits.currentUses += 1;
   this.budget.currentSpend += discountAmount;
@@ -362,6 +397,12 @@ CampaignSchema.methods.recordUsage = async function(userId, orderId, discountAmo
   return this.save();
 };
 
+/**
+ * @description Calculates the discount amount for a given purchase.
+ * @param {number} originalAmount - The original total amount of the purchase
+ * @param {number} productCount - The number of products in the purchase (for bundle/BOGO)
+ * @returns {number} - The calculated discount amount, capped at the original amount
+ */
 CampaignSchema.methods.calculateDiscount = function(originalAmount, productCount = 1) {
   if (!this.discount.type) return 0;
   
@@ -381,10 +422,8 @@ CampaignSchema.methods.calculateDiscount = function(originalAmount, productCount
       
     case 'bogo':
       if (this.bundleConfig && productCount >= this.bundleConfig.buyQuantity) {
-        const freeItems = Math.floor(productCount / this.bundleConfig.buyQuantity) * 
-                         this.bundleConfig.getQuantity;
-        discountAmount = (originalAmount / productCount) * freeItems * 
-                        (this.bundleConfig.getDiscountPercentage / 100);
+        const freeItems = Math.floor(productCount / this.bundleConfig.buyQuantity) * this.bundleConfig.getQuantity;
+        discountAmount = (originalAmount / productCount) * freeItems * (this.bundleConfig.getDiscountPercentage / 100);
       }
       break;
   }
@@ -392,7 +431,7 @@ CampaignSchema.methods.calculateDiscount = function(originalAmount, productCount
   return Math.min(discountAmount, originalAmount);
 };
 
-// Helper function to generate unique code
+// Helper function to generate a unique 8-character alphanumeric code
 async function generateUniqueCode() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code;
