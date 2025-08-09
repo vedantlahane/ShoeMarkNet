@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToWishlist } from '../redux/slices/wishlistSlice';
+import { addToCart } from '../redux/slices/cartSlice';
 
 const ProductCard = ({ product, viewMode = 'grid', index = 0 }) => {
   const dispatch = useDispatch();
@@ -41,7 +42,19 @@ const ProductCard = ({ product, viewMode = 'grid', index = 0 }) => {
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Add to cart:', product._id);
+    
+    // For now, add with default size and color - ideally this should open a modal for variant selection
+    const defaultVariant = product.variants && product.variants[0];
+    const defaultSize = defaultVariant?.sizes && defaultVariant.sizes[0];
+    
+    const cartItem = {
+      productId: product._id,
+      quantity: 1,
+      size: defaultSize?.size || null,
+      color: defaultVariant?.color || null
+    };
+    
+    dispatch(addToCart(cartItem));
   };
 
   if (viewMode === 'list') {

@@ -1,6 +1,7 @@
 // src/hooks/useAuth.js
 import { useState, useEffect, createContext } from 'react';
-import api from '../utils/api';
+import userService from '../services/userService';
+import authService from '../services/authService';
 
 // Create a context for profile version (keep this for components that need it)
 export const ProfileContext = createContext({
@@ -53,12 +54,16 @@ export const useAuth = () => {
           return;
         }
         
-        const response = await api.get('/auth/profile');
-        setUser(response.data);
+        const response = await userService.getUserProfile();
+        setUser(response.user || response);
         setError(null);
       } catch (err) {
         setError(err);
         setUser(null);
+        // If token is invalid, remove it
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+        }
       } finally {
         setLoading(false);
       }
@@ -68,20 +73,32 @@ export const useAuth = () => {
   }, [profileVersion]); // Re-fetch when profile version changes
   
   // Update user profile
-  const updateUserProfile = async ({ id, userData }) => {
+  const updateUserProfile = async (userData) => {
     try {
-      const response = await api.put(`/users/${id}`, userData);
-      return response.data;
+      const response = await userService.updateUserProfile(userData);
+      refreshProfile(); // Refresh to get updated data
+      return response;
     } catch (err) {
       throw err;
     }
   };
-  
+
+  // Change password
+  const changePassword = async (passwordData) => {
+    try {
+      const response = await userService.changePassword(passwordData);
+      return response;
+    } catch (err) {
+      throw err;
+    }
+  };
+
   return {
     user,
     loading,
     error,
     updateUserProfile,
+    changePassword,
     refreshProfile
   };
 };

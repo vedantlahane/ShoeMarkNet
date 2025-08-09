@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/common/Loader';
 import { toast } from 'react-toastify';
+import productService from '../services/productService';
+import categoryService from '../services/categoryService';
 
 // Dummy data configurations
 const mockFeaturedProducts = [
@@ -146,20 +148,30 @@ const Home = () => {
     seconds: '42'
   });
 
-  // Simulate data loading
+  // Load data from API
   useEffect(() => {
-    const loadDummyData = async () => {
+    const loadData = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Fetch featured products
+        const featuredResponse = await productService.getFeaturedProducts();
+        setFeaturedProducts(featuredResponse.products || featuredResponse || []);
+        
+        // Fetch categories
+        const categoriesResponse = await categoryService.getCategories();
+        setCategories(categoriesResponse.categories || categoriesResponse || []);
+        
+        setIsImagesLoaded(true);
+      } catch (err) {
+        console.error('Failed to load data:', err);
+        // Fallback to mock data if API fails
+        toast.warning('Using demo data - API not available');
         setFeaturedProducts(mockFeaturedProducts);
         setCategories(mockCategories);
         setIsImagesLoaded(true);
-      } catch (err) {
-        toast.error('Failed to load dummy data');
       }
     };
     
-    loadDummyData();
+    loadData();
   }, []);
 
   // Countdown timer
