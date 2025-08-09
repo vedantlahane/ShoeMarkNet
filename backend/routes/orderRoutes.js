@@ -1,4 +1,5 @@
 const express = require('express');
+const router = express.Router();
 const {
   createOrder,
   getUserOrders,
@@ -9,20 +10,72 @@ const {
   updateOrderStatus,
   deleteOrder
 } = require('../controllers/orderController');
-const {protect, admin} = require('../middleware/authMiddleware');
+const { protect, admin } = require('../middleware/authMiddleware');
 
-const router = express.Router();
+// ====================================================================
+// ==================== PROTECTED USER ROUTES =========================
+// These routes require a valid JWT to access.
+// ====================================================================
 
-// User routes (protected)
+/**
+ * @description Create a new order.
+ * @route POST /api/orders
+ * @access Private
+ */
 router.post('/', protect, createOrder);
-router.get('/', protect, getUserOrders);
-router.get('/:orderId', protect, getOrderById);
-router.put('/:orderId/pay', protect, updateOrderPayment);
-router.put('/:orderId/cancel',protect, cancelOrder);
 
-// Admin routes
-router.get('/admin/all', protect,admin, getAllOrders);
-router.put('/admin/:orderId', protect,admin, updateOrderStatus);
-router.delete('/admin/:orderId', protect,admin, deleteOrder);
+/**
+ * @description Get all orders for the authenticated user.
+ * @route GET /api/orders
+ * @access Private
+ */
+router.get('/', protect, getUserOrders);
+
+/**
+ * @description Get a specific order by its ID.
+ * @route GET /api/orders/:orderId
+ * @access Private
+ */
+router.get('/:orderId', protect, getOrderById);
+
+/**
+ * @description Update an order's payment status after a successful transaction.
+ * @route PUT /api/orders/:orderId/pay
+ * @access Private
+ */
+router.put('/:orderId/pay', protect, updateOrderPayment);
+
+/**
+ * @description Cancel an order.
+ * @route PUT /api/orders/:orderId/cancel
+ * @access Private
+ */
+router.put('/:orderId/cancel', protect, cancelOrder);
+
+// ====================================================================
+// ========================= ADMIN ROUTES =============================
+// These routes require a valid JWT and an 'admin' role.
+// ====================================================================
+
+/**
+ * @description Get all orders for the admin dashboard, with optional filtering and pagination.
+ * @route GET /api/orders/admin/all
+ * @access Private/Admin
+ */
+router.get('/admin/all', protect, admin, getAllOrders);
+
+/**
+ * @description Update the status of a specific order.
+ * @route PUT /api/orders/admin/:orderId
+ * @access Private/Admin
+ */
+router.put('/admin/:orderId', protect, admin, updateOrderStatus);
+
+/**
+ * @description Delete a specific order.
+ * @route DELETE /api/orders/admin/:orderId
+ * @access Private/Admin
+ */
+router.delete('/admin/:orderId', protect, admin, deleteOrder);
 
 module.exports = router;

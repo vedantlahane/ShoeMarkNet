@@ -1,29 +1,32 @@
-// controllers/reviewController.js
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
 
-// @desc    Get all reviews (Admin)
+// @desc    Get all reviews with filters, sorting, and pagination (Admin)
 // @route   GET /api/reviews
 // @access  Private/Admin
 const getAllReviews = asyncHandler(async (req, res) => {
   const { product, rating, status, page = 1, limit = 10 } = req.query;
 
+  // Build a filter object based on query parameters
   const filter = {};
   if (product) filter.product = product;
   if (rating) filter.rating = Number(rating);
   if (status) filter.status = status;
 
+  // Calculate pagination skip value
   const skip = (Number(page) - 1) * Number(limit);
 
+  // Find reviews with the specified filters and pagination
   const reviews = await Review.find(filter)
-    .populate('user', 'name email')
-    .populate('product', 'name')
-    .sort({ createdAt: -1 })
+    .populate('user', 'name email') // Populate user details
+    .populate('product', 'name') // Populate product name
+    .sort({ createdAt: -1 }) // Sort by newest first
     .skip(skip)
     .limit(Number(limit))
-    .lean();
+    .lean(); // Use lean() for faster read performance
 
+  // Get the total count for pagination info
   const total = await Review.countDocuments(filter);
 
   res.json({
@@ -36,7 +39,7 @@ const getAllReviews = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Moderate review (Admin)
+// @desc    Moderate a specific review (Admin)
 // @route   PUT /api/reviews/:reviewId/moderate
 // @access  Private/Admin
 const moderateReview = asyncHandler(async (req, res) => {
@@ -50,6 +53,7 @@ const moderateReview = asyncHandler(async (req, res) => {
     throw new Error('Review not found');
   }
 
+  // Update the review's status and moderation details
   review.status = status || review.status;
   review.adminComment = adminComment || review.adminComment;
   review.moderatedAt = Date.now();
@@ -57,16 +61,22 @@ const moderateReview = asyncHandler(async (req, res) => {
 
   await review.save();
 
+  // If the review status changes to 'approved' or 'rejected',
+  // we need to recalculate the product's overall rating.
   if (status === 'approved' || status === 'rejected') {
     const product = await Product.findById(review.product);
     if (product) {
+      // Find all approved reviews for the product
       const approvedReviews = await Review.find({ product: review.product, status: 'approved' });
+      
       if (approvedReviews.length > 0) {
+        // Recalculate average rating and review count
         const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
         product.rating = totalRating / approvedReviews.length;
         product.numReviews = approvedReviews.length;
         await product.save();
       } else {
+        // If there are no approved reviews, reset the rating and count
         product.rating = 0;
         product.numReviews = 0;
         await product.save();

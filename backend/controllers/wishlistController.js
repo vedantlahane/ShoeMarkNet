@@ -2,80 +2,85 @@ const mongoose = require('mongoose');
 const Wishlist = require('../models/Wishlist');
 const Product = require('../models/Product');
 const { updateLeadScore } = require('../utils/leadScoring');
+const asyncHandler = require('express-async-handler');
 
 // Configuration
 const MAX_WISHLIST_ITEMS = 50;
 
-// Get user's wishlist with pagination
-const getWishlist = async (req, res) => {
-  try {
-    const { page = 1, limit = 20, sort = '-createdAt' } = req.query;
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    
-    let wishlist = await Wishlist.findOne({ user: req.user.id });
-    
-    if (!wishlist) {
-      return res.status(200).json({
-        products: [],
-        pagination: {
-          total: 0,
-          page: parseInt(page),
-          pages: 0,
-          limit: parseInt(limit)
-        }
-      });
-    }
-
-    // Get total count for pagination
-    const total = wishlist.products.length;
-    const pages = Math.ceil(total / parseInt(limit));
-
-    // Populate products with pagination
-    wishlist = await Wishlist.findOne({ user: req.user.id })
-      .populate({
-        path: 'products',
-        options: {
-          skip,
-          limit: parseInt(limit),
-          sort
-        },
-        select: 'name price images description inStock rating'
-      });
-
-    res.status(200).json({
-      products: wishlist.products,
+/**
+ * @description Get the authenticated user's wishlist with pagination.
+ * @route GET /api/wishlist
+ * @access Private
+ */
+const getWishlist = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 20, sort = '-createdAt' } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  
+  // Find the user's wishlist
+  let wishlist = await Wishlist.findOne({ user: req.user.id });
+  
+  if (!wishlist) {
+    // If no wishlist is found, return an empty list with pagination info
+    return res.status(200).json({
+      products: [],
       pagination: {
-        total,
+        total: 0,
         page: parseInt(page),
-        pages,
+        pages: 0,
         limit: parseInt(limit)
       }
     });
-  } catch (error) {
-    console.error('Get wishlist error:', error);
-    res.status(500).json({ 
-      message: 'Error fetching wishlist', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
-    });
   }
-};
 
-// Add product to wishlist
-const addToWishlist = async (req, res) => {
+  // Calculate total count for pagination
+  const total = wishlist.products.length;
+  const pages = Math.ceil(total / parseInt(limit));
+
+  // Find the wishlist again, but this time populate the products with pagination options
+  // and select a subset of product fields for a lighter response
+  wishlist = await Wishlist.findOne({ user: req.user.id })
+    .populate({
+      path: 'products',
+      options: {
+        skip,
+        limit: parseInt(limit),
+        sort
+      },
+      select: 'name price images description inStock rating'
+    });
+
+  res.status(200).json({
+    products: wishlist.products,
+    pagination: {
+      total,
+      page: parseInt(page),
+      pages,
+      limit: parseInt(limit)
+    }
+  });
+});
+
+/**
+ * @description Add a product to the authenticated user's wishlist.
+ * Uses a Mongoose transaction to ensure atomicity.
+ * @route POST /api/wishlist
+ * @access Private
+ */
+const addToWishlist = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   
   try {
     const { productId } = req.body;
     
-    // Verify product exists
+    // Verify that the product exists
     const product = await Product.findById(productId).session(session);
     if (!product) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: 'Product not found' });
+      res.status(404);
+      throw new Error('Product not found');
     }
     
-    // Find or create wishlist
+    // Find or create the user's wishlist
     let wishlist = await Wishlist.findOne({ user: req.user.id }).session(session);
     
     if (!wishlist) {
@@ -85,35 +90,32 @@ const addToWishlist = async (req, res) => {
       });
     }
     
-    // Check if product already in wishlist
+    // Check if the product is already in the wishlist
     if (wishlist.products.includes(productId)) {
-      await session.abortTransaction();
-      return res.status(400).json({ message: 'Product already in wishlist' });
+      res.status(400);
+      throw new Error('Product already in wishlist');
     }
     
-    // Check wishlist size limit
+    // Check the wishlist size limit
     if (wishlist.products.length >= MAX_WISHLIST_ITEMS) {
-      await session.abortTransaction();
-      return res.status(400).json({ 
-        message: `Wishlist cannot exceed ${MAX_WISHLIST_ITEMS} items` 
-      });
+      res.status(400);
+      throw new Error(`Wishlist cannot exceed ${MAX_WISHLIST_ITEMS} items`);
     }
     
-    // Add product to wishlist
+    // Add the product and save the wishlist
     wishlist.products.push(productId);
     await wishlist.save({ session });
     
-    // Update lead score
+    // Update the user's lead score (and continue if it fails)
     try {
       await updateLeadScore(req.user.id, 'add_to_wishlist', { session });
     } catch (leadScoreError) {
       console.error('Lead score update failed:', leadScoreError);
-      // Continue even if lead score fails
     }
     
     await session.commitTransaction();
     
-    // Return updated wishlist
+    // Return the updated wishlist with populated product details
     const populatedWishlist = await Wishlist.findById(wishlist._id)
       .populate({
         path: 'products',
@@ -127,18 +129,19 @@ const addToWishlist = async (req, res) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    console.error('Add to wishlist error:', error);
-    res.status(500).json({ 
-      message: 'Error adding to wishlist', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
-    });
+    throw error;
   } finally {
     session.endSession();
   }
-};
+});
 
-// Remove product from wishlist
-const removeFromWishlist = async (req, res) => {
+/**
+ * @description Remove a product from the authenticated user's wishlist.
+ * Uses a Mongoose transaction to ensure atomicity.
+ * @route DELETE /api/wishlist/:productId
+ * @access Private
+ */
+const removeFromWishlist = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   
@@ -148,8 +151,8 @@ const removeFromWishlist = async (req, res) => {
     const wishlist = await Wishlist.findOne({ user: req.user.id }).session(session);
     
     if (!wishlist) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: 'Wishlist not found' });
+      res.status(404);
+      throw new Error('Wishlist not found');
     }
     
     const productIndex = wishlist.products.findIndex(
@@ -157,17 +160,17 @@ const removeFromWishlist = async (req, res) => {
     );
     
     if (productIndex === -1) {
-      await session.abortTransaction();
-      return res.status(400).json({ message: 'Product not in wishlist' });
+      res.status(400);
+      throw new Error('Product not in wishlist');
     }
     
-    // Remove product from wishlist
+    // Remove the product and save the wishlist
     wishlist.products.splice(productIndex, 1);
     await wishlist.save({ session });
     
     await session.commitTransaction();
     
-    // Return updated wishlist
+    // Return the updated wishlist with populated product details
     const populatedWishlist = await Wishlist.findById(wishlist._id)
       .populate({
         path: 'products',
@@ -181,66 +184,57 @@ const removeFromWishlist = async (req, res) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    console.error('Remove from wishlist error:', error);
-    res.status(500).json({ 
-      message: 'Error removing from wishlist', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
-    });
+    throw error;
   } finally {
     session.endSession();
   }
-};
+});
 
-// Clear entire wishlist
-const clearWishlist = async (req, res) => {
-  try {
-    const wishlist = await Wishlist.findOne({ user: req.user.id });
-    
-    if (!wishlist) {
-      return res.status(404).json({ message: 'Wishlist not found' });
-    }
-    
-    wishlist.products = [];
-    await wishlist.save();
-    
-    res.status(200).json({
-      message: 'Wishlist cleared',
-      products: [],
-      productCount: 0
-    });
-  } catch (error) {
-    console.error('Clear wishlist error:', error);
-    res.status(500).json({ 
-      message: 'Error clearing wishlist', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
-    });
+/**
+ * @description Clear the entire wishlist for the authenticated user.
+ * @route DELETE /api/wishlist
+ * @access Private
+ */
+const clearWishlist = asyncHandler(async (req, res) => {
+  const wishlist = await Wishlist.findOne({ user: req.user.id });
+  
+  if (!wishlist) {
+    res.status(404);
+    throw new Error('Wishlist not found');
   }
-};
+  
+  wishlist.products = [];
+  await wishlist.save();
+  
+  res.status(200).json({
+    message: 'Wishlist cleared',
+    products: [],
+    productCount: 0
+  });
+});
 
-// Check if product is in wishlist
-const checkProductInWishlist = async (req, res) => {
-  try {
-    const { productId } = req.params;
-    
-    const wishlist = await Wishlist.findOne({ user: req.user.id });
-    
-    if (!wishlist) {
-      return res.status(200).json({ inWishlist: false });
-    }
-    
-    const inWishlist = wishlist.products.some(
-      product => product.toString() === productId
-    );
-    
-    res.status(200).json({ inWishlist });
-  } catch (error) {
-    console.error('Check product in wishlist error:', error);
-    res.status(500).json({ 
-      message: 'Error checking wishlist', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
-    });
+/**
+ * @description Check if a specific product is in the user's wishlist.
+ * @route GET /api/wishlist/contains/:productId
+ * @access Private
+ */
+const checkProductInWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  
+  const wishlist = await Wishlist.findOne({ user: req.user.id });
+  
+  if (!wishlist) {
+    // If no wishlist exists, the product cannot be in it
+    return res.status(200).json({ inWishlist: false });
   }
-};
+  
+  // Use .some() to check if the product ID exists in the products array
+  const inWishlist = wishlist.products.some(
+    product => product.toString() === productId
+  );
+  
+  res.status(200).json({ inWishlist });
+});
 
 module.exports = {
   getWishlist,

@@ -6,7 +6,7 @@ const {
   clearWishlist,
   checkProductInWishlist
 } = require('../controllers/wishlistController');
-const {protect} = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const {
   validateProductId,
   validateProductParam,
@@ -15,30 +15,58 @@ const {
 
 const router = express.Router();
 
-// All wishlist routes require authentication
+// All routes in this router require authentication via a valid JWT
 router.use(protect);
 
-// Get wishlist with pagination
+// ====================================================================
+// ==================== PROTECTED USER ROUTES =========================
+// These routes are accessible only to authenticated users.
+// ====================================================================
+
+/**
+ * @description Get the authenticated user's wishlist, with support for pagination.
+ * @route GET /api/wishlist
+ * @access Private
+ */
 router.get('/', getWishlist);
 
-// Add product to wishlist
+/**
+ * @description Add a product to the user's wishlist.
+ * The `validateProductId` middleware ensures the request body has a valid product ID.
+ * @route POST /api/wishlist
+ * @access Private
+ */
 router.post('/', 
   validateProductId,
   handleValidationErrors,
   addToWishlist
 );
 
-// Remove product from wishlist
+/**
+ * @description Remove a product from the user's wishlist.
+ * The `validateProductParam` middleware checks the validity of the product ID in the URL.
+ * @route DELETE /api/wishlist/:productId
+ * @access Private
+ */
 router.delete('/:productId', 
   validateProductParam,
   handleValidationErrors,
   removeFromWishlist
 );
 
-// Clear entire wishlist
+/**
+ * @description Clear all products from the user's wishlist.
+ * @route DELETE /api/wishlist
+ * @access Private
+ */
 router.delete('/', clearWishlist);
 
-// Check if product is in wishlist
+/**
+ * @description Check if a specific product is in the user's wishlist.
+ * The `validateProductParam` middleware checks the validity of the product ID in the URL.
+ * @route GET /api/wishlist/contains/:productId
+ * @access Private
+ */
 router.get('/check/:productId',
   validateProductParam,
   handleValidationErrors,
