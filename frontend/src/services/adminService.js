@@ -88,6 +88,20 @@ const getLeadScoreData = async () => {
 };
 
 /**
+ * Get current system settings
+ * @returns {Promise} - Promise resolving to current settings
+ */
+const getSettings = async () => {
+  try {
+    const response = await api.get('/admin/settings');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    throw error;
+  }
+};
+
+/**
  * Update system settings
  * @param {Object} settings - Updated system settings
  * @returns {Promise} - Promise resolving to updated settings
@@ -201,12 +215,13 @@ const adminService = {
   getInventoryReport,
   getCustomerAnalytics,
   getLeadScoreData,
+  getSettings,
   updateSettings,
   createCampaign,
   getCampaigns,
   updateCampaign,
   deleteCampaign,
-  getUsers // Added this line
+  getUsers
 };
 
-module.exports = adminService;
+export default adminService;

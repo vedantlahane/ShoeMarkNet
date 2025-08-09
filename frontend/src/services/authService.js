@@ -58,6 +58,21 @@ const getProfile = async () => {
 };
 
 /**
+ * Update user profile
+ * @param {Object} profileData - Updated profile data
+ * @returns {Promise} - Promise resolving to updated user data
+ */
+const updateProfile = async (profileData) => {
+  try {
+    const response = await api.put('/auth/profile', profileData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    throw error;
+  }
+};
+
+/**
  * Logout user by removing tokens
  */
 const logoutUser = () => {
@@ -117,12 +132,13 @@ const requestPasswordReset = async (email) => {
 
 /**
  * Reset password with token
- * @param {Object} resetData - Reset token and new password
+ * @param {string} token - Reset token from URL
+ * @param {string} password - New password
  * @returns {Promise} - Promise resolving to success message
  */
-const resetPassword = async (resetData) => {
+const resetPassword = async (token, password) => {
   try {
-    const response = await api.post('/auth/reset-password', resetData);
+    const response = await api.post(`/auth/reset-password/${token}`, { password });
     return response.data;
   } catch (error) {
     console.error('Password reset error:', error);
@@ -137,7 +153,7 @@ const resetPassword = async (resetData) => {
  */
 const verifyEmail = async (verificationToken) => {
   try {
-    const response = await api.post('/auth/verify-email', { token: verificationToken });
+    const response = await api.get(`/auth/verify-email/${verificationToken}`);
     return response.data;
   } catch (error) {
     console.error('Email verification error:', error);
@@ -149,6 +165,7 @@ const authService = {
   login,
   register,
   getProfile,
+  updateProfile,
   logoutUser,
   refreshToken,
   requestPasswordReset,

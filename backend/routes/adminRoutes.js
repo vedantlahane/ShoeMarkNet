@@ -5,6 +5,7 @@ const {
   getInventoryReport,
   getCustomerAnalytics,
   getLeadScoreData,
+  getSettings,
   updateSettings,
   createCampaign,
   getCampaigns,
@@ -75,6 +76,13 @@ router.get('/leads', getLeadScoreData);
 // ====================================================================
 // ========================= SETTINGS & CAMPAIGNS =====================
 // ====================================================================
+
+/**
+ * @description Get current system-wide settings.
+ * @route GET /api/admin/settings
+ * @access Private/Admin
+ */
+router.get('/settings', getSettings);
 
 /**
  * @description Update system-wide settings.

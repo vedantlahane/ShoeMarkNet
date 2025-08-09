@@ -4,6 +4,7 @@ const {
   register,
   login,
   getProfile,
+  updateProfile,
   forgotPassword,
   resetPassword,
   verifyEmail,
@@ -78,5 +79,12 @@ router.post('/logout', protect, logout);
  * @access Private
  */
 router.get('/profile', protect, getProfile);
+
+/**
+ * @description Update the profile of the currently authenticated user.
+ * @route PUT /api/auth/profile
+ * @access Private
+ */
+router.put('/profile', protect, updateProfile);
 
 module.exports = router;

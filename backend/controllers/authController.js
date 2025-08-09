@@ -135,6 +135,36 @@ const getProfile = async (req, res) => {
   }
 };
 
+/** Update Profile */
+const updateProfile = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id)
+      return res.status(401).json({ message: 'Not authenticated' });
+
+    const { name, phone, address } = req.body;
+    
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Update allowed fields
+    if (name) user.name = name.trim();
+    if (phone) user.phone = phone.trim();
+    if (address) user.address = address;
+
+    await user.save();
+
+    // Return updated user without sensitive data
+    const updatedUser = await User.findById(req.user.id).select('-password -resetPasswordToken -resetPasswordExpire');
+    
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating profile', error: process.env.NODE_ENV === 'production' ? 'Server error' : error.message });
+  }
+};
+
 /** Forgot Password */
 const forgotPassword = async (req, res) => {
   try {
@@ -301,6 +331,7 @@ module.exports = {
   register,
   login,
   getProfile,
+  updateProfile,
   forgotPassword,
   resetPassword,
   verifyEmail,

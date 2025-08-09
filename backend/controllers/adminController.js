@@ -196,7 +196,7 @@ const getInventoryReport = asyncHandler(async (req, res) => {
 
 /**
  * @description Provides customer analytics, including source breakdown and top customers.
- * @route GET /api/admin/reports/customers
+ * @route GET /api/admin/analytics/customers
  * @access Private/Admin
  */
 const getCustomerAnalytics = asyncHandler(async (req, res) => {
@@ -279,7 +279,7 @@ const getCustomerAnalytics = asyncHandler(async (req, res) => {
 
 /**
  * @description Fetches all users and their lead score data for reporting.
- * @route GET /api/admin/reports/leads
+ * @route GET /api/admin/leads
  * @access Private/Admin
  */
 const getLeadScoreData = asyncHandler(async (req, res) => {
@@ -314,8 +314,35 @@ const getLeadScoreData = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @description Gets current system-wide settings.
+ * @route GET /api/admin/settings
+ * @access Private/Admin
+ */
+const getSettings = asyncHandler(async (req, res) => {
+  try {
+    let settings = await Setting.findOne();
+    if (!settings) {
+      // Return default settings if none exist
+      settings = {
+        siteName: 'ShoeMarkNet',
+        contactEmail: 'admin@shoemarknet.com',
+        supportPhone: '',
+        shippingFee: 0,
+        taxRate: 0,
+        enableReviews: true,
+        requireLoginForCheckout: false,
+        maintenanceMode: false
+      };
+    }
+    res.status(200).json(settings);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching settings', error: error.message });
+  }
+});
+
+/**
  * @description Creates or updates system-wide settings.
- * @route POST /api/admin/settings
+ * @route PUT /api/admin/settings
  * @access Private/Admin
  */
 const updateSettings = asyncHandler(async (req, res) => {
@@ -503,6 +530,7 @@ module.exports = {
   getInventoryReport,
   getCustomerAnalytics,
   getLeadScoreData,
+  getSettings,
   updateSettings,
   createCampaign,
   getCampaigns,
