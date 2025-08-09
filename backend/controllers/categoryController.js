@@ -2,20 +2,29 @@ const Category = require('../models/Category');
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
 
-// @desc    Get all categories
-// @route   GET /api/categories
-// @access  Public
+// ====================================================================
+// ========================= PUBLIC ROUTES ============================
+// ====================================================================
+
+/**
+ * @description Get a list of all categories, sorted alphabetically by name.
+ * @route GET /api/categories
+ * @access Public
+ */
 const getAllCategories = asyncHandler(async (req, res) => {
   const categories = await Category.find().sort({ name: 1 }).lean();
   res.status(200).json(categories);
 });
 
-// @desc    Get category tree
-// @route   GET /api/categories/tree
-// @access  Public
+/**
+ * @description Get the entire category tree structure, great for menus and navigation.
+ * @route GET /api/categories/tree
+ * @access Public
+ */
 const getCategoryTree = asyncHandler(async (req, res) => {
   const { activeOnly = true, maxLevel = 3 } = req.query;
   
+  // Use the static method from the Category schema to build the tree
   const tree = await Category.getCategoryTree({ 
     activeOnly: activeOnly === 'true',
     maxLevel: Number(maxLevel) 
@@ -24,9 +33,11 @@ const getCategoryTree = asyncHandler(async (req, res) => {
   res.status(200).json(tree);
 });
 
-// @desc    Get category by ID
-// @route   GET /api/categories/:id
-// @access  Public
+/**
+ * @description Get a single category by its ID.
+ * @route GET /api/categories/:id
+ * @access Public
+ */
 const getCategoryById = asyncHandler(async (req, res) => {
   const category = await Category.findById(req.params.id).lean();
 
@@ -38,9 +49,11 @@ const getCategoryById = asyncHandler(async (req, res) => {
   res.status(200).json(category);
 });
 
-// @desc    Get category breadcrumb
-// @route   GET /api/categories/:id/breadcrumb
-// @access  Public
+/**
+ * @description Get the breadcrumb path for a given category ID.
+ * @route GET /api/categories/:id/breadcrumb
+ * @access Public
+ */
 const getCategoryBreadcrumb = asyncHandler(async (req, res) => {
   const category = await Category.findById(req.params.id);
   
@@ -49,24 +62,29 @@ const getCategoryBreadcrumb = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
   
+  // Use the instance method from the Category schema to build the breadcrumb trail
   const breadcrumb = await category.getBreadcrumb();
   res.status(200).json(breadcrumb);
 });
 
-// @desc    Get products by category with filters, sorting, and pagination
-// @route   GET /api/categories/:id/products
-// @access  Public
+/**
+ * @description Get products belonging to a specific category (without subcategories).
+ * @route GET /api/categories/:id/products
+ * @access Public
+ */
 const getProductsByCategory = asyncHandler(async (req, res) => {
   const { minPrice, maxPrice, sort, page = 1, limit = 10 } = req.query;
 
   const filters = { category: req.params.id, isActive: true };
 
+  // Price range filtering
   if (minPrice || maxPrice) {
     filters.price = {};
     if (minPrice) filters.price.$gte = Number(minPrice);
     if (maxPrice) filters.price.$lte = Number(maxPrice);
   }
 
+  // Sorting logic
   let sortOption = {};
   if (sort) {
     const [field, order] = sort.split(':');
@@ -96,9 +114,11 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get products by category tree (including subcategories)
-// @route   GET /api/categories/:id/products-tree
-// @access  Public
+/**
+ * @description Get products from a category and all its subcategories (the entire tree).
+ * @route GET /api/categories/:id/products-tree
+ * @access Public
+ */
 const getProductsByCategoryTree = asyncHandler(async (req, res) => {
   const category = await Category.findById(req.params.id);
   
@@ -107,11 +127,10 @@ const getProductsByCategoryTree = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
   
-  // Get all descendant categories
+  // Get all descendant categories using the instance method
   const descendants = await category.getDescendants(true);
   const categoryIds = [category._id, ...descendants.map(d => d._id)];
   
-  // Apply filters from query
   const { minPrice, maxPrice, sort, page = 1, limit = 10 } = req.query;
   
   const filters = { 
@@ -119,12 +138,14 @@ const getProductsByCategoryTree = asyncHandler(async (req, res) => {
     isActive: true 
   };
   
+  // Price range filtering
   if (minPrice || maxPrice) {
     filters.price = {};
     if (minPrice) filters.price.$gte = Number(minPrice);
     if (maxPrice) filters.price.$lte = Number(maxPrice);
   }
   
+  // Sorting logic
   let sortOption = {};
   if (sort) {
     const [field, order] = sort.split(':');
@@ -159,9 +180,15 @@ const getProductsByCategoryTree = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Create a new category
-// @route   POST /api/categories
-// @access  Private/Admin
+// ====================================================================
+// ========================== ADMIN ROUTES ============================
+// ====================================================================
+
+/**
+ * @description Create a new category.
+ * @route POST /api/categories
+ * @access Private/Admin
+ */
 const createCategory = asyncHandler(async (req, res) => {
   const { name, description, image, parentCategory, displayOrder, isFeatured, showInMenu, metaTitle, metaDescription } = req.body;
 
@@ -188,9 +215,11 @@ const createCategory = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'Category created successfully', category });
 });
 
-// @desc    Update category
-// @route   PUT /api/categories/:id
-// @access  Private/Admin
+/**
+ * @description Update an existing category by its ID.
+ * @route PUT /api/categories/:id
+ * @access Private/Admin
+ */
 const updateCategory = asyncHandler(async (req, res) => {
   const { name, description, image, parentCategory, displayOrder, isFeatured, showInMenu, metaTitle, metaDescription, isActive } = req.body;
 
@@ -201,6 +230,7 @@ const updateCategory = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
 
+  // Check for duplicate name
   if (name && name !== category.name) {
     const existingCategory = await Category.findOne({ name });
     if (existingCategory) {
@@ -209,12 +239,13 @@ const updateCategory = asyncHandler(async (req, res) => {
     }
   }
 
-  // Prevent setting itself as parent
+  // Prevent a category from being its own parent
   if (parentCategory && parentCategory === req.params.id) {
     res.status(400);
     throw new Error('Category cannot be its own parent');
   }
 
+  // Update fields
   if (name !== undefined) category.name = name;
   if (description !== undefined) category.description = description;
   if (image !== undefined) category.image = image;
@@ -231,9 +262,11 @@ const updateCategory = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Category updated successfully', category });
 });
 
-// @desc    Delete category
-// @route   DELETE /api/categories/:id
-// @access  Private/Admin
+/**
+ * @description Delete a category by its ID.
+ * @route DELETE /api/categories/:id
+ * @access Private/Admin
+ */
 const deleteCategory = asyncHandler(async (req, res) => {
   const category = await Category.findById(req.params.id);
 
@@ -242,6 +275,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
 
+  // Use the schema method to check if the category can be deleted
   const canDelete = await category.canBeDeleted();
 
   if (!canDelete.canDelete) {
@@ -254,9 +288,12 @@ const deleteCategory = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Category deleted successfully' });
 });
 
-// @desc    Update category product count
-// @route   POST /api/categories/:id/update-count
-// @access  Private/Admin
+/**
+ * @description Manually update the cached product count for a category.
+ * This can be useful for data consistency after a bulk product operation.
+ * @route POST /api/categories/:id/update-count
+ * @access Private/Admin
+ */
 const updateCategoryProductCount = asyncHandler(async (req, res) => {
   const category = await Category.findById(req.params.id);
 
@@ -265,6 +302,7 @@ const updateCategoryProductCount = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
 
+  // Use the schema method to update the count
   await category.updateProductCount();
 
   res.status(200).json({ 
