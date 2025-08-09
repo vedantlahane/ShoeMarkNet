@@ -106,36 +106,46 @@ const deleteUserAddress = async (addressId) => {
 };
 
 /**
- * Get user's order history
- * @param {Object} filters - Optional filters for orders
- * @returns {Promise} - Promise resolving to an array of orders
+ * Get user's search history (requires authentication)
+ * @param {number} page - Page number for pagination (default: 1)
+ * @param {number} limit - Number of results per page (default: 10)
+ * @returns {Promise} - Promise resolving to user's search history
  */
-const getUserOrders = async (filters = {}) => {
+const getUserSearchHistory = async (page = 1, limit = 10) => {
   try {
-    const queryParams = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-    
-    const response = await api.get(`/users/orders?${queryParams.toString()}`);
+    const response = await api.get(`/users/search-history?page=${page}&limit=${limit}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching user orders:', error);
+    console.error('Error fetching search history:', error);
+    throw error;
+  }
+};
+
+/**
+ * Clear user's search history (requires authentication)
+ * @returns {Promise} - Promise resolving to success confirmation
+ */
+const clearSearchHistory = async () => {
+  try {
+    const response = await api.delete('/users/search-history');
+    return response.data;
+  } catch (error) {
+    console.error('Error clearing search history:', error);
     throw error;
   }
 };
 
 /**
  * Update user notification preferences
- * @param {Object} preferences - Notification preferences
+ * @param {Object} preferences - Notification preferences (newsletter, marketing)
  * @returns {Promise} - Promise resolving to updated preferences
  */
-const updateNotificationPreferences = async (preferences) => {
+const updateUserPreferences = async (preferences) => {
   try {
-    const response = await api.put('/users/notifications', preferences);
+    const response = await api.put('/users/preferences', preferences);
     return response.data;
   } catch (error) {
-    console.error('Error updating notification preferences:', error);
+    console.error('Error updating user preferences:', error);
     throw error;
   }
 };
@@ -152,7 +162,7 @@ const getAllUsers = async (filters = {}) => {
       if (value) queryParams.append(key, value);
     });
     
-    const response = await api.get(`/admin/users?${queryParams.toString()}`);
+    const response = await api.get(`/users/admin?${queryParams.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching all users:', error);
@@ -168,7 +178,7 @@ const getAllUsers = async (filters = {}) => {
  */
 const updateUser = async (userId, userData) => {
   try {
-    const response = await api.put(`/admin/users/${userId}`, userData);
+    const response = await api.put(`/users/admin/${userId}`, userData);
     return response.data;
   } catch (error) {
     console.error(`Error updating user ${userId}:`, error);
@@ -183,7 +193,7 @@ const updateUser = async (userId, userData) => {
  */
 const deleteUser = async (userId) => {
   try {
-    const response = await api.delete(`/admin/users/${userId}`);
+    const response = await api.delete(`/users/admin/${userId}`);
     return response.data;
   } catch (error) {
     console.error(`Error deleting user ${userId}:`, error);
@@ -199,8 +209,9 @@ const userService = {
   addUserAddress,
   updateUserAddress,
   deleteUserAddress,
-  getUserOrders,
-  updateNotificationPreferences,
+  getUserSearchHistory,
+  clearSearchHistory,
+  updateUserPreferences,
   getAllUsers,
   updateUser,
   deleteUser

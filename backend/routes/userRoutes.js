@@ -11,7 +11,8 @@ const {
   updateUser,
   deleteUser,
   getUserSearchHistory,
-  clearUserSearchHistory
+  clearUserSearchHistory,
+  updateUserPreferences
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -42,6 +43,13 @@ router.put('/profile', protect, updateUserProfile);
  * @access Private
  */
 router.put('/password', protect, changePassword);
+
+/**
+ * @description Update the authenticated user's notification preferences.
+ * @route PUT /api/users/preferences
+ * @access Private
+ */
+router.put('/preferences', protect, updateUserPreferences);
 
 // ====================================================================
 // ==================== PROTECTED ADDRESS ROUTES ======================

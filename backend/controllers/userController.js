@@ -347,6 +347,39 @@ const clearUserSearchHistory = async (req, res) => {
   }
 };
 
+/**
+ * @description Update the authenticated user's notification preferences.
+ * @route PUT /api/users/preferences
+ * @access Private
+ */
+const updateUserPreferences = async (req, res) => {
+  try {
+    const { newsletter, marketing } = req.body;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $set: {
+          'preferences.newsletter': newsletter,
+          'preferences.marketing': marketing
+        }
+      },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.status(200).json({ 
+      message: 'Preferences updated successfully', 
+      preferences: user.preferences 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating preferences', error: error.message });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
@@ -359,5 +392,6 @@ module.exports = {
   updateUser,
   deleteUser,
   getUserSearchHistory,
-  clearUserSearchHistory
+  clearUserSearchHistory,
+  updateUserPreferences
 };
