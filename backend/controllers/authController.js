@@ -82,8 +82,8 @@ const login = async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-    if (user.status === 'inactive' || user.status === 'banned')
-      return res.status(403).json({ message: 'Account is inactive or banned' });
+    if (!user.isActive)
+      return res.status(403).json({ message: 'Account is inactive' });
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
