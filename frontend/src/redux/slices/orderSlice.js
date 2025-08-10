@@ -1,145 +1,510 @@
-// src/redux/slices/orderSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import orderService from '../../services/orderService';
-import { toast } from 'react-toastify'; // Assuming you use react-toastify
+import { toast } from 'react-toastify';
 
-// Async thunk to fetch user's orders
+// Enhanced error handling utility
+const createErrorPayload = (error, defaultMessage) => {
+  const message =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    error.message ||
+    defaultMessage;
+
+  return {
+    message,
+    status: error.response?.status,
+    code: error.response?.data?.code,
+    timestamp: new Date().toISOString(),
+  };
+};
+
+// Enhanced toast notifications
+const showSuccessToast = (message, options = {}) => {
+  toast.success(message, {
+    position: "bottom-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    className: "premium-toast-success",
+    ...options,
+  });
+};
+
+const showErrorToast = (message, options = {}) => {
+  toast.error(message, {
+    position: "bottom-right",
+    autoClose: 4000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    className: "premium-toast-error",
+    ...options,
+  });
+};
+
+const showInfoToast = (message, options = {}) => {
+  toast.info(message, {
+    position: "bottom-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    className: "premium-toast-info",
+    ...options,
+  });
+};
+
+// Helper to extract orders from different response formats
+const extractOrdersArray = (response) => {
+  if (Array.isArray(response)) return response;
+  if (response?.orders && Array.isArray(response.orders)) return response.orders;
+  if (response?.data && Array.isArray(response.data)) return response.data;
+  return [];
+};
+
+// Helper to extract pagination info
+const extractPagination = (response) => {
+  if (response?.pagination) return response.pagination;
+  if (response?.meta) return response.meta;
+  return null;
+};
+
+// Enhanced async thunks
+
+// Fetch user's orders with enhanced error handling
 export const fetchOrders = createAsyncThunk(
   'order/fetchOrders',
-  async (_, { rejectWithValue }) => {
+  async (options = {}, { rejectWithValue }) => {
     try {
-      return await orderService.getUserOrders();
+      const response = await orderService.getUserOrders(options);
+      const orders = extractOrdersArray(response);
+      
+      if (orders.length === 0) {
+        showInfoToast("📦 No orders found. Start shopping to see your orders here!");
+      } else {
+        showInfoToast(`📋 Loaded ${orders.length} orders`);
+      }
+      
+      return {
+        orders,
+        pagination: extractPagination(response),
+        totalOrders: response?.totalOrders || orders.length,
+      };
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch orders' });
+      const errorPayload = createErrorPayload(error, 'Failed to fetch orders');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
     }
   }
 );
 
-// Async thunk to fetch a single order by ID
+// Fetch single order by ID with enhanced details
 export const fetchOrderById = createAsyncThunk(
   'order/fetchOrderById',
   async (orderId, { rejectWithValue }) => {
     try {
-      return await orderService.getOrderById(orderId);
+      const loadingToast = toast.loading("📦 Loading order details...");
+      
+      const response = await orderService.getOrderById(orderId);
+      
+      toast.dismiss(loadingToast);
+      
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch order details' });
+      const errorPayload = createErrorPayload(error, 'Failed to fetch order details');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
     }
   }
 );
 
-// Async thunk to update order status
-export const updateOrderStatus = createAsyncThunk(
-  'order/updateOrderStatus',
-  async ({ orderId, updates }, { rejectWithValue }) => {
-    try {
-      return await orderService.updateOrderStatus(orderId, updates);
-    } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to update order status' });
-    }
-  }
-);
-
-// Async thunk to create a new order
+// Create new order with enhanced flow
 export const createOrder = createAsyncThunk(
   'order/createOrder',
   async (orderData, { rejectWithValue, dispatch }) => {
     try {
+      const loadingToast = toast.loading("🛒 Creating your order...");
+      
       const result = await orderService.createOrder(orderData);
       
-      // Show success notification
-      toast.success('Order placed successfully!');
+      toast.dismiss(loadingToast);
+      showSuccessToast(`🎉 Order #${result.orderNumber || result._id} placed successfully!`);
+      
+      // Show follow-up information
+      setTimeout(() => {
+        showInfoToast(
+          "📧 Order confirmation email sent! Check your inbox for details.",
+          { autoClose: 5000 }
+        );
+      }, 2000);
+
+      // Track order creation analytics
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag("event", "purchase", {
+          transaction_id: result._id,
+          value: result.totalPrice,
+          currency: "USD",
+          items: result.items?.map(item => ({
+            item_id: item.product._id,
+            item_name: item.product.name,
+            quantity: item.quantity,
+            price: item.price
+          }))
+        });
+      }
       
       return result;
     } catch (error) {
-      // Show error notification
-      toast.error(error.response?.data?.message || 'Failed to create order');
-      return rejectWithValue(error.response?.data || { message: 'Failed to create order' });
+      const errorPayload = createErrorPayload(error, 'Failed to create order');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      
+      // Track failed order
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag("event", "purchase_failed", {
+          error_message: errorPayload.message,
+        });
+      }
+      
+      return rejectWithValue(errorPayload);
     }
   }
 );
 
-// Async thunk to update order payment
+// Update order payment with enhanced flow
 export const payOrder = createAsyncThunk(
   'order/payOrder',
   async ({ orderId, paymentResult }, { rejectWithValue }) => {
     try {
+      const loadingToast = toast.loading("💳 Processing payment...");
+      
       const result = await orderService.updateOrderPayment(orderId, paymentResult);
       
-      // Show success notification
-      toast.success('Payment completed successfully!');
+      toast.dismiss(loadingToast);
+      showSuccessToast("✅ Payment completed successfully!");
+      
+      // Show payment success details
+      setTimeout(() => {
+        showInfoToast(
+          `💰 Payment of $${result.totalPrice} processed successfully`,
+          { autoClose: 5000 }
+        );
+      }, 1500);
+
+      // Track payment completion
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag("event", "payment_completed", {
+          transaction_id: orderId,
+          payment_method: paymentResult.payment_method,
+          value: result.totalPrice,
+        });
+      }
       
       return result;
     } catch (error) {
-      // Show error notification
-      toast.error(error.response?.data?.message || 'Payment failed');
-      return rejectWithValue(error.response?.data || { message: 'Payment failed' });
+      const errorPayload = createErrorPayload(error, 'Payment failed');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
     }
   }
 );
 
-// Async thunk to cancel an order
+// Cancel order with enhanced confirmation
 export const cancelOrder = createAsyncThunk(
   'order/cancelOrder',
-  async (orderId, { rejectWithValue }) => {
+  async ({ orderId, reason }, { rejectWithValue }) => {
     try {
-      const result = await orderService.cancelOrder(orderId);
+      const loadingToast = toast.loading("🚫 Cancelling order...");
       
-      // Show success notification
-      toast.success('Order cancelled successfully');
+      const result = await orderService.cancelOrder(orderId, reason);
+      
+      toast.dismiss(loadingToast);
+      showSuccessToast("✅ Order cancelled successfully");
+      
+      // Show cancellation details
+      if (result.refundAmount > 0) {
+        setTimeout(() => {
+          showInfoToast(
+            `💰 Refund of $${result.refundAmount} will be processed within 3-5 business days`,
+            { autoClose: 6000 }
+          );
+        }, 2000);
+      }
+
+      // Track cancellation
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag("event", "order_cancelled", {
+          transaction_id: orderId,
+          reason: reason || 'user_request',
+        });
+      }
       
       return result;
     } catch (error) {
-      // Show error notification
-      toast.error(error.response?.data?.message || 'Failed to cancel order');
-      return rejectWithValue(error.response?.data || { message: 'Failed to cancel order' });
+      const errorPayload = createErrorPayload(error, 'Failed to cancel order');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
     }
   }
 );
 
-// Async thunk to fetch all orders (admin only)
+// Update order status (admin)
+export const updateOrderStatus = createAsyncThunk(
+  'order/updateOrderStatus',
+  async ({ orderId, updates }, { rejectWithValue }) => {
+    try {
+      const loadingToast = toast.loading("⚡ Updating order status...");
+      
+      const result = await orderService.updateOrderStatus(orderId, updates);
+      
+      toast.dismiss(loadingToast);
+      showSuccessToast(`✅ Order #${result.orderNumber || orderId} status updated to: ${updates.status}`);
+      
+      return result;
+    } catch (error) {
+      const errorPayload = createErrorPayload(error, 'Failed to update order status');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
+// Fetch all orders (admin)
 export const fetchAllOrders = createAsyncThunk(
   'order/fetchAllOrders',
-  async (queryParams, { rejectWithValue }) => {
+  async (queryParams = {}, { rejectWithValue }) => {
     try {
-      return await orderService.getAllOrders(queryParams);
+      const response = await orderService.getAllOrders(queryParams);
+      const orders = extractOrdersArray(response);
+      
+      showInfoToast(`📊 Loaded ${orders.length} orders for admin view`);
+      
+      return {
+        orders,
+        pagination: extractPagination(response),
+        totalOrders: response?.totalOrders || response?.total || orders.length,
+      };
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch all orders' });
+      const errorPayload = createErrorPayload(error, 'Failed to fetch all orders');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
     }
   }
 );
 
+// Track order delivery
+export const trackOrder = createAsyncThunk(
+  'order/trackOrder',
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const response = await orderService.trackOrder(orderId);
+      
+      showInfoToast(`📍 Order tracking updated for #${orderId}`);
+      
+      return { orderId, trackingInfo: response };
+    } catch (error) {
+      const errorPayload = createErrorPayload(error, 'Failed to track order');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
+// Get order statistics (admin)
+export const fetchOrderStats = createAsyncThunk(
+  'order/fetchOrderStats',
+  async (filters = {}, { rejectWithValue }) => {
+    try {
+      const response = await orderService.getOrderStats(filters);
+      return response;
+    } catch (error) {
+      const errorPayload = createErrorPayload(error, 'Failed to fetch order statistics');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
+// Delete order (admin)
+export const deleteOrder = createAsyncThunk(
+  'order/deleteOrder',
+  async ({ orderId, orderNumber }, { rejectWithValue }) => {
+    try {
+      const loadingToast = toast.loading("🗑️ Deleting order...");
+      
+      await orderService.deleteOrder(orderId);
+      
+      toast.dismiss(loadingToast);
+      showSuccessToast(`✅ Order #${orderNumber || orderId} deleted successfully`);
+      
+      return orderId;
+    } catch (error) {
+      const errorPayload = createErrorPayload(error, 'Failed to delete order');
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
+// Enhanced initial state
 const initialState = {
+  // User orders
   orders: [],
   order: null,
+  totalOrders: 0,
+  pagination: null,
+  
+  // Loading states
   loading: false,
+  orderLoading: false,
+  createLoading: false,
+  paymentLoading: false,
+  cancelLoading: false,
+  trackingLoading: false,
+  
+  // Success states
   success: false,
+  createSuccess: false,
+  paymentSuccess: false,
+  cancelSuccess: false,
+  updateSuccess: false,
+  
+  // Error states
   error: null,
+  lastError: null,
+  
+  // Admin section
   adminOrders: {
     items: [],
-    loading: false,
-    error: null,
+    totalItems: 0,
     pagination: {
       page: 1,
       totalPages: 1,
-      totalItems: 0
-    }
-  }
+      totalItems: 0,
+      limit: 10
+    },
+    loading: false,
+    error: null,
+  },
+  
+  // Order statistics
+  orderStats: {
+    data: null,
+    loading: false,
+    error: null,
+  },
+  
+  // Tracking information
+  trackingInfo: {},
+  
+  // Filters and search
+  filters: {
+    status: '',
+    dateRange: null,
+    search: '',
+  },
+  
+  // UI state
+  selectedOrders: [],
+  sortBy: 'createdAt',
+  sortOrder: 'desc',
 };
 
 const orderSlice = createSlice({
   name: 'order',
   initialState,
   reducers: {
+    // Error management
     clearOrderError: (state) => {
+      state.lastError = state.error;
       state.error = null;
     },
+    
+    clearAllErrors: (state) => {
+      state.error = null;
+      state.lastError = null;
+      state.adminOrders.error = null;
+      state.orderStats.error = null;
+    },
+    
+    // Success flags management
     resetOrderSuccess: (state) => {
       state.success = false;
+      state.createSuccess = false;
+      state.paymentSuccess = false;
+      state.cancelSuccess = false;
+      state.updateSuccess = false;
     },
+    
     clearOrderDetails: (state) => {
       state.order = null;
-    }
+      state.trackingInfo = {};
+    },
+    
+    // Filters and sorting
+    setOrderFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    
+    clearOrderFilters: (state) => {
+      state.filters = {
+        status: '',
+        dateRange: null,
+        search: '',
+      };
+    },
+    
+    setSortOptions: (state, action) => {
+      const { sortBy, sortOrder } = action.payload;
+      state.sortBy = sortBy;
+      state.sortOrder = sortOrder;
+    },
+    
+    // Selection management (admin)
+    toggleOrderSelection: (state, action) => {
+      const orderId = action.payload;
+      const index = state.selectedOrders.indexOf(orderId);
+      if (index >= 0) {
+        state.selectedOrders.splice(index, 1);
+      } else {
+        state.selectedOrders.push(orderId);
+      }
+    },
+    
+    selectAllOrders: (state) => {
+      state.selectedOrders = state.adminOrders.items.map(order => order._id);
+    },
+    
+    clearOrderSelection: (state) => {
+      state.selectedOrders = [];
+    },
+    
+    // Local order management
+    updateOrderLocally: (state, action) => {
+      const updatedOrder = action.payload;
+      
+      // Update in user orders
+      const userOrderIndex = state.orders.findIndex(order => order._id === updatedOrder._id);
+      if (userOrderIndex >= 0) {
+        state.orders[userOrderIndex] = updatedOrder;
+      }
+      
+      // Update current order if it matches
+      if (state.order && state.order._id === updatedOrder._id) {
+        state.order = updatedOrder;
+      }
+      
+      // Update in admin orders
+      const adminOrderIndex = state.adminOrders.items.findIndex(order => order._id === updatedOrder._id);
+      if (adminOrderIndex >= 0) {
+        state.adminOrders.items[adminOrderIndex] = updatedOrder;
+      }
+    },
   },
+  
   extraReducers: (builder) => {
     builder
       // Fetch Orders
@@ -149,7 +514,10 @@ const orderSlice = createSlice({
       })
       .addCase(fetchOrders.fulfilled, (state, action) => {
         state.loading = false;
-        state.orders = action.payload;
+        state.orders = action.payload.orders;
+        state.totalOrders = action.payload.totalOrders;
+        state.pagination = action.payload.pagination;
+        state.error = null;
       })
       .addCase(fetchOrders.rejected, (state, action) => {
         state.loading = false;
@@ -158,132 +526,156 @@ const orderSlice = createSlice({
       
       // Fetch Order By ID
       .addCase(fetchOrderById.pending, (state) => {
-        state.loading = true;
+        state.orderLoading = true;
         state.error = null;
       })
       .addCase(fetchOrderById.fulfilled, (state, action) => {
-        state.loading = false;
+        state.orderLoading = false;
         state.order = action.payload;
+        state.error = null;
       })
       .addCase(fetchOrderById.rejected, (state, action) => {
-        state.loading = false;
+        state.orderLoading = false;
         state.error = action.payload;
       })
       
       // Create Order
       .addCase(createOrder.pending, (state) => {
+        state.createLoading = true;
         state.loading = true;
         state.error = null;
-        state.success = false;
+        state.createSuccess = false;
       })
       .addCase(createOrder.fulfilled, (state, action) => {
+        state.createLoading = false;
         state.loading = false;
+        state.createSuccess = true;
         state.success = true;
         state.order = action.payload;
-        // Add the new order to the orders array if it exists
-        if (state.orders.length > 0) {
-          state.orders = [action.payload, ...state.orders];
-        }
+        state.orders = [action.payload, ...state.orders];
+        state.totalOrders += 1;
+        state.error = null;
       })
       .addCase(createOrder.rejected, (state, action) => {
+        state.createLoading = false;
         state.loading = false;
         state.error = action.payload;
-        state.success = false;
+        state.createSuccess = false;
       })
       
       // Update Order Status
       .addCase(updateOrderStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.updateSuccess = false;
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = true;
+        state.updateSuccess = true;
         
-        // If the updated order is the currently selected order, update it
-        if (state.order && state.order._id === action.payload._id) {
-          state.order = action.payload;
+        const updatedOrder = action.payload;
+        
+        // Update current order
+        if (state.order && state.order._id === updatedOrder._id) {
+          state.order = updatedOrder;
         }
         
-        // Update the order in the orders array
-        if (state.orders.length > 0) {
-          state.orders = state.orders.map(order => 
-            order._id === action.payload._id ? action.payload : order
-          );
+        // Update in user orders
+        const userOrderIndex = state.orders.findIndex(order => order._id === updatedOrder._id);
+        if (userOrderIndex >= 0) {
+          state.orders[userOrderIndex] = updatedOrder;
         }
         
-        // Update in admin orders if present
-        if (state.adminOrders.items.length > 0) {
-          state.adminOrders.items = state.adminOrders.items.map(order => 
-            order._id === action.payload._id ? action.payload : order
-          );
+        // Update in admin orders
+        const adminOrderIndex = state.adminOrders.items.findIndex(order => order._id === updatedOrder._id);
+        if (adminOrderIndex >= 0) {
+          state.adminOrders.items[adminOrderIndex] = updatedOrder;
         }
+        
+        state.error = null;
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.updateSuccess = false;
       })
       
       // Pay Order
       .addCase(payOrder.pending, (state) => {
+        state.paymentLoading = true;
         state.loading = true;
         state.error = null;
+        state.paymentSuccess = false;
       })
       .addCase(payOrder.fulfilled, (state, action) => {
+        state.paymentLoading = false;
         state.loading = false;
+        state.paymentSuccess = true;
         state.success = true;
-        state.order = action.payload;
         
-        // Update the order in the orders array
-        if (state.orders.length > 0) {
-          state.orders = state.orders.map(order => 
-            order._id === action.payload._id ? action.payload : order
-          );
+        const paidOrder = action.payload;
+        state.order = paidOrder;
+        
+        // Update in orders array
+        const orderIndex = state.orders.findIndex(order => order._id === paidOrder._id);
+        if (orderIndex >= 0) {
+          state.orders[orderIndex] = paidOrder;
         }
         
-        // Update in admin orders if present
-        if (state.adminOrders.items.length > 0) {
-          state.adminOrders.items = state.adminOrders.items.map(order => 
-            order._id === action.payload._id ? action.payload : order
-          );
+        // Update in admin orders
+        const adminOrderIndex = state.adminOrders.items.findIndex(order => order._id === paidOrder._id);
+        if (adminOrderIndex >= 0) {
+          state.adminOrders.items[adminOrderIndex] = paidOrder;
         }
+        
+        state.error = null;
       })
       .addCase(payOrder.rejected, (state, action) => {
+        state.paymentLoading = false;
         state.loading = false;
         state.error = action.payload;
+        state.paymentSuccess = false;
       })
       
       // Cancel Order
       .addCase(cancelOrder.pending, (state) => {
+        state.cancelLoading = true;
         state.loading = true;
         state.error = null;
+        state.cancelSuccess = false;
       })
       .addCase(cancelOrder.fulfilled, (state, action) => {
+        state.cancelLoading = false;
         state.loading = false;
+        state.cancelSuccess = true;
         state.success = true;
         
-        // If the cancelled order is the currently selected order, update it
-        if (state.order && state.order._id === action.payload._id) {
-          state.order = action.payload;
+        const cancelledOrder = action.payload;
+        
+        // Update current order
+        if (state.order && state.order._id === cancelledOrder._id) {
+          state.order = cancelledOrder;
         }
         
-        // Update the order in the orders array
-        if (state.orders.length > 0) {
-          state.orders = state.orders.map(order => 
-            order._id === action.payload._id ? action.payload : order
-          );
+        // Update in orders array
+        const orderIndex = state.orders.findIndex(order => order._id === cancelledOrder._id);
+        if (orderIndex >= 0) {
+          state.orders[orderIndex] = cancelledOrder;
         }
         
-        // Update in admin orders if present
-        if (state.adminOrders.items.length > 0) {
-          state.adminOrders.items = state.adminOrders.items.map(order => 
-            order._id === action.payload._id ? action.payload : order
-          );
+        // Update in admin orders
+        const adminOrderIndex = state.adminOrders.items.findIndex(order => order._id === cancelledOrder._id);
+        if (adminOrderIndex >= 0) {
+          state.adminOrders.items[adminOrderIndex] = cancelledOrder;
         }
+        
+        state.error = null;
       })
       .addCase(cancelOrder.rejected, (state, action) => {
+        state.cancelLoading = false;
         state.loading = false;
         state.error = action.payload;
+        state.cancelSuccess = false;
       })
       
       // Fetch All Orders (Admin)
@@ -293,39 +685,144 @@ const orderSlice = createSlice({
       })
       .addCase(fetchAllOrders.fulfilled, (state, action) => {
         state.adminOrders.loading = false;
+        state.adminOrders.items = action.payload.orders;
+        state.adminOrders.totalItems = action.payload.totalOrders;
         
-        // Handle different response formats
-        if (Array.isArray(action.payload)) {
-          state.adminOrders.items = action.payload;
+        if (action.payload.pagination) {
           state.adminOrders.pagination = {
-            page: 1,
-            totalPages: 1,
-            totalItems: action.payload.length
-          };
-        } else if (action.payload && typeof action.payload === 'object') {
-          // Handle paginated response
-          state.adminOrders.items = action.payload.orders || action.payload.items || [];
-          state.adminOrders.pagination = {
-            page: action.payload.page || 1,
-            totalPages: action.payload.totalPages || 1,
-            totalItems: action.payload.totalItems || action.payload.count || state.adminOrders.items.length
+            ...state.adminOrders.pagination,
+            ...action.payload.pagination
           };
         }
+        
+        state.adminOrders.error = null;
       })
       .addCase(fetchAllOrders.rejected, (state, action) => {
         state.adminOrders.loading = false;
         state.adminOrders.error = action.payload;
+      })
+      
+      // Track Order
+      .addCase(trackOrder.pending, (state) => {
+        state.trackingLoading = true;
+      })
+      .addCase(trackOrder.fulfilled, (state, action) => {
+        state.trackingLoading = false;
+        state.trackingInfo[action.payload.orderId] = action.payload.trackingInfo;
+      })
+      .addCase(trackOrder.rejected, (state, action) => {
+        state.trackingLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Order Statistics
+      .addCase(fetchOrderStats.pending, (state) => {
+        state.orderStats.loading = true;
+        state.orderStats.error = null;
+      })
+      .addCase(fetchOrderStats.fulfilled, (state, action) => {
+        state.orderStats.loading = false;
+        state.orderStats.data = action.payload;
+        state.orderStats.error = null;
+      })
+      .addCase(fetchOrderStats.rejected, (state, action) => {
+        state.orderStats.loading = false;
+        state.orderStats.error = action.payload;
+      })
+      
+      // Delete Order
+      .addCase(deleteOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        const deletedOrderId = action.payload;
+        
+        // Remove from user orders
+        state.orders = state.orders.filter(order => order._id !== deletedOrderId);
+        state.totalOrders = Math.max(0, state.totalOrders - 1);
+        
+        // Remove from admin orders
+        state.adminOrders.items = state.adminOrders.items.filter(order => order._id !== deletedOrderId);
+        state.adminOrders.totalItems = Math.max(0, state.adminOrders.totalItems - 1);
+        
+        // Clear current order if it was deleted
+        if (state.order && state.order._id === deletedOrderId) {
+          state.order = null;
+        }
+        
+        // Remove from selection
+        state.selectedOrders = state.selectedOrders.filter(id => id !== deletedOrderId);
+        
+        state.error = null;
+      })
+      .addCase(deleteOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-// Selectors
+// Enhanced selectors
 export const selectOrders = (state) => state.order.orders;
 export const selectOrderDetails = (state) => state.order.order;
 export const selectOrderLoading = (state) => state.order.loading;
 export const selectOrderError = (state) => state.order.error;
 export const selectOrderSuccess = (state) => state.order.success;
 export const selectAdminOrders = (state) => state.order.adminOrders;
+export const selectOrderStats = (state) => state.order.orderStats;
+export const selectOrderFilters = (state) => state.order.filters;
+export const selectSelectedOrders = (state) => state.order.selectedOrders;
+export const selectOrderPagination = (state) => state.order.pagination;
+export const selectTotalOrders = (state) => state.order.totalOrders;
 
-export const { clearOrderError, resetOrderSuccess, clearOrderDetails } = orderSlice.actions;
+// Loading selectors
+export const selectCreateLoading = (state) => state.order.createLoading;
+export const selectPaymentLoading = (state) => state.order.paymentLoading;
+export const selectCancelLoading = (state) => state.order.cancelLoading;
+export const selectTrackingLoading = (state) => state.order.trackingLoading;
+export const selectOrderDetailLoading = (state) => state.order.orderLoading;
+
+// Success selectors
+export const selectCreateSuccess = (state) => state.order.createSuccess;
+export const selectPaymentSuccess = (state) => state.order.paymentSuccess;
+export const selectCancelSuccess = (state) => state.order.cancelSuccess;
+export const selectUpdateSuccess = (state) => state.order.updateSuccess;
+
+// Utility selectors
+export const selectOrderById = (orderId) => (state) =>
+  state.order.orders.find(order => order._id === orderId);
+
+export const selectOrdersByStatus = (status) => (state) =>
+  state.order.orders.filter(order => order.status === status);
+
+export const selectRecentOrders = (limit = 5) => (state) =>
+  state.order.orders.slice(0, limit);
+
+export const selectTrackingInfo = (orderId) => (state) =>
+  state.order.trackingInfo[orderId];
+
+export const selectHasAnyLoading = (state) =>
+  state.order.loading ||
+  state.order.createLoading ||
+  state.order.paymentLoading ||
+  state.order.cancelLoading ||
+  state.order.trackingLoading ||
+  state.order.orderLoading;
+
+export const {
+  clearOrderError,
+  clearAllErrors,
+  resetOrderSuccess,
+  clearOrderDetails,
+  setOrderFilters,
+  clearOrderFilters,
+  setSortOptions,
+  toggleOrderSelection,
+  selectAllOrders,
+  clearOrderSelection,
+  updateOrderLocally,
+} = orderSlice.actions;
+
 export default orderSlice.reducer;

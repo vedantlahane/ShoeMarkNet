@@ -1,17 +1,38 @@
-// src/redux/slices/productSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import productService from "../../services/productService";
+import { toast } from "react-toastify";
+
+// Helper function to extract products array from different response formats
+const extractProducts = (response) => {
+  if (Array.isArray(response)) return response;
+  if (response?.products && Array.isArray(response.products)) return response.products;
+  if (response?.data && Array.isArray(response.data)) return response.data;
+  return [];
+};
 
 // Async thunks
 export const fetchFeaturedProducts = createAsyncThunk(
   "product/fetchFeatured",
   async (_, { rejectWithValue }) => {
     try {
-      return await productService.getFeaturedProducts();
+      const response = await productService.getFeaturedProducts();
+      return extractProducts(response);
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to fetch featured products" }
-      );
+      const message = error?.userMessage || error.response?.data?.message || "Failed to fetch featured products";
+      return rejectWithValue({ message });
+    }
+  }
+);
+
+export const fetchNewArrivals = createAsyncThunk(
+  "product/fetchNewArrivals",
+  async (options = {}, { rejectWithValue }) => {
+    try {
+      const response = await productService.getNewArrivals(options);
+      return extractProducts(response);
+    } catch (error) {
+      const message = error?.userMessage || error.response?.data?.message || "Failed to fetch new arrivals";
+      return rejectWithValue({ message });
     }
   }
 );
@@ -20,24 +41,11 @@ export const fetchCategories = createAsyncThunk(
   "product/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
-      return await productService.getCategories();
+      const response = await productService.getCategories();
+      return Array.isArray(response) ? response : response?.categories || [];
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to fetch categories" }
-      );
-    }
-  }
-);
-
-export const fetchProductById = createAsyncThunk(
-  "product/fetchProductById",
-  async (id, { rejectWithValue }) => {
-    try {
-      return await productService.getProductById(id);
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to fetch product details" }
-      );
+      const message = error?.userMessage || error.response?.data?.message || "Failed to fetch categories";
+      return rejectWithValue({ message });
     }
   }
 );
@@ -47,24 +55,89 @@ export const fetchProducts = createAsyncThunk(
   async (filters = {}, { rejectWithValue }) => {
     try {
       const response = await productService.getProducts(filters);
-      return response.products; // Always return array of products
+      
+      return {
+        products: extractProducts(response),
+        pagination: response?.pagination || null,
+        totalProducts: response?.totalProducts || response?.total || 0,
+      };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to fetch products" }
-      );
+      const message = error?.userMessage || error.response?.data?.message || "Failed to fetch products";
+      return rejectWithValue({ message });
     }
   }
 );
 
+export const searchProducts = createAsyncThunk(
+  "product/searchProducts",
+  async ({ query, filters = {} }, { rejectWithValue }) => {
+    try {
+      const response = await productService.searchProducts(query, filters);
+      
+      return {
+        products: extractProducts(response),
+        pagination: response?.pagination || null,
+        totalProducts: response?.totalProducts || response?.total || 0,
+        query,
+      };
+    } catch (error) {
+      const message = error?.userMessage || error.response?.data?.message || "Search failed";
+      return rejectWithValue({ message });
+    }
+  }
+);
+
+export const fetchProductById = createAsyncThunk(
+  "product/fetchProductById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await productService.getProductById(id);
+      return response;
+    } catch (error) {
+      const message = error?.userMessage || error.response?.data?.message || "Failed to fetch product details";
+      return rejectWithValue({ message });
+    }
+  }
+);
+
+export const fetchProductBySlug = createAsyncThunk(
+  "product/fetchProductBySlug",
+  async (slug, { rejectWithValue }) => {
+    try {
+      const response = await productService.getProductBySlug(slug);
+      return response;
+    } catch (error) {
+      const message = error?.userMessage || error.response?.data?.message || "Failed to fetch product details";
+      return rejectWithValue({ message });
+    }
+  }
+);
+
+export const fetchRelatedProducts = createAsyncThunk(
+  "product/fetchRelatedProducts",
+  async ({ productId, options = {} }, { rejectWithValue }) => {
+    try {
+      const response = await productService.getRelatedProducts(productId, options);
+      return extractProducts(response);
+    } catch (error) {
+      const message = error?.userMessage || error.response?.data?.message || "Failed to fetch related products";
+      return rejectWithValue({ message });
+    }
+  }
+);
+
+// Admin functions
 export const createProduct = createAsyncThunk(
   "product/createProduct",
   async (productData, { rejectWithValue }) => {
     try {
-      return await productService.createProduct(productData); // Returns product object
+      const response = await productService.createProduct(productData);
+      toast.success("Product created successfully!");
+      return response;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to create product" }
-      );
+      const message = error?.userMessage || error.response?.data?.message || "Failed to create product";
+      toast.error(message);
+      return rejectWithValue({ message });
     }
   }
 );
@@ -73,49 +146,84 @@ export const updateProduct = createAsyncThunk(
   "product/updateProduct",
   async ({ id, productData }, { rejectWithValue }) => {
     try {
-      return await productService.updateProduct(id, productData); // Returns product object
+      const response = await productService.updateProduct(id, productData);
+      toast.success("Product updated successfully!");
+      return response;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to update product" }
-      );
-    }
-  }
-);
-export const deleteProduct = createAsyncThunk(
-  "product/deleteProduct",
-  async (id, { rejectWithValue }) => {
-    try {
-      const result = await productService.deleteProduct(id);
-      // Return both the result and the id for the reducer to use
-      return { result, id };
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to delete product" }
-      );
+      const message = error?.userMessage || error.response?.data?.message || "Failed to update product";
+      toast.error(message);
+      return rejectWithValue({ message });
     }
   }
 );
 
+export const deleteProduct = createAsyncThunk(
+  "product/deleteProduct",
+  async ({ id, name }, { rejectWithValue }) => {
+    try {
+      await productService.deleteProduct(id);
+      toast.success(`Product "${name || 'Unknown'}" deleted successfully!`);
+      return id;
+    } catch (error) {
+      const message = error?.userMessage || error.response?.data?.message || "Failed to delete product";
+      toast.error(message);
+      return rejectWithValue({ message });
+    }
+  }
+);
+
+// Review functions
 export const createReview = createAsyncThunk(
   "product/createReview",
   async ({ productId, reviewData }, { rejectWithValue }) => {
     try {
-      return await productService.createReview(productId, reviewData);
+      const response = await productService.createReview(productId, reviewData);
+      toast.success("Review submitted successfully!");
+      return { productId, review: response };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to submit review" }
-      );
+      const message = error?.userMessage || error.response?.data?.message || "Failed to submit review";
+      toast.error(message);
+      return rejectWithValue({ message });
     }
   }
 );
 
 const initialState = {
+  // Product lists
   featuredProducts: [],
-  categories: [],
+  newArrivals: [],
   products: [],
+  searchResults: [],
+  relatedProducts: [],
+  
+  // Single product
   product: null,
+  
+  // Categories
+  categories: [],
+  
+  // Pagination
+  pagination: null,
+  totalProducts: 0,
+  
+  // Search
+  lastSearchQuery: "",
+  
+  // Loading states
   loading: false,
+  featuredLoading: false,
+  searchLoading: false,
+  productLoading: false,
+  categoriesLoading: false,
+  
+  // Error states
   error: null,
+  searchError: null,
+  
+  // Success states
+  createSuccess: false,
+  updateSuccess: false,
+  deleteSuccess: false,
 };
 
 const productSlice = createSlice({
@@ -124,42 +232,179 @@ const productSlice = createSlice({
   reducers: {
     clearProductError: (state) => {
       state.error = null;
+      state.searchError = null;
+    },
+    
+    clearSearchResults: (state) => {
+      state.searchResults = [];
+      state.lastSearchQuery = "";
+      state.searchError = null;
+    },
+    
+    clearProductDetails: (state) => {
+      state.product = null;
+      state.relatedProducts = [];
+    },
+    
+    clearSuccessFlags: (state) => {
+      state.createSuccess = false;
+      state.updateSuccess = false;
+      state.deleteSuccess = false;
+    },
+    
+    setProducts: (state, action) => {
+      state.products = action.payload;
     },
   },
+  
   extraReducers: (builder) => {
     builder
       // Featured Products
       .addCase(fetchFeaturedProducts.pending, (state) => {
-        state.loading = true;
+        state.featuredLoading = true;
+        state.error = null;
       })
       .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
-        state.loading = false;
+        state.featuredLoading = false;
         state.featuredProducts = action.payload;
+        state.error = null;
       })
       .addCase(fetchFeaturedProducts.rejected, (state, action) => {
+        state.featuredLoading = false;
+        state.error = action.payload;
+      })
+      
+      // New Arrivals
+      .addCase(fetchNewArrivals.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchNewArrivals.fulfilled, (state, action) => {
+        state.loading = false;
+        state.newArrivals = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchNewArrivals.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Add these cases to your extraReducers builder in productSlice.js
-
+      
+      // Categories
+      .addCase(fetchCategories.pending, (state) => {
+        state.categoriesLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.categoriesLoading = false;
+        state.categories = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.categoriesLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Products
+      .addCase(fetchProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.products;
+        state.pagination = action.payload.pagination;
+        state.totalProducts = action.payload.totalProducts;
+        state.error = null;
+      })
+      .addCase(fetchProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Search Products
+      .addCase(searchProducts.pending, (state) => {
+        state.searchLoading = true;
+        state.searchError = null;
+      })
+      .addCase(searchProducts.fulfilled, (state, action) => {
+        state.searchLoading = false;
+        state.searchResults = action.payload.products;
+        state.pagination = action.payload.pagination;
+        state.totalProducts = action.payload.totalProducts;
+        state.lastSearchQuery = action.payload.query;
+        state.searchError = null;
+      })
+      .addCase(searchProducts.rejected, (state, action) => {
+        state.searchLoading = false;
+        state.searchError = action.payload;
+      })
+      
+      // Single Product by ID
+      .addCase(fetchProductById.pending, (state) => {
+        state.productLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.productLoading = false;
+        state.product = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.productLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Single Product by Slug
+      .addCase(fetchProductBySlug.pending, (state) => {
+        state.productLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchProductBySlug.fulfilled, (state, action) => {
+        state.productLoading = false;
+        state.product = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchProductBySlug.rejected, (state, action) => {
+        state.productLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Related Products
+      .addCase(fetchRelatedProducts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchRelatedProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.relatedProducts = action.payload;
+      })
+      .addCase(fetchRelatedProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
       // Create Product
       .addCase(createProduct.pending, (state) => {
         state.loading = true;
+        state.error = null;
+        state.createSuccess = false;
       })
-      // Update the createProduct.fulfilled case in your productSlice.js
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false;
-        state.products.push(action.payload); // payload is product object
+        state.products = [action.payload, ...state.products];
+        state.createSuccess = true;
+        state.error = null;
       })
-
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.createSuccess = false;
       })
-
+      
       // Update Product
       .addCase(updateProduct.pending, (state) => {
         state.loading = true;
+        state.error = null;
+        state.updateSuccess = false;
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
@@ -170,83 +415,52 @@ const productSlice = createSlice({
         if (state.product && state.product._id === action.payload._id) {
           state.product = action.payload;
         }
+        state.updateSuccess = true;
+        state.error = null;
       })
       .addCase(updateProduct.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.updateSuccess = false;
       })
-
+      
       // Delete Product
       .addCase(deleteProduct.pending, (state) => {
         state.loading = true;
+        state.error = null;
+        state.deleteSuccess = false;
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.loading = false;
-        // Remove the deleted product from the array
         state.products = state.products.filter(
-          (product) => product._id !== action.payload.id
+          (product) => product._id !== action.payload
         );
-        // If the deleted product is the currently selected product, clear it
-        if (state.product && state.product._id === action.payload.id) {
+        if (state.product && state.product._id === action.payload) {
           state.product = null;
         }
+        state.deleteSuccess = true;
+        state.error = null;
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.deleteSuccess = false;
       })
-
-      // Categories
-      .addCase(fetchCategories.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchCategories.fulfilled, (state, action) => {
-        state.loading = false;
-        state.categories = action.payload;
-      })
-      .addCase(fetchCategories.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // Add these cases to your existing extraReducers builder
-      .addCase(fetchProducts.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.loading = false;
-        state.products = action.payload;
-      })
-      .addCase(fetchProducts.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // Single Product
-      .addCase(fetchProductById.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchProductById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.product = action.payload;
-      })
-      .addCase(fetchProductById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
+      
       // Create Review
       .addCase(createReview.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(createReview.fulfilled, (state, action) => {
         state.loading = false;
-        // If the current product is being reviewed, update its reviews
+        // Update the current product's reviews if it's the same product
         if (state.product && state.product._id === action.payload.productId) {
-          state.product.reviews = action.payload.reviews;
-          state.product.rating = action.payload.rating;
-          state.product.numReviews = action.payload.numReviews;
+          if (action.payload.review.product) {
+            state.product = action.payload.review.product;
+          }
         }
+        state.error = null;
       })
       .addCase(createReview.rejected, (state, action) => {
         state.loading = false;
@@ -255,5 +469,25 @@ const productSlice = createSlice({
   },
 });
 
-export const { clearProductError } = productSlice.actions;
+// Enhanced selectors
+export const selectFeaturedProducts = (state) => state.product.featuredProducts;
+export const selectNewArrivals = (state) => state.product.newArrivals;
+export const selectProducts = (state) => state.product.products;
+export const selectSearchResults = (state) => state.product.searchResults;
+export const selectRelatedProducts = (state) => state.product.relatedProducts;
+export const selectProduct = (state) => state.product.product;
+export const selectCategories = (state) => state.product.categories;
+export const selectProductLoading = (state) => state.product.loading;
+export const selectProductError = (state) => state.product.error;
+export const selectPagination = (state) => state.product.pagination;
+export const selectLastSearchQuery = (state) => state.product.lastSearchQuery;
+
+export const {
+  clearProductError,
+  clearSearchResults,
+  clearProductDetails,
+  clearSuccessFlags,
+  setProducts,
+} = productSlice.actions;
+
 export default productSlice.reducer;
