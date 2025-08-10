@@ -1,66 +1,231 @@
-// src/routes/routeConfig.js
-import React from 'react';
-import MainLayout from '../components/layouts/MainLayout';
-import ProtectedRoute from '../components/common/ProtectedRoute';
-import AdminRoute from '../components/common/AdminRoute';
+import { lazy } from 'react';
 
-// Pages
-import Home from '../pages/Home';
-import ProductDetail from '../pages/ProductDetail';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import Profile from '../pages/Profile';
-import Orders from '../pages/Orders';
-import Cart from '../pages/Cart';
-import Wishlist from '../pages/Wishlist';
-import AdminDashboard from '../pages/AdminDashboard';
-import NotFound from '../pages/NotFound';
+// Lazy load components for better performance
+const Home = lazy(() => import('../pages/Home'));
+const ProductDetail = lazy(() => import('../pages/ProductDetail'));
+const Products = lazy(() => import('../pages/Products'));
+const Category = lazy(() => import('../pages/Category'));
+const Search = lazy(() => import('../pages/Search'));
+const About = lazy(() => import('../pages/About'));
+const Contact = lazy(() => import('../pages/Contact'));
+const Login = lazy(() => import('../pages/Login'));
+const Register = lazy(() => import('../pages/Register'));
+const Profile = lazy(() => import('../pages/Profile'));
+const Orders = lazy(() => import('../pages/Orders'));
+const Cart = lazy(() => import('../pages/Cart'));
+const Checkout = lazy(() => import('../pages/Checkout'));
+const Wishlist = lazy(() => import('../pages/Wishlist'));
+const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
+const NotFound = lazy(() => import('../pages/NotFound'));
 
-const routes = [
+// Route configuration with metadata
+export const routeConfig = {
   // Public routes
-  { path: '/', element: <MainLayout><Home /></MainLayout> },
-  { path: '/products/:id', element: <MainLayout><ProductDetail /></MainLayout> },
-  { path: '/login', element: <MainLayout><Login /></MainLayout> },
-  { path: '/register', element: <MainLayout><Register /></MainLayout> },
-  
-  // Protected user routes
-  { 
-    path: '/profile', 
-    element: <MainLayout><ProtectedRoute><Profile /></ProtectedRoute></MainLayout> 
-  },
-  { 
-    path: '/orders', 
-    element: <MainLayout><ProtectedRoute><Orders /></ProtectedRoute></MainLayout> 
-  },
-  { 
-    path: '/cart', 
-    element: <MainLayout><ProtectedRoute><Cart /></ProtectedRoute></MainLayout> 
-  },
-  { 
-    path: '/wishlist', 
-    element: <MainLayout><ProtectedRoute><Wishlist /></ProtectedRoute></MainLayout> 
-  },
-  
-  // Admin routes
-  { 
-    path: '/admin', 
-    element: <MainLayout><AdminRoute><AdminDashboard /></AdminRoute></MainLayout> 
-  },
-  { 
-    path: '/admin/products', 
-    element: <MainLayout><AdminRoute><AdminDashboard section="products" /></AdminRoute></MainLayout> 
-  },
-  { 
-    path: '/admin/orders', 
-    element: <MainLayout><AdminRoute><AdminDashboard section="orders" /></AdminRoute></MainLayout> 
-  },
-  { 
-    path: '/admin/users', 
-    element: <MainLayout><AdminRoute><AdminDashboard section="users" /></AdminRoute></MainLayout> 
-  },
-  
-  // 404 route
-  { path: '*', element: <MainLayout><NotFound /></MainLayout> }
-];
+  public: [
+    {
+      path: '/',
+      component: Home,
+      exact: true,
+      title: 'Home',
+      description: 'Welcome to our store'
+    },
+    {
+      path: '/products',
+      component: Products,
+      title: 'Products',
+      description: 'Browse our product catalog'
+    },
+    {
+      path: '/products/:slug',
+      component: ProductDetail,
+      title: 'Product Details',
+      description: 'View product information'
+    },
+    {
+      path: '/categories',
+      component: Category,
+      title: 'Categories',
+      description: 'Browse product categories'
+    },
+    {
+      path: '/categories/:categoryId',
+      component: Category,
+      title: 'Category',
+      description: 'View category products'
+    },
+    {
+      path: '/search',
+      component: Search,
+      title: 'Search Results',
+      description: 'Search results'
+    },
+    {
+      path: '/about',
+      component: About,
+      title: 'About Us',
+      description: 'Learn more about our company'
+    },
+    {
+      path: '/contact',
+      component: Contact,
+      title: 'Contact Us',
+      description: 'Get in touch with us'
+    }
+  ],
 
-export default routes;
+  // Authentication routes (no layout)
+  auth: [
+    {
+      path: '/login',
+      component: Login,
+      title: 'Login',
+      description: 'Sign in to your account'
+    },
+    {
+      path: '/register',
+      component: Register,
+      title: 'Register',
+      description: 'Create a new account'
+    }
+  ],
+
+  // Protected user routes
+  protected: [
+    {
+      path: '/profile',
+      component: Profile,
+      title: 'Profile',
+      description: 'Manage your profile',
+      requiredRole: 'user'
+    },
+    {
+      path: '/orders',
+      component: Orders,
+      title: 'Orders',
+      description: 'View your orders',
+      requiredRole: 'user'
+    },
+    {
+      path: '/orders/:orderId',
+      component: Orders,
+      title: 'Order Details',
+      description: 'View order details',
+      requiredRole: 'user'
+    },
+    {
+      path: '/cart',
+      component: Cart,
+      title: 'Shopping Cart',
+      description: 'Review items in your cart',
+      requiredRole: 'user'
+    },
+    {
+      path: '/checkout',
+      component: Checkout,
+      title: 'Checkout',
+      description: 'Complete your purchase',
+      requiredRole: 'user'
+    },
+    {
+      path: '/wishlist',
+      component: Wishlist,
+      title: 'Wishlist',
+      description: 'Your saved items',
+      requiredRole: 'user'
+    }
+  ],
+
+  // Admin routes
+  admin: [
+    {
+      path: '/admin',
+      component: AdminDashboard,
+      title: 'Admin Dashboard',
+      description: 'Administration panel',
+      requiredRole: 'admin',
+      section: 'overview'
+    },
+    {
+      path: '/admin/dashboard',
+      component: AdminDashboard,
+      title: 'Dashboard',
+      description: 'Admin dashboard overview',
+      requiredRole: 'admin',
+      section: 'overview'
+    },
+    {
+      path: '/admin/products',
+      component: AdminDashboard,
+      title: 'Manage Products',
+      description: 'Product management',
+      requiredRole: 'admin',
+      section: 'products'
+    },
+    {
+      path: '/admin/orders',
+      component: AdminDashboard,
+      title: 'Manage Orders',
+      description: 'Order management',
+      requiredRole: 'admin',
+      section: 'orders'
+    },
+    {
+      path: '/admin/users',
+      component: AdminDashboard,
+      title: 'Manage Users',
+      description: 'User management',
+      requiredRole: 'admin',
+      section: 'users'
+    },
+    {
+      path: '/admin/categories',
+      component: AdminDashboard,
+      title: 'Manage Categories',
+      description: 'Category management',
+      requiredRole: 'admin',
+      section: 'categories'
+    },
+    {
+      path: '/admin/reviews',
+      component: AdminDashboard,
+      title: 'Manage Reviews',
+      description: 'Review management',
+      requiredRole: 'admin',
+      section: 'reviews'
+    },
+    {
+      path: '/admin/reports',
+      component: AdminDashboard,
+      title: 'Reports',
+      description: 'View reports',
+      requiredRole: 'admin',
+      section: 'reports'
+    },
+    {
+      path: '/admin/settings',
+      component: AdminDashboard,
+      title: 'Settings',
+      description: 'System settings',
+      requiredRole: 'admin',
+      section: 'settings'
+    },
+    {
+      path: '/admin/campaigns',
+      component: AdminDashboard,
+      title: 'Campaigns',
+      description: 'Marketing campaigns',
+      requiredRole: 'admin',
+      section: 'campaigns'
+    }
+  ],
+
+  // Fallback route
+  fallback: {
+    path: '*',
+    component: NotFound,
+    title: '404 - Page Not Found',
+    description: 'The page you are looking for does not exist'
+  }
+};
+
+export default routeConfig;
