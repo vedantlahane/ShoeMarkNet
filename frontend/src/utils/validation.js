@@ -68,5 +68,4 @@ export const validatePhone = (phone) => {
   return { isValid: true, message: '' };
 };
 
-// Re-export existing validations
-export { validateEmail, validatePassword } from './validation';
+// Remove duplicate export - these functions are already defined in this file

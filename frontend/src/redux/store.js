@@ -4,6 +4,7 @@ import cartReducer from './slices/cartSlice';
 import productReducer from './slices/productSlice';
 import orderReducer from './slices/orderSlice';
 import wishlistReducer from './slices/wishlistSlice';
+import contactReducer from './slices/contactSlice';
 
 // Development middleware
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -13,6 +14,7 @@ const store = configureStore({
     auth: authReducer,
     cart: cartReducer,
     product: productReducer,
+    contact: contactReducer,
     order: orderReducer,
     wishlist: wishlistReducer,
   },

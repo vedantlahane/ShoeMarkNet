@@ -11,9 +11,10 @@ const FilterChips = ({ filters, onRemove, onClearAll, className = '' }) => {
         return `Brand: ${value}`;
       case 'rating':
         return `${value}+ Stars`;
-      case 'price':
+      case 'price': {
         const [min, max] = value.split('-');
         return `$${min} - $${max}`;
+      }
       case 'inStock':
         return 'In Stock';
       case 'onSale':

@@ -115,6 +115,7 @@ const Category = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [compareItems, setCompareItems] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   
