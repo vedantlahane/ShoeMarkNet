@@ -1,47 +1,271 @@
-// src/components/admin/DashboardOverview.jsx
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
-const DashboardOverview = () => {
-  const { products } = useSelector(state => state.product);
-  const { orders } = useSelector(state => state.order);
-  const { users } = useSelector(state => state.auth);
+// Redux actions
+import { fetchProducts } from '../../redux/slices/productSlice';
+import { fetchAllOrders } from '../../redux/slices/orderSlice';
+import { fetchUsers } from '../../redux/slices/authSlice';
+import adminService from '../../services/adminService';
+
+// Components
+import LoadingSpinner from '../common/LoadingSpinner';
+import ErrorMessage from '../common/ErrorMessage';
+import StatsCard from './dashboard/StatsCard';
+import RevenueChart from './dashboard/RevenueChart';
+import OrdersChart from './dashboard/OrdersChart';
+import RecentOrdersTable from './dashboard/RecentOrdersTable';
+import InventoryAlerts from './dashboard/InventoryAlerts';
+import QuickActionGrid from './dashboard/QuickActionGrid';
+import PerformanceMetrics from './dashboard/PerformanceMetrics';
+import TopProductsWidget from './dashboard/TopProductsWidget';
+import CustomerAnalytics from './dashboard/CustomerAnalytics';
+import LiveActivityFeed from './dashboard/LiveActivityFeed';
+
+// Hooks
+import useWebSocket from '../../hooks/useWebSocket';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import useDebounce from '../../hooks/useDebounce';
+
+// Utils
+import { trackEvent } from '../../utils/analytics';
+import { formatCurrency, formatNumber, formatPercentage } from '../../utils/helpers';
+
+// Constants
+const REFRESH_INTERVAL = 30000; // 30 seconds
+const CHART_COLORS = {
+  primary: '#3B82F6',
+  secondary: '#8B5CF6',
+  success: '#10B981',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  info: '#06B6D4'
+};
+
+const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
+  const dispatch = useDispatch();
+
+  // Redux state
+  const { products, loading: productsLoading } = useSelector(state => state.product);
+  const { adminOrders, loading: ordersLoading } = useSelector(state => state.order);
+  const { users, loading: usersLoading } = useSelector(state => state.auth);
+
+  // WebSocket for real-time updates
+  const { isConnected, lastMessage } = useWebSocket('/admin/dashboard');
+
+  // Local state
   const [animateStats, setAnimateStats] = useState(false);
-  
-  // Calculate enhanced metrics
-  const totalRevenue = orders?.reduce((sum, order) => sum + order.totalPrice, 0) || 0;
-  const pendingOrders = orders?.filter(order => !order.isDelivered).length || 0;
-  const lowStockProducts = products?.filter(product => product.countInStock <= 5).length || 0;
-  const todaysOrders = orders?.filter(order => {
-    const today = new Date().toDateString();
-    return new Date(order.createdAt).toDateString() === today;
-  }).length || 0;
+  const [dashboardData, setDashboardData] = useState(null);
+  const [selectedTimeRange, setSelectedTimeRange] = useLocalStorage('dashboardTimeRange', '7d');
+  const [refreshing, setRefreshing] = useState(false);
+  const [chartData, setChartData] = useState({
+    revenue: [],
+    orders: [],
+    customers: []
+  });
+  const [activeMetric, setActiveMetric] = useState('revenue');
+  const [showAdvancedMetrics, setShowAdvancedMetrics] = useState(false);
 
-  // Calculate growth metrics
-  const lastMonthRevenue = orders?.filter(order => {
-    const orderDate = new Date(order.createdAt);
-    const lastMonth = new Date();
-    lastMonth.setMonth(lastMonth.getMonth() - 1);
-    return orderDate >= lastMonth;
-  }).reduce((sum, order) => sum + order.totalPrice, 0) || 0;
+  // Debounced refresh function
+  const debouncedRefresh = useDebounce(() => {
+    fetchDashboardData();
+  }, 1000);
 
-  const revenueGrowth = lastMonthRevenue > 0 ? ((totalRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
-
+  // Initialize component
   useEffect(() => {
-    if (products && orders && users) {
-      console.log('Dashboard data loaded');
-      setTimeout(() => setAnimateStats(true), 100);
-    }
-  }, [products, orders, users]);
+    const timer = setTimeout(() => setAnimateStats(true), 100);
+    fetchDashboardData();
     
-  if (!products || !orders || !users) {
+    // Track dashboard view
+    trackEvent('admin_dashboard_viewed', {
+      time_range: selectedTimeRange,
+      timestamp: new Date().toISOString()
+    });
+
+    return () => clearTimeout(timer);
+  }, [selectedTimeRange]);
+
+  // Auto-refresh dashboard data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!refreshing) {
+        debouncedRefresh();
+      }
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [refreshing, debouncedRefresh]);
+
+  // Handle real-time updates
+  useEffect(() => {
+    if (lastMessage && isConnected) {
+      const data = JSON.parse(lastMessage.data);
+      if (data.type === 'dashboard_update') {
+        setDashboardData(prev => ({
+          ...prev,
+          ...data.payload
+        }));
+      }
+    }
+  }, [lastMessage, isConnected]);
+
+  // Fetch comprehensive dashboard data
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      
+      const [dashboardStats, salesReport, customerAnalytics] = await Promise.all([
+        adminService.getDashboardStats(),
+        adminService.getSalesReport({ timeRange: selectedTimeRange }),
+        adminService.getCustomerAnalytics({ timeRange: selectedTimeRange })
+      ]);
+
+      setDashboardData({
+        ...dashboardStats,
+        salesReport,
+        customerAnalytics
+      });
+
+      // Update chart data
+      setChartData({
+        revenue: salesReport.revenueChart || [],
+        orders: salesReport.ordersChart || [],
+        customers: customerAnalytics.customersChart || []
+      });
+
+      if (onDataUpdate) {
+        onDataUpdate(dashboardStats);
+      }
+
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [selectedTimeRange, onDataUpdate]);
+
+  // Calculate enhanced metrics
+  const enhancedMetrics = useMemo(() => {
+    if (!dashboardData && (!products || !adminOrders?.items || !users)) {
+      return null;
+    }
+
+    const ordersData = adminOrders?.items || [];
+    const productsData = products || [];
+    const usersData = users || [];
+
+    // Revenue calculations
+    const totalRevenue = ordersData.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+    const todayRevenue = ordersData
+      .filter(order => {
+        const today = new Date().toDateString();
+        return new Date(order.createdAt).toDateString() === today;
+      })
+      .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+
+    const lastMonthRevenue = ordersData
+      .filter(order => {
+        const orderDate = new Date(order.createdAt);
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        return orderDate >= lastMonth;
+      })
+      .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+
+    const revenueGrowth = lastMonthRevenue > 0 ? 
+      ((totalRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+
+    // Order calculations
+    const totalOrders = ordersData.length;
+    const pendingOrders = ordersData.filter(order => !order.isDelivered).length;
+    const todaysOrders = ordersData.filter(order => {
+      const today = new Date().toDateString();
+      return new Date(order.createdAt).toDateString() === today;
+    }).length;
+
+    // Product calculations
+    const totalProducts = productsData.length;
+    const lowStockProducts = productsData.filter(product => 
+      (product.countInStock || 0) <= 5
+    ).length;
+    const outOfStockProducts = productsData.filter(product => 
+      (product.countInStock || 0) === 0
+    ).length;
+
+    // User calculations
+    const totalUsers = usersData.length;
+    const activeUsers = usersData.filter(user => {
+      const lastActive = new Date(user.lastLogin || user.createdAt);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      return lastActive >= thirtyDaysAgo;
+    }).length;
+
+    // Advanced metrics
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const conversionRate = totalUsers > 0 ? (totalOrders / totalUsers) * 100 : 0;
+    const customerLifetimeValue = activeUsers > 0 ? totalRevenue / activeUsers : 0;
+
+    return {
+      revenue: {
+        total: totalRevenue,
+        today: todayRevenue,
+        growth: revenueGrowth,
+        average: averageOrderValue
+      },
+      orders: {
+        total: totalOrders,
+        pending: pendingOrders,
+        today: todaysOrders,
+        fulfilled: totalOrders - pendingOrders
+      },
+      products: {
+        total: totalProducts,
+        lowStock: lowStockProducts,
+        outOfStock: outOfStockProducts,
+        inStock: totalProducts - outOfStockProducts
+      },
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        conversionRate,
+        lifetimeValue: customerLifetimeValue
+      }
+    };
+  }, [dashboardData, products, adminOrders, users]);
+
+  // Handle metric selection
+  const handleMetricSelect = useCallback((metric) => {
+    setActiveMetric(metric);
+    trackEvent('dashboard_metric_selected', {
+      metric,
+      time_range: selectedTimeRange
+    });
+  }, [selectedTimeRange]);
+
+  // Handle time range change
+  const handleTimeRangeChange = useCallback((range) => {
+    setSelectedTimeRange(range);
+    trackEvent('dashboard_time_range_changed', {
+      from_range: selectedTimeRange,
+      to_range: range
+    });
+  }, [selectedTimeRange, setSelectedTimeRange]);
+
+  // Handle manual refresh
+  const handleRefresh = useCallback(() => {
+    fetchDashboardData();
+    trackEvent('dashboard_manual_refresh');
+  }, [fetchDashboardData]);
+
+  if (isLoading || (!enhancedMetrics && (productsLoading || ordersLoading || usersLoading))) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="flex justify-center items-center h-96">
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-            <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <LoadingSpinner size="large" />
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 mt-6">
               <i className="fas fa-chart-line mr-2 text-blue-500"></i>
               Loading Dashboard
             </h3>
@@ -55,317 +279,292 @@ const DashboardOverview = () => {
     );
   }
 
+  if (!enhancedMetrics) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+        <ErrorMessage 
+          message="Failed to load dashboard data"
+          onRetry={fetchDashboardData}
+          className="max-w-md mx-auto"
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-      
-      {/* Enhanced Header */}
-      <div className="mb-8">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                <i className="fas fa-tachometer-alt mr-3"></i>
-                Admin Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
-                <i className="fas fa-calendar-day mr-2"></i>
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-lg">
-                <div className="text-2xl font-bold">{todaysOrders}</div>
-                <div className="text-sm text-green-100">Orders Today</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Enhanced Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {/* Total Revenue Card */}
-        <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.1s' }}>
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-full blur-xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-dollar-sign text-white text-xl"></i>
-              </div>
-              <div className="text-right">
-                <div className={`text-xs font-medium px-2 py-1 rounded-full ${revenueGrowth >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  <i className={`fas ${revenueGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1`}></i>
-                  {Math.abs(revenueGrowth).toFixed(1)}%
-                </div>
-              </div>
-            </div>
-            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">Total Revenue</h3>
-            <p className="text-3xl font-black text-gray-900 dark:text-white">${totalRevenue.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              <i className="fas fa-chart-line mr-1"></i>
-              All time earnings
-            </p>
-          </div>
-        </div>
+    <>
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>Admin Dashboard | ShoeMarkNet Control Center</title>
+        <meta name="description" content="Comprehensive admin dashboard with real-time analytics, order management, and business insights for ShoeMarkNet." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
         
-        {/* Total Products Card */}
-        <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full blur-xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-box text-white text-xl"></i>
-              </div>
-              <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                <i className="fas fa-plus mr-1"></i>
-                Active
-              </div>
-            </div>
-            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">Total Products</h3>
-            <p className="text-3xl font-black text-gray-900 dark:text-white">{products.length.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              <i className="fas fa-warehouse mr-1"></i>
-              In inventory
-            </p>
-          </div>
-        </div>
-        
-        {/* Pending Orders Card */}
-        <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.3s' }}>
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-full blur-xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-clock text-white text-xl"></i>
-              </div>
-              {pendingOrders > 0 && (
-                <div className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full animate-pulse">
-                  <i className="fas fa-exclamation-triangle mr-1"></i>
-                  Urgent
-                </div>
-              )}
-            </div>
-            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">Pending Orders</h3>
-            <p className="text-3xl font-black text-gray-900 dark:text-white">{pendingOrders.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              <i className="fas fa-shipping-fast mr-1"></i>
-              Awaiting fulfillment
-            </p>
-          </div>
-        </div>
-        
-        {/* Total Users Card */}
-        <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-full blur-xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-users text-white text-xl"></i>
-              </div>
-              <div className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                <i className="fas fa-user-plus mr-1"></i>
-                Growing
-              </div>
-            </div>
-            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">Total Users</h3>
-            <p className="text-3xl font-black text-gray-900 dark:text-white">{users.length.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              <i className="fas fa-user-friends mr-1"></i>
-              Registered customers
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Enhanced Action Items */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-        
-        {/* Recent Orders Section */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              <i className="fas fa-shopping-cart mr-3 text-blue-500"></i>
-              Recent Orders
-            </h2>
-            <Link to="/admin/orders" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-2xl transition-all duration-200 transform hover:scale-105">
-              <i className="fas fa-external-link-alt mr-2"></i>
-              View All
-            </Link>
-          </div>
-          
-          {orders.length > 0 ? (
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {orders.slice(0, 5).map((order, index) => (
-                <div key={order._id} className={`bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl p-4 hover:bg-white/20 transition-all duration-200 animate-fade-in-up`} style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold">
-                        {order._id.substring(order._id.length - 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          Order #{order._id.substring(order._id.length - 8)}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <i className="fas fa-calendar mr-1"></i>
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          <i className="fas fa-dollar-sign mr-1 text-green-500"></i>
-                          ${order.totalPrice?.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                        order.isPaid 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        <i className={`fas ${order.isPaid ? 'fa-check-circle' : 'fa-times-circle'} mr-1`}></i>
-                        {order.isPaid ? 'Paid' : 'Unpaid'}
+        {/* Enhanced Header */}
+        <div className={`mb-8 ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`}>
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            
+            {/* Background Effects */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
+            
+            <div className="relative z-10">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+                <div>
+                  <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                    <i className="fas fa-tachometer-alt mr-3"></i>
+                    Admin Dashboard
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 text-lg flex items-center">
+                    <i className="fas fa-calendar-day mr-2"></i>
+                    {new Date().toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                  
+                  {/* Connection Status */}
+                  <div className="flex items-center mt-2 space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {isConnected ? 'Live Updates' : 'Offline'}
                       </span>
-                      <div className="mt-1">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          order.isDelivered 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          <i className={`fas ${order.isDelivered ? 'fa-truck' : 'fa-clock'} mr-1`}></i>
-                          {order.isDelivered ? 'Delivered' : 'Pending'}
-                        </span>
-                      </div>
                     </div>
+                    {refreshing && (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">Refreshing...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-shopping-cart text-gray-400 text-2xl"></i>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  
+                  {/* Time Range Selector */}
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Period:</label>
+                    <select
+                      value={selectedTimeRange}
+                      onChange={(e) => handleTimeRangeChange(e.target.value)}
+                      className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      <option value="1d" className="bg-gray-800 text-white">Last 24 Hours</option>
+                      <option value="7d" className="bg-gray-800 text-white">Last 7 Days</option>
+                      <option value="30d" className="bg-gray-800 text-white">Last 30 Days</option>
+                      <option value="90d" className="bg-gray-800 text-white">Last 90 Days</option>
+                      <option value="1y" className="bg-gray-800 text-white">Last Year</option>
+                    </select>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                      className="w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 transition-all duration-200 disabled:opacity-50"
+                      title="Refresh Dashboard"
+                    >
+                      <i className={`fas fa-sync-alt ${refreshing ? 'animate-spin' : ''}`}></i>
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowAdvancedMetrics(!showAdvancedMetrics)}
+                      className="w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-white/30 transition-all duration-200"
+                      title="Advanced Metrics"
+                    >
+                      <i className="fas fa-chart-bar"></i>
+                    </button>
+                  </div>
+
+                  {/* Today's Highlight */}
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-lg">
+                    <div className="text-2xl font-bold">{enhancedMetrics.orders.today}</div>
+                    <div className="text-sm text-green-100">Orders Today</div>
+                  </div>
+                </div>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-lg">No orders yet</p>
-              <p className="text-gray-400 dark:text-gray-500 text-sm">Orders will appear here when customers start purchasing</p>
             </div>
-          )}
+          </div>
         </div>
         
-        {/* Low Stock Products Section */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              <i className="fas fa-exclamation-triangle mr-3 text-yellow-500"></i>
-              Inventory Alerts
-            </h2>
-            <Link to="/admin/products" className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-2 px-4 rounded-2xl transition-all duration-200 transform hover:scale-105">
-              <i className="fas fa-warehouse mr-2"></i>
-              Manage Stock
-            </Link>
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <StatsCard
+            title="Total Revenue"
+            value={formatCurrency(enhancedMetrics.revenue.total)}
+            icon="fa-dollar-sign"
+            color="from-blue-500 to-blue-600"
+            change={enhancedMetrics.revenue.growth}
+            subtitle="All time earnings"
+            animateStats={animateStats}
+            animationDelay="0.1s"
+            onClick={() => handleMetricSelect('revenue')}
+            isActive={activeMetric === 'revenue'}
+          />
+          
+          <StatsCard
+            title="Total Products"
+            value={formatNumber(enhancedMetrics.products.total)}
+            icon="fa-boxes"
+            color="from-green-500 to-green-600"
+            badge={{ text: `${enhancedMetrics.products.inStock} Active`, type: 'success' }}
+            subtitle="In inventory"
+            animateStats={animateStats}
+            animationDelay="0.2s"
+            onClick={() => handleMetricSelect('products')}
+            isActive={activeMetric === 'products'}
+          />
+          
+          <StatsCard
+            title="Pending Orders"
+            value={formatNumber(enhancedMetrics.orders.pending)}
+            icon="fa-clock"
+            color="from-yellow-500 to-orange-500"
+            urgent={enhancedMetrics.orders.pending > 0}
+            subtitle="Awaiting fulfillment"
+            animateStats={animateStats}
+            animationDelay="0.3s"
+            onClick={() => handleMetricSelect('orders')}
+            isActive={activeMetric === 'orders'}
+          />
+          
+          <StatsCard
+            title="Total Users"
+            value={formatNumber(enhancedMetrics.users.total)}
+            icon="fa-users"
+            color="from-purple-500 to-purple-600"
+            badge={{ text: `${enhancedMetrics.users.active} Active`, type: 'info' }}
+            subtitle="Registered customers"
+            animateStats={animateStats}
+            animationDelay="0.4s"
+            onClick={() => handleMetricSelect('users')}
+            isActive={activeMetric === 'users'}
+          />
+        </div>
+
+        {/* Advanced Metrics Panel */}
+        {showAdvancedMetrics && (
+          <div className={`mb-12 ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.5s' }}>
+            <PerformanceMetrics
+              metrics={enhancedMetrics}
+              timeRange={selectedTimeRange}
+              chartData={chartData}
+            />
+          </div>
+        )}
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-12">
+          <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
+            <RevenueChart
+              data={chartData.revenue}
+              timeRange={selectedTimeRange}
+              totalRevenue={enhancedMetrics.revenue.total}
+              growth={enhancedMetrics.revenue.growth}
+            />
           </div>
           
-          {lowStockProducts > 0 ? (
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {products
-                .filter(product => product.countInStock <= 5)
-                .slice(0, 5)
-                .map((product, index) => (
-                  <div key={product._id} className={`bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl p-4 hover:bg-white/20 transition-all duration-200 animate-fade-in-up`} style={{ animationDelay: `${index * 0.1}s` }}>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold ${
-                          product.countInStock === 0 
-                            ? 'bg-gradient-to-r from-red-500 to-red-600' 
-                            : 'bg-gradient-to-r from-orange-500 to-yellow-500'
-                        }`}>
-                          <i className={`fas ${product.countInStock === 0 ? 'fa-times' : 'fa-exclamation'}`}></i>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900 dark:text-white">{product.name}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            <i className="fas fa-boxes mr-1"></i>
-                            Stock: {product.countInStock} units
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            <i className="fas fa-tag mr-1"></i>
-                            ${product.price}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          product.countInStock === 0 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          <i className={`fas ${product.countInStock === 0 ? 'fa-times-circle' : 'fa-exclamation-triangle'} mr-1`}></i>
-                          {product.countInStock === 0 ? 'Out of Stock' : 'Low Stock'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-check-circle text-green-500 text-2xl"></i>
-              </div>
-              <p className="text-green-600 dark:text-green-400 text-lg font-semibold">All Products Well Stocked!</p>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">No inventory issues detected</p>
-            </div>
-          )}
+          <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.7s' }}>
+            <OrdersChart
+              data={chartData.orders}
+              timeRange={selectedTimeRange}
+              totalOrders={enhancedMetrics.orders.total}
+              pending={enhancedMetrics.orders.pending}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-          <i className="fas fa-bolt mr-3 text-yellow-500"></i>
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: 'fa-plus', label: 'Add Product', color: 'from-blue-500 to-blue-600', link: '/admin/products/new' },
-            { icon: 'fa-chart-bar', label: 'View Reports', color: 'from-green-500 to-green-600', link: '/admin/reports' },
-            { icon: 'fa-users', label: 'Manage Users', color: 'from-purple-500 to-purple-600', link: '/admin/users' },
-            { icon: 'fa-cog', label: 'Settings', color: 'from-gray-500 to-gray-600', link: '/admin/settings' }
-          ].map((action, index) => (
-            <Link
-              key={index}
-              to={action.link}
-              className={`bg-gradient-to-r ${action.color} hover:scale-105 transform transition-all duration-200 text-white rounded-2xl p-6 text-center shadow-lg group`}
-            >
-              <i className={`fas ${action.icon} text-2xl mb-3 group-hover:animate-bounce`}></i>
-              <p className="font-semibold text-sm">{action.label}</p>
-            </Link>
-          ))}
+        {/* Enhanced Data Tables and Widgets */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-12">
+          
+          {/* Recent Orders with Enhanced Features */}
+          <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
+            <RecentOrdersTable
+              orders={adminOrders?.items || []}
+              totalOrders={enhancedMetrics.orders.total}
+              todaysOrders={enhancedMetrics.orders.today}
+            />
+          </div>
+          
+          {/* Enhanced Inventory Alerts */}
+          <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.9s' }}>
+            <InventoryAlerts
+              products={products || []}
+              lowStockCount={enhancedMetrics.products.lowStock}
+              outOfStockCount={enhancedMetrics.products.outOfStock}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes fade-in-up {
-          from {
+        {/* Additional Widgets Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          
+          {/* Top Products Widget */}
+          <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.0s' }}>
+            <TopProductsWidget
+              products={products || []}
+              orders={adminOrders?.items || []}
+              timeRange={selectedTimeRange}
+            />
+          </div>
+          
+          {/* Customer Analytics Widget */}
+          <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.1s' }}>
+            <CustomerAnalytics
+              users={users || []}
+              orders={adminOrders?.items || []}
+              metrics={enhancedMetrics.users}
+            />
+          </div>
+          
+          {/* Live Activity Feed */}
+          <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.2s' }}>
+            <LiveActivityFeed
+              realtimeData={realtimeData}
+              isConnected={isConnected}
+            />
+          </div>
+        </div>
+
+        {/* Enhanced Quick Actions */}
+        <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.3s' }}>
+          <QuickActionGrid />
+        </div>
+
+        {/* Custom Styles */}
+        <style jsx>{`
+          @keyframes fade-in-up {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
             opacity: 0;
-            transform: translateY(20px);
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
+
+          @keyframes shimmer {
+            0% { transform: translateX(-100%) skewX(-12deg); }
+            100% { transform: translateX(200%) skewX(-12deg); }
           }
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.6s ease-out forwards;
-        }
-      `}</style>
-    </div>
+          
+          .animate-shimmer {
+            animation: shimmer 2s ease-in-out infinite;
+          }
+        `}</style>
+      </div>
+    </>
   );
 };
 

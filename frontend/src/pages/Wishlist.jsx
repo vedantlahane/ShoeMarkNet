@@ -1,588 +1,769 @@
-// src/pages/Wishlist.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
-import { fetchWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
-import { addToCart } from '../redux/slices/cartSlice';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-toastify';
+
+// Redux actions
+import { 
+  fetchWishlist, 
+  removeFromWishlist, 
+  clearWishlistAsync,
+  clearWishlistLocal 
+} from '../redux/slices/wishlistSlice';
+import { addToCart } from '../redux/slices/cartSlice';
+
+// Components
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
+import WishlistItem from '../components/wishlist/WishlistItem';
+import WishlistFilters from '../components/wishlist/WishlistFilters';
+import ShareModal from '../components/common/ShareModal';
+import CompareModal from '../components/products/CompareModal';
+import Pagination from '../components/common/Pagination';
+
+// Hooks
+import useLocalStorage from '../hooks/useLocalStorage';
+import useDebounce from '../hooks/useDebounce';
+
+// Utils
+import { trackEvent } from '../utils/analytics';
+import { formatPrice, calculateDiscount } from '../utils/helpers';
+
+// Constants
+const VIEW_MODES = {
+  GRID: 'grid',
+  LIST: 'list',
+  COMPACT: 'compact'
+};
+
+const SORT_OPTIONS = [
+  { value: 'dateAdded:desc', label: 'Recently Added', icon: 'fa-clock' },
+  { value: 'dateAdded:asc', label: 'Oldest First', icon: 'fa-history' },
+  { value: 'price:asc', label: 'Price: Low to High', icon: 'fa-sort-amount-up' },
+  { value: 'price:desc', label: 'Price: High to Low', icon: 'fa-sort-amount-down' },
+  { value: 'name:asc', label: 'Name: A-Z', icon: 'fa-sort-alpha-up' },
+  { value: 'rating:desc', label: 'Highest Rated', icon: 'fa-star' },
+  { value: 'discount:desc', label: 'Best Deals', icon: 'fa-percentage' }
+];
+
+const ITEMS_PER_PAGE_OPTIONS = [
+  { value: 12, label: '12 items' },
+  { value: 24, label: '24 items' },
+  { value: 48, label: '48 items' }
+];
 
 const Wishlist = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, loading, error } = useSelector((state) => state.wishlist);
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const [isRemoving, setIsRemoving] = useState(null);
-  const [animateElements, setAnimateElements] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Trigger animations
+  // Redux state
+  const { 
+    items: wishlistItems, 
+    totalItems,
+    pagination,
+    loading, 
+    error 
+  } = useSelector((state) => state.wishlist);
+  
+  const { user, isAuthenticated, isInitialized } = useSelector((state) => state.auth);
+  const { items: cartItems } = useSelector((state) => state.cart);
+
+  // Local state
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [viewMode, setViewMode] = useLocalStorage('wishlistViewMode', VIEW_MODES.GRID);
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'dateAdded:desc');
+  const [filterBy, setFilterBy] = useState({
+    category: searchParams.get('category') || '',
+    priceRange: {
+      min: parseInt(searchParams.get('minPrice') || '0', 10),
+      max: parseInt(searchParams.get('maxPrice') || '10000', 10)
+    },
+    inStock: searchParams.get('inStock') === 'true',
+    onSale: searchParams.get('onSale') === 'true'
+  });
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1', 10));
+  const [itemsPerPage, setItemsPerPage] = useLocalStorage('wishlistItemsPerPage', 12);
+  
+  // Modal states
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [shareItem, setShareItem] = useState(null);
+  const [compareItems, setCompareItems] = useState([]);
+  
+  // Animation and interaction states
+  const [animateElements, setAnimateElements] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [processingItems, setProcessingItems] = useState(new Set());
+  
+  // Debounced search
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Initialize animations
   useEffect(() => {
-    setAnimateElements(true);
+    setTimeout(() => setAnimateElements(true), 100);
   }, []);
 
+  // Authentication and initialization check
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login?redirect=/wishlist');
+    if (isInitialized && !isAuthenticated) {
+      toast.info('Please sign in to view your wishlist');
+      navigate(`/login?redirect=${encodeURIComponent('/wishlist')}`);
       return;
     }
-    if (user) {
-      dispatch(fetchWishlist());
-    }
-  }, [dispatch, user, isAuthenticated, navigate]);
 
-  const calculateDiscountPrice = (price, discountPercentage) => {
-    if (discountPercentage && discountPercentage > 0) {
-      return price - (price * discountPercentage / 100);
-    }
-    return null;
-  };
+    if (isAuthenticated && user) {
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        sort: sortBy,
+        ...(filterBy.category && { category: filterBy.category }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+        ...(filterBy.inStock && { inStock: true }),
+        ...(filterBy.onSale && { onSale: true }),
+        ...(filterBy.priceRange.min > 0 && { minPrice: filterBy.priceRange.min }),
+        ...(filterBy.priceRange.max < 10000 && { maxPrice: filterBy.priceRange.max })
+      };
 
-  const handleRemoveFromWishlist = async (productId) => {
-    setIsRemoving(productId);
+      dispatch(fetchWishlist(params));
+      
+      // Track page view
+      trackEvent('page_view', {
+        page_title: 'Wishlist',
+        page_location: window.location.href,
+        wishlist_item_count: totalItems
+      });
+    }
+  }, [
+    dispatch, 
+    user, 
+    isAuthenticated, 
+    isInitialized, 
+    navigate, 
+    currentPage,
+    itemsPerPage,
+    sortBy,
+    filterBy,
+    debouncedSearchTerm,
+    totalItems
+  ]);
+
+  // Update URL params
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (sortBy !== 'dateAdded:desc') params.set('sort', sortBy);
+    if (filterBy.category) params.set('category', filterBy.category);
+    if (searchTerm) params.set('search', searchTerm);
+    if (filterBy.inStock) params.set('inStock', 'true');
+    if (filterBy.onSale) params.set('onSale', 'true');
+    if (filterBy.priceRange.min > 0) params.set('minPrice', filterBy.priceRange.min.toString());
+    if (filterBy.priceRange.max < 10000) params.set('maxPrice', filterBy.priceRange.max.toString());
+    if (currentPage > 1) params.set('page', currentPage.toString());
+
+    const newParamsString = params.toString();
+    const currentParamsString = searchParams.toString();
+    
+    if (newParamsString !== currentParamsString) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [sortBy, filterBy, searchTerm, currentPage, searchParams, setSearchParams]);
+
+  // Memoized calculations
+  const filteredAndSortedItems = useMemo(() => {
+    if (!Array.isArray(wishlistItems)) return [];
+    
+    let filtered = [...wishlistItems];
+    
+    // Apply client-side filtering if needed
+    if (searchTerm && !debouncedSearchTerm) {
+      filtered = filtered.filter(item => 
+        item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [wishlistItems, searchTerm, debouncedSearchTerm]);
+
+  const totalValue = useMemo(() => {
+    return filteredAndSortedItems.reduce((sum, item) => {
+      const discountedPrice = calculateDiscount(item.price, item.discountPercentage);
+      return sum + (discountedPrice || item.price);
+    }, 0);
+  }, [filteredAndSortedItems]);
+
+  const totalSavings = useMemo(() => {
+    return filteredAndSortedItems.reduce((savings, item) => {
+      if (item.discountPercentage > 0) {
+        const originalPrice = item.price;
+        const discountedPrice = calculateDiscount(originalPrice, item.discountPercentage);
+        return savings + (originalPrice - discountedPrice);
+      }
+      return savings;
+    }, 0);
+  }, [filteredAndSortedItems]);
+
+  const availableItems = useMemo(() => {
+    return filteredAndSortedItems.filter(item => item.countInStock > 0);
+  }, [filteredAndSortedItems]);
+
+  // Enhanced handlers
+  const handleRemoveFromWishlist = useCallback(async (productId, productName) => {
+    setProcessingItems(prev => new Set(prev).add(productId));
+    
     try {
       await dispatch(removeFromWishlist(productId)).unwrap();
-      toast.success("💔 Item removed from wishlist");
+      setSelectedItems(prev => prev.filter(id => id !== productId));
+      
+      trackEvent('remove_from_wishlist', {
+        item_id: productId,
+        item_name: productName
+      });
+      
     } catch (err) {
-      toast.error(typeof err === 'string' ? err : "Failed to remove item from wishlist");
+      console.error('Failed to remove from wishlist:', err);
     } finally {
-      setIsRemoving(null);
+      setProcessingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
     }
-  };
+  }, [dispatch]);
 
-  const handleAddToCart = async (product) => {
+  const handleAddToCart = useCallback(async (item) => {
+    setProcessingItems(prev => new Set(prev).add(item._id));
+    
     try {
-      await dispatch(addToCart({ 
-        productId: product._id, 
+      const cartItem = {
+        productId: item._id,
         quantity: 1,
-        name: product.name,
-        price: product.price,
-        image: product.images && product.images.length > 0 ? product.images[0] : null
-      })).unwrap();
-      toast.success(`🛒 ${product.name} added to cart!`);
-    } catch (err) {
-      toast.error(typeof err === 'string' ? err : "Failed to add item to cart");
-    }
-  };
-
-  const handleBulkAddToCart = async () => {
-    const availableItems = selectedItems.filter(id => {
-      const item = wishlistItems.find(item => item._id === id);
-      return item && item.countInStock > 0;
-    });
-
-    if (availableItems.length === 0) {
-      toast.warning("No available items selected");
-      return;
-    }
-
-    try {
-      for (const itemId of availableItems) {
-        const item = wishlistItems.find(item => item._id === itemId);
-        await dispatch(addToCart({
-          productId: item._id,
-          quantity: 1,
+        product: {
+          _id: item._id,
           name: item.name,
           price: item.price,
           image: item.images?.[0]
-        })).unwrap();
-      }
-      toast.success(`🎉 ${availableItems.length} items added to cart!`);
-      setSelectedItems([]);
-    } catch (err) {
-      toast.error("Failed to add items to cart");
-    }
-  };
+        }
+      };
 
-  const toggleItemSelection = (itemId) => {
+      await dispatch(addToCart(cartItem)).unwrap();
+      
+      trackEvent('add_to_cart', {
+        currency: 'USD',
+        value: item.price,
+        items: [{
+          item_id: item._id,
+          item_name: item.name,
+          price: item.price,
+          quantity: 1
+        }]
+      });
+
+    } catch (err) {
+      console.error('Failed to add to cart:', err);
+    } finally {
+      setProcessingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(item._id);
+        return newSet;
+      });
+    }
+  }, [dispatch]);
+
+  const handleBulkAddToCart = useCallback(async () => {
+    if (selectedItems.length === 0) {
+      toast.warning('Please select items first');
+      return;
+    }
+
+    const availableSelectedItems = selectedItems.filter(id => {
+      const item = filteredAndSortedItems.find(item => item._id === id);
+      return item && item.countInStock > 0;
+    });
+
+    if (availableSelectedItems.length === 0) {
+      toast.warning('No available items selected');
+      return;
+    }
+
+    setBulkLoading(true);
+
+    try {
+      for (const itemId of availableSelectedItems) {
+        const item = filteredAndSortedItems.find(item => item._id === itemId);
+        await handleAddToCart(item);
+      }
+
+      setSelectedItems([]);
+      toast.success(`🎉 ${availableSelectedItems.length} items added to cart!`);
+      
+      trackEvent('bulk_add_to_cart', {
+        item_count: availableSelectedItems.length,
+        total_value: availableSelectedItems.reduce((sum, id) => {
+          const item = filteredAndSortedItems.find(item => item._id === id);
+          return sum + item.price;
+        }, 0)
+      });
+
+    } catch (error) {
+      toast.error('Failed to add some items to cart');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedItems, filteredAndSortedItems, handleAddToCart]);
+
+  const handleBulkRemove = useCallback(async () => {
+    if (selectedItems.length === 0) {
+      toast.warning('Please select items first');
+      return;
+    }
+
+    if (!window.confirm(`Remove ${selectedItems.length} items from your wishlist?`)) {
+      return;
+    }
+
+    setBulkLoading(true);
+
+    try {
+      for (const itemId of selectedItems) {
+        const item = filteredAndSortedItems.find(item => item._id === itemId);
+        await handleRemoveFromWishlist(itemId, item?.name);
+      }
+
+      setSelectedItems([]);
+      toast.success(`${selectedItems.length} items removed from wishlist`);
+
+    } catch (error) {
+      toast.error('Failed to remove some items');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedItems, filteredAndSortedItems, handleRemoveFromWishlist]);
+
+  const handleClearWishlist = useCallback(async () => {
+    if (!window.confirm('Are you sure you want to clear your entire wishlist? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await dispatch(clearWishlistAsync()).unwrap();
+      setSelectedItems([]);
+      
+      trackEvent('wishlist_cleared', {
+        item_count: filteredAndSortedItems.length
+      });
+
+    } catch (error) {
+      console.error('Failed to clear wishlist:', error);
+    }
+  }, [dispatch, filteredAndSortedItems.length]);
+
+  const handleItemSelect = useCallback((itemId) => {
     setSelectedItems(prev => 
-      prev.includes(itemId) 
+      prev.includes(itemId)
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
-  };
+  }, []);
 
-  const selectAllItems = () => {
-    if (selectedItems.length === wishlistItems.length) {
+  const handleSelectAll = useCallback(() => {
+    if (selectedItems.length === filteredAndSortedItems.length) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(wishlistItems.map(item => item._id));
+      setSelectedItems(filteredAndSortedItems.map(item => item._id));
     }
-  };
+  }, [selectedItems.length, filteredAndSortedItems]);
 
-  // Enhanced loading state
-  if (loading) {
+  const handleShare = useCallback((item) => {
+    setShareItem(item);
+    setShowShareModal(true);
+    
+    trackEvent('wishlist_item_share_clicked', {
+      item_id: item._id,
+      item_name: item.name
+    });
+  }, []);
+
+  const handleAddToCompare = useCallback((item) => {
+    if (compareItems.find(compareItem => compareItem._id === item._id)) {
+      toast.info('Item already in comparison');
+      return;
+    }
+
+    if (compareItems.length >= 4) {
+      toast.warning('You can compare up to 4 items at once');
+      return;
+    }
+
+    setCompareItems(prev => [...prev, item]);
+    toast.success(`${item.name} added to comparison`);
+    
+    trackEvent('add_to_compare', {
+      item_id: item._id,
+      item_name: item.name,
+      compare_count: compareItems.length + 1
+    });
+  }, [compareItems]);
+
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    trackEvent('pagination_click', {
+      page_number: page
+    });
+  }, []);
+
+  const handleSortChange = useCallback((newSort) => {
+    setSortBy(newSort);
+    setCurrentPage(1);
+    
+    trackEvent('wishlist_sort_changed', {
+      sort_option: newSort
+    });
+  }, []);
+
+  const handleFilterChange = useCallback((newFilter) => {
+    setFilterBy(prev => ({ ...prev, ...newFilter }));
+    setCurrentPage(1);
+    
+    trackEvent('wishlist_filter_changed', {
+      filter_type: Object.keys(newFilter)[0],
+      filter_value: Object.values(newFilter)[0]
+    });
+  }, []);
+
+  const isInCart = useCallback((productId) => {
+    return cartItems?.some(item => 
+      (item.product?._id || item.productId) === productId
+    );
+  }, [cartItems]);
+
+  // Loading state
+  if (loading && !wishlistItems?.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="flex justify-center items-center h-96">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-            <div className="w-16 h-16 border-4 border-pink-500/30 border-t-pink-500 rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              <i className="fas fa-heart mr-2 text-pink-500"></i>
-              Loading Your Wishlist
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Gathering your favorite items...
-            </p>
-          </div>
+        <div className="container mx-auto px-4 py-8">
+          <LoadingSpinner size="large" message="Loading your wishlist..." />
         </div>
       </div>
     );
   }
 
-  // Enhanced error state
-  if (error) {
+  // Error state
+  if (error && !wishlistItems?.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-        <div className="bg-red-500/20 backdrop-blur-xl border border-red-300/50 rounded-3xl p-12 text-center shadow-2xl max-w-md">
-          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <i className="fas fa-exclamation-triangle text-white text-2xl"></i>
-          </div>
-          <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">
-            Failed to Load Wishlist
-          </h3>
-          <p className="text-red-500 dark:text-red-300 mb-6">{error || 'Something went wrong'}</p>
-          <button
-            onClick={() => dispatch(fetchWishlist())}
-            className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-200"
-          >
-            <i className="fas fa-redo mr-2"></i>
-            Try Again
-          </button>
-        </div>
+        <ErrorMessage
+          message={error || 'Failed to load wishlist'}
+          onRetry={() => dispatch(fetchWishlist())}
+          className="max-w-md"
+        />
       </div>
     );
   }
 
-  const wishlistItems = Array.isArray(items) ? items : [];
+  const items = Array.isArray(wishlistItems) ? wishlistItems : [];
+  const totalPages = pagination?.totalPages || Math.ceil(items.length / itemsPerPage);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(10)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-pink-400/20 rounded-full animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 6}s`,
-              animationDuration: `${4 + Math.random() * 4}s`
-            }}
-          />
-        ))}
-      </div>
+    <>
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>My Wishlist - {totalItems} Items | ShoeMarkNet</title>
+        <meta name="description" content={`Your wishlist contains ${totalItems} carefully selected items worth ${formatPrice(totalValue)}. Save and organize your favorite products.`} />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://shoemarknet.com/wishlist" />
+      </Helmet>
 
-      <div className="container mx-auto px-4 py-8 relative z-10">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         
-        {/* Enhanced Header */}
-        <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-              <div>
-                <button 
-                  onClick={() => navigate(-1)} 
-                  className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors font-semibold mb-4"
-                >
-                  <i className="fas fa-arrow-left mr-3 text-lg"></i>
-                  Back
-                </button>
-                
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 bg-clip-text text-transparent mb-2">
-                  <i className="fas fa-heart mr-3"></i>
-                  Your Wishlist
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  <i className="fas fa-sparkles mr-2"></i>
-                  Save your favorite items for later
-                </p>
-              </div>
-              
-              {wishlistItems.length > 0 && (
-                <div className="flex flex-wrap gap-3">
-                  <div className="bg-pink-500/20 backdrop-blur-lg border border-pink-300/50 rounded-2xl px-4 py-2 text-pink-800 dark:text-pink-200">
-                    <i className="fas fa-heart mr-2"></i>
-                    {wishlistItems.length} {wishlistItems.length === 1 ? 'item' : 'items'}
-                  </div>
-                  
-                  {selectedItems.length > 0 && (
-                    <button
-                      onClick={handleBulkAddToCart}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-2xl transition-all duration-200"
-                    >
-                      <i className="fas fa-cart-plus mr-2"></i>
-                      Add Selected to Cart ({selectedItems.length})
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Animated Background Elements */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-pink-400/20 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 8}s`,
+                animationDuration: `${4 + Math.random() * 6}s`
+              }}
+            />
+          ))}
         </div>
 
-        {wishlistItems.length === 0 ? (
-          /* Enhanced Empty State */
-          <div className={`text-center py-16 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 shadow-2xl max-w-2xl mx-auto">
-              <div className="w-24 h-24 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl animate-pulse">
-                <i className="fas fa-heart text-4xl text-white"></i>
-              </div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                Your Wishlist is Empty
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg leading-relaxed">
-                Start adding items you love to your wishlist. 
-                It's a great way to keep track of products you want to buy later!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/products">
-                  <button className="bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 hover:from-pink-700 hover:via-red-700 hover:to-rose-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-2xl">
-                    <i className="fas fa-search mr-3"></i>
-                    Discover Products
-                    <i className="fas fa-arrow-right ml-3"></i>
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          
+          {/* Enhanced Header */}
+          <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div>
+                  <button 
+                    onClick={() => navigate(-1)} 
+                    className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors font-semibold mb-4 group"
+                  >
+                    <i className="fas fa-arrow-left mr-3 text-lg group-hover:-translate-x-1 transition-transform duration-200"></i>
+                    Back
                   </button>
-                </Link>
-                <Link to="/categories">
-                  <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-2xl hover:bg-white/30 transition-all duration-200">
-                    <i className="fas fa-th-large mr-3"></i>
-                    Browse Categories
-                  </button>
-                </Link>
+                  
+                  <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 bg-clip-text text-transparent mb-2">
+                    <i className="fas fa-heart mr-3"></i>
+                    Your Wishlist
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 text-lg">
+                    <i className="fas fa-sparkles mr-2"></i>
+                    Save your favorite items for later
+                  </p>
+                  
+                  {items.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {items.length} items • Total value: {formatPrice(totalValue)}
+                        {totalSavings > 0 && (
+                          <span className="text-green-600 ml-2">
+                            (Save {formatPrice(totalSavings)})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Quick Stats */}
+                {items.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    <div className="bg-pink-500/20 backdrop-blur-lg border border-pink-300/50 rounded-2xl px-4 py-2 text-pink-800 dark:text-pink-200">
+                      <i className="fas fa-heart mr-2"></i>
+                      {items.length} Items
+                    </div>
+                    <div className="bg-green-500/20 backdrop-blur-lg border border-green-300/50 rounded-2xl px-4 py-2 text-green-800 dark:text-green-200">
+                      <i className="fas fa-check-circle mr-2"></i>
+                      {availableItems.length} Available
+                    </div>
+                    {compareItems.length > 0 && (
+                      <button
+                        onClick={() => setShowCompareModal(true)}
+                        className="bg-purple-500/20 backdrop-blur-lg border border-purple-300/50 rounded-2xl px-4 py-2 text-purple-800 dark:text-purple-200 hover:bg-purple-500/30 transition-colors duration-200"
+                      >
+                        <i className="fas fa-balance-scale mr-2"></i>
+                        Compare ({compareItems.length})
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        ) : (
-          <>
-            {/* Controls Bar */}
-            <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-6 shadow-2xl">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  
-                  {/* Selection Controls */}
-                  <div className="flex items-center space-x-4">
-                    <button
-                      onClick={selectAllItems}
-                      className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    >
-                      <div className={`w-5 h-5 rounded border-2 border-current flex items-center justify-center ${
-                        selectedItems.length === wishlistItems.length ? 'bg-blue-600 border-blue-600' : ''
-                      }`}>
-                        {selectedItems.length === wishlistItems.length && (
-                          <i className="fas fa-check text-white text-xs"></i>
-                        )}
-                      </div>
-                      <span className="font-medium">
-                        {selectedItems.length === wishlistItems.length ? 'Deselect All' : 'Select All'}
-                      </span>
-                    </button>
-                    
-                    {selectedItems.length > 0 && (
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {selectedItems.length} selected
-                      </span>
-                    )}
-                  </div>
 
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center space-x-4">
-                    <div className="flex bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl p-1">
-                      <button
-                        onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-xl transition-all duration-200 ${
-                          viewMode === 'grid' 
-                            ? 'bg-pink-600 text-white' 
-                            : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400'
-                        }`}
-                      >
-                        <i className="fas fa-th-large"></i>
-                      </button>
-                      <button
-                        onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-xl transition-all duration-200 ${
-                          viewMode === 'list' 
-                            ? 'bg-pink-600 text-white' 
-                            : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400'
-                        }`}
-                      >
-                        <i className="fas fa-list"></i>
-                      </button>
-                    </div>
-                  </div>
+          {items.length === 0 ? (
+            /* Enhanced Empty State */
+            <div className={`text-center py-16 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 shadow-2xl max-w-2xl mx-auto">
+                <div className="w-24 h-24 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                  <i className="fas fa-heart text-4xl text-white animate-pulse"></i>
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                  Your Wishlist is Empty
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg leading-relaxed">
+                  Start adding items you love to your wishlist. 
+                  It's a great way to keep track of products you want to buy later!
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link to="/products">
+                    <button className="bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 hover:from-pink-700 hover:via-red-700 hover:to-rose-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-2xl">
+                      <i className="fas fa-search mr-3"></i>
+                      Discover Products
+                      <i className="fas fa-arrow-right ml-3"></i>
+                    </button>
+                  </Link>
+                  <Link to="/categories">
+                    <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-2xl hover:bg-white/30 transition-all duration-200">
+                      <i className="fas fa-th-large mr-3"></i>
+                      Browse Categories
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>
+          ) : (
+            <>
+              {/* Enhanced Filters and Controls */}
+              <WishlistFilters
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                sortBy={sortBy}
+                onSortChange={handleSortChange}
+                filterBy={filterBy}
+                onFilterChange={handleFilterChange}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={setItemsPerPage}
+                totalItems={items.length}
+                selectedItems={selectedItems}
+                onSelectAll={handleSelectAll}
+                onBulkAddToCart={handleBulkAddToCart}
+                onBulkRemove={handleBulkRemove}
+                onClearWishlist={handleClearWishlist}
+                bulkLoading={bulkLoading}
+                sortOptions={SORT_OPTIONS}
+                itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
+                className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}
+                style={{ animationDelay: '0.2s' }}
+              />
 
-            {/* Enhanced Wishlist Items */}
-            <div className={`${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1'
-              }`}>
-                {wishlistItems.map((item, index) => {
-                  const salePrice = calculateDiscountPrice(item.price, item.discountPercentage);
-                  const isSelected = selectedItems.includes(item._id);
-                  
-                  return (
-                    <div
+              {/* Loading overlay for pagination */}
+              {loading && items.length > 0 && (
+                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <LoadingSpinner size="medium" message="Updating wishlist..." />
+                </div>
+              )}
+
+              {/* Enhanced Wishlist Items */}
+              <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+                <div className={`grid gap-6 ${
+                  viewMode === VIEW_MODES.GRID 
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                    : viewMode === VIEW_MODES.LIST
+                    ? 'grid-cols-1'
+                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                }`}>
+                  {filteredAndSortedItems.map((item, index) => (
+                    <WishlistItem
                       key={item._id}
-                      className={`group bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden shadow-2xl hover:scale-105 transition-all duration-500 ${
-                        viewMode === 'list' ? 'flex flex-col md:flex-row' : ''
-                      } ${animateElements ? 'animate-fade-in-scale' : 'opacity-0'}`}
-                      style={{ animationDelay: `${0.6 + index * 0.1}s` }}
-                    >
-                      
-                      {/* Image Section */}
-                      <div className={`relative overflow-hidden ${viewMode === 'list' ? 'md:w-64 h-48 md:h-full' : 'h-64'}`}>
-                        {/* Selection Checkbox */}
-                        <div className="absolute top-4 left-4 z-10">
-                          <button
-                            onClick={() => toggleItemSelection(item._id)}
-                            className={`w-6 h-6 rounded border-2 border-white/50 flex items-center justify-center transition-all duration-200 ${
-                              isSelected ? 'bg-blue-600 border-blue-600' : 'bg-white/20 backdrop-blur-lg'
-                            }`}
-                          >
-                            {isSelected && <i className="fas fa-check text-white text-xs"></i>}
-                          </button>
-                        </div>
-
-                        <Link to={`/products/${item._id}`}>
-                          <img 
-                            src={item.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400&auto=format&fit=crop'} 
-                            alt={item.name} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          />
-                          
-                          {/* Enhanced Badges */}
-                          <div className="absolute top-4 right-4 flex flex-col space-y-2">
-                            {item.discountPercentage > 0 && (
-                              <div className="bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-                                <i className="fas fa-percentage mr-1"></i>
-                                {item.discountPercentage}% OFF
-                              </div>
-                            )}
-                            {item.isNew && (
-                              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-                                <i className="fas fa-sparkles mr-1"></i>
-                                NEW
-                              </div>
-                            )}
-                          </div>
-                        </Link>
-
-                        {/* Remove Button */}
-                        <button 
-                          onClick={() => handleRemoveFromWishlist(item._id)}
-                          disabled={isRemoving === item._id}
-                          className="absolute bottom-4 left-4 w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 group"
-                          title="Remove from wishlist"
-                        >
-                          {isRemoving === item._id ? (
-                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <i className="fas fa-trash group-hover:animate-bounce"></i>
-                          )}
-                        </button>
-
-                        {/* Quick View on Hover */}
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <Link
-                            to={`/products/${item._id}`}
-                            className="bg-white/20 backdrop-blur-lg border border-white/30 text-white font-semibold py-2 px-4 rounded-2xl hover:bg-white/30 transition-all duration-200"
-                          >
-                            <i className="fas fa-eye mr-2"></i>
-                            Quick View
-                          </Link>
-                        </div>
-                      </div>
-                      
-                      {/* Content Section */}
-                      <div className={`p-6 flex-1 flex flex-col ${viewMode === 'list' ? 'justify-between' : ''}`}>
-                        {/* Brand */}
-                        {item.brand && (
-                          <div className="flex items-center mb-2">
-                            <div className="w-2 h-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full mr-2"></div>
-                            <span className="text-xs font-semibold text-pink-600 dark:text-pink-400 uppercase tracking-wider">
-                              {item.brand}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Product Name */}
-                        <Link to={`/products/${item._id}`}>
-                          <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-white hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200 line-clamp-2 leading-tight">
-                            {item.name}
-                          </h3>
-                        </Link>
-                        
-                        {/* Enhanced Price Display */}
-                        <div className="mb-6">
-                          {salePrice ? (
-                            <div className="flex items-center space-x-2 mb-2">
-                              <span className="text-2xl font-black bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 bg-clip-text text-transparent">
-                                ${salePrice.toFixed(2)}
-                              </span>
-                              <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                                ${item.price.toFixed(2)}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-2xl font-black bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 bg-clip-text text-transparent">
-                              ${item.price.toFixed(2)}
-                            </span>
-                          )}
-                          
-                          {/* Savings Badge */}
-                          {salePrice && (
-                            <div className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full inline-block">
-                              <i className="fas fa-piggy-bank mr-1"></i>
-                              Save ${(item.price - salePrice).toFixed(2)}
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Stock Status */}
-                        <div className="mb-4">
-                          <div className={`flex items-center text-sm font-semibold ${
-                            item.countInStock > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                          }`}>
-                            <div className={`w-2 h-2 rounded-full mr-2 ${
-                              item.countInStock > 0 ? 'bg-green-400' : 'bg-red-400'
-                            }`}></div>
-                            {item.countInStock > 0 ? `${item.countInStock} in stock` : 'Out of Stock'}
-                          </div>
-                        </div>
-                        
-                        {/* Enhanced Action Buttons */}
-                        <div className="space-y-3 mt-auto">
-                          <button 
-                            onClick={() => handleAddToCart(item)}
-                            disabled={item.countInStock === 0}
-                            className={`w-full flex items-center justify-center py-3 px-4 rounded-2xl font-semibold transition-all duration-200 ${
-                              item.countInStock === 0 
-                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:scale-105 active:scale-95'
-                            }`}
-                          >
-                            <i className={`fas ${item.countInStock === 0 ? 'fa-times' : 'fa-cart-plus'} mr-2`}></i>
-                            {item.countInStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                          </button>
-                          
-                          <div className="flex space-x-2">
-                            <Link 
-                              to={`/products/${item._id}`}
-                              className="flex-1 text-center py-2 px-4 bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white rounded-2xl hover:bg-white/30 transition-all duration-200 font-semibold"
-                            >
-                              <i className="fas fa-eye mr-2"></i>
-                              View Details
-                            </Link>
-                            <button className="flex-1 text-center py-2 px-4 bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white rounded-2xl hover:bg-white/30 transition-all duration-200 font-semibold">
-                              <i className="fas fa-share mr-2"></i>
-                              Share
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Product Features */}
-                        <div className="mt-4 pt-4 border-t border-white/10 dark:border-gray-700/20">
-                          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                            <div className="flex items-center">
-                              <i className="fas fa-shipping-fast mr-1 text-blue-500"></i>
-                              <span>Free Ship</span>
-                            </div>
-                            <div className="flex items-center">
-                              <i className="fas fa-undo mr-1 text-green-500"></i>
-                              <span>Returns</span>
-                            </div>
-                            <div className="flex items-center">
-                              <i className="fas fa-shield-alt mr-1 text-purple-500"></i>
-                              <span>Warranty</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      item={item}
+                      index={index}
+                      viewMode={viewMode}
+                      isSelected={selectedItems.includes(item._id)}
+                      isProcessing={processingItems.has(item._id)}
+                      isInCart={isInCart(item._id)}
+                      onSelect={handleItemSelect}
+                      onRemove={handleRemoveFromWishlist}
+                      onAddToCart={handleAddToCart}
+                      onShare={handleShare}
+                      onAddToCompare={handleAddToCompare}
+                      animateElements={animateElements}
+                      className="transition-all duration-300 hover:scale-105"
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Continue Shopping CTA */}
-            <div className={`mt-12 text-center ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  <i className="fas fa-search mr-3 text-blue-500"></i>
-                  Looking for More?
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Discover more amazing products from our curated collection
-                </p>
-                <Link to="/products">
-                  <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105">
-                    <i className="fas fa-store mr-2"></i>
-                    Continue Shopping
-                  </button>
-                </Link>
+              {/* Enhanced Pagination */}
+              {totalPages > 1 && (
+                <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    showInfo={true}
+                    totalItems={totalItems}
+                    itemsPerPage={itemsPerPage}
+                    className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
+                  />
+                </div>
+              )}
+
+              {/* Continue Shopping CTA */}
+              <div className={`text-center ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    <i className="fas fa-search mr-3 text-blue-500"></i>
+                    Looking for More?
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Discover more amazing products from our curated collection
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link to="/products">
+                      <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105">
+                        <i className="fas fa-store mr-2"></i>
+                        Continue Shopping
+                      </button>
+                    </Link>
+                    <Link to="/products?sort=rating:desc">
+                      <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-3 px-8 rounded-2xl hover:bg-white/30 transition-all duration-200">
+                        <i className="fas fa-star mr-2"></i>
+                        Top Rated
+                      </button>
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          </>
+            </>
+          )}
+        </div>
+
+        {/* Modals */}
+        {showShareModal && shareItem && (
+          <ShareModal
+            item={shareItem}
+            onClose={() => {
+              setShowShareModal(false);
+              setShareItem(null);
+            }}
+            shareUrl={`${window.location.origin}/products/${shareItem._id}`}
+            title={`Check out this amazing ${shareItem.name}!`}
+            description={`I found this on ShoeMarkNet and thought you'd love it! Only ${formatPrice(shareItem.price)}.`}
+          />
         )}
-      </div>
 
-      {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          33% { transform: translateY(-10px) rotate(1deg); }
-          66% { transform: translateY(-5px) rotate(-1deg); }
-        }
-        
-        @keyframes fade-in-up {
-          from {
+        {showCompareModal && (
+          <CompareModal
+            items={compareItems}
+            onClose={() => setShowCompareModal(false)}
+            onRemoveItem={(itemId) => {
+              setCompareItems(prev => prev.filter(item => item._id !== itemId));
+            }}
+            onClearAll={() => setCompareItems([])}
+          />
+        )}
+
+        {/* Custom Styles */}
+        <style jsx>{`
+          @keyframes float {
+            0%, 100% { 
+              transform: translateY(0px) rotate(0deg); 
+              opacity: 0.7;
+            }
+            33% { 
+              transform: translateY(-15px) rotate(2deg); 
+              opacity: 1;
+            }
+            66% { 
+              transform: translateY(-8px) rotate(-2deg); 
+              opacity: 0.8;
+            }
+          }
+          
+          @keyframes fade-in-up {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          .animate-float {
+            animation: float 8s ease-in-out infinite;
+          }
+          
+          .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
             opacity: 0;
-            transform: translateY(30px);
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes fade-in-scale {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out forwards;
-          opacity: 0;
-        }
-        
-        .animate-fade-in-scale {
-          animation: fade-in-scale 0.6s ease-out forwards;
-          opacity: 0;
-        }
-        
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
-    </div>
+        `}</style>
+      </div>
+    </>
   );
 };
 
