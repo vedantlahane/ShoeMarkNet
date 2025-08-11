@@ -11,25 +11,25 @@ import ErrorBoundary from "./components/common/ErrorBoundary";
 
 // Pages
 import Home from "./pages/Home";
-import ProductDetail from "./pages/ProductDetail";
+// import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-import Orders from './pages/Orders';
-import Cart from "./pages/Cart";
-import Wishlist from "./pages/Wishlist";
-import AdminDashboard from './pages/AdminDashboard';
+// import Profile from "./pages/Profile";
+// import Orders from './pages/Orders';
+// import Cart from "./pages/Cart";
+// import Wishlist from "./pages/Wishlist";
+// import AdminDashboard from './pages/AdminDashboard';
 import NotFound from "./pages/NotFound";
-import Products from "./pages/Products";
-import Category from "./pages/Category";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Search from "./pages/Search";
-import Checkout from "./pages/Checkout";
+// import Products from "./pages/Products";
+// import Category from "./pages/Category";
+// import About from "./pages/About";
+// import Contact from "./pages/Contact";
+// import Search from "./pages/Search";
+// import Checkout from "./pages/Checkout";
 
 // Protection Components
-import ProtectedRoute from "./components/common/ProtectedRoute";
-import AdminRoute from "./components/common/AdminRoute";
+// import ProtectedRoute from "./components/common/ProtectedRoute";
+// import AdminRoute from "./components/common/AdminRoute";
 
 // Make store available globally for API interceptors
 window.__REDUX_STORE__ = store;
