@@ -73,26 +73,26 @@ const AppContent = () => {
         {/* Public routes wrapped by MainLayout */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
-          <Route path="products" element={<Products />} />
+          {/* <Route path="products" element={<Products />} />
           <Route path="products/:slug" element={<ProductDetail />} />
           <Route path="categories" element={<Category />} />
           <Route path="categories/:categoryId" element={<Category />} />
           <Route path="search" element={<Search />} />
           <Route path="about" element={<About />} />
-          <Route path="contact" element={<Contact />} />
+          <Route path="contact" element={<Contact />} /> */}
           
           {/* Protected user routes */}
-          <Route element={<ProtectedRoute />}>
+          {/* <Route element={<ProtectedRoute />}>
             <Route path="profile" element={<Profile />} />
             <Route path="orders" element={<Orders />} />
             <Route path="orders/:orderId" element={<Orders />} />
             <Route path="cart" element={<Cart />} />
             <Route path="checkout" element={<Checkout />} />
             <Route path="wishlist" element={<Wishlist />} />
-          </Route>
+          </Route> */}
           
           {/* Admin routes - protected by AdminRoute */}
-          <Route path="admin" element={<AdminRoute />}>
+          {/* <Route path="admin" element={<AdminRoute />}>
             <Route index element={<AdminDashboard section="overview" />} />
             <Route path="dashboard" element={<AdminDashboard section="overview" />} />
             <Route path="products" element={<AdminDashboard section="products" />} />
@@ -112,7 +112,7 @@ const AppContent = () => {
             <Route path="settings" element={<AdminDashboard section="settings" />} />
             <Route path="campaigns" element={<AdminDashboard section="campaigns" />} />
             <Route path="campaigns/:campaignId" element={<AdminDashboard section="campaign-detail" />} />
-          </Route>
+          </Route> */}
           
           {/* 404 route */}
           <Route path="*" element={<NotFound />} />

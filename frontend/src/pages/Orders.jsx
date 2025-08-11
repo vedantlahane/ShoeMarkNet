@@ -20,7 +20,7 @@ import OrderCard from '../components/orders/OrderCard';
 import OrderTable from '../components/orders/OrderTable';
 import OrderFilters from '../components/orders/OrderFilters';
 import OrderStats from '../components/orders/OrderStats';
-import ExportModal from '../components/orders/ExportModal';
+// import ExportModal from '../components/orders/ExportModal';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -651,7 +651,7 @@ const Orders = () => {
         </div>
 
         {/* Export Modal */}
-        {showExportModal && (
+        {/* {showExportModal && (
           <ExportModal
             selectedOrders={selectedOrders}
             allOrders={filteredOrders}
@@ -663,7 +663,7 @@ const Orders = () => {
               setSelectedOrders([]);
             }}
           />
-        )}
+        )} */}
 
         {/* Custom Styles */}
         <style jsx>{`

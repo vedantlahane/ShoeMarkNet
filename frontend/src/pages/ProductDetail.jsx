@@ -990,7 +990,7 @@ const ProductDetail = () => {
         </div>
 
         {/* Modals */}
-        {showImageZoom && (
+        {/* {showImageZoom && (
           <ImageZoom
             images={availableImages}
             currentIndex={currentImageIndex}
@@ -998,14 +998,14 @@ const ProductDetail = () => {
             onImageChange={setCurrentImageIndex}
             productName={product.name}
           />
-        )}
+        )} */}
 
-        {showSizeGuide && (
+        {/* {showSizeGuide && (
           <SizeGuide
             onClose={() => setShowSizeGuide(false)}
             productType={product.category}
           />
-        )}
+        )} */}
 
         {/* Custom Styles */}
         <style jsx>{`
