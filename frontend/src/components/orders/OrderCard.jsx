@@ -1,176 +1,180 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { FaEye, FaFileInvoice, FaTimesCircle } from 'react-icons/fa';
+import { formatCurrency, getRelativeTime } from '../../utils/helpers';
 
 const OrderCard = ({ 
-  orders, 
-  selectedOrders, 
-  onOrderSelect, 
-  onCancelOrder, 
-  onDownloadInvoice,
-  formatPrice,
-  getRelativeTime,
-  className = '',
-  style = {}
+  order, 
+  index, 
+  isSelected, 
+  priority, 
+  onSelect, 
+  onStatusUpdate, 
+  onViewDetails, 
+  onTrackOrder,
+  animateCards 
 }) => {
-  const getStatusConfig = (status) => {
-    const configs = {
-      pending: { 
-        color: 'from-yellow-500 to-orange-500', 
-        icon: 'fa-clock', 
-        label: 'Pending'
-      },
-      processing: { 
-        color: 'from-blue-500 to-cyan-500', 
-        icon: 'fa-cog', 
-        label: 'Processing'
-      },
-      shipped: { 
-        color: 'from-purple-500 to-pink-500', 
-        icon: 'fa-truck', 
-        label: 'Shipped'
-      },
-      delivered: { 
-        color: 'from-green-500 to-emerald-500', 
-        icon: 'fa-check-circle', 
-        label: 'Delivered'
-      },
-      cancelled: { 
-        color: 'from-red-500 to-red-600', 
-        icon: 'fa-times-circle', 
-        label: 'Cancelled'
-      }
-    };
-    return configs[status?.toLowerCase()] || configs.processing;
+  const getStatusColor = (order) => {
+    if (order.isDelivered) return 'from-green-500 to-emerald-500';
+    if (order.isPaid) return 'from-blue-500 to-cyan-500';
+    return 'from-yellow-500 to-orange-500';
   };
 
+  const getPriorityBadge = (priority) => {
+    const configs = {
+      high: { color: 'bg-red-500', icon: 'fa-exclamation-triangle', label: 'Urgent' },
+      medium: { color: 'bg-yellow-500', icon: 'fa-clock', label: 'Medium' },
+      low: { color: 'bg-green-500', icon: 'fa-check', label: 'Normal' }
+    };
+    return configs[priority] || configs.low;
+  };
+
+  const priorityConfig = getPriorityBadge(priority);
+
   return (
-    <div className={`grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 ${className}`} style={style}>
-      {orders.map((order, index) => {
-        const statusConfig = getStatusConfig(order.status);
-        const isSelected = selectedOrders.includes(order._id);
+    <div
+      className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden shadow-2xl hover:scale-105 transition-all duration-500 relative group cursor-pointer ${
+        animateCards ? 'animate-fade-in-up' : 'opacity-0'
+      }`}
+      style={{ animationDelay: `${index * 0.1}s` }}
+      onClick={() => onViewDetails(order)}
+    >
+      
+      {/* Selection Checkbox */}
+      <div className="absolute top-4 left-4 z-20">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => {
+            e.stopPropagation();
+            onSelect();
+          }}
+          className="w-5 h-5 text-blue-600 bg-white/20 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+        />
+      </div>
+
+      {/* Priority Indicator */}
+      {priority !== 'low' && (
+        <div className={`absolute top-4 right-4 w-3 h-3 ${priorityConfig.color} rounded-full ${
+          priority === 'high' ? 'animate-pulse' : ''
+        }`} title={`${priorityConfig.label} Priority`}></div>
+      )}
+
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+
+      <div className="p-6 relative z-10">
         
-        return (
-          <div
-            key={order._id}
-            className={`bg-white/10 backdrop-blur-xl border rounded-3xl overflow-hidden shadow-2xl hover:scale-105 transition-all duration-500 group relative ${
-              isSelected 
-                ? 'border-blue-500 ring-2 ring-blue-500/50' 
-                : 'border-white/20 dark:border-gray-700/20'
-            }`}
-          >
-            {/* Selection Checkbox */}
-            <div className="absolute top-4 left-4 z-10">
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => onOrderSelect(order._id)}
-                className="w-5 h-5 text-blue-600 bg-white/20 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
-              />
+        {/* Order Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              Order #{order._id.substring(order._id.length - 8)}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              <i className="fas fa-clock mr-1"></i>
+              {getRelativeTime(order.createdAt)}
+            </p>
+          </div>
+          <div className={`w-12 h-12 bg-gradient-to-r ${getStatusColor(order)} rounded-2xl flex items-center justify-center shadow-lg`}>
+            <i className={`fas ${
+              order.isDelivered ? 'fa-truck' : 
+              order.isPaid ? 'fa-credit-card' : 'fa-clock'
+            } text-white`}></i>
+          </div>
+        </div>
+
+        {/* Customer Info */}
+        <div className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl p-4 mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+              {order.user?.name?.charAt(0)?.toUpperCase() || 'G'}
             </div>
-
-            {/* Order Header */}
-            <div className={`bg-gradient-to-r ${statusConfig.color} p-6 text-white relative`}>
-              <div className="flex justify-between items-start mb-4 mt-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-1">
-                    #{order._id?.substring(order._id.length - 8).toUpperCase()}
-                  </h3>
-                  <p className="text-blue-100">
-                    <i className="fas fa-calendar mr-2"></i>
-                    {getRelativeTime(order.createdAt)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">
-                    {formatPrice(order.totalPrice)}
-                  </div>
-                  <p className="text-blue-100 text-sm">
-                    {order.orderItems?.length || 0} items
-                  </p>
-                </div>
-              </div>
-              
-              {/* Status Badge */}
-              <div className="flex items-center justify-between">
-                <span className="bg-white/20 backdrop-blur-lg px-3 py-1 rounded-full text-sm font-semibold flex items-center">
-                  <i className={`fas ${statusConfig.icon} mr-2`}></i>
-                  {statusConfig.label}
-                </span>
-                {order.isPaid && (
-                  <span className="bg-green-500/30 px-3 py-1 rounded-full text-sm font-semibold">
-                    <i className="fas fa-check-circle mr-1"></i>
-                    Paid
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Order Content */}
-            <div className="p-6">
-              {/* Customer Info */}
-              <div className="mb-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  <i className="fas fa-user mr-2 text-blue-500"></i>
-                  Ship to:
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {order.shippingAddress?.fullName}<br />
-                  {order.shippingAddress?.address}<br />
-                  {order.shippingAddress?.city}, {order.shippingAddress?.country}
-                </p>
-              </div>
-
-              {/* Order Items */}
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-                  <i className="fas fa-box mr-2 text-purple-500"></i>
-                  Items ({order.orderItems?.length || 0}):
-                </h4>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {order.orderItems?.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-sm">
-                      <span className="text-gray-900 dark:text-white truncate">{item.name}</span>
-                      <span className="text-gray-600 dark:text-gray-400 ml-2">
-                        {item.qty}x {formatPrice(item.price)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <Link
-                  to={`/orders/${order._id}`}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-200 text-center"
-                >
-                  <FaEye className="inline mr-2" />
-                  View Details
-                </Link>
-                
-                <button
-                  onClick={() => onDownloadInvoice(order._id)}
-                  className="w-12 h-10 bg-green-600 hover:bg-green-700 text-white rounded-xl flex items-center justify-center transition-all duration-200"
-                  title="Download Invoice"
-                >
-                  <FaFileInvoice />
-                </button>
-                
-                {order.status !== 'cancelled' && order.status !== 'delivered' && (
-                  <button
-                    onClick={() => onCancelOrder(order._id)}
-                    className="w-12 h-10 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center transition-all duration-200"
-                    title="Cancel Order"
-                  >
-                    <FaTimesCircle />
-                  </button>
-                )}
-              </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 dark:text-white truncate">
+                {order.user?.name || 'Guest User'}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                {order.user?.email || 'No email provided'}
+              </p>
             </div>
           </div>
-        );
-      })}
+        </div>
+
+        {/* Order Details */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-white">
+              {formatCurrency(order.totalPrice)}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Items</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-white">
+              {order.orderItems?.length || 0}
+            </p>
+          </div>
+        </div>
+
+        {/* Status Badges */}
+        <div className="flex gap-2 mb-4">
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+            order.isPaid 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            <i className={`fas ${order.isPaid ? 'fa-check-circle' : 'fa-times-circle'} mr-1`}></i>
+            {order.isPaid ? 'Paid' : 'Unpaid'}
+          </span>
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+            order.isDelivered 
+              ? 'bg-blue-100 text-blue-800' 
+              : 'bg-yellow-100 text-yellow-800'
+          }`}>
+            <i className={`fas ${order.isDelivered ? 'fa-truck' : 'fa-clock'} mr-1`}></i>
+            {order.isDelivered ? 'Delivered' : 'Processing'}
+          </span>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onTrackOrder();
+            }}
+            className="flex items-center justify-center py-2 px-3 bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl font-medium text-gray-900 dark:text-white hover:bg-white/30 transition-all duration-200"
+          >
+            <i className="fas fa-map-marker-alt mr-2 text-blue-500"></i>
+            Track
+          </button>
+          
+          {!order.isPaid && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStatusUpdate(order._id, 'isPaid', true);
+              }}
+              className="flex items-center justify-center py-2 px-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-medium transition-all duration-200"
+            >
+              <i className="fas fa-check mr-2"></i>
+              Mark Paid
+            </button>
+          )}
+          
+          {order.isPaid && !order.isDelivered && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStatusUpdate(order._id, 'isDelivered', true);
+              }}
+              className="flex items-center justify-center py-2 px-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl font-medium transition-all duration-200"
+            >
+              <i className="fas fa-truck mr-2"></i>
+              Deliver
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
