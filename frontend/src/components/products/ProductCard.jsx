@@ -1,18 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onAddToCart }) => {
   // Simple fallback for missing product data
   const {
-    id = '1',
+    _id,
+    id = _id || '1',
     name = 'Sample Product',
     brand = 'Brand',
     price = 99.99,
     originalPrice,
     image = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop',
     rating = 0,
-    inStock = true
+    inStock = true,
+    countInStock = 0,
+    slug
   } = product || {};
+
+  const isInStock = inStock && countInStock > 0;
 
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
 
@@ -68,18 +73,29 @@ const ProductCard = ({ product }) => {
           </div>
           
           {/* Stock Status */}
-          <span className={`text-sm font-medium ${inStock ? 'text-green-600' : 'text-red-600'}`}>
-            {inStock ? 'In Stock' : 'Out of Stock'}
+          <span className={`text-sm font-medium ${isInStock ? 'text-green-600' : 'text-red-600'}`}>
+            {isInStock ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
 
-        {/* Action Button */}
-        <Link
-          to={`/product/${id}`}
-          className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center block"
-        >
-          View Details
-        </Link>
+        {/* Action Buttons */}
+        <div className="mt-4 flex gap-2">
+          <Link
+            to={`/products/${slug || id}`}
+            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center"
+          >
+            View Details
+          </Link>
+          {onAddToCart && isInStock && (
+            <button
+              onClick={() => onAddToCart(product)}
+              className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors font-medium"
+              title="Add to Cart"
+            >
+              <i className="fas fa-cart-plus"></i>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

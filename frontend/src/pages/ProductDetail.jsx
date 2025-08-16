@@ -22,14 +22,11 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import Rating from '../components/common/Rating';
 import ReviewForm from '../components/ReviewForm';
 import ProductCard from '../components/ProductCard';
-import ImageZoom from '../components/product/ImageZoom';
-import ProductBreadcrumb from '../components/product/ProductBreadcrumb';
-import SizeGuide from '../components/product/SizeGuide';
-import PriceDisplay from '../components/product/PriceDisplay';
-import StockIndicator from '../components/product/StockIndicator';
-import ProductTabs from '../components/product/ProductTabs';
-import SocialShare from '../components/common/SocialShare';
-import RecentlyViewed from '../components/product/RecentlyViewed';
+import ImageZoom from '../components/products/ImageZoom';
+import ProductBreadcrumb from '../components/products/ProductBreadcrumb';
+import StockIndicator from '../components/products/StockIndicator';
+// import SocialShare from '../components/common/SocialShare';
+// import RecentlyViewed from '../components/product/RecentlyViewed';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';

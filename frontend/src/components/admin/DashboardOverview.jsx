@@ -18,10 +18,10 @@ import OrdersChart from './dashboard/OrdersChart';
 import RecentOrdersTable from './dashboard/RecentOrdersTable';
 import InventoryAlerts from './dashboard/InventoryAlerts';
 import QuickActionGrid from './dashboard/QuickActionGrid';
-import PerformanceMetrics from './dashboard/PerformanceMetrics';
-import TopProductsWidget from './dashboard/TopProductsWidget';
-import CustomerAnalytics from './dashboard/CustomerAnalytics';
-import LiveActivityFeed from './dashboard/LiveActivityFeed';
+// import PerformanceMetrics from './dashboard/PerformanceMetrics';
+// import TopProductsWidget from './dashboard/TopProductsWidget';
+// import CustomerAnalytics from './dashboard/CustomerAnalytics';
+// import LiveActivityFeed from './dashboard/LiveActivityFeed';
 
 // Hooks
 import useWebSocket from '../../hooks/useWebSocket';

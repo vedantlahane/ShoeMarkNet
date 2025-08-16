@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 // Utils
-import { trackEvent } from '../../../utils/analytics';
-import { formatCurrency } from '../../../utils/helpers';
+import { trackEvent } from '../utils/analytics';
+import { formatCurrency } from '../utils/helpers';
 
 const ProductCard = ({
   product = {},

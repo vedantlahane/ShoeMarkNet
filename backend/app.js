@@ -71,6 +71,12 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
 }));
+const startServer = () => {
+  server = app.listen(PORT, () => {
+    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`📅 Started at: ${new Date().toISOString()}`);
+  });
+};
 
 // Body parsing middleware with size limits
 app.use(express.json({ limit: '10mb' }));
@@ -129,12 +135,6 @@ app.use(errorMiddleware);
 const PORT = process.env.PORT || 5000;
 let server;
 
-const startServer = () => {
-  server = app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    console.log(`📅 Started at: ${new Date().toISOString()}`);
-  });
-};
 
 // Graceful shutdown handling
 const gracefulShutdown = (signal) => {

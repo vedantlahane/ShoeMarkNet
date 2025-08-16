@@ -45,7 +45,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     isFeatured,
     isNewArrival,
     inStock
-  } = req.query;
+  } = req.query;//
   
   // Build a filter object for the MongoDB query
   const filters = { isActive: true };

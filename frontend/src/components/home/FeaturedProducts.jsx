@@ -1,54 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import ProductCard from '../products/ProductCard';
 
-const FeaturedProducts = ({ limit = 8 }) => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+const FeaturedProducts = ({ products, onAddToCart }) => {
+  const { featuredLoading: loading } = useSelector(state => state.product);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      // Simple mock data - just what's needed
-      const mockProducts = [
-        {
-          id: 1,
-          name: "Nike Air Force 1",
-          brand: "Nike",
-          price: 110,
-          originalPrice: 130,
-          rating: 4.5,
-          image: "/assets/product1.png",
-          inStock: true
-        },
-        {
-          id: 2,
-          name: "Adidas Ultraboost 22",
-          brand: "Adidas",
-          price: 180,
-          originalPrice: 200,
-          rating: 4.7,
-          image: "/assets/product2.png",
-          inStock: true
-        },
-        {
-          id: 3,
-          name: "Jordan Retro 1",
-          brand: "Jordan",
-          price: 170,
-          rating: 4.8,
-          image: "/assets/product3.png",
-          inStock: false
-        }
-      ];
-
-      // Simulate API delay
-      setTimeout(() => {
-        setProducts(mockProducts.slice(0, limit));
-        setLoading(false);
-      }, 500);
-    };
-
-    fetchProducts();
-  }, [limit]);
+  // Use passed products or fallback to empty array
+  const displayProducts = products || [];
 
   if (loading) {
     return (
@@ -80,8 +38,12 @@ const FeaturedProducts = ({ limit = 8 }) => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {displayProducts.map((product) => (
+            <ProductCard 
+              key={product._id || product.id} 
+              product={product} 
+              onAddToCart={onAddToCart}
+            />
           ))}
         </div>
       </div>
