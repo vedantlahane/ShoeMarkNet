@@ -1,646 +1,512 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
-
-// Utils
-import { trackEvent } from '../utils/analytics';
+import { gsap } from 'gsap';
+import {
+  Heart,
+  ShoppingBag,
+  Star,
+  Eye,
+  Share2,
+  Zap,
+  TrendingUp,
+  Award,
+  ShoppingCart
+} from 'lucide-react';
+import { addToCart } from '../redux/slices/cartSlice';
+import { addToWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
 import { formatCurrency } from '../utils/helpers';
+import { showCartToast, showWishlistToast, showErrorToast, showSuccessToast } from '../utils/toast';
 
 const ProductCard = ({
   product = {},
-  onEdit = () => {},
-  onDelete = () => {},
-  onStatusChange = () => {},
-  onDuplicate = () => {},
-  variant = 'default', // default, compact, detailed, grid
-  showActions = true,
-  showStats = true,
-  className = ''
+  variant = 'default', // default, compact, featured, grid
+  showActionsProp = true,
+  showQuickView = true,
+  className = '',
+  onQuickView = null,
+  index = 0
 }) => {
-  // Default product data structure
+  const cardRef = useRef(null);
+  const imageRef = useRef(null);
+  const actionsRef = useRef(null);
+  const badgeRef = useRef(null);
+
+  // Default product data
   const defaultProduct = {
     id: '1',
     name: 'Premium Running Shoes',
     brand: 'ShoeMarkNet',
-    sku: 'SMN-RUN-001',
     price: 129.99,
     originalPrice: 159.99,
     discount: 19,
-    status: 'active', // active, inactive, draft, archived
-    stock: 25,
-    lowStockThreshold: 10,
-    category: 'Running Shoes',
-    subcategory: 'Road Running',
     images: [
       'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop'
     ],
     rating: 4.8,
     reviewCount: 156,
-    sales: 234,
-    views: 1234,
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    featured: false,
-    tags: ['running', 'athletic', 'comfortable'],
-    variants: [
-      { size: 'US 8', color: 'Black', stock: 5 },
-      { size: 'US 9', color: 'White', stock: 8 },
-      { size: 'US 10', color: 'Blue', stock: 12 }
-    ]
+    isNew: false,
+    isTrending: false,
+    isBestseller: false,
+    inStock: true,
+    category: 'Running Shoes'
   };
 
-  // Merge provided product with defaults
   const productData = { ...defaultProduct, ...product };
-
-  // Local state
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(0);
-
-  // Redux state (if needed)
-  const { cart, wishlist } = useSelector(state => ({
-    cart: state.cart?.items || [],
-    wishlist: state.wishlist?.items || []
-  }));
   const dispatch = useDispatch();
+  
+  // Redux state
+  const { items: wishlistItems } = useSelector(state => state.wishlist || { items: [] });
+  const { items: cartItems } = useSelector(state => state.cart || { items: [] });
+  
+  // Local state
+  const [currentImage, setCurrentImage] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
-  // Handle status change
-  const handleStatusChange = useCallback((newStatus) => {
-    onStatusChange(productData.id, newStatus);
-    
-    trackEvent('admin_product_status_changed', {
-      product_id: productData.id,
-      product_name: productData.name,
-      old_status: productData.status,
-      new_status: newStatus
-    });
-    
-    toast.success(`Product status updated to ${newStatus}`);
-  }, [productData.id, productData.name, productData.status, onStatusChange]);
+  const isInWishlist = wishlistItems.some(item => item.id === productData.id);
+  const isInCart = cartItems.some(item => item.productId === productData.id);
 
-  // Handle delete product
-  const handleDelete = useCallback(() => {
-    if (window.confirm(`Are you sure you want to delete "${productData.name}"?`)) {
-      onDelete(productData.id);
+  // GSAP Animations
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    // Entrance animation
+    gsap.fromTo(card, 
+      { y: 50, opacity: 0, scale: 0.9 },
+      { 
+        y: 0, 
+        opacity: 1, 
+        scale: 1,
+        duration: 0.6,
+        delay: index * 0.1,
+        ease: 'power3.out'
+      }
+    );
+
+    // Hover animations setup
+    const handleMouseEnter = () => {
+      setIsHovered(true);
+      setShowActions(true);
       
-      trackEvent('admin_product_deleted', {
-        product_id: productData.id,
-        product_name: productData.name,
-        category: productData.category
+      gsap.to(card, { y: -8, duration: 0.3, ease: 'power2.out' });
+      gsap.to(imageRef.current, { scale: 1.1, duration: 0.4, ease: 'power2.out' });
+      gsap.fromTo(actionsRef.current, 
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
+      );
+    };
+
+    const handleMouseLeave = () => {
+      setIsHovered(false);
+      
+      gsap.to(card, { y: 0, duration: 0.3, ease: 'power2.out' });
+      gsap.to(imageRef.current, { scale: 1, duration: 0.4, ease: 'power2.out' });
+      gsap.to(actionsRef.current, 
+        { opacity: 0, y: 20, duration: 0.2, ease: 'power2.in',
+          onComplete: () => setShowActions(false)
+        }
+      );
+    };
+
+    card.addEventListener('mouseenter', handleMouseEnter);
+    card.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      card.removeEventListener('mouseenter', handleMouseEnter);
+      card.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [index]);
+
+  // Badge animation
+  useEffect(() => {
+    if (badgeRef.current && (productData.isNew || productData.isTrending || productData.isBestseller)) {
+      gsap.fromTo(badgeRef.current,
+        { scale: 0, rotation: -180 },
+        { scale: 1, rotation: 0, duration: 0.6, ease: 'bounce.out', delay: 0.3 }
+      );
+    }
+  }, [productData.isNew, productData.isTrending, productData.isBestseller]);
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!productData.inStock) {
+      showErrorToast("This product is currently out of stock");
+      return;
+    }
+    
+    dispatch(addToCart({
+      productId: productData.id,
+      quantity: 1,
+      product: productData
+    }));
+
+    // Animation feedback
+    gsap.to(e.target, {
+      scale: 0.95,
+      duration: 0.1,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power2.inOut'
+    });
+
+    showCartToast.added(productData.name);
+  };
+
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isInWishlist) {
+      dispatch(removeFromWishlist(productData.id));
+      showWishlistToast.removed(productData.name);
+    } else {
+      dispatch(addToWishlist(productData));
+      showWishlistToast.added(productData.name);
+    }
+
+    // Heart animation
+    gsap.to(e.target, {
+      scale: 1.3,
+      duration: 0.2,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power2.inOut'
+    });
+  };
+
+  const handleShare = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (navigator.share) {
+      navigator.share({
+        title: productData.name,
+        text: `Check out ${productData.name} for ${formatCurrency(productData.price)}`,
+        url: `/products/${productData.id}`
       });
-      
-      toast.success('Product deleted successfully');
-    }
-  }, [productData.id, productData.name, productData.category, onDelete]);
-
-  // Handle duplicate product
-  const handleDuplicate = useCallback(() => {
-    onDuplicate(productData);
-    
-    trackEvent('admin_product_duplicated', {
-      product_id: productData.id,
-      product_name: productData.name
-    });
-    
-    toast.success('Product duplicated successfully');
-  }, [productData, onDuplicate]);
-
-  // Get status styling
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'active':
-        return { bg: 'bg-green-100 dark:bg-green-900/20', text: 'text-green-800 dark:text-green-200', dot: 'bg-green-400' };
-      case 'inactive':
-        return { bg: 'bg-gray-100 dark:bg-gray-900/20', text: 'text-gray-800 dark:text-gray-200', dot: 'bg-gray-400' };
-      case 'draft':
-        return { bg: 'bg-yellow-100 dark:bg-yellow-900/20', text: 'text-yellow-800 dark:text-yellow-200', dot: 'bg-yellow-400' };
-      case 'archived':
-        return { bg: 'bg-red-100 dark:bg-red-900/20', text: 'text-red-800 dark:text-red-200', dot: 'bg-red-400' };
-      default:
-        return { bg: 'bg-gray-100 dark:bg-gray-900/20', text: 'text-gray-800 dark:text-gray-200', dot: 'bg-gray-400' };
+    } else {
+      navigator.clipboard.writeText(`${window.location.origin}/products/${productData.id}`);
+      showSuccessToast('Link copied to clipboard!');
     }
   };
 
-  // Get stock status
-  const getStockStatus = () => {
-    if (productData.stock === 0) return { label: 'Out of Stock', color: 'text-red-600', bg: 'bg-red-100' };
-    if (productData.stock <= productData.lowStockThreshold) return { label: 'Low Stock', color: 'text-orange-600', bg: 'bg-orange-100' };
-    return { label: 'In Stock', color: 'text-green-600', bg: 'bg-green-100' };
+  const getBadgeInfo = () => {
+    if (productData.isNew) return { text: 'NEW', color: 'bg-gradient-accent', icon: Zap };
+    if (productData.isTrending) return { text: 'TRENDING', color: 'bg-gradient-secondary', icon: TrendingUp };
+    if (productData.isBestseller) return { text: 'BESTSELLER', color: 'bg-gradient-gold', icon: Award };
+    return null;
   };
 
-  const statusStyle = getStatusStyle(productData.status);
-  const stockStatus = getStockStatus();
+  const renderStars = () => {
+    const stars = [];
+    const fullStars = Math.floor(productData.rating);
+    const hasHalfStar = productData.rating % 1 !== 0;
 
-  // Render compact variant
+    for (let i = 0; i < 5; i++) {
+      stars.push(
+        <Star
+          key={i}
+          size={14}
+          className={`${
+            i < fullStars 
+              ? 'text-yellow-400 fill-current' 
+              : i === fullStars && hasHalfStar 
+                ? 'text-yellow-400 fill-current opacity-50'
+                : 'text-gray-300'
+          }`}
+        />
+      );
+    }
+    return stars;
+  };
+
+  // Compact variant
   if (variant === 'compact') {
     return (
-      <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-2xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 ${className}`}>
-        <div className="flex items-center space-x-4">
-          
-          {/* Product Image */}
-          <div className="relative flex-shrink-0">
-            <img
-              src={productData.images[0]}
-              alt={productData.name}
-              className="w-16 h-16 rounded-xl object-cover border-2 border-white/30"
-            />
-            {productData.featured && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                <i className="fas fa-star text-white text-xs"></i>
-              </div>
-            )}
-          </div>
-          
-          {/* Product Info */}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 dark:text-white text-lg truncate">
-              {productData.name}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              {productData.brand} • {productData.sku}
-            </p>
-            <div className="flex items-center space-x-2 mt-1">
-              <span className="font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(productData.price)}
-              </span>
-              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
-                {productData.status}
-              </span>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          {showActions && (
-            <div className="flex items-center space-x-2">
-              <Link
-                to={`/admin/products/${productData.id}/edit`}
-                className="w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors"
-                title="Edit product"
-              >
-                <i className="fas fa-edit text-xs"></i>
-              </Link>
-              <button
-                onClick={handleDelete}
-                className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
-                title="Delete product"
-              >
-                <i className="fas fa-trash text-xs"></i>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Render grid variant
-  if (variant === 'grid') {
-    return (
-      <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105 ${className}`}>
-        
-        {/* Product Image */}
-        <div className="relative aspect-square bg-gray-100 dark:bg-gray-800">
+      <div 
+        ref={cardRef}
+        className={`card-premium p-4 flex items-center space-x-4 hover-lift ${className}`}
+      >
+        <div className="flex-shrink-0">
           <img
-            src={productData.images[selectedImage]}
+            src={productData.images[0]}
             alt={productData.name}
-            className="w-full h-full object-cover cursor-pointer"
-            onClick={() => setSelectedImage((selectedImage + 1) % productData.images.length)}
+            className="w-16 h-16 rounded-xl object-cover"
+            onLoad={() => setIsImageLoaded(true)}
           />
-          
-          {/* Badges */}
-          <div className="absolute top-3 left-3 space-y-2">
-            {productData.discount > 0 && (
-              <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                -{productData.discount}%
-              </span>
-            )}
-            {productData.featured && (
-              <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                Featured
-              </span>
-            )}
-          </div>
-
-          {/* Status Indicator */}
-          <div className="absolute top-3 right-3">
-            <div className={`w-3 h-3 ${statusStyle.dot} rounded-full animate-pulse`}></div>
-          </div>
-
-          {/* Stock Warning */}
-          {productData.stock <= productData.lowStockThreshold && (
-            <div className="absolute bottom-3 left-3 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-              Low Stock: {productData.stock}
-            </div>
-          )}
         </div>
-
-        {/* Product Details */}
-        <div className="p-4 space-y-3">
-          
-          {/* Header */}
-          <div>
-            <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-1 line-clamp-2">
-              {productData.name}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              {productData.brand} • {productData.category}
-            </p>
-          </div>
-
-          {/* Price */}
-          <div className="flex items-baseline space-x-2">
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
-              {formatCurrency(productData.price)}
-            </span>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-white truncate">{productData.name}</h3>
+          <p className="text-sm text-gray-300 truncate">{productData.brand}</p>
+          <div className="flex items-center space-x-2 mt-1">
+            <span className="font-bold text-cyan-400">{formatCurrency(productData.price)}</span>
             {productData.originalPrice > productData.price && (
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-xs text-gray-400 line-through">
                 {formatCurrency(productData.originalPrice)}
               </span>
             )}
           </div>
+        </div>
 
-          {/* Rating and Sales */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <i
-                    key={i}
-                    className={`fas fa-star text-xs ${
-                      i < Math.floor(productData.rating) ? 'text-yellow-400' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                ({productData.reviewCount})
-              </span>
-            </div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">
-              {productData.sales} sold
-            </span>
-          </div>
-
-          {/* Status and Stock */}
-          <div className="flex items-center justify-between">
-            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
-              {productData.status}
-            </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${stockStatus.bg} ${stockStatus.color}`}>
-              {stockStatus.label} ({productData.stock})
-            </span>
-          </div>
-
-          {/* Actions */}
-          {showActions && (
-            <div className="flex space-x-2 pt-2">
-              <Link
-                to={`/admin/products/${productData.id}/edit`}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-xl transition-colors text-center text-sm"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={() => setIsActionsOpen(!isActionsOpen)}
-                className="w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl flex items-center justify-center text-gray-900 dark:text-white hover:bg-white/30 transition-colors"
-              >
-                <i className="fas fa-ellipsis-v text-sm"></i>
-              </button>
-            </div>
-          )}
-
-          {/* Actions Dropdown */}
-          {isActionsOpen && showActions && (
-            <div className="absolute top-full right-4 mt-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl py-2 min-w-48 z-10">
-              <button
-                onClick={() => {
-                  window.open(`/product/${productData.id}`, '_blank');
-                  setIsActionsOpen(false);
-                }}
-                className="w-full px-4 py-2 text-left hover:bg-white/20 transition-colors text-gray-900 dark:text-white flex items-center"
-              >
-                <i className="fas fa-eye mr-3 text-blue-500"></i>
-                View Product
-              </button>
-              
-              <button
-                onClick={() => {
-                  handleDuplicate();
-                  setIsActionsOpen(false);
-                }}
-                className="w-full px-4 py-2 text-left hover:bg-white/20 transition-colors text-gray-900 dark:text-white flex items-center"
-              >
-                <i className="fas fa-copy mr-3 text-green-500"></i>
-                Duplicate
-              </button>
-              
-              <div className="px-4 py-2">
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  Status
-                </label>
-                <select
-                  value={productData.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className="w-full bg-white/20 border border-white/30 rounded-xl px-2 py-1 text-sm text-gray-900 dark:text-white"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="draft">Draft</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </div>
-              
-              <hr className="border-white/20 my-2" />
-              
-              <button
-                onClick={() => {
-                  handleDelete();
-                  setIsActionsOpen(false);
-                }}
-                className="w-full px-4 py-2 text-left hover:bg-red-500/20 transition-colors text-red-600 dark:text-red-400 flex items-center"
-              >
-                <i className="fas fa-trash mr-3"></i>
-                Delete Product
-              </button>
-            </div>
-          )}
+        <div className="flex-shrink-0">
+          <button
+            onClick={handleAddToCart}
+            className="p-2 glass rounded-lg hover:glass transition-all duration-200"
+          >
+            <ShoppingBag size={16} className="text-white" />
+          </button>
         </div>
       </div>
     );
   }
 
-  // Render default detailed variant
-  return (
-    <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105 ${className}`}>
-      
-      {/* Header */}
-      <div className="p-6 border-b border-white/20 dark:border-gray-700/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            
-            {/* Product Image */}
-            <div className="relative">
-              <img
-                src={productData.images[selectedImage]}
-                alt={productData.name}
-                className="w-20 h-20 rounded-xl object-cover border-2 border-white/30 shadow-lg cursor-pointer"
-                onClick={() => setSelectedImage((selectedImage + 1) % productData.images.length)}
-              />
-              <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${statusStyle.dot} rounded-full border-2 border-white animate-pulse`}></div>
-            </div>
-
-            {/* Product Info */}
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {productData.name}
-                </h3>
-                {productData.featured && (
-                  <i className="fas fa-star text-yellow-500" title="Featured Product"></i>
-                )}
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-2">
-                {productData.brand} • {productData.sku}
-              </p>
-              <div className="flex items-center space-x-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
-                  {productData.status}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${stockStatus.bg} ${stockStatus.color}`}>
-                  {stockStatus.label}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          {showActions && (
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full flex items-center justify-center text-gray-900 dark:text-white hover:bg-white/30 transition-all duration-200"
-                title={isExpanded ? 'Collapse' : 'Expand'}
-              >
-                <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
-              </button>
-              
-              <div className="relative">
-                <button
-                  onClick={() => setIsActionsOpen(!isActionsOpen)}
-                  className="w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full flex items-center justify-center text-gray-900 dark:text-white hover:bg-white/30 transition-all duration-200"
-                  title="More actions"
-                >
-                  <i className="fas fa-ellipsis-v"></i>
-                </button>
-                
-                {isActionsOpen && (
-                  <div className="absolute top-12 right-0 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl py-2 min-w-48 z-10">
-                    <Link
-                      to={`/admin/products/${productData.id}/edit`}
-                      className="w-full px-4 py-2 text-left hover:bg-white/20 transition-colors text-gray-900 dark:text-white flex items-center"
-                      onClick={() => setIsActionsOpen(false)}
-                    >
-                      <i className="fas fa-edit mr-3 text-blue-500"></i>
-                      Edit Product
-                    </Link>
-                    
-                    <button
-                      onClick={() => {
-                        window.open(`/product/${productData.id}`, '_blank');
-                        setIsActionsOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-white/20 transition-colors text-gray-900 dark:text-white flex items-center"
-                    >
-                      <i className="fas fa-eye mr-3 text-green-500"></i>
-                      View Product
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        handleDuplicate();
-                        setIsActionsOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-white/20 transition-colors text-gray-900 dark:text-white flex items-center"
-                    >
-                      <i className="fas fa-copy mr-3 text-purple-500"></i>
-                      Duplicate
-                    </button>
-                    
-                    <hr className="border-white/20 my-2" />
-                    
-                    <button
-                      onClick={() => {
-                        handleDelete();
-                        setIsActionsOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-red-500/20 transition-colors text-red-600 dark:text-red-400 flex items-center"
-                    >
-                      <i className="fas fa-trash mr-3"></i>
-                      Delete Product
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+  // Featured variant
+  if (variant === 'featured') {
+    return (
+      <div 
+        ref={cardRef}
+        className={`card-premium overflow-hidden relative group ${className}`}
+      >
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img
+            ref={imageRef}
+            src={productData.images[0]}
+            alt={productData.name}
+            className="w-full h-full object-cover transition-transform duration-500"
+            onLoad={() => setIsImageLoaded(true)}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
         </div>
-      </div>
 
-      {/* Details */}
-      <div className="p-6 space-y-4">
-        
-        {/* Price and Performance */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Price</label>
-            <div className="flex items-baseline space-x-2">
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
+        {/* Badge */}
+        {getBadgeInfo() && (
+          <div 
+            ref={badgeRef}
+            className={`absolute top-4 left-4 ${getBadgeInfo().color} px-3 py-1 rounded-full text-xs font-bold text-white flex items-center space-x-1`}
+          >
+            {React.createElement(getBadgeInfo().icon, { size: 12 })}
+            <span>{getBadgeInfo().text}</span>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="relative z-10 p-6 h-full flex flex-col justify-end">
+          <div className="mb-4">
+            <h3 className="text-2xl font-bold text-white mb-2">{productData.name}</h3>
+            <p className="text-blue-200 mb-3">{productData.brand}</p>
+            
+            <div className="flex items-center space-x-1 mb-4">
+              {renderStars()}
+              <span className="text-sm text-gray-300 ml-2">({productData.reviewCount})</span>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <span className="text-3xl font-bold text-white">
                 {formatCurrency(productData.price)}
-              </p>
+              </span>
               {productData.originalPrice > productData.price && (
-                <p className="text-sm text-gray-500 line-through">
-                  {formatCurrency(productData.originalPrice)}
-                </p>
+                <>
+                  <span className="text-lg text-gray-400 line-through">
+                    {formatCurrency(productData.originalPrice)}
+                  </span>
+                  <span className="bg-gradient-secondary px-2 py-1 rounded-full text-xs font-bold text-white">
+                    -{productData.discount}%
+                  </span>
+                </>
               )}
             </div>
           </div>
-          <div>
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Stock</label>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
-              {productData.stock} units
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Sales</label>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
-              {productData.sales}
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Rating</label>
-            <div className="flex items-center space-x-2">
-              <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {productData.rating}
-              </p>
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <i
-                    key={i}
-                    className={`fas fa-star text-xs ${
-                      i < Math.floor(productData.rating) ? 'text-yellow-400' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleAddToCart}
+              disabled={!productData.inStock}
+              className="btn-premium flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ShoppingCart size={20} className="mr-2" />
+              {productData.inStock ? 'Add to Cart' : 'Out of Stock'}
+            </button>
+            
+            <button
+              onClick={handleToggleWishlist}
+              className={`p-3 rounded-xl transition-all duration-300 ${
+                isInWishlist 
+                  ? 'bg-red-500 text-white' 
+                  : 'glass text-white hover:glass'
+              }`}
+            >
+              <Heart size={20} className={isInWishlist ? 'fill-current' : ''} />
+            </button>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Category and Tags */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Category</label>
-            <p className="text-gray-900 dark:text-white font-semibold">
-              {productData.category}  {productData.subcategory}
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tags</label>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {productData.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium"
+  // Default variant
+  return (
+    <Link to={`/products/${productData.id}`} className="block">
+      <div 
+        ref={cardRef}
+        className={`card-premium overflow-hidden relative group cursor-pointer ${className}`}
+      >
+        {/* Product Image */}
+        <div className="relative overflow-hidden rounded-t-3xl">
+          <img
+            ref={imageRef}
+            src={productData.images[currentImage]}
+            alt={productData.name}
+            className="w-full h-48 sm:h-56 lg:h-64 object-cover transition-transform duration-500"
+            onLoad={() => setIsImageLoaded(true)}
+          />
+          
+          {/* Image Loading Skeleton */}
+          {!isImageLoaded && (
+            <div className="absolute inset-0 skeleton rounded-t-3xl"></div>
+          )}
+
+          {/* Badge */}
+          {getBadgeInfo() && (
+            <div 
+              ref={badgeRef}
+              className={`absolute top-3 left-3 ${getBadgeInfo().color} px-3 py-1 rounded-full text-xs font-bold text-white flex items-center space-x-1 shadow-lg`}
+            >
+              {React.createElement(getBadgeInfo().icon, { size: 12 })}
+              <span>{getBadgeInfo().text}</span>
+            </div>
+          )}
+
+          {/* Discount Badge */}
+          {productData.originalPrice > productData.price && (
+            <div className="absolute top-3 right-3 bg-gradient-secondary px-2 py-1 rounded-full text-xs font-bold text-white">
+              -{productData.discount}%
+            </div>
+          )}
+
+          {/* Hover Actions */}
+          {showActionsProp && showActions && isHovered && (
+            <div 
+              ref={actionsRef}
+              className="absolute inset-0 bg-black/40 flex items-center justify-center"
+            >
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleToggleWishlist}
+                  className={`p-3 rounded-full transition-all duration-200 ${
+                    isInWishlist 
+                      ? 'bg-red-500 text-white' 
+                      : 'glass text-white hover:glass'
+                  }`}
                 >
-                  {tag}
-                </span>
+                  <Heart size={20} className={isInWishlist ? 'fill-current' : ''} />
+                </button>
+                
+                {onQuickView && showQuickView && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onQuickView(productData);
+                    }}
+                    className="p-3 glass rounded-full text-white hover:glass transition-all duration-200"
+                  >
+                    <Eye size={20} />
+                  </button>
+                )}
+                
+                <button
+                  onClick={handleShare}
+                  className="p-3 glass rounded-full text-white hover:glass transition-all duration-200"
+                >
+                  <Share2 size={20} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Image Navigation Dots */}
+          {productData.images.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1">
+              {productData.images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentImage(index);
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === currentImage ? 'bg-white' : 'bg-white/50'
+                  }`}
+                />
               ))}
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Expanded Details */}
-        {isExpanded && (
-          <div className="space-y-4 animate-fade-in pt-4 border-t border-white/20 dark:border-gray-700/20">
-            
-            {/* Variants */}
-            <div>
-              <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">
-                Product Variants
-              </label>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-                {productData.variants.map((variant, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl"
-                  >
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {variant.size} - {variant.color}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {variant.stock} left
-                    </span>
-                  </div>
-                ))}
-              </div>
+        {/* Product Info */}
+        <div className="p-4 sm:p-6">
+          {/* Brand */}
+          <p className="text-sm text-gray-400 mb-1">{productData.brand}</p>
+          
+          {/* Name */}
+          <h3 className="font-semibold text-white mb-2 text-lg leading-tight line-clamp-2">
+            {productData.name}
+          </h3>
+
+          {/* Rating */}
+          <div className="flex items-center space-x-2 mb-3">
+            <div className="flex items-center space-x-1">
+              {renderStars()}
             </div>
+            <span className="text-sm text-gray-400">
+              ({productData.reviewCount})
+            </span>
+          </div>
 
-            {/* Performance Stats */}
-            {showStats && (
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20 dark:border-gray-700/20">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {productData.views}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Views</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {((productData.sales / productData.views) * 100).toFixed(1)}%
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Conversion</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {formatCurrency(productData.sales * productData.price)}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
-                </div>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="flex space-x-3 pt-2">
-              <Link
-                to={`/admin/products/${productData.id}/edit`}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center justify-center"
-              >
-                <i className="fas fa-edit mr-2"></i>
-                Edit Product
-              </Link>
-              <button
-                onClick={() => window.open(`/product/${productData.id}`, '_blank')}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center justify-center"
-              >
-                <i className="fas fa-eye mr-2"></i>
-                View Live
-              </button>
-              <button
-                onClick={handleDuplicate}
-                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center justify-center"
-              >
-                <i className="fas fa-copy mr-2"></i>
-                Duplicate
-              </button>
+          {/* Price */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-white">
+                {formatCurrency(productData.price)}
+              </span>
+              {productData.originalPrice > productData.price && (
+                <span className="text-sm text-gray-400 line-through">
+                  {formatCurrency(productData.originalPrice)}
+                </span>
+              )}
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Custom Styles */}
-    </div>
+          {/* Add to Cart Button */}
+          <button
+            onClick={handleAddToCart}
+            disabled={!productData.inStock}
+            className={`w-full btn-premium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
+              isInCart ? 'bg-green-500 hover:bg-green-600' : ''
+            }`}
+          >
+            <ShoppingBag size={18} />
+            <span>
+              {!productData.inStock 
+                ? 'Out of Stock' 
+                : isInCart 
+                  ? 'In Cart' 
+                  : 'Add to Cart'
+              }
+            </span>
+          </button>
+        </div>
+      </div>
+    </Link>
   );
 };
 

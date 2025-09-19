@@ -50,7 +50,8 @@ const Header = () => {
     { to: '/', label: 'Home', icon: Home },
     { to: '/products', label: 'Products', icon: Grid3X3 },
     { to: '/categories', label: 'Categories', icon: Tag },
-    { to: '/sale', label: 'Sale', icon: Percent, badge: 'Hot' }
+    { to: '/sale', label: 'Sale', icon: Percent, badge: 'Hot' },
+    ...(process.env.NODE_ENV === 'development' ? [{ to: '/toast-demo', label: 'Toast Demo', icon: ChevronDown }] : [])
   ];
 
   // Handle scroll effect

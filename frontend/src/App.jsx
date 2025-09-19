@@ -28,6 +28,9 @@ import Contact from "./pages/Contact";
 import Search from "./pages/Search";
 import Checkout from "./pages/Checkout";
 
+// Demo Components
+import ToastDemo from "./components/demo/ToastDemo";
+
 // Protection Components
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminRoute from "./components/common/AdminRoute";
@@ -81,6 +84,7 @@ const AppContent = () => {
           <Route path="search" element={<Search />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="toast-demo" element={<ToastDemo />} />
           
           {/* Protected user routes */}
           <Route element={<ProtectedRoute />}>
