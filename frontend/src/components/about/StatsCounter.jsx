@@ -360,51 +360,6 @@ const StatsCounter = ({
       )}
 
       {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out forwards;
-          opacity: 0;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-        
-        /* Counter animation enhancement */
-        @keyframes counter-glow {
-          0%, 100% { text-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
-          50% { text-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
-        }
-        
-        /* Progress bar animation */
-        @keyframes progress-fill {
-          from { transform: translateX(-100%); }
-          to { transform: translateX(0); }
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .text-5xl {
-            font-size: 2.5rem;
-          }
-        }
-      `}</style>
     </div>
   );
 };

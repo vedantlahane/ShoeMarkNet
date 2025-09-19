@@ -765,63 +765,6 @@ const Category = () => {
         )}
 
         {/* Custom Styles */}
-        <style jsx>{`
-          @keyframes float {
-            0%, 100% { 
-              transform: translateY(0px) rotate(0deg); 
-              opacity: 0.7;
-            }
-            33% { 
-              transform: translateY(-15px) rotate(2deg); 
-              opacity: 1;
-            }
-            66% { 
-              transform: translateY(-8px) rotate(-2deg); 
-              opacity: 0.8;
-            }
-          }
-          
-          @keyframes fade-in {
-            from { 
-              opacity: 0; 
-              transform: translateY(20px); 
-            }
-            to { 
-              opacity: 1; 
-              transform: translateY(0); 
-            }
-          }
-          
-          @keyframes fade-in-up {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          
-          .animate-float {
-            animation: float 8s ease-in-out infinite;
-          }
-          
-          .animate-fade-in {
-            animation: fade-in 0.6s ease-out forwards;
-            opacity: 0;
-          }
-          
-          .animate-fade-in-up {
-            animation: fade-in-up 0.8s ease-out forwards;
-            opacity: 0;
-          }
-          
-          select option {
-            background-color: #1f2937;
-            color: white;
-          }
-        `}</style>
       </div>
     </>
   );

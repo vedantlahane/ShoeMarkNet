@@ -416,39 +416,6 @@ const CategoryStats = ({
       </div>
 
       {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out forwards;
-          opacity: 0;
-        }
-        
-        /* Loading skeleton animation */
-        @keyframes pulse {
-          0%, 100% {
-            background-position: 200% 0;
-          }
-          50% {
-            background-position: -200% 0;
-          }
-        }
-        
-        .animate-pulse {
-          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-          background-size: 200% 100%;
-          animation: pulse 1.5s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };

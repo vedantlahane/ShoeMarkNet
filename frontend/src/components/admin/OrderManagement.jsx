@@ -653,32 +653,6 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
         )}
 
         {/* Custom Styles */}
-        <style jsx>{`
-          @keyframes fade-in-up {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          
-          .animate-fade-in-up {
-            animation: fade-in-up 0.8s ease-out forwards;
-            opacity: 0;
-          }
-
-          @keyframes shimmer {
-            0% { transform: translateX(-100%) skewX(-12deg); }
-            100% { transform: translateX(200%) skewX(-12deg); }
-          }
-          
-          .animate-shimmer {
-            animation: shimmer 2s ease-in-out infinite;
-          }
-        `}</style>
       </div>
     </>
   );

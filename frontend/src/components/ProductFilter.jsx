@@ -602,53 +602,6 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
       </div>
 
       {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.6s ease-out forwards;
-          opacity: 0;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.4s ease-out;
-        }
-        
-        /* Custom slider styling */
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #10b981, #059669);
-          cursor: pointer;
-          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-        }
-        
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #10b981, #059669);
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-        }
-      `}</style>
     </div>
   );
 };

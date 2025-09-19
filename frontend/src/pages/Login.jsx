@@ -582,64 +582,6 @@ const Login = () => {
         </div>
 
         {/* Enhanced Custom Styles */}
-        <style jsx>{`
-          @keyframes float {
-            0%, 100% { 
-              transform: translateY(0px) rotate(0deg); 
-              opacity: 0.7;
-            }
-            33% { 
-              transform: translateY(-15px) rotate(2deg); 
-              opacity: 1;
-            }
-            66% { 
-              transform: translateY(-8px) rotate(-2deg); 
-              opacity: 0.8;
-            }
-          }
-          
-          @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-          }
-          
-          @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-          }
-          
-          .animate-float {
-            animation: float 8s ease-in-out infinite;
-          }
-          
-          .animate-shake {
-            animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
-          }
-          
-          .animate-shimmer {
-            animation: shimmer 1.5s infinite;
-          }
-          
-          /* Custom scrollbar */
-          ::-webkit-scrollbar {
-            width: 6px;
-          }
-          
-          ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-          }
-          
-          ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-          }
-          
-          ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-          }
-        `}</style>
       </div>
     </>
   );

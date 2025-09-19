@@ -569,60 +569,6 @@ const CompareDrawer = ({
         </div>
 
         {/* Custom Styles */}
-        <style jsx>{`
-          @keyframes slide-in-right {
-            from {
-              transform: translateX(100%);
-            }
-            to {
-              transform: translateX(0);
-            }
-          }
-          
-          @keyframes slide-out-right {
-            from {
-              transform: translateX(0);
-            }
-            to {
-              transform: translateX(100%);
-            }
-          }
-          
-          .animate-slide-in-right {
-            animation: slide-in-right 0.3s ease-out;
-          }
-          
-          .animate-slide-out-right {
-            animation: slide-out-right 0.3s ease-in;
-          }
-          
-          .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-          
-          /* Custom scrollbar */
-          .overflow-auto::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-          }
-          
-          .overflow-auto::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-          }
-          
-          .overflow-auto::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-          }
-          
-          .overflow-auto::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-          }
-        `}</style>
       </div>
     </div>
   );

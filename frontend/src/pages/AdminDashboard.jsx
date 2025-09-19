@@ -753,39 +753,6 @@ const AdminDashboard = ({ section = "overview" }) => {
         )}
 
         {/* Custom Styles */}
-        <style jsx>{`
-          @keyframes shimmer {
-            0% { transform: translateX(-100%) skewX(-12deg); }
-            100% { transform: translateX(200%) skewX(-12deg); }
-          }
-          
-          .animate-shimmer {
-            animation: shimmer 2s ease-in-out infinite;
-          }
-          
-          .hover\\:scale-102:hover {
-            transform: scale(1.02);
-          }
-          
-          /* Custom scrollbar */
-          .overflow-y-auto::-webkit-scrollbar {
-            width: 6px;
-          }
-          
-          .overflow-y-auto::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-          }
-          
-          .overflow-y-auto::-webkit-scrollbar-thumb {
-            background: rgba(59, 130, 246, 0.5);
-            border-radius: 3px;
-          }
-          
-          .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-            background: rgba(59, 130, 246, 0.7);
-          }
-        `}</style>
       </div>
     </ErrorBoundary>
   );

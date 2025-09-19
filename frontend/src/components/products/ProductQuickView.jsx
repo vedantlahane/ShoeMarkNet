@@ -633,56 +633,6 @@ const ProductQuickView = ({
         </div>
 
         {/* Custom Styles */}
-        <style jsx>{`
-          @keyframes fade-in-scale {
-            from {
-              opacity: 0;
-              transform: scale(0.95) translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-          
-          @keyframes fade-out-scale {
-            from {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-            to {
-              opacity: 0;
-              transform: scale(0.95) translateY(20px);
-            }
-          }
-          
-          .animate-fade-in-scale {
-            animation: fade-in-scale 0.3s ease-out;
-          }
-          
-          .animate-fade-out-scale {
-            animation: fade-out-scale 0.3s ease-in;
-          }
-          
-          /* Custom scrollbar */
-          .overflow-y-auto::-webkit-scrollbar {
-            width: 4px;
-          }
-          
-          .overflow-y-auto::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-          }
-          
-          .overflow-y-auto::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-          }
-          
-          .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-          }
-        `}</style>
       </div>
     </div>
   );

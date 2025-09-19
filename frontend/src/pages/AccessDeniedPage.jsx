@@ -623,49 +623,6 @@ const AccessDeniedPage = ({
         </div>
 
         {/* Enhanced Custom Styles */}
-        <style jsx>{`
-          @keyframes fade-in-up {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          
-          @keyframes pulse-glow {
-            0%, 100% { 
-              box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); 
-            }
-            50% { 
-              box-shadow: 0 0 60px rgba(239, 68, 68, 0.6); 
-            }
-          }
-          
-          .animate-fade-in-up {
-            animation: fade-in-up 0.8s ease-out;
-          }
-          
-          .animate-pulse-glow {
-            animation: pulse-glow 2s ease-in-out infinite;
-          }
-          
-          /* Enhanced focus states */
-          button:focus-visible {
-            outline: 2px solid #3b82f6;
-            outline-offset: 2px;
-          }
-          
-          /* Print styles */
-          @media print {
-            .animate-pulse,
-            .animate-pulse-glow {
-              animation: none !important;
-            }
-          }
-        `}</style>
       </div>
     </ErrorBoundary>
   );
