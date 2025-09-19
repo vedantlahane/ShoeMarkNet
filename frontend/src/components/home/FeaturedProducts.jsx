@@ -11,10 +11,22 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   const autoplayRef = useRef(null);
   const carouselRef = useRef(null);
 
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  
   // Use passed products or fallback to empty array
   const displayProducts = products || [];
-  const slidesToShow = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1;
+  const slidesToShow = windowWidth >= 1280 ? 4 : windowWidth >= 1024 ? 3 : windowWidth >= 640 ? 2 : 1;
   const maxIndex = Math.max(0, Math.ceil(displayProducts.length / slidesToShow) - 1);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Auto-play functionality
   useEffect(() => {
