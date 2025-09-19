@@ -342,6 +342,21 @@ const batchUpdateStock = async (updates) => {
   }
 };
 
+/**
+ * Bulk update multiple products (admin only)
+ * @param {Object} params - { productIds: [], updates: {} }
+ * @returns {Promise<Object>} Update results
+ */
+const bulkUpdateProducts = async ({ productIds, updates }) => {
+  try {
+    const response = await api.post('/products/bulk-update', { productIds, updates });
+    return response.data;
+  } catch (error) {
+    console.error('Error bulk updating products:', error);
+    throw error;
+  }
+};
+
 const productService = {
   getFeaturedProducts,
   getNewArrivals,
@@ -360,7 +375,8 @@ const productService = {
   updateProduct,
   deleteProduct,
   batchUpdatePrices,
-  batchUpdateStock
+  batchUpdateStock,
+  bulkUpdateProducts
 };
 
 export default productService;

@@ -10,6 +10,7 @@ const {
   getAllUsers,
   updateUser,
   deleteUser,
+  bulkUpdateUsers,
   getUserSearchHistory,
   clearUserSearchHistory,
   updateUserPreferences
@@ -123,5 +124,12 @@ router.put('/admin/:userId', protect, admin, updateUser);
  * @access Private/Admin
  */
 router.delete('/admin/:userId', protect, admin, deleteUser);
+
+/**
+ * @description Bulk update multiple users (Admin only).
+ * @route POST /api/users/admin/bulk-update
+ * @access Private/Admin
+ */
+router.post('/admin/bulk-update', protect, admin, bulkUpdateUsers);
 
 module.exports = router;

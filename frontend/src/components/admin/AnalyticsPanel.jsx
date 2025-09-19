@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaUsers, FaTrendingUp, FaTrendingDown, FaChartBar, FaCalendarAlt } from 'react-icons/fa';
+import { FaUsers, FaArrowUp, FaArrowDown, FaChartBar, FaCalendarAlt } from 'react-icons/fa';
 
 const AnalyticsPanel = ({ className = "" }) => {
   const [analyticsData, setAnalyticsData] = useState({
@@ -89,9 +89,9 @@ const AnalyticsPanel = ({ className = "" }) => {
       {trend !== undefined && (
         <div className="mt-4 flex items-center">
           {trend >= 0 ? (
-            <FaTrendingUp className="w-4 h-4 text-green-500 mr-1" />
+            <FaArrowUp className="w-4 h-4 text-green-500 mr-1" />
           ) : (
-            <FaTrendingDown className="w-4 h-4 text-red-500 mr-1" />
+            <FaArrowDown className="w-4 h-4 text-red-500 mr-1" />
           )}
           <span className={`text-sm font-medium ${
             trend >= 0 ? 'text-green-600' : 'text-red-600'
@@ -159,7 +159,7 @@ const AnalyticsPanel = ({ className = "" }) => {
           title="Total Revenue"
           value={analyticsData.overview.totalRevenue}
           trend={analyticsData.trends.revenueGrowth}
-          icon={FaTrendingUp}
+          icon={FaArrowUp}
           prefix="$"
         />
         

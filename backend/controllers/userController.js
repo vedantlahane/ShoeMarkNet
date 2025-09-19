@@ -304,6 +304,42 @@ const deleteUser = async (req, res) => {
 };
 
 /**
+ * @description Bulk update multiple users (Admin only).
+ * @route POST /api/users/bulk-update
+ * @access Private/Admin
+ */
+const bulkUpdateUsers = async (req, res) => {
+  try {
+    const { userIds, updates } = req.body;
+    
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: 'Invalid userIds array' });
+    }
+    
+    if (!updates || typeof updates !== 'object' || Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'Invalid updates object' });
+    }
+    
+    const bulkOps = userIds.map(userId => ({
+      updateOne: {
+        filter: { _id: userId },
+        update: { $set: updates }
+      }
+    }));
+    
+    const result = await User.bulkWrite(bulkOps);
+    
+    res.status(200).json({ 
+      message: 'Users updated successfully',
+      modifiedCount: result.modifiedCount,
+      matchedCount: result.matchedCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error bulk updating users', error: error.message });
+  }
+};
+
+/**
  * @description Get the authenticated user's search history with pagination.
  * @route GET /api/users/search-history
  * @access Private
@@ -391,6 +427,7 @@ module.exports = {
   getAllUsers,
   updateUser,
   deleteUser,
+  bulkUpdateUsers,
   getUserSearchHistory,
   clearUserSearchHistory,
   updateUserPreferences

@@ -373,6 +373,38 @@ const batchUpdateStock = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Bulk update products
+// @route   POST /api/products/bulk-update
+// @access  Private/Admin
+const bulkUpdateProducts = asyncHandler(async (req, res) => {
+  const { productIds, updates } = req.body; // Expects { productIds: [], updates: {} }
+  
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    res.status(400);
+    throw new Error('Invalid productIds array');
+  }
+  
+  if (!updates || typeof updates !== 'object' || Object.keys(updates).length === 0) {
+    res.status(400);
+    throw new Error('Invalid updates object');
+  }
+  
+  const bulkOps = productIds.map(productId => ({
+    updateOne: {
+      filter: { _id: productId },
+      update: { $set: updates }
+    }
+  }));
+  
+  const result = await Product.bulkWrite(bulkOps);
+  
+  res.status(200).json({ 
+    message: 'Products updated successfully',
+    modifiedCount: result.modifiedCount,
+    matchedCount: result.matchedCount
+  });
+});
+
 // @desc    Get product reviews with pagination
 // @route   GET /api/products/:id/reviews
 // @access  Public
@@ -619,6 +651,7 @@ module.exports = {
   checkProductAvailability,
   batchUpdatePrices,
   batchUpdateStock,
+  bulkUpdateProducts,
   getProductReviews,
   createProductReview,
   updateProductReview,

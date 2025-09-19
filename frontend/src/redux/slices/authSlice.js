@@ -356,6 +356,28 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
+export const bulkUpdateUsers = createAsyncThunk(
+  "auth/bulkUpdateUsers",
+  async ({ userIds, updates }, { rejectWithValue }) => {
+    try {
+      const loadingToast = toast.loading("🔄 Updating users...");
+
+      const response = await userService.bulkUpdateUsers({ userIds, updates });
+
+      toast.dismiss(loadingToast);
+      showSuccessToast(
+        `✅ ${response.modifiedCount} user(s) updated successfully!`
+      );
+
+      return response;
+    } catch (error) {
+      const errorPayload = createErrorPayload(error, "Failed to bulk update users");
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
 // Enhanced logout
 export const logoutUser = createAsyncThunk(
   "auth/logout",
@@ -624,6 +646,22 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(bulkUpdateUsers.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(bulkUpdateUsers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Note: We don't update the local state here as the bulk update
+        // might affect users not currently loaded. A refetch would be needed
+        // to get the updated data, but we'll just clear error state.
+        state.error = null;
+      })
+      .addCase(bulkUpdateUsers.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })

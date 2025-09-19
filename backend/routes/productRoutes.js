@@ -12,6 +12,7 @@ const {
   checkProductAvailability,
   batchUpdatePrices,
   batchUpdateStock,
+  bulkUpdateProducts,
   getProductReviews,
   createProductReview,
   updateProductReview,
@@ -154,5 +155,12 @@ router.post('/batch-update-prices', protect, admin, batchUpdatePrices);
  * @access Private/Admin
  */
 router.post('/batch-update-stock', protect, admin, batchUpdateStock);
+
+/**
+ * @description Perform a bulk update on multiple products.
+ * @route POST /api/products/bulk-update
+ * @access Private/Admin
+ */
+router.post('/bulk-update', protect, admin, bulkUpdateProducts);
 
 module.exports = router;

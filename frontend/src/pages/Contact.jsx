@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 // Redux actions (you'll need to create these)
 import { 
   submitContactForm, 
-  clearContactError 
+  clearErrors as clearContactError 
 } from '../redux/slices/contactSlice';
 
 // Components

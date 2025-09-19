@@ -187,9 +187,9 @@ const updateUser = async (userId, userData) => {
 };
 
 /**
- * Admin function to delete a user
- * @param {string} userId - ID of the user to delete
- * @returns {Promise} - Promise resolving to success message
+ * Delete a user (admin only)
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Deletion confirmation
  */
 const deleteUser = async (userId) => {
   try {
@@ -197,6 +197,21 @@ const deleteUser = async (userId) => {
     return response.data;
   } catch (error) {
     console.error(`Error deleting user ${userId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Bulk update multiple users (admin only)
+ * @param {Object} params - { userIds: [], updates: {} }
+ * @returns {Promise<Object>} Update results
+ */
+const bulkUpdateUsers = async ({ userIds, updates }) => {
+  try {
+    const response = await api.post('/users/admin/bulk-update', { userIds, updates });
+    return response.data;
+  } catch (error) {
+    console.error('Error bulk updating users:', error);
     throw error;
   }
 };
@@ -214,7 +229,8 @@ const userService = {
   updateUserPreferences,
   getAllUsers,
   updateUser,
-  deleteUser
+  deleteUser,
+  bulkUpdateUsers
 };
 
 export default userService;
