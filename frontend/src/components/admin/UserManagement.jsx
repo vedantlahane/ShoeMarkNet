@@ -10,7 +10,7 @@ import {
   deleteUser, 
   bulkUpdateUsers,
   exportUsers,
-  clearUserError 
+  clearError as clearUserError 
 } from '../../redux/slices/authSlice';
 import userService from '../../services/userService';
 

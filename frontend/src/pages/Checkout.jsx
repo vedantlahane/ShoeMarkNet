@@ -7,12 +7,11 @@ import { toast } from 'react-toastify';
 // Redux actions
 import { 
   clearCart, 
-  updateCartItemQuantity, 
+  updateCartItem as updateCartItemQuantity, 
   removeFromCart 
 } from '../redux/slices/cartSlice';
 import { 
   createOrder, 
-  calculateShipping, 
   validateCoupon,
   clearOrderError 
 } from '../redux/slices/orderSlice';
@@ -729,60 +728,6 @@ const Checkout = () => {
           </div>
         )}
 
-        {/* Enhanced Custom Styles */}
-        <style jsx>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          
-          .animate-fade-in {
-            animation: fade-in 0.5s ease-out;
-          }
-          
-          /* Security indicator pulse */
-          @keyframes security-pulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
-          }
-          
-          .security-indicator {
-            animation: security-pulse 2s ease-in-out infinite;
-          }
-          
-          /* Form field focus enhancement */
-          input:focus, select:focus, textarea:focus {
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-            border-color: #3b82f6;
-          }
-          
-          /* Checkout step progress */
-          .step-progress {
-            position: relative;
-          }
-          
-          .step-progress::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 100%;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-            transform: translateY(-50%);
-          }
-          
-          /* Print optimizations */
-          @media print {
-            .no-print {
-              display: none !important;
-            }
-            
-            body {
-              background: white !important;
-            }
-          }
-        `}</style>
       </div>
     </ErrorBoundary>
   );

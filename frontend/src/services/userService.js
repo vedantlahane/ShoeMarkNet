@@ -216,6 +216,45 @@ const bulkUpdateUsers = async ({ userIds, updates }) => {
   }
 };
 
+/**
+ * Export users data (admin only)
+ * @param {Array} users - Array of user objects to export
+ * @param {string} format - Export format ('csv' or 'json')
+ * @returns {Promise<string>} Exported data
+ */
+const exportUsers = async (users, format = 'csv') => {
+  try {
+    if (format === 'csv') {
+      // Convert users to CSV format
+      const headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Verified', 'Created At', 'Last Login'];
+      const csvRows = [headers.join(',')];
+      
+      users.forEach(user => {
+        const row = [
+          user._id,
+          `"${user.name || ''}"`,
+          `"${user.email || ''}"`,
+          user.role || 'user',
+          user.isActive ? 'Active' : 'Inactive',
+          user.isVerified ? 'Verified' : 'Unverified',
+          user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '',
+          user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : ''
+        ];
+        csvRows.push(row.join(','));
+      });
+      
+      return csvRows.join('\n');
+    } else if (format === 'json') {
+      return JSON.stringify(users, null, 2);
+    } else {
+      throw new Error('Unsupported export format');
+    }
+  } catch (error) {
+    console.error('Error exporting users:', error);
+    throw error;
+  }
+};
+
 const userService = {
   getUserProfile,
   updateUserProfile,
@@ -230,7 +269,8 @@ const userService = {
   getAllUsers,
   updateUser,
   deleteUser,
-  bulkUpdateUsers
+  bulkUpdateUsers,
+  exportUsers
 };
 
 export default userService;

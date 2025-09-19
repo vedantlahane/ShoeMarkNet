@@ -378,6 +378,26 @@ export const bulkUpdateUsers = createAsyncThunk(
   }
 );
 
+export const exportUsers = createAsyncThunk(
+  "auth/exportUsers",
+  async ({ users, format = 'csv' }, { rejectWithValue }) => {
+    try {
+      const loadingToast = toast.loading("📊 Exporting users...");
+
+      const exportData = await userService.exportUsers(users, format);
+
+      toast.dismiss(loadingToast);
+      showSuccessToast(`✅ Users exported successfully!`);
+
+      return { data: exportData, format };
+    } catch (error) {
+      const errorPayload = createErrorPayload(error, "Failed to export users");
+      showErrorToast(`❌ ${errorPayload.message}`);
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
 // Enhanced logout
 export const logoutUser = createAsyncThunk(
   "auth/logout",
@@ -662,6 +682,19 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(bulkUpdateUsers.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(exportUsers.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(exportUsers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(exportUsers.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
