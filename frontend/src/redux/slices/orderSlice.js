@@ -349,6 +349,34 @@ export const deleteOrder = createAsyncThunk(
   }
 );
 
+export const validateCoupon = createAsyncThunk(
+  'order/validateCoupon',
+  async (couponCode, { rejectWithValue }) => {
+    try {
+      // TODO: Implement actual coupon validation with backend
+      // For now, return a mock valid response
+      if (!couponCode || couponCode.trim().length === 0) {
+        return rejectWithValue({ message: 'Coupon code is required' });
+      }
+      
+      // Mock validation - in real implementation, this would call the backend
+      const mockCouponData = {
+        code: couponCode.toUpperCase(),
+        discountType: 'percentage',
+        discountValue: 10,
+        minimumPurchase: 50,
+        isValid: true,
+        message: 'Coupon applied successfully!'
+      };
+      
+      return mockCouponData;
+    } catch (error) {
+      const errorPayload = createErrorPayload(error, 'Failed to validate coupon');
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
 // Enhanced initial state
 const initialState = {
   // User orders
@@ -375,6 +403,9 @@ const initialState = {
   // Error states
   error: null,
   lastError: null,
+  
+  // Coupon validation
+  coupon: null,
   
   // Admin section
   adminOrders: {
@@ -760,6 +791,22 @@ const orderSlice = createSlice({
       .addCase(deleteOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      
+      // Validate Coupon
+      .addCase(validateCoupon.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateCoupon.fulfilled, (state, action) => {
+        state.loading = false;
+        state.coupon = action.payload;
+        state.error = null;
+      })
+      .addCase(validateCoupon.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.coupon = null;
       });
   },
 });
