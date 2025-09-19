@@ -68,4 +68,86 @@ export const validatePhone = (phone) => {
   return { isValid: true, message: '' };
 };
 
-// Remove duplicate export - these functions are already defined in this file
+export const validateSearchQuery = (query) => {
+  if (!query || typeof query !== 'string') {
+    return false;
+  }
+  
+  const trimmedQuery = query.trim();
+  
+  if (trimmedQuery.length === 0) {
+    return false;
+  }
+  
+  if (trimmedQuery.length < 2) {
+    return false;
+  }
+  
+  if (trimmedQuery.length > 100) {
+    return false;
+  }
+  
+  // Check for potentially harmful characters (basic XSS prevention)
+  const dangerousChars = /[<>\"';&]/;
+  if (dangerousChars.test(trimmedQuery)) {
+    return false;
+  }
+  
+  return true;
+};
+
+export const validateAddress = (address) => {
+  if (!address || typeof address !== 'object') {
+    return false;
+  }
+  
+  const requiredFields = ['street', 'city', 'state', 'zipCode', 'country'];
+  
+  for (const field of requiredFields) {
+    if (!address[field] || typeof address[field] !== 'string' || address[field].trim().length === 0) {
+      return false;
+    }
+  }
+  
+  // Basic zip code validation (US format)
+  const zipRegex = /^\d{5}(-\d{4})?$/;
+  if (!zipRegex.test(address.zipCode.trim())) {
+    return false;
+  }
+  
+  return true;
+};
+
+export const validateCreditCard = (cardNumber) => {
+  if (!cardNumber || typeof cardNumber !== 'string') {
+    return false;
+  }
+  
+  // Remove spaces and dashes
+  const cleanNumber = cardNumber.replace(/[\s-]/g, '');
+  
+  // Check if it's all digits and length is between 13-19
+  if (!/^\d{13,19}$/.test(cleanNumber)) {
+    return false;
+  }
+  
+  // Luhn algorithm validation
+  let sum = 0;
+  let shouldDouble = false;
+  
+  for (let i = cleanNumber.length - 1; i >= 0; i--) {
+    let digit = parseInt(cleanNumber.charAt(i), 10);
+    
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+    
+    sum += digit;
+    shouldDouble = !shouldDouble;
+  }
+  
+  return sum % 10 === 0;
+};

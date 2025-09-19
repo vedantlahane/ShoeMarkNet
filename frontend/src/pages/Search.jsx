@@ -13,7 +13,7 @@ import {
   addToRecentSearches
 } from '../redux/slices/searchSlice';
 import { addToCart } from '../redux/slices/cartSlice';
-import { toggleWishlist } from '../redux/slices/wishlistSlice';
+import { toggleWishlistItem as toggleWishlist } from '../redux/slices/wishlistSlice';
 
 // Components
 import LoadingSpinner from '../components/common/LoadingSpinner';
