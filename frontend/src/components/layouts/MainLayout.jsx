@@ -19,7 +19,7 @@ const ROUTE_TITLES = {
 const MainLayout = () => {
   const location = useLocation();
   const [showScrollTop, setShowScrollTop] = useState(false);
-  
+
   // Simple scroll handling
   useEffect(() => {
     const handleScroll = () => {
@@ -30,9 +30,12 @@ const MainLayout = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Simple scroll to top
+  // Simple scroll to top with smooth animation
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   // Get page title
@@ -44,28 +47,33 @@ const MainLayout = () => {
         <title>{pageTitle}</title>
       </Helmet>
 
-      <div className="flex flex-col min-h-screen">
-        {/* Header */}
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        {/* Header with proper spacing */}
         <Header />
 
-        {/* Main Content */}
-        <main className="flex-grow">
+        {/* Main Content with top padding for fixed header */}
+        <main className="flex-grow pt-20">
           <Outlet />
         </main>
 
         {/* Footer */}
         <Footer />
 
-        {/* Simple Scroll to Top */}
-        {showScrollTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-8 right-8 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 flex items-center justify-center z-40"
-            aria-label="Scroll to top"
-          >
-            <i className="fas fa-chevron-up"></i>
-          </button>
-        )}
+        {/* Enhanced Scroll to Top Button */}
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-xl hover:shadow-blue-500/25 text-white rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 z-40 flex items-center justify-center group ${
+            showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+          aria-label="Scroll to top"
+        >
+          <i className="fas fa-chevron-up text-lg group-hover:animate-bounce"></i>
+        </button>
+
+        {/* Loading indicator for route changes */}
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50">
+          {/* This could be enhanced with a global loading state */}
+        </div>
       </div>
     </ErrorBoundary>
   );
