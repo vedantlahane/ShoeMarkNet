@@ -52,7 +52,9 @@ app.use(compression());
 const allowedOrigins = [
   'https://shoe-mark-net.vercel.app',
   'http://localhost:5173',
-  'http://localhost:3000'
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://localhost:5175'
 ];
 
 app.use(cors({
