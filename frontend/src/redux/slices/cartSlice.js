@@ -1,3 +1,11 @@
+/**
+ * Redux slice for managing shopping cart state in the ShoeMarkNet application.
+ * Handles both server-side cart operations (for authenticated users) and local cart management (for guest users).
+ * Includes optimistic updates, error handling, and persistence to localStorage.
+ *
+ * @module cartSlice
+ */
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import cartService from '../../services/cartService';
 import { toast } from 'react-toastify';
@@ -38,7 +46,11 @@ const saveCartToStorage = (items) => {
   }
 };
 
-// Fetch cart items
+/**
+ * Async thunk to fetch cart items from the server.
+ * Updates localStorage with the fetched items.
+ * @returns {Promise<{items: Array, totalPrice: number}>} Cart data
+ */
 export const fetchCart = createAsyncThunk(
   'cart/fetchCart',
   async (_, { rejectWithValue }) => {
@@ -56,7 +68,16 @@ export const fetchCart = createAsyncThunk(
   }
 );
 
-// Add item to cart
+/**
+ * Async thunk to add an item to the cart.
+ * Performs optimistic update and handles product variants (size/color).
+ * @param {Object} cartItem - The item to add
+ * @param {string} cartItem.productId - Product ID
+ * @param {number} cartItem.quantity - Quantity to add
+ * @param {string} [cartItem.size] - Product size variant
+ * @param {string} [cartItem.color] - Product color variant
+ * @returns {Promise<{items: Array, totalPrice: number}>} Updated cart data
+ */
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
   async (cartItem, { rejectWithValue, getState }) => {
@@ -111,7 +132,13 @@ export const addToCart = createAsyncThunk(
   }
 );
 
-// Update cart item quantity
+/**
+ * Async thunk to update the quantity of a cart item.
+ * @param {Object} params - Update parameters
+ * @param {string} params.itemId - Cart item ID
+ * @param {number} params.quantity - New quantity
+ * @returns {Promise<{items: Array, totalPrice: number}>} Updated cart data
+ */
 export const updateCartItem = createAsyncThunk(
   'cart/updateCartItem',
   async ({ itemId, quantity }, { rejectWithValue, getState }) => {
@@ -141,7 +168,11 @@ export const updateCartItem = createAsyncThunk(
   }
 );
 
-// Remove item from cart
+/**
+ * Async thunk to remove an item from the cart.
+ * @param {string} itemId - Cart item ID to remove
+ * @returns {Promise<{items: Array, totalPrice: number}>} Updated cart data
+ */
 export const removeFromCart = createAsyncThunk(
   'cart/removeFromCart',
   async (itemId, { rejectWithValue, getState }) => {
@@ -171,7 +202,10 @@ export const removeFromCart = createAsyncThunk(
   }
 );
 
-// Clear cart
+/**
+ * Async thunk to clear the entire cart.
+ * @returns {Promise<{items: Array, totalPrice: number}>} Empty cart data
+ */
 export const clearCart = createAsyncThunk(
   'cart/clearCart',
   async (_, { rejectWithValue }) => {
@@ -188,6 +222,7 @@ export const clearCart = createAsyncThunk(
   }
 );
 
+// Initial state for the cart slice
 const initialState = {
   items: getCartFromStorage(),
   totalPrice: 0,
@@ -276,6 +311,7 @@ const cartSlice = createSlice({
     },
   },
   
+  // Handle async thunk states
   extraReducers: (builder) => {
     builder
       .addCase(fetchCart.pending, (state) => {
