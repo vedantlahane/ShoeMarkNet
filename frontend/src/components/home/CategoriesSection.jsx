@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -10,7 +10,12 @@ import {
   ArrowRight,
   Eye,
   ShoppingBag,
-  Zap
+  Zap,
+  Activity,
+  Users,
+  Heart,
+  Briefcase,
+  Dumbbell
 } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -32,6 +37,7 @@ const CategoriesSection = ({
   const headerRef = useRef(null);
   const gridRef = useRef(null);
   const ctaRef = useRef(null);
+  const gsapContextRef = useRef(null);
 
   const defaultCategories = [
     {
@@ -41,8 +47,7 @@ const CategoriesSection = ({
       count: 156,
       image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop',
       color: 'from-orange-400 to-red-500',
-      icon: 'fas fa-running',
-      lucideIcon: TrendingUp,
+      lucideIcon: Activity,
       description: 'Performance & Comfort',
       badge: 'Trending',
       badgeColor: 'from-orange-500 to-red-500',
@@ -56,7 +61,6 @@ const CategoriesSection = ({
       count: 134,
       image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?q=80&w=400&auto=format&fit=crop',
       color: 'from-purple-400 to-pink-500',
-      icon: 'fas fa-basketball-ball',
       lucideIcon: Zap,
       description: 'Court Dominance',
       badge: 'Pro Series',
@@ -71,7 +75,6 @@ const CategoriesSection = ({
       count: 198,
       image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop',
       color: 'from-green-400 to-blue-500',
-      icon: 'fas fa-shoe-prints',
       lucideIcon: Star,
       description: 'Style & Comfort',
       badge: 'Popular',
@@ -86,8 +89,7 @@ const CategoriesSection = ({
       count: 87,
       image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=400&auto=format&fit=crop',
       color: 'from-gray-600 to-gray-800',
-      icon: 'fas fa-tie',
-      lucideIcon: Sparkles,
+      lucideIcon: Briefcase,
       description: 'Elegance & Class',
       badge: 'Premium',
       badgeColor: 'from-gray-600 to-black',
@@ -101,8 +103,7 @@ const CategoriesSection = ({
       count: 112,
       image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=400&auto=format&fit=crop',
       color: 'from-cyan-400 to-teal-500',
-      icon: 'fas fa-dumbbell',
-      lucideIcon: TrendingUp,
+      lucideIcon: Dumbbell,
       description: 'Performance First',
       badge: 'New',
       badgeColor: 'from-cyan-500 to-teal-500',
@@ -116,8 +117,7 @@ const CategoriesSection = ({
       count: 203,
       image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=400&auto=format&fit=crop',
       color: 'from-pink-400 to-rose-500',
-      icon: 'fas fa-heart',
-      lucideIcon: Star,
+      lucideIcon: Heart,
       description: 'Fashion Forward',
       badge: 'Exclusive',
       badgeColor: 'from-pink-500 to-rose-500',
@@ -128,11 +128,11 @@ const CategoriesSection = ({
 
   const categories = propCategories || defaultCategories;
 
-  // GSAP Animations
+  // GSAP Animations with proper cleanup
   useEffect(() => {
     if (!animateOnScroll || !sectionRef.current) return;
 
-    const ctx = gsap.context(() => {
+    gsapContextRef.current = gsap.context(() => {
       // Section entrance animation
       gsap.fromTo(sectionRef.current,
         { opacity: 0 },
@@ -219,7 +219,11 @@ const CategoriesSection = ({
       }
     }, sectionRef);
 
-    return () => ctx.revert();
+    return () => {
+      if (gsapContextRef.current) {
+        gsapContextRef.current.revert();
+      }
+    };
   }, [animateOnScroll, activeCategory]);
 
   // Stagger visibility animation
@@ -236,7 +240,7 @@ const CategoriesSection = ({
   }, [categories.length]);
 
   // Handle category interactions
-  const handleCategoryHover = (categoryId) => {
+  const handleCategoryHover = useCallback((categoryId) => {
     setHoveredCategory(categoryId);
     setActiveCategory(categoryId);
     
@@ -251,9 +255,9 @@ const CategoriesSection = ({
         ease: 'power2.out'
       });
     }
-  };
+  }, []);
 
-  const handleCategoryLeave = () => {
+  const handleCategoryLeave = useCallback(() => {
     const previousCategory = hoveredCategory;
     setHoveredCategory(null);
     
@@ -270,16 +274,17 @@ const CategoriesSection = ({
         });
       }
     }
-  };
+  }, [hoveredCategory]);
 
   return (
     <section 
       ref={sectionRef}
       id="categories" 
       className={`py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 relative overflow-hidden ${className}`}
+      aria-label="Product categories"
     >
       {/* Enhanced Background Elements */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" aria-hidden="true">
         <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-400/10 to-teal-400/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
@@ -295,9 +300,9 @@ const CategoriesSection = ({
         {showHeader && (
           <div ref={headerRef} className="text-center mb-16">
             <div className="inline-flex items-center space-x-3 glass bg-gradient-to-r from-purple-100/50 to-blue-100/50 dark:from-purple-900/30 dark:to-blue-900/30 text-purple-600 dark:text-purple-400 rounded-full px-8 py-4 mb-8 shadow-lg">
-              <Grid3X3 size={20} className="animate-pulse" />
+              <Grid3X3 size={20} className="animate-pulse" aria-hidden="true" />
               <span className="text-sm font-semibold tracking-wide">Shop by Style</span>
-              <Sparkles size={16} className="animate-spin-slow" />
+              <Sparkles size={16} className="animate-spin-slow" aria-hidden="true" />
             </div>
 
             <h2 className="text-4xl lg:text-7xl font-heading font-bold mb-6 text-gray-900 dark:text-white">
@@ -308,7 +313,7 @@ const CategoriesSection = ({
             </h2>
             
             <p className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              <Eye className="inline mr-2" size={20} />
+              <Eye className="inline mr-2" size={20} aria-hidden="true" />
               Find the perfect footwear for every occasion and activity in our diverse collection of premium brands
             </p>
 
@@ -344,147 +349,155 @@ const CategoriesSection = ({
               ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
               : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
           }`}
+          role="grid"
+          aria-label="Product categories grid"
         >
-          {categories.map((category, index) => (
-            <Link
-              key={category.id}
-              to={`/category/${category.slug}`}
-              data-category-id={category.id}
-              className={`group relative block overflow-hidden rounded-3xl transition-all duration-700 transform hover:scale-105 hover:-translate-y-4 hover:rotate-1 perspective-1000 ${
-                visibleCategories.includes(index)
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-8'
-              }`}
-              style={{ transitionDelay: `${index * 100}ms` }}
-              onMouseEnter={() => handleCategoryHover(category.id)}
-              onMouseLeave={handleCategoryLeave}
-            >
-              {/* Premium Glassmorphism Card */}
-              <div className="card-premium rounded-3xl overflow-hidden h-full shadow-2xl hover:shadow-3xl relative z-10">
-                
-                {/* Enhanced Image Section */}
-                <div className="relative h-64 lg:h-72 overflow-hidden">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-3"
-                    onError={(e) => {
-                      e.target.src = '/api/placeholder/400/300';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-
-                  {/* Premium Badge */}
-                  <div className="absolute top-4 left-4">
-                    <span className={`bg-gradient-to-r ${category.badgeColor} text-white text-xs font-bold px-4 py-2 rounded-full border border-white/30 shadow-lg backdrop-blur-sm flex items-center space-x-1`}>
-                      {React.createElement(category.lucideIcon, { size: 12 })}
-                      <span>{category.badge}</span>
-                    </span>
-                  </div>
-
-                  {/* Stats Badge */}
-                  <div className="absolute top-4 right-4 glass text-white text-xs font-semibold px-3 py-2 rounded-full">
-                    ★ {category.stats.avgRating}
-                  </div>
-
-                  {/* Trending Indicator */}
-                  {category.stats.trending && (
-                    <div className="absolute bottom-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse flex items-center space-x-1">
-                      <TrendingUp size={12} />
-                      <span>Trending</span>
-                    </div>
-                  )}
-
-                  {/* Hover Overlay with Gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
-                    
-                    {/* Quick Actions */}
-                    <div className="flex items-center space-x-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-300">
-                      <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:scale-110 transition-transform duration-200">
-                        <Eye size={16} />
-                        <span className="text-sm font-semibold">Explore</span>
-                      </div>
-                      <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:scale-110 transition-transform duration-200">
-                        <ShoppingBag size={16} />
-                        <span className="text-sm font-semibold">Shop</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Floating Animation Elements */}
-                  {hoveredCategory === category.id && (
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      <div className="absolute top-8 right-8 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
-                      <div className="absolute bottom-8 left-8 w-1 h-1 bg-purple-400 rounded-full animate-ping delay-300"></div>
-                      <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white/80 rounded-full animate-ping delay-700"></div>
-                      <div className="absolute top-16 left-16 w-0.5 h-0.5 bg-pink-400 rounded-full animate-bounce delay-1000"></div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Enhanced Content Section */}
-                <div className="relative p-6 lg:p-8 space-y-4">
+          {categories.map((category, index) => {
+            const IconComponent = category.lucideIcon;
+            return (
+              <Link
+                key={category.id}
+                to={`/category/${category.slug}`}
+                data-category-id={category.id}
+                className={`group relative block overflow-hidden rounded-3xl transition-all duration-700 transform hover:scale-105 hover:-translate-y-4 hover:rotate-1 perspective-1000 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 ${
+                  visibleCategories.includes(index)
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-8'
+                }`}
+                style={{ transitionDelay: `${index * 100}ms` }}
+                onMouseEnter={() => handleCategoryHover(category.id)}
+                onMouseLeave={handleCategoryLeave}
+                role="gridcell"
+                aria-label={`${category.name} category with ${category.count} products`}
+              >
+                {/* Premium Glassmorphism Card */}
+                <div className="card-premium rounded-3xl overflow-hidden h-full shadow-2xl hover:shadow-3xl relative z-10">
                   
-                  {/* Icon & Title Row */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-16 h-16 bg-gradient-to-r ${category.color} rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-xl`}>
-                        <i className={`${category.icon} text-white text-2xl`}></i>
+                  {/* Enhanced Image Section */}
+                  <div className="relative h-64 lg:h-72 overflow-hidden">
+                    <img
+                      src={category.image}
+                      alt={`${category.name} category`}
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-3"
+                      onError={(e) => {
+                        e.target.src = '/api/placeholder/400/300';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+
+                    {/* Premium Badge */}
+                    <div className="absolute top-4 left-4">
+                      <span className={`bg-gradient-to-r ${category.badgeColor} text-white text-xs font-bold px-4 py-2 rounded-full border border-white/30 shadow-lg backdrop-blur-sm flex items-center space-x-1`}>
+                        <IconComponent size={12} aria-hidden="true" />
+                        <span>{category.badge}</span>
+                      </span>
+                    </div>
+
+                    {/* Stats Badge */}
+                    <div className="absolute top-4 right-4 glass text-white text-xs font-semibold px-3 py-2 rounded-full">
+                      <Star size={12} className="inline mr-1" aria-hidden="true" />
+                      {category.stats.avgRating}
+                    </div>
+
+                    {/* Trending Indicator */}
+                    {category.stats.trending && (
+                      <div className="absolute bottom-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse flex items-center space-x-1">
+                        <TrendingUp size={12} aria-hidden="true" />
+                        <span>Trending</span>
+                      </div>
+                    )}
+
+                    {/* Hover Overlay with Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                      
+                      {/* Quick Actions */}
+                      <div className="flex items-center space-x-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-300">
+                        <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:scale-110 transition-transform duration-200">
+                          <Eye size={16} aria-hidden="true" />
+                          <span className="text-sm font-semibold">Explore</span>
+                        </div>
+                        <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:scale-110 transition-transform duration-200">
+                          <ShoppingBag size={16} aria-hidden="true" />
+                          <span className="text-sm font-semibold">Shop</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Floating Animation Elements */}
+                    {hoveredCategory === category.id && (
+                      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+                        <div className="absolute top-8 right-8 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
+                        <div className="absolute bottom-8 left-8 w-1 h-1 bg-purple-400 rounded-full animate-ping delay-300"></div>
+                        <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white/80 rounded-full animate-ping delay-700"></div>
+                        <div className="absolute top-16 left-16 w-0.5 h-0.5 bg-pink-400 rounded-full animate-bounce delay-1000"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Enhanced Content Section */}
+                  <div className="relative p-6 lg:p-8 space-y-4">
+                    
+                    {/* Icon & Title Row */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-16 h-16 bg-gradient-to-r ${category.color} rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-xl`}>
+                          <IconComponent size={24} className="text-white" aria-hidden="true" />
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                            {category.name}
+                          </h3>
+                          <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
+                            {category.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Features */}
+                    <div className="flex flex-wrap gap-2">
+                      {category.features.map((feature, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full border border-white/30"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                          {category.count} products
+                        </span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">
+                          {category.stats.sales} sold
+                        </span>
                       </div>
                       
-                      <div>
-                        <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                          {category.name}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                          {category.description}
-                        </p>
+                      <div className="flex items-center text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-2 transition-transform duration-300">
+                        <span className="text-sm mr-2">Explore</span>
+                        <ArrowRight size={16} aria-hidden="true" />
                       </div>
                     </div>
                   </div>
 
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-2">
-                    {category.features.map((feature, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full border border-white/30"
-                      >
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Premium Border Effect */}
+                  <div className={`absolute inset-0 rounded-3xl border-2 transition-all duration-300 pointer-events-none ${
+                    hoveredCategory === category.id 
+                      ? `border-gradient bg-gradient-to-r ${category.color} p-0.5 opacity-80` 
+                      : 'border-transparent'
+                  }`}></div>
 
-                  {/* Stats Row */}
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                        {category.count} products
-                      </span>
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">
-                        {category.stats.sales} sold
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-2 transition-transform duration-300">
-                      <span className="text-sm mr-2">Explore</span>
-                      <ArrowRight size={16} />
-                    </div>
-                  </div>
+                  {/* Shine Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100"></div>
                 </div>
-
-                {/* Premium Border Effect */}
-                <div className={`absolute inset-0 rounded-3xl border-2 transition-all duration-300 pointer-events-none ${
-                  hoveredCategory === category.id 
-                    ? `border-gradient bg-gradient-to-r ${category.color} p-0.5 opacity-80` 
-                    : 'border-transparent'
-                }`}></div>
-
-                {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100"></div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Enhanced Bottom CTA */}
@@ -492,7 +505,7 @@ const CategoriesSection = ({
           <div className="card-premium p-8 lg:p-12 max-w-4xl mx-auto relative overflow-hidden">
             
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0 opacity-5" aria-hidden="true">
               <div className="absolute top-8 left-8 w-4 h-4 border-2 border-blue-500 rounded-full"></div>
               <div className="absolute bottom-12 right-12 w-6 h-6 border-2 border-purple-500 rotate-45"></div>
               <div className="absolute top-16 right-16 w-2 h-2 bg-pink-500 rounded-full"></div>
@@ -500,7 +513,7 @@ const CategoriesSection = ({
             
             <div className="relative z-10">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl animate-bounce-slow">
-                <Grid3X3 size={32} className="text-white" />
+                <Grid3X3 size={32} className="text-white" aria-hidden="true" />
               </div>
               
               <h3 className="text-3xl lg:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -513,31 +526,31 @@ const CategoriesSection = ({
               
               <Link
                 to="/products"
-                className="inline-flex items-center gap-4 btn-premium text-white px-10 py-5 rounded-2xl text-lg font-bold hover:shadow-2xl hover:shadow-blue-500/25 micro-bounce group"
+                className="inline-flex items-center gap-4 btn-premium text-white px-10 py-5 rounded-2xl text-lg font-bold hover:shadow-2xl hover:shadow-blue-500/25 micro-bounce group focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50"
               >
-                <Grid3X3 size={24} />
+                <Grid3X3 size={24} aria-hidden="true" />
                 Browse All Products
-                <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform duration-300" />
+                <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform duration-300" aria-hidden="true" />
               </Link>
               
               {/* Additional CTA Options */}
               <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
                 <Link
                   to="/deals"
-                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl hover:glass transition-all duration-200 flex items-center space-x-2 group"
+                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl hover:glass transition-all duration-200 flex items-center space-x-2 group focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <Zap size={16} />
+                  <Zap size={16} aria-hidden="true" />
                   <span>Hot Deals</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" aria-hidden="true" />
                 </Link>
                 
                 <Link
                   to="/new-arrivals"
-                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl hover:glass transition-all duration-200 flex items-center space-x-2 group"
+                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl hover:glass transition-all duration-200 flex items-center space-x-2 group focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <Star size={16} />
+                  <Star size={16} aria-hidden="true" />
                   <span>New Arrivals</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" aria-hidden="true" />
                 </Link>
               </div>
             </div>

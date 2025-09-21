@@ -53,34 +53,4 @@ const App = () => {
   );
 };
 
-const Home = () => {
-  const dispatch = useDispatch();
-  const { featuredProducts } = useSelector(state => state.products);
-
-  const handleAddToCart = (product) => {
-    dispatch(addToCart(product));
-  };
-
-  return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 transition-all duration-500">
-        {/* Enhanced Hero Section */}
-        <HeroSection />
-
-        {/* Enhanced Featured Products with Dynamic Carousel */}
-        <FeaturedProducts
-          products={featuredProducts}
-          onAddToCart={handleAddToCart}
-        />
-
-        {/* Categories Section */}
-        <CategoriesSection />
-
-        {/* Offers Section */}
-        <OffersSection />
-      </div>
-    </>
-  );
-};
-
 export default App;

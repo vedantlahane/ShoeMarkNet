@@ -5,6 +5,8 @@ import productReducer from './slices/productSlice';
 import orderReducer from './slices/orderSlice';
 import wishlistReducer from './slices/wishlistSlice';
 import contactReducer from './slices/contactSlice';
+import categoryReducer from './slices/categorySlice';
+import searchReducer from './slices/searchSlice';
 
 // Development middleware
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -17,6 +19,8 @@ const store = configureStore({
     contact: contactReducer,
     order: orderReducer,
     wishlist: wishlistReducer,
+    category: categoryReducer,
+    search: searchReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

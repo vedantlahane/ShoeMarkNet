@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { gsap } from 'gsap';
@@ -27,6 +27,7 @@ const HeroSection = () => {
   const particlesRef = useRef(null);
   const productRef = useRef(null);
   const statsRef = useRef([]);
+  const gsapContextRef = useRef(null);
 
   const [timeLeft, setTimeLeft] = useState({
     days: 7,
@@ -74,96 +75,101 @@ const HeroSection = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // GSAP Animations
+  // GSAP Animations with proper cleanup
   useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.5 });
-    
-    // Animate background gradient
-    gsap.to('.hero-bg', {
-      backgroundPosition: '200% center',
-      duration: 20,
-      ease: 'none',
-      repeat: -1
-    });
+    gsapContextRef.current = gsap.context(() => {
+      const tl = gsap.timeline({ delay: 0.5 });
+      
+      // Animate background gradient
+      gsap.to('.hero-bg', {
+        backgroundPosition: '200% center',
+        duration: 20,
+        ease: 'none',
+        repeat: -1
+      });
 
-    // Create floating particles animation
-    const createParticles = () => {
-      if (particlesRef.current) {
-        for (let i = 0; i < 50; i++) {
-          const particle = document.createElement('div');
-          particle.className = 'absolute rounded-full bg-white/20 pointer-events-none';
-          const size = Math.random() * 8 + 2;
-          particle.style.width = `${size}px`;
-          particle.style.height = `${size}px`;
-          particle.style.left = `${Math.random() * 100}%`;
-          particle.style.top = `${Math.random() * 100}%`;
-          
-          particlesRef.current.appendChild(particle);
-          
-          // Animate particles
-          gsap.to(particle, {
-            y: -100,
-            x: Math.random() * 100 - 50,
-            opacity: 0,
-            duration: Math.random() * 3 + 2,
-            repeat: -1,
-            delay: Math.random() * 2,
-            ease: 'none'
+      // Create floating particles animation
+      const createParticles = () => {
+        if (particlesRef.current) {
+          for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'absolute rounded-full bg-white/20 pointer-events-none';
+            const size = Math.random() * 8 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            
+            particlesRef.current.appendChild(particle);
+            
+            // Animate particles
+            gsap.to(particle, {
+              y: -100,
+              x: Math.random() * 100 - 50,
+              opacity: 0,
+              duration: Math.random() * 3 + 2,
+              repeat: -1,
+              delay: Math.random() * 2,
+              ease: 'none'
+            });
+          }
+        }
+      };
+
+      // Hero entrance animations
+      tl.fromTo(titleRef.current, 
+        { y: 100, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 1.2, ease: 'power4.out' }
+      )
+      .fromTo(subtitleRef.current,
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+        '-=0.8'
+      )
+      .fromTo(statsRef.current,
+        { y: 30, opacity: 0, scale: 0.9 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.6, stagger: 0.1, ease: 'back.out(1.7)' },
+        '-=0.4'
+      )
+      .fromTo(ctaRef.current,
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+        '-=0.3'
+      )
+      .fromTo(productRef.current,
+        { x: 100, opacity: 0, rotationY: -15 },
+        { x: 0, opacity: 1, rotationY: 0, duration: 1.2, ease: 'power4.out' },
+        '-=1'
+      );
+
+      createParticles();
+
+      // Scroll-triggered animations
+      ScrollTrigger.create({
+        trigger: heroRef.current,
+        start: 'top center',
+        end: 'bottom center',
+        scrub: 1,
+        onUpdate: (self) => {
+          gsap.to('.hero-content', {
+            y: -50 * self.progress,
+            opacity: 1 - self.progress * 0.5,
+            duration: 0.3
           });
         }
-      }
-    };
+      });
+    }, heroRef);
 
-    // Hero entrance animations
-    tl.fromTo(titleRef.current, 
-      { y: 100, opacity: 0 }, 
-      { y: 0, opacity: 1, duration: 1.2, ease: 'power4.out' }
-    )
-    .fromTo(subtitleRef.current,
-      { y: 50, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-      '-=0.8'
-    )
-    .fromTo(statsRef.current,
-      { y: 30, opacity: 0, scale: 0.9 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.6, stagger: 0.1, ease: 'back.out(1.7)' },
-      '-=0.4'
-    )
-    .fromTo(ctaRef.current,
-      { y: 40, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-      '-=0.3'
-    )
-    .fromTo(productRef.current,
-      { x: 100, opacity: 0, rotationY: -15 },
-      { x: 0, opacity: 1, rotationY: 0, duration: 1.2, ease: 'power4.out' },
-      '-=1'
-    );
-
-    createParticles();
     setIsLoaded(true);
 
-    // Scroll-triggered animations
-    ScrollTrigger.create({
-      trigger: heroRef.current,
-      start: 'top center',
-      end: 'bottom center',
-      scrub: 1,
-      onUpdate: (self) => {
-        gsap.to('.hero-content', {
-          y: -50 * self.progress,
-          opacity: 1 - self.progress * 0.5,
-          duration: 0.3
-        });
-      }
-    });
-
     return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      if (gsapContextRef.current) {
+        gsapContextRef.current.revert();
+      }
     };
   }, []);
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = useCallback((product) => {
     dispatch(addToCart({
       productId: product.id,
       quantity: 1,
@@ -178,9 +184,9 @@ const HeroSection = () => {
       repeat: 1,
       ease: 'power2.inOut'
     });
-  };
+  }, [dispatch]);
 
-  const scrollToSection = (sectionId) => {
+  const scrollToSection = useCallback((sectionId) => {
     const section = document.getElementById(sectionId);
     if (section) {
       const headerHeight = 80;
@@ -190,12 +196,13 @@ const HeroSection = () => {
         behavior: 'smooth'
       });
     }
-  };
+  }, []);
 
   return (
     <section 
       ref={heroRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
+      aria-label="Hero section"
     >
       {/* Animated Background */}
       <div className="hero-bg absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 bg-[length:200%_200%]">
@@ -203,10 +210,10 @@ const HeroSection = () => {
       </div>
 
       {/* Floating Particles */}
-      <div ref={particlesRef} className="absolute inset-0 pointer-events-none"></div>
+      <div ref={particlesRef} className="absolute inset-0 pointer-events-none" aria-hidden="true"></div>
 
       {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 glass opacity-10"></div>
+      <div className="absolute inset-0 glass opacity-10" aria-hidden="true"></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -216,8 +223,8 @@ const HeroSection = () => {
             
             {/* Premium Badge */}
             <div className="inline-flex items-center space-x-2 glass-card px-6 py-3 mb-8 animate-float">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <Sparkles size={16} className="text-yellow-400" />
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" aria-hidden="true"></div>
+              <Sparkles size={16} className="text-yellow-400" aria-hidden="true" />
               <span className="text-sm font-semibold text-white">AI-Powered Shopping Experience</span>
             </div>
 
@@ -249,7 +256,7 @@ const HeroSection = () => {
                     ref={el => statsRef.current[index] = el}
                     className="glass-card p-4 text-center hover-lift cursor-pointer"
                   >
-                    <IconComponent size={24} className={`${stat.color} mx-auto mb-2`} />
+                    <IconComponent size={24} className={`${stat.color} mx-auto mb-2`} aria-hidden="true" />
                     <div className="text-2xl lg:text-3xl font-bold text-white mb-1">
                       {stat.value}
                     </div>
@@ -265,18 +272,20 @@ const HeroSection = () => {
             <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 mb-8 justify-center lg:justify-start">
               <button
                 onClick={() => scrollToSection('featured')}
-                className="btn-premium inline-flex items-center justify-center space-x-3 hover-scale group"
+                className="btn-premium inline-flex items-center justify-center space-x-3 hover-scale group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Start shopping for featured products"
               >
-                <ShoppingBag size={20} />
+                <ShoppingBag size={20} aria-hidden="true" />
                 <span>Start Shopping</span>
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" aria-hidden="true" />
               </button>
               
               <button
                 onClick={() => scrollToSection('offers')}
-                className="btn-glass inline-flex items-center justify-center space-x-3 text-white hover:text-white hover-scale group"
+                className="btn-glass inline-flex items-center justify-center space-x-3 text-white hover:text-white hover-scale group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="View current deals and offers"
               >
-                <Gift size={20} />
+                <Gift size={20} aria-hidden="true" />
                 <span>View Deals</span>
               </button>
             </div>
@@ -284,8 +293,8 @@ const HeroSection = () => {
             {/* Countdown Timer */}
             <div className="glass-card max-w-md mx-auto lg:mx-0">
               <div className="flex items-center justify-center mb-4 space-x-2">
-                <Clock size={20} className="text-yellow-400" />
-                <Zap size={16} className="text-pink-400" />
+                <Clock size={20} className="text-yellow-400" aria-hidden="true" />
+                <Zap size={16} className="text-pink-400" aria-hidden="true" />
                 <span className="text-lg font-bold text-white">Flash Sale Ends In</span>
               </div>
               
@@ -333,7 +342,7 @@ const HeroSection = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end">
                   <div className="p-6 text-white w-full">
                     <p className="text-sm mb-2">Limited Time Offer</p>
-                    <button className="btn-premium w-full add-to-cart-btn">
+                    <button className="btn-premium w-full add-to-cart-btn focus:outline-none focus:ring-2 focus:ring-blue-500">
                       Quick Add to Cart
                     </button>
                   </div>
@@ -343,7 +352,7 @@ const HeroSection = () => {
               <div className="p-6">
                 <div className="flex items-center space-x-2 mb-3">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} className="text-yellow-400 fill-current" />
+                    <Star key={i} size={16} className="text-yellow-400 fill-current" aria-hidden="true" />
                   ))}
                   <span className="text-sm text-gray-300">(4.9)</span>
                 </div>
@@ -365,9 +374,10 @@ const HeroSection = () => {
                       price: 129.99,
                       image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop'
                     })}
-                    className="btn-premium text-sm px-6 py-2 add-to-cart-btn"
+                    className="btn-premium text-sm px-6 py-2 add-to-cart-btn focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Add Premium Athletic Collection to cart"
                   >
-                    <ShoppingBag size={16} className="mr-2" />
+                    <ShoppingBag size={16} className="mr-2" aria-hidden="true" />
                     Add to Cart
                   </button>
                 </div>
@@ -405,7 +415,8 @@ const HeroSection = () => {
                     </span>
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className="text-white hover:text-cyan-400 transition-colors duration-200"
+                      className="text-white hover:text-cyan-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-1"
+                      aria-label={`Add ${product.name} to cart`}
                     >
                       <ShoppingBag size={16} />
                     </button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { gsap } from 'gsap';
@@ -19,12 +19,74 @@ import {
   LogOut
 } from 'lucide-react';
 
+// Custom hooks for accessibility
+const useReducedMotion = () => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = (event) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  return prefersReducedMotion;
+};
+
+const useFocusTrap = (isOpen, containerRef) => {
+  useEffect(() => {
+    if (!isOpen || !containerRef.current) return;
+
+    const container = containerRef.current;
+    const focusableElements = container.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        // Close menu on escape
+        return;
+      }
+      
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable?.focus();
+          }
+        } else {
+          if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable?.focus();
+          }
+        }
+      }
+    };
+
+    container.addEventListener('keydown', handleKeyDown);
+    firstFocusable?.focus();
+
+    return () => {
+      container.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, containerRef]);
+};
+
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const headerRef = useRef(null);
-  const logoRef = useRef(null);
-  const cartBadgeRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const gsapContextRef = useRef(null);
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -36,10 +98,16 @@ const Header = () => {
   });
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  const prefersReducedMotion = useReducedMotion();
+  
   // Redux state
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { items: cartItems } = useSelector((state) => state.cart);
   const { items: wishlistItems } = useSelector((state) => state.wishlist);
+
+  // Focus trap hooks
+  useFocusTrap(isMenuOpen, mobileMenuRef);
+  useFocusTrap(isUserMenuOpen, userMenuRef);
 
   // Calculations
   const cartItemCount = cartItems?.length || 0;
@@ -50,22 +118,30 @@ const Header = () => {
     { to: '/', label: 'Home', icon: Home },
     { to: '/products', label: 'Products', icon: Grid3X3 },
     { to: '/categories', label: 'Categories', icon: Tag },
-    { to: '/sale', label: 'Sale', icon: Percent, badge: 'Hot' },
-    ...(process.env.NODE_ENV === 'development' ? [{ to: '/toast-demo', label: 'Toast Demo', icon: ChevronDown }] : [])
+    { to: '/sale', label: 'Sale', icon: Percent, badge: 'Hot' }
   ];
 
-  // Handle scroll effect
+  // Handle scroll effect with throttling
   useEffect(() => {
+    let timeoutId;
+    
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 20);
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      timeoutId = setTimeout(() => {
+        const scrollTop = window.scrollY;
+        setIsScrolled(scrollTop > 20);
+      }, 16); // ~60fps
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
-  // Handle theme toggle with GSAP animation
+  // Handle theme toggle
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -76,30 +152,52 @@ const Header = () => {
     }
   }, [isDarkMode]);
 
-  // GSAP Animations
-  useEffect(() => {
-    // Header entrance animation
-    gsap.fromTo(headerRef.current, 
-      { y: -100, opacity: 0 }, 
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out", delay: 0.2 }
-    );
+  // Optimized GSAP Animations with proper cleanup
+  useLayoutEffect(() => {
+    if (prefersReducedMotion) return;
 
-    // Logo animation
-    gsap.fromTo(logoRef.current,
-      { scale: 0.8, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 1, ease: "bounce.out", delay: 0.5 }
-    );
+    gsapContextRef.current = gsap.context(() => {
+      gsap.fromTo(headerRef.current, 
+        { y: -50, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+      );
+    }, headerRef);
+
+    return () => {
+      if (gsapContextRef.current) {
+        gsapContextRef.current.revert();
+      }
+    };
+  }, [prefersReducedMotion]);
+
+  // Close menus on escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false);
+        setIsUserMenuOpen(false);
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
-  // Cart badge animation
+  // Close menus when clicking outside
   useEffect(() => {
-    if (cartBadgeRef.current && cartItemCount > 0) {
-      gsap.fromTo(cartBadgeRef.current,
-        { scale: 0, rotate: -180 },
-        { scale: 1, rotate: 0, duration: 0.5, ease: "bounce.out" }
-      );
-    }
-  }, [cartItemCount]);
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -112,12 +210,6 @@ const Header = () => {
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
-    
-    // Theme toggle animation
-    gsap.to(document.body, {
-      duration: 0.3,
-      ease: "power2.inOut"
-    });
   };
 
   const toggleMobileMenu = () => {
@@ -128,236 +220,53 @@ const Header = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
   };
 
+  // Focus search input when opened
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
   return (
-    <header 
-      ref={headerRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled 
-          ? 'glass-header shadow-glass backdrop-blur-2xl' 
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div 
-                ref={logoRef}
-                className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow group-hover:shadow-neon transition-all duration-300 transform group-hover:scale-110"
-              >
-                <span className="text-white font-bold text-xl lg:text-2xl font-heading">S</span>
-              </div>
-              <span className="hidden sm:block text-xl lg:text-2xl font-bold gradient-text font-heading">
-                ShoeMarkNet
-              </span>
-            </Link>
-          </div>
+    <>
+      {/* Skip to main content link for accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-md"
+      >
+        Skip to main content
+      </a>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1">
-            {navigationLinks.map((link) => {
-              const IconComponent = link.icon;
-              const isActive = location.pathname === link.to;
-              
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`relative px-4 py-2 rounded-xl transition-all duration-300 flex items-center space-x-2 hover-scale group ${
-                    isActive 
-                      ? 'glass text-white' 
-                      : 'text-gray-700 dark:text-gray-300 hover:glass hover:text-white'
-                  }`}
-                >
-                  <IconComponent size={18} />
-                  <span className="font-medium">{link.label}</span>
-                  {link.badge && (
-                    <span className="absolute -top-1 -right-1 bg-gradient-secondary px-2 py-0.5 text-xs font-bold text-white rounded-full animate-pulse-glow">
-                      {link.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Search, Actions & User Menu */}
-          <div className="flex items-center space-x-3">
+      <header 
+        ref={headerRef}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg shadow-lg' 
+            : 'bg-transparent'
+        }`}
+        role="banner"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 lg:h-20">
             
-            {/* Search Toggle */}
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2 rounded-xl glass hover:glass transition-all duration-300 hover-scale group"
-              aria-label="Search"
-            >
-              <Search size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-white transition-colors duration-300" />
-            </button>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl glass hover:glass transition-all duration-300 hover-scale group relative overflow-hidden"
-              aria-label="Toggle theme"
-            >
-              <div className="relative z-10">
-                {isDarkMode ? (
-                  <Sun size={20} className="text-yellow-400 group-hover:text-white transition-colors duration-300" />
-                ) : (
-                  <Moon size={20} className="text-blue-600 group-hover:text-white transition-colors duration-300" />
-                )}
-              </div>
-            </button>
-
-            {/* Wishlist */}
-            <Link
-              to="/wishlist"
-              className="relative p-2 rounded-xl glass hover:glass transition-all duration-300 hover-scale group"
-              aria-label="Wishlist"
-            >
-              <Heart size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-red-400 transition-colors duration-300" />
-              {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-secondary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-bounce-in">
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
-
-            {/* Shopping Cart */}
-            <Link
-              to="/cart"
-              className="relative p-2 rounded-xl glass hover:glass transition-all duration-300 hover-scale group"
-              aria-label="Shopping cart"
-            >
-              <ShoppingBag size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-green-400 transition-colors duration-300" />
-              {cartItemCount > 0 && (
-                <span 
-                  ref={cartBadgeRef}
-                  className="absolute -top-1 -right-1 bg-gradient-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse-glow"
-                >
-                  {cartItemCount}
-                </span>
-              )}
-            </Link>
-
-            {/* User Menu */}
-            <div className="relative">
-              {isAuthenticated ? (
-                <button
-                  onClick={handleUserMenuToggle}
-                  className="flex items-center space-x-2 p-2 rounded-xl glass hover:glass transition-all duration-300 hover-scale group"
-                  aria-label="User menu"
-                >
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="Profile"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <User size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-blue-400 transition-colors duration-300" />
-                  )}
-                  <ChevronDown 
-                    size={14} 
-                    className={`text-gray-500 transition-transform duration-300 ${isUserMenuOpen ? 'rotate-180' : ''}`} 
-                  />
-                </button>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Link
-                    to="/login"
-                    className="btn-glass text-sm font-medium hover:text-white"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="btn-premium text-sm font-medium"
-                  >
-                    Sign Up
-                  </Link>
+            {/* Logo */}
+            <div className="flex items-center">
+              <Link 
+                to="/" 
+                className="flex items-center space-x-3 group focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1"
+                aria-label="ShoeMarkNet Home"
+              >
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105">
+                  <span className="text-white font-bold text-xl lg:text-2xl">S</span>
                 </div>
-              )}
-
-              {/* User Dropdown */}
-              {isAuthenticated && isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 glass rounded-2xl shadow-glass border border-glass-border overflow-hidden animate-slide-up">
-                  <div className="py-2">
-                    <Link
-                      to="/profile"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/10 transition-colors duration-200"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <User size={16} className="mr-3" />
-                      Profile
-                    </Link>
-                    <Link
-                      to="/orders"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/10 transition-colors duration-200"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <ShoppingBag size={16} className="mr-3" />
-                      Orders
-                    </Link>
-                    <hr className="my-2 border-glass-border" />
-                    <button
-                      onClick={() => {
-                        // Handle logout
-                        setIsUserMenuOpen(false);
-                      }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors duration-200"
-                    >
-                      <LogOut size={16} className="mr-3" />
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              )}
+                <span className="hidden sm:block text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  ShoeMarkNet
+                </span>
+              </Link>
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={toggleMobileMenu}
-              className="lg:hidden p-2 rounded-xl glass hover:glass transition-all duration-300 hover-scale"
-              aria-label="Toggle mobile menu"
-            >
-              {isMenuOpen ? (
-                <X size={20} className="text-gray-700 dark:text-gray-300" />
-              ) : (
-                <Menu size={20} className="text-gray-700 dark:text-gray-300" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        {isSearchOpen && (
-          <div className="py-4 animate-slide-up">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for shoes, brands, styles..."
-                className="w-full pl-12 pr-4 py-3 glass rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300"
-                autoFocus
-              />
-              <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-premium text-sm px-4 py-1.5"
-              >
-                Search
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Mobile Navigation Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden py-4 animate-slide-up">
-            <nav className="flex flex-col space-y-2">
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-1" role="navigation" aria-label="Main navigation">
               {navigationLinks.map((link) => {
                 const IconComponent = link.icon;
                 const isActive = location.pathname === link.to;
@@ -366,17 +275,20 @@ const Header = () => {
                   <Link
                     key={link.to}
                     to={link.to}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                    className={`relative px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group ${
                       isActive 
-                        ? 'glass text-white' 
-                        : 'text-gray-700 dark:text-gray-300 hover:glass hover:text-white'
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/10 hover:text-blue-600 dark:hover:text-blue-400'
                     }`}
+                    aria-current={isActive ? 'page' : undefined}
                   >
-                    <IconComponent size={20} />
+                    <IconComponent size={18} aria-hidden="true" />
                     <span className="font-medium">{link.label}</span>
                     {link.badge && (
-                      <span className="bg-gradient-secondary px-2 py-0.5 text-xs font-bold text-white rounded-full">
+                      <span 
+                        className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 text-xs font-bold text-white rounded-full"
+                        aria-label={`${link.label} has ${link.badge} items`}
+                      >
                         {link.badge}
                       </span>
                     )}
@@ -384,10 +296,248 @@ const Header = () => {
                 );
               })}
             </nav>
+
+            {/* Search, Actions & User Menu */}
+            <div className="flex items-center space-x-3">
+              
+              {/* Search Toggle */}
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                aria-label={isSearchOpen ? "Close search" : "Open search"}
+                aria-expanded={isSearchOpen}
+              >
+                <Search size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200" aria-hidden="true" />
+              </button>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDarkMode ? (
+                  <Sun size={20} className="text-yellow-500 group-hover:text-yellow-400 transition-colors duration-200" aria-hidden="true" />
+                ) : (
+                  <Moon size={20} className="text-blue-600 group-hover:text-blue-500 transition-colors duration-200" aria-hidden="true" />
+                )}
+              </button>
+
+              {/* Wishlist */}
+              <Link
+                to="/wishlist"
+                className="relative p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                aria-label={`Wishlist with ${wishlistCount} items`}
+              >
+                <Heart size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-red-500 transition-colors duration-200" aria-hidden="true" />
+                {wishlistCount > 0 && (
+                  <span 
+                    className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Shopping Cart */}
+              <Link
+                to="/cart"
+                className="relative p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                aria-label={`Shopping cart with ${cartItemCount} items`}
+              >
+                <ShoppingBag size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-green-500 transition-colors duration-200" aria-hidden="true" />
+                {cartItemCount > 0 && (
+                  <span 
+                    className="absolute -top-1 -right-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    {cartItemCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* User Menu */}
+              <div className="relative" ref={userMenuRef}>
+                {isAuthenticated ? (
+                  <button
+                    onClick={handleUserMenuToggle}
+                    className="flex items-center space-x-2 p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                    aria-label="User menu"
+                    aria-expanded={isUserMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200" aria-hidden="true" />
+                    )}
+                    <ChevronDown 
+                      size={14} 
+                      className={`text-gray-500 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Link
+                      to="/login"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+
+                {/* User Dropdown */}
+                {isAuthenticated && isUserMenuOpen && (
+                  <div 
+                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    role="menu"
+                    aria-labelledby="user-menu-button"
+                  >
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        role="menuitem"
+                      >
+                        <User size={16} className="mr-3" aria-hidden="true" />
+                        Profile
+                      </Link>
+                      <Link
+                        to="/orders"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        role="menuitem"
+                      >
+                        <ShoppingBag size={16} className="mr-3" aria-hidden="true" />
+                        Orders
+                      </Link>
+                      <hr className="my-2 border-gray-200 dark:border-gray-700" />
+                      <button
+                        onClick={() => {
+                          // Handle logout
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 focus:outline-none focus:bg-red-50 dark:focus:bg-red-900/20"
+                        role="menuitem"
+                      >
+                        <LogOut size={16} className="mr-3" aria-hidden="true" />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={toggleMobileMenu}
+                className="lg:hidden p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={isMenuOpen ? "Close mobile menu" : "Open mobile menu"}
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
+              >
+                {isMenuOpen ? (
+                  <X size={20} className="text-gray-700 dark:text-gray-300" aria-hidden="true" />
+                ) : (
+                  <Menu size={20} className="text-gray-700 dark:text-gray-300" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Search Bar */}
+          {isSearchOpen && (
+            <div className="py-4">
+              <form onSubmit={handleSearch} className="relative" role="search">
+                <label htmlFor="search-input" className="sr-only">Search for shoes, brands, styles</label>
+                <input
+                  ref={searchInputRef}
+                  id="search-input"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for shoes, brands, styles..."
+                  className="w-full pl-12 pr-20 py-3 bg-white/50 dark:bg-gray-800/50 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 backdrop-blur-lg border border-gray-200 dark:border-gray-700"
+                />
+                <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" aria-hidden="true" />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm px-4 py-1.5 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Mobile Navigation Menu */}
+          {isMenuOpen && (
+            <div 
+              ref={mobileMenuRef}
+              className="lg:hidden py-4"
+              id="mobile-menu"
+              role="navigation"
+              aria-label="Mobile navigation"
+            >
+              <nav className="flex flex-col space-y-2">
+                {navigationLinks.map((link) => {
+                  const IconComponent = link.icon;
+                  const isActive = location.pathname === link.to;
+                  
+                  return (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        isActive 
+                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 hover:text-blue-600 dark:hover:text-blue-400'
+                      }`}
+                      aria-current={isActive ? 'page' : undefined}
+                    >
+                      <IconComponent size={20} aria-hidden="true" />
+                      <span className="font-medium">{link.label}</span>
+                      {link.badge && (
+                        <span 
+                          className="bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 text-xs font-bold text-white rounded-full"
+                          aria-label={`${link.label} has ${link.badge} items`}
+                        >
+                          {link.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile menu backdrop */}
+        {isMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm lg:hidden -z-10"
+            onClick={() => setIsMenuOpen(false)}
+            aria-hidden="true"
+          />
         )}
-      </div>
-    </header>
+      </header>
+    </>
   );
 };
 

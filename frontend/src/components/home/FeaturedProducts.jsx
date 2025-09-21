@@ -1,5 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { 
+  Star, 
+  Truck, 
+  ChevronLeft, 
+  ChevronRight, 
+  Play, 
+  Pause, 
+  ShoppingCart, 
+  Percent 
+} from 'lucide-react';
 
 const FeaturedProducts = ({ products, onAddToCart }) => {
   const { featuredLoading: loading } = useSelector(state => state.product);
@@ -48,16 +58,16 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   }, [isPlaying, currentIndex, maxIndex, displayProducts.length, slidesToShow]);
 
   // Touch handlers
-  const handleTouchStart = (e) => {
+  const handleTouchStart = useCallback((e) => {
     setTouchStartX(e.touches[0].clientX);
     setIsPlaying(false);
-  };
+  }, []);
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = useCallback((e) => {
     setTouchEndX(e.touches[0].clientX);
-  };
+  }, []);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     if (!touchStartX || !touchEndX) return;
 
     const distance = touchStartX - touchEndX;
@@ -73,32 +83,32 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
     setTouchStartX(0);
     setTouchEndX(0);
     setTimeout(() => setIsPlaying(true), 1000);
-  };
+  }, [touchStartX, touchEndX, currentIndex, maxIndex]);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setCurrentIndex(prev => prev >= maxIndex ? 0 : prev + 1);
     setTimeout(() => setIsTransitioning(false), 500);
-  };
+  }, [isTransitioning, maxIndex]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setCurrentIndex(prev => prev <= 0 ? maxIndex : prev - 1);
     setTimeout(() => setIsTransitioning(false), 500);
-  };
+  }, [isTransitioning, maxIndex]);
 
-  const goToSlide = (index) => {
+  const goToSlide = useCallback((index) => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setCurrentIndex(index);
     setTimeout(() => setIsTransitioning(false), 500);
-  };
+  }, [isTransitioning]);
 
-  const toggleAutoplay = () => {
+  const toggleAutoplay = useCallback(() => {
     setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying]);
 
   if (loading) {
     return (
@@ -106,15 +116,15 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 reveal">
             <div className="inline-flex items-center space-x-2 glass bg-blue-100/50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
-              <i className="fas fa-star animate-pulse"></i>
+              <Star size={16} className="animate-pulse" aria-hidden="true" />
               <span className="text-sm font-medium">Featured Collection</span>
             </div>
             <h2 className="text-4xl lg:text-6xl font-heading font-bold mb-6 text-gray-900 dark:text-white">
               <span className="text-gradient">Trending</span> Now
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              <i className="fas fa-truck mr-2"></i>Discover premium products with
-              exclusive discounts and lightning-fast delivery
+              <Truck size={20} className="inline mr-2" aria-hidden="true" />
+              Discover premium products with exclusive discounts and lightning-fast delivery
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -132,12 +142,16 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   }
 
   return (
-    <section id="featured" className="py-20 bg-white dark:bg-gray-900 relative overflow-hidden">
+    <section 
+      id="featured" 
+      className="py-20 bg-white dark:bg-gray-900 relative overflow-hidden"
+      aria-label="Featured products"
+    >
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16 reveal">
           <div className="inline-flex items-center space-x-2 glass bg-blue-100/50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
-            <i className="fas fa-star animate-pulse"></i>
+            <Star size={16} className="animate-pulse" aria-hidden="true" />
             <span className="text-sm font-medium">Featured Collection</span>
           </div>
 
@@ -145,8 +159,8 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
             <span className="text-gradient">Trending</span> Now
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            <i className="fas fa-truck mr-2"></i>Discover premium products with
-            exclusive discounts and lightning-fast delivery
+            <Truck size={20} className="inline mr-2" aria-hidden="true" />
+            Discover premium products with exclusive discounts and lightning-fast delivery
           </p>
         </div>
 
@@ -156,39 +170,46 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
               <button
-                id="carousel-prev"
                 onClick={prevSlide}
-                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce disabled:opacity-50"
+                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={currentIndex === 0}
+                aria-label="Previous products"
               >
-                <i className="fas fa-chevron-left"></i>
+                <ChevronLeft size={20} aria-hidden="true" />
               </button>
               <button
-                id="carousel-next"
                 onClick={nextSlide}
-                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce disabled:opacity-50"
+                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={currentIndex >= maxIndex}
+                aria-label="Next products"
               >
-                <i className="fas fa-chevron-right"></i>
+                <ChevronRight size={20} aria-hidden="true" />
               </button>
             </div>
 
             {/* Carousel Controls */}
             <div className="flex items-center space-x-4">
               <button
-                id="carousel-play-pause"
                 onClick={toggleAutoplay}
-                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce"
+                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={isPlaying ? "Pause carousel" : "Play carousel"}
               >
-                <i className={`fas fa-${isPlaying ? 'pause' : 'play'}`} id="play-pause-icon"></i>
+                {isPlaying ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
               </button>
-              <div className="flex items-center space-x-2" id="carousel-dots">
+              <div className="flex items-center space-x-2" role="tablist" aria-label="Carousel navigation">
                 {Array.from({ length: Math.ceil(displayProducts.length / slidesToShow) }, (_, i) => (
-                  <div
+                  <button
                     key={i}
-                    className={`carousel-dot ${i === currentIndex ? 'active' : ''}`}
+                    className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      i === currentIndex 
+                        ? 'bg-blue-600 w-8' 
+                        : 'bg-gray-300 dark:bg-gray-600 hover:bg-blue-400'
+                    }`}
                     onClick={() => goToSlide(i)}
-                  ></div>
+                    role="tab"
+                    aria-selected={i === currentIndex}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
                 ))}
               </div>
             </div>
@@ -198,7 +219,6 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
           <div className="carousel-wrapper overflow-hidden">
             <div
               ref={carouselRef}
-              id="products-carousel"
               className="carousel-container flex transition-transform duration-500 ease-in-out"
               style={{
                 transform: `translate3d(-${currentIndex * (100 / slidesToShow)}%, 0, 0)`
@@ -206,11 +226,13 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
+              role="tabpanel"
+              aria-live="polite"
             >
               {displayProducts.map((product, index) => (
                 <div
                   key={product._id || product.id}
-                  className={`carousel-slide flex-shrink-0 px-4`}
+                  className="carousel-slide flex-shrink-0 px-4"
                   style={{
                     width: `${100 / slidesToShow}%`
                   }}
@@ -223,10 +245,11 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                         className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        <i className="fas fa-percentage mr-1"></i>{product.discount || '20%'}
+                        <Percent size={12} className="inline mr-1" aria-hidden="true" />
+                        {product.discount || '20%'}
                       </div>
                       <div className="absolute top-4 left-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        <i className="fas fa-star"></i>
+                        <Star size={12} aria-hidden="true" />
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
@@ -235,9 +258,20 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                         {product.name}
                       </h3>
                       <div className="flex items-center mb-3">
-                        <div className="flex text-yellow-400 text-sm">
+                        <div className="flex text-yellow-400 text-sm" aria-label={`Rating: ${product.rating || 4.8} out of 5 stars`}>
                           {[...Array(5)].map((_, i) => (
-                            <i key={i} className={`fas fa-star ${i < Math.floor(product.rating || 4.5) ? '' : i < (product.rating || 4.5) ? 'fa-star-half-alt' : 'far fa-star'}`}></i>
+                            <Star 
+                              key={i} 
+                              size={16} 
+                              className={`${
+                                i < Math.floor(product.rating || 4.5) 
+                                  ? 'fill-current' 
+                                  : i < (product.rating || 4.5) 
+                                  ? 'fill-current opacity-50' 
+                                  : ''
+                              }`}
+                              aria-hidden="true"
+                            />
                           ))}
                         </div>
                         <span className="text-gray-600 dark:text-gray-400 ml-2 text-sm">
@@ -255,10 +289,11 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                         )}
                       </div>
                       <button
-                        className="add-to-cart w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 micro-bounce"
+                        className="add-to-cart w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 micro-bounce focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         onClick={() => onAddToCart(product)}
+                        aria-label={`Add ${product.name} to cart`}
                       >
-                        <i className="fas fa-cart-plus mr-2"></i>
+                        <ShoppingCart size={16} className="inline mr-2" aria-hidden="true" />
                         Add to Cart
                       </button>
                     </div>
@@ -271,12 +306,16 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
           {/* Progress Bar */}
           <div className="mt-8 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
             <div
-              id="carousel-progress"
               className="h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full transition-all duration-300"
               style={{
                 width: `${((currentIndex + 1) / (maxIndex + 1)) * 100}%`
               }}
-            ></div>
+              role="progressbar"
+              aria-valuenow={currentIndex + 1}
+              aria-valuemin={1}
+              aria-valuemax={maxIndex + 1}
+              aria-label="Carousel progress"
+            />
           </div>
         </div>
       </div>
