@@ -33,6 +33,39 @@
       "price": "150",
       "color": "rgb(153, 155, 160)",
       "shadow": "shadow-lg shadow-black-700"
+    },
+    {
+      "id": "0M0x4",
+      "title": "New Balance 550 Vintage",
+      "text": "MEN Lifestyle Shoes",
+      "rating": "4.8",
+      "btn": "Buy Now",
+      "img": "/assets/product11.png",
+      "price": "130",
+      "color": "rgb(134, 239, 172)",
+      "shadow": "shadow-lg shadow-emerald-400/30"
+    },
+    {
+      "id": "0M0x5",
+      "title": "Nike LeBron XX South Beach",
+      "text": "MEN Basketball Shoes",
+      "rating": "4.9",
+      "btn": "Buy Now",
+      "img": "/assets/product12.png",
+      "price": "210",
+      "color": "rgb(125, 211, 252)",
+      "shadow": "shadow-lg shadow-cyan-400/40"
+    },
+    {
+      "id": "0M0x6",
+      "title": "Adidas Harden Vol. 7",
+      "text": "MEN Performance Shoes",
+      "rating": "4.7",
+      "btn": "Buy Now",
+      "img": "/assets/product8.png",
+      "price": "160",
+      "color": "rgb(253, 224, 71)",
+      "shadow": "shadow-lg shadow-yellow-400/40"
     }
   ]
 }

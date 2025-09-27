@@ -19,6 +19,40 @@ import {
   LogOut
 } from 'lucide-react';
 
+const routePrefetchers = {
+  '/': () => import('../../pages/Home'),
+  '/products': () => import('../../pages/Products'),
+  '/categories': () => import('../../pages/Category'),
+  '/sale': () => import('../../pages/Products'),
+  '/cart': () => import('../../pages/Cart'),
+  '/wishlist': () => import('../../pages/Wishlist'),
+  '/search': () => import('../../pages/Search'),
+  '/profile': () => import('../../pages/Profile'),
+  '/orders': () => import('../../pages/Orders'),
+  '/login': () => import('../../pages/Login'),
+  '/register': () => import('../../pages/Register'),
+  '/logout': () => import('../../pages/Logout')
+};
+
+const prefetchedRoutes = new Set();
+
+const normalizePath = (path = '/') => path.split('?')[0];
+
+const prefetchRoute = (path) => {
+  if (typeof window === 'undefined') return;
+
+  const normalized = normalizePath(path);
+  if (!normalized || prefetchedRoutes.has(normalized)) return;
+
+  const loader = routePrefetchers[normalized];
+  if (!loader) return;
+
+  prefetchedRoutes.add(normalized);
+  loader().catch(() => {
+    prefetchedRoutes.delete(normalized);
+  });
+};
+
 // Custom hooks for accessibility
 const useReducedMotion = () => {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -140,6 +174,19 @@ const Header = () => {
     { to: '/sale', label: 'Sale', icon: Percent, badge: 'Hot' }
   ];
 
+  const iconButtonClasses =
+    'relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-transparent bg-white/70 text-gray-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 focus-visible:outline focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-gray-800/70 dark:text-gray-300 dark:hover:text-blue-300 dark:border-gray-700/70';
+
+  const counterBadgeClasses =
+    'absolute -top-1.5 -right-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-1 text-[0.65rem] font-semibold text-white shadow-sm';
+
+  const getNavLinkClasses = (isActive) =>
+    `relative inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-blue-500 ${
+      isActive
+        ? 'bg-blue-50 text-blue-600 shadow-sm dark:bg-blue-500/15 dark:text-blue-200'
+        : 'text-gray-600 hover:bg-white hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-blue-200'
+    }`;
+
   // Handle scroll effect with throttling
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -234,9 +281,16 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const createPrefetchProps = (path) => ({
+    onMouseEnter: () => prefetchRoute(path),
+    onFocus: () => prefetchRoute(path),
+    onTouchStart: () => prefetchRoute(path)
+  });
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      prefetchRoute('/search');
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
       setSearchQuery('');
@@ -274,10 +328,10 @@ const Header = () => {
 
       <header 
         ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg shadow-lg' 
-            : 'bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300 ${
+          isScrolled
+            ? 'border-b border-gray-200/70 bg-white/90 shadow-lg dark:border-gray-800 dark:bg-gray-950/85'
+            : 'border-b border-transparent bg-white/75 dark:bg-gray-950/60'
         }`}
         role="banner"
       >
@@ -288,6 +342,7 @@ const Header = () => {
             <div className="flex items-center">
               <Link 
                 to="/" 
+                {...createPrefetchProps('/')}
                 className="flex items-center space-x-3 group focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1"
                 aria-label="ShoeMarkNet Home"
               >
@@ -310,6 +365,7 @@ const Header = () => {
                   <Link
                     key={link.to}
                     to={link.to}
+                    {...createPrefetchProps(link.to)}
                     className={`relative px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group ${
                       isActive 
                         ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
@@ -361,6 +417,7 @@ const Header = () => {
               {/* Wishlist */}
               <Link
                 to="/wishlist"
+                {...createPrefetchProps('/wishlist')}
                 className="relative p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
                 aria-label={`Wishlist with ${wishlistCount} items`}
               >
@@ -378,6 +435,7 @@ const Header = () => {
               {/* Shopping Cart */}
               <Link
                 to="/cart"
+                {...createPrefetchProps('/cart')}
                 className="relative p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
                 aria-label={`Shopping cart with ${cartItemCount} items`}
               >
@@ -421,12 +479,14 @@ const Header = () => {
                   <div className="flex items-center space-x-2">
                     <Link
                       to="/login"
+                      {...createPrefetchProps('/login')}
                       className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       Sign In
                     </Link>
                     <Link
                       to="/register"
+                      {...createPrefetchProps('/register')}
                       className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       Sign Up
@@ -444,6 +504,7 @@ const Header = () => {
                     <div className="py-2">
                       <Link
                         to="/profile"
+                        {...createPrefetchProps('/profile')}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
                         onClick={() => setIsUserMenuOpen(false)}
                         role="menuitem"
@@ -453,6 +514,7 @@ const Header = () => {
                       </Link>
                       <Link
                         to="/orders"
+                        {...createPrefetchProps('/orders')}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
                         onClick={() => setIsUserMenuOpen(false)}
                         role="menuitem"
@@ -465,6 +527,7 @@ const Header = () => {
                         onClick={() => {
                           setIsUserMenuOpen(false);
                           setIsMenuOpen(false);
+                          prefetchRoute('/logout');
                           navigate('/logout');
                         }}
                         className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 focus:outline-none focus:bg-red-50 dark:focus:bg-red-900/20"
@@ -538,6 +601,7 @@ const Header = () => {
                     <Link
                       key={link.to}
                       to={link.to}
+                      {...createPrefetchProps(link.to)}
                       onClick={() => setIsMenuOpen(false)}
                       className={`relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         isActive 

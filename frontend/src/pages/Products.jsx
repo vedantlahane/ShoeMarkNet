@@ -56,6 +56,7 @@ const Products = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isSalePage = location.pathname === '/sale';
   
   // Redux state
   const { 
@@ -78,7 +79,7 @@ const Products = () => {
   const [activeFilters, setActiveFilters] = useState(new Set());
   
   // Initialize filters from URL params
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState(() => ({
     category: searchParams.get('category') || '',
     brand: searchParams.get('brand') || '',
     search: searchParams.get('search') || '',
@@ -88,11 +89,11 @@ const Products = () => {
     },
     rating: parseInt(searchParams.get('rating') || '0', 10),
     inStock: searchParams.get('inStock') === 'true',
-    onSale: searchParams.get('onSale') === 'true',
+    onSale: searchParams.get('onSale') === 'true' || isSalePage,
     sort: searchParams.get('sort') || 'newest',
     page: currentPage,
     limit: itemsPerPage
-  });
+  }));
 
   // Debounced search and filter functions
   const debouncedSearch = useCallback(
@@ -165,11 +166,17 @@ const Products = () => {
     
     // Track page view
     trackEvent('page_view', {
-      page_title: 'Products',
+      page_title: isSalePage ? 'Sale' : 'Products',
       page_location: window.location.href,
       content_category: 'product_listing'
     });
-  }, [dispatch]);
+  }, [dispatch, isSalePage]);
+
+  useEffect(() => {
+    if (isSalePage && !filters.onSale) {
+      setFilters(prev => ({ ...prev, onSale: true }));
+    }
+  }, [isSalePage, filters.onSale]);
 
   // Handle URL and data synchronization
   useEffect(() => {
@@ -182,7 +189,7 @@ const Products = () => {
     if (filters.priceRange?.max < 1000) params.set('maxPrice', filters.priceRange.max.toString());
     if (filters.rating > 0) params.set('rating', filters.rating.toString());
     if (filters.inStock) params.set('inStock', 'true');
-    if (filters.onSale) params.set('onSale', 'true');
+  if (filters.onSale) params.set('onSale', 'true');
     if (filters.sort !== 'newest') params.set('sort', filters.sort);
     if (currentPage > 1) params.set('page', currentPage.toString());
     if (itemsPerPage !== 12) params.set('limit', itemsPerPage.toString());
@@ -197,6 +204,7 @@ const Products = () => {
     // Fetch products with current filters
     const filterParams = {
       ...filters,
+      onSale: isSalePage ? true : filters.onSale,
       page: currentPage,
       limit: itemsPerPage
     };
@@ -206,7 +214,7 @@ const Products = () => {
     } else {
       debouncedFetchProducts(filterParams);
     }
-  }, [filters, currentPage, itemsPerPage, debouncedSearch, debouncedFetchProducts, setSearchParams, searchParams]);
+  }, [filters, currentPage, itemsPerPage, debouncedSearch, debouncedFetchProducts, setSearchParams, searchParams, isSalePage]);
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters) => {
@@ -291,7 +299,7 @@ const Products = () => {
       priceRange: { min: 0, max: 1000 },
       rating: 0,
       inStock: false,
-      onSale: false,
+      onSale: isSalePage,
       sort: 'newest'
     };
     
@@ -345,8 +353,11 @@ const Products = () => {
     if (filters.category) {
       return `${filters.category} Shoes | ShoeMarkNet`;
     }
+    if (isSalePage || filters.onSale) {
+      return 'Sale Shoes & Exclusive Deals | ShoeMarkNet';
+    }
     return 'Premium Shoes Collection | ShoeMarkNet';
-  }, [filters.search, filters.category]);
+  }, [filters.search, filters.category, filters.onSale, isSalePage]);
 
   const seoDescription = useMemo(() => {
     if (filters.search) {
@@ -355,8 +366,22 @@ const Products = () => {
     if (filters.category) {
       return `Shop premium ${filters.category.toLowerCase()} shoes. Discover the latest styles with fast shipping and competitive prices.`;
     }
+    if (isSalePage || filters.onSale) {
+      return 'Shop limited-time footwear deals with deep discounts on top brands. Grab exclusive offers before they are gone!';
+    }
     return 'Browse our premium shoe collection. Find the perfect footwear with advanced filters, competitive prices, and fast shipping.';
-  }, [filters.search, filters.category]);
+  }, [filters.search, filters.category, filters.onSale, isSalePage]);
+
+  const canonicalPath = useMemo(() => (isSalePage ? '/sale' : '/products'), [isSalePage]);
+  const canonicalSearch = useMemo(() => {
+    if (!location.search) return '';
+    const params = new URLSearchParams(location.search);
+    if (isSalePage) {
+      params.delete('onSale');
+    }
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : '';
+  }, [location.search, isSalePage]);
 
   return (
     <>
@@ -365,19 +390,19 @@ const Products = () => {
         title={seoTitle}
         description={seoDescription}
         robots="index, follow"
-        canonical={`https://shoemarknet.com/products${location.search}`}
+        canonical={`https://shoemarknet.com${canonicalPath}${canonicalSearch}`}
         openGraph={{
           title: seoTitle,
           description: seoDescription,
           type: 'website',
-          url: `https://shoemarknet.com/products${location.search}`,
+          url: `https://shoemarknet.com${canonicalPath}${canonicalSearch}`,
         }}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
           name: seoTitle,
           description: seoDescription,
-          url: `https://shoemarknet.com/products${location.search}`,
+          url: `https://shoemarknet.com${canonicalPath}${canonicalSearch}`,
           mainEntity: {
             '@type': 'ItemList',
             numberOfItems: totalCount,

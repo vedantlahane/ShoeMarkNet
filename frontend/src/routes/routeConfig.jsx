@@ -50,6 +50,12 @@ export const routeConfig = {
       description: 'Browse product categories'
     },
     {
+      path: '/sale',
+      component: Products,
+      title: 'Sale',
+      description: 'Shop discounted products and limited-time offers'
+    },
+    {
       path: '/categories/:categoryId',
       component: Category,
       title: 'Category',

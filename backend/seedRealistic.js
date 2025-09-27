@@ -41,7 +41,11 @@ const categoryMapping = {
   'Nike Air Jordan 1 Low \'UNC\'': 'womens',
   'Adidas Samba OG \'White Green\'': 'lifestyle-sneakers',
   'Nike Air Zoom Pegasus 39': 'running-shoes',
-  'Travis Scott x Air Jordan 1 Low \'Reverse Mocha\'': 'limited-editions'
+  'Travis Scott x Air Jordan 1 Low \'Reverse Mocha\'': 'limited-editions',
+  'Nike LeBron XX \'South Beach\'': 'basketball-shoes',
+  'Adidas Harden Vol. 7 \'Pulse Aqua\'': 'basketball-shoes',
+  'ASICS Gel-Kayano 30 \'Glacier Grey\'': 'running-shoes',
+  'Hoka Speedgoat 5 \'Fiesta\'': 'running-shoes'
 };
 
 const seedDatabase = async () => {

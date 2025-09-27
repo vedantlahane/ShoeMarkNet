@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -17,8 +17,96 @@ import {
   Briefcase,
   Dumbbell
 } from 'lucide-react';
+import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const DEFAULT_CATEGORIES = [
+  {
+    id: 1,
+    name: 'Running Shoes',
+    slug: 'running-shoes',
+    count: 156,
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop',
+    color: 'from-orange-400 to-red-500',
+    lucideIcon: Activity,
+    description: 'Performance & Comfort',
+    badge: 'Trending',
+    badgeColor: 'from-orange-500 to-red-500',
+    features: ['Lightweight', 'Breathable', 'Durable'],
+    stats: { avgRating: 4.8, sales: 1234, trending: true }
+  },
+  {
+    id: 2,
+    name: 'Basketball',
+    slug: 'basketball',
+    count: 134,
+    image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?q=80&w=400&auto=format&fit=crop',
+    color: 'from-purple-400 to-pink-500',
+    lucideIcon: Zap,
+    description: 'Court Dominance',
+    badge: 'Pro Series',
+    badgeColor: 'from-purple-500 to-pink-500',
+    features: ['High Tops', 'Ankle Support', 'Grip'],
+    stats: { avgRating: 4.6, sales: 987, trending: false }
+  },
+  {
+    id: 3,
+    name: 'Casual',
+    slug: 'casual',
+    count: 198,
+    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop',
+    color: 'from-green-400 to-blue-500',
+    lucideIcon: Star,
+    description: 'Style & Comfort',
+    badge: 'Popular',
+    badgeColor: 'from-green-500 to-blue-500',
+    features: ['Versatile', 'All-Day Comfort', 'Stylish'],
+    stats: { avgRating: 4.7, sales: 1567, trending: true }
+  },
+  {
+    id: 4,
+    name: 'Formal',
+    slug: 'formal',
+    count: 87,
+    image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=400&auto=format&fit=crop',
+    color: 'from-gray-600 to-gray-800',
+    lucideIcon: Briefcase,
+    description: 'Elegance & Class',
+    badge: 'Premium',
+    badgeColor: 'from-gray-600 to-black',
+    features: ['Leather', 'Handcrafted', 'Timeless'],
+    stats: { avgRating: 4.9, sales: 456, trending: false }
+  },
+  {
+    id: 5,
+    name: 'Athletic',
+    slug: 'athletic',
+    count: 112,
+    image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=400&auto=format&fit=crop',
+    color: 'from-cyan-400 to-teal-500',
+    lucideIcon: Dumbbell,
+    description: 'Performance First',
+    badge: 'New',
+    badgeColor: 'from-cyan-500 to-teal-500',
+    features: ['Multi-Sport', 'Performance', 'Innovation'],
+    stats: { avgRating: 4.5, sales: 789, trending: true }
+  },
+  {
+    id: 6,
+    name: 'Lifestyle',
+    slug: 'lifestyle',
+    count: 203,
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=400&auto=format&fit=crop',
+    color: 'from-pink-400 to-rose-500',
+    lucideIcon: Heart,
+    description: 'Fashion Forward',
+    badge: 'Exclusive',
+    badgeColor: 'from-pink-500 to-rose-500',
+    features: ['Designer', 'Limited Edition', 'Premium'],
+    stats: { avgRating: 4.8, sales: 1123, trending: true }
+  }
+];
 
 const CategoriesSection = ({ 
   categories: propCategories,
@@ -30,7 +118,9 @@ const CategoriesSection = ({
 }) => {
   const [hoveredCategory, setHoveredCategory] = useState(null);
   const [visibleCategories, setVisibleCategories] = useState([]);
+  const [isGridVisible, setIsGridVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
   
   // Refs
   const sectionRef = useRef(null);
@@ -39,98 +129,16 @@ const CategoriesSection = ({
   const ctaRef = useRef(null);
   const gsapContextRef = useRef(null);
 
-  const defaultCategories = [
-    {
-      id: 1,
-      name: 'Running Shoes',
-      slug: 'running-shoes',
-      count: 156,
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop',
-      color: 'from-orange-400 to-red-500',
-      lucideIcon: Activity,
-      description: 'Performance & Comfort',
-      badge: 'Trending',
-      badgeColor: 'from-orange-500 to-red-500',
-      features: ['Lightweight', 'Breathable', 'Durable'],
-      stats: { avgRating: 4.8, sales: 1234, trending: true }
-    },
-    {
-      id: 2,
-      name: 'Basketball',
-      slug: 'basketball',
-      count: 134,
-      image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?q=80&w=400&auto=format&fit=crop',
-      color: 'from-purple-400 to-pink-500',
-      lucideIcon: Zap,
-      description: 'Court Dominance',
-      badge: 'Pro Series',
-      badgeColor: 'from-purple-500 to-pink-500',
-      features: ['High Tops', 'Ankle Support', 'Grip'],
-      stats: { avgRating: 4.6, sales: 987, trending: false }
-    },
-    {
-      id: 3,
-      name: 'Casual',
-      slug: 'casual',
-      count: 198,
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop',
-      color: 'from-green-400 to-blue-500',
-      lucideIcon: Star,
-      description: 'Style & Comfort',
-      badge: 'Popular',
-      badgeColor: 'from-green-500 to-blue-500',
-      features: ['Versatile', 'All-Day Comfort', 'Stylish'],
-      stats: { avgRating: 4.7, sales: 1567, trending: true }
-    },
-    {
-      id: 4,
-      name: 'Formal',
-      slug: 'formal',
-      count: 87,
-      image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=400&auto=format&fit=crop',
-      color: 'from-gray-600 to-gray-800',
-      lucideIcon: Briefcase,
-      description: 'Elegance & Class',
-      badge: 'Premium',
-      badgeColor: 'from-gray-600 to-black',
-      features: ['Leather', 'Handcrafted', 'Timeless'],
-      stats: { avgRating: 4.9, sales: 456, trending: false }
-    },
-    {
-      id: 5,
-      name: 'Athletic',
-      slug: 'athletic',
-      count: 112,
-      image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=400&auto=format&fit=crop',
-      color: 'from-cyan-400 to-teal-500',
-      lucideIcon: Dumbbell,
-      description: 'Performance First',
-      badge: 'New',
-      badgeColor: 'from-cyan-500 to-teal-500',
-      features: ['Multi-Sport', 'Performance', 'Innovation'],
-      stats: { avgRating: 4.5, sales: 789, trending: true }
-    },
-    {
-      id: 6,
-      name: 'Lifestyle',
-      slug: 'lifestyle',
-      count: 203,
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=400&auto=format&fit=crop',
-      color: 'from-pink-400 to-rose-500',
-      lucideIcon: Heart,
-      description: 'Fashion Forward',
-      badge: 'Exclusive',
-      badgeColor: 'from-pink-500 to-rose-500',
-      features: ['Designer', 'Limited Edition', 'Premium'],
-      stats: { avgRating: 4.8, sales: 1123, trending: true }
+  const categories = useMemo(() => {
+    if (propCategories && Array.isArray(propCategories)) {
+      return propCategories;
     }
-  ];
-
-  const categories = propCategories || defaultCategories;
+    return DEFAULT_CATEGORIES;
+  }, [propCategories]);
 
   // GSAP Animations with proper cleanup
   useEffect(() => {
-    if (!animateOnScroll || !sectionRef.current) return;
+    if (!animateOnScroll || !sectionRef.current || prefersReducedMotion) return;
 
     gsapContextRef.current = gsap.context(() => {
       // Section entrance animation
@@ -224,20 +232,60 @@ const CategoriesSection = ({
         gsapContextRef.current.revert();
       }
     };
-  }, [animateOnScroll, activeCategory]);
+  }, [animateOnScroll, activeCategory, prefersReducedMotion]);
 
   // Stagger visibility animation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      categories.forEach((_, index) => {
-        setTimeout(() => {
-          setVisibleCategories(prev => [...prev, index]);
-        }, index * 150);
-      });
-    }, 300);
+    setVisibleCategories([]);
+    setIsGridVisible(false);
 
-    return () => clearTimeout(timer);
-  }, [categories.length]);
+    if (!gridRef.current) {
+      return undefined;
+    }
+
+    if (!animateOnScroll || prefersReducedMotion) {
+      setVisibleCategories(categories.map((_, index) => index));
+      setIsGridVisible(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry?.isIntersecting) {
+        setIsGridVisible(true);
+        observer.disconnect();
+      }
+    }, {
+      threshold: 0.25
+    });
+
+    observer.observe(gridRef.current);
+
+    return () => observer.disconnect();
+  }, [categories, animateOnScroll, prefersReducedMotion]);
+
+  useEffect(() => {
+    if (!isGridVisible) {
+      return undefined;
+    }
+
+    const timers = [];
+    categories.forEach((_, index) => {
+      const timeoutId = setTimeout(() => {
+        setVisibleCategories(prev => {
+          if (prev.includes(index)) {
+            return prev;
+          }
+          return [...prev, index];
+        });
+      }, index * 120);
+      timers.push(timeoutId);
+    });
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [categories, isGridVisible]);
 
   // Handle category interactions
   const handleCategoryHover = useCallback((categoryId) => {
@@ -245,6 +293,10 @@ const CategoriesSection = ({
     setActiveCategory(categoryId);
     
     // Add hover animation
+    if (prefersReducedMotion) {
+      return;
+    }
+
     const card = gridRef.current?.querySelector(`[data-category-id="${categoryId}"]`);
     if (card) {
       gsap.to(card, {
@@ -255,14 +307,14 @@ const CategoriesSection = ({
         ease: 'power2.out'
       });
     }
-  }, []);
+  }, [prefersReducedMotion]);
 
   const handleCategoryLeave = useCallback(() => {
     const previousCategory = hoveredCategory;
     setHoveredCategory(null);
     
     // Reset hover animation
-    if (previousCategory) {
+    if (previousCategory && !prefersReducedMotion) {
       const card = gridRef.current?.querySelector(`[data-category-id="${previousCategory}"]`);
       if (card) {
         gsap.to(card, {
@@ -274,13 +326,13 @@ const CategoriesSection = ({
         });
       }
     }
-  }, [hoveredCategory]);
+  }, [hoveredCategory, prefersReducedMotion]);
 
   return (
     <section 
       ref={sectionRef}
       id="categories" 
-      className={`py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 relative overflow-hidden ${className}`}
+      className={`py-16 md:py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 relative overflow-hidden ${className}`}
       aria-label="Product categories"
     >
       {/* Enhanced Background Elements */}
@@ -295,7 +347,7 @@ const CategoriesSection = ({
         <div className="absolute top-1/3 right-10 w-1 h-1 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '2.1s' }}></div>
       </div>
 
-      <div className="container mx-auto px-4 relative">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Enhanced Section Header */}
         {showHeader && (
           <div ref={headerRef} className="text-center mb-16">
@@ -354,12 +406,15 @@ const CategoriesSection = ({
         >
           {categories.map((category, index) => {
             const IconComponent = category.lucideIcon;
+            const hoverClass = prefersReducedMotion
+              ? 'transition-opacity duration-500'
+              : 'transition-all duration-700 transform hover:scale-105 hover:-translate-y-4 hover:rotate-1 perspective-1000';
             return (
               <Link
                 key={category.id}
-                to={`/category/${category.slug}`}
+                to={`/categories/${category.slug}`}
                 data-category-id={category.id}
-                className={`group relative block overflow-hidden rounded-3xl transition-all duration-700 transform hover:scale-105 hover:-translate-y-4 hover:rotate-1 perspective-1000 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 ${
+                className={`group relative block overflow-hidden rounded-3xl ${hoverClass} focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 ${
                   visibleCategories.includes(index)
                     ? 'opacity-100 translate-y-0'
                     : 'opacity-0 translate-y-8'
@@ -379,6 +434,8 @@ const CategoriesSection = ({
                       src={category.image}
                       alt={`${category.name} category`}
                       className="w-full h-full object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-3"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.src = '/api/placeholder/400/300';
                       }}
@@ -424,7 +481,7 @@ const CategoriesSection = ({
                     </div>
 
                     {/* Floating Animation Elements */}
-                    {hoveredCategory === category.id && (
+                    {hoveredCategory === category.id && !prefersReducedMotion && (
                       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
                         <div className="absolute top-8 right-8 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
                         <div className="absolute bottom-8 left-8 w-1 h-1 bg-purple-400 rounded-full animate-ping delay-300"></div>

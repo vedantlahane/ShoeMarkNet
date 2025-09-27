@@ -25,6 +25,11 @@ const ROUTE_CONFIG = {
     description: 'Browse our curated collection of premium sneakers and athletic footwear.',
     background: 'gradient-secondary'
   },
+  '/sale': {
+    title: 'Exclusive Deals - ShoeMarkNet',
+    description: 'Shop limited-time offers and discounted footwear from top brands.',
+    background: 'gradient-tertiary'
+  },
   '/cart': {
     title: 'Shopping Cart - ShoeMarkNet',
     description: 'Review your selected items and complete your purchase.',

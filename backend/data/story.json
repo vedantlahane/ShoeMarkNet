@@ -20,6 +20,26 @@
       "time": "41 Mins",
       "by": "Michael Le",
       "btn": "Read More"
+    },
+    {
+      "title": "Hoka Updates the Speedgoat",
+      "text": "Hoka unveils the Speedgoat 5 'Fiesta', pairing Megagrip traction with a vibrant trail-ready palette for spring adventures.",
+      "img": "https://images.hoka.com/is/image/hoka/speedgoat-5-fiesta",
+      "url": "https://www.hoka.com/en/us/speedgoat-5.html",
+      "like": "4/5",
+      "time": "18 Mins",
+      "by": "Sarah Jacobs",
+      "btn": "Read More"
+    },
+    {
+      "title": "ASICS Celebrates 30 Years of Gel-Kayano",
+      "text": "ASICS marks three decades of stability with the Gel-Kayano 30, introducing PureGEL cushioning and a refreshed support system.",
+      "img": "https://images.asics.com/is/image/asics/gel-kayano-30",
+      "url": "https://www.asics.com/us/en-us/gel-kayano-30",
+      "like": "4/5",
+      "time": "25 Mins",
+      "by": "Liam Patel",
+      "btn": "Read More"
     }
   ]
 }

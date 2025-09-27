@@ -43,7 +43,7 @@ const POPULAR_PAGES = [
   },
   { 
     name: 'Sale', 
-    path: '/products?sale=true', 
+    path: '/sale', 
     icon: 'fa-tags', 
     color: 'from-orange-500 to-red-500',
     description: 'Special offers'
@@ -94,6 +94,38 @@ const ERROR_TYPES = {
   SERVER_ERROR: '500',
   FORBIDDEN: '403',
   NETWORK: 'network'
+};
+
+const ROUTE_PREFETCHERS = {
+  '/': () => import('./Home'),
+  '/products': () => import('./Products'),
+  '/sale': () => import('./Products'),
+  '/categories': () => import('./Category'),
+  '/about': () => import('./About'),
+  '/contact': () => import('./Contact'),
+  '/cart': () => import('./Cart'),
+  '/wishlist': () => import('./Wishlist'),
+  '/orders': () => import('./Orders'),
+  '/profile': () => import('./Profile'),
+  '/login': () => import('./Login'),
+  '/register': () => import('./Register')
+};
+
+const prefetchedRoutes = new Set();
+
+const normalizePath = (path = '/') => path.split('?')[0];
+
+const prefetchRoute = (path) => {
+  const normalized = normalizePath(path);
+  if (!normalized || prefetchedRoutes.has(normalized)) return;
+
+  const loader = ROUTE_PREFETCHERS[normalized];
+  if (!loader) return;
+
+  prefetchedRoutes.add(normalized);
+  loader().catch(() => {
+    prefetchedRoutes.delete(normalized);
+  });
 };
 
 const NotFound = () => {
@@ -153,6 +185,18 @@ const NotFound = () => {
         };
     }
   }, [errorType]);
+
+  useEffect(() => {
+    prefetchRoute('/');
+
+    const previousPage = recentPages.find(
+      (page) => page?.path && normalizePath(page.path) !== normalizePath(currentPath)
+    );
+
+    if (previousPage?.path) {
+      prefetchRoute(previousPage.path);
+    }
+  }, [recentPages, currentPath]);
 
   // Initialize animations and tracking
   useEffect(() => {
@@ -250,19 +294,29 @@ const NotFound = () => {
       search_term: suggestion.term,
       category: suggestion.category
     });
+    prefetchRoute('/products');
     
     navigate(`/products?search=${encodeURIComponent(suggestion.term)}`);
   }, [navigate]);
 
   const handleGoBack = useCallback(() => {
     trackEvent('404_go_back_clicked');
-    
+    setShowCountdown(false);
+    setCountdown(10);
+
+    const previousPage = recentPages.find(
+      (page) => page?.path && normalizePath(page.path) !== normalizePath(currentPath)
+    );
+    const targetPath = previousPage?.path || '/';
+
+    prefetchRoute(targetPath);
+
     if (window.history.length > 1) {
-      window.history.back();
+      navigate(-1);
     } else {
-      navigate('/', { replace: true });
+      navigate(targetPath, { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, recentPages, currentPath]);
 
   const handleToggleCountdown = useCallback(() => {
     const newShowCountdown = !showCountdown;
@@ -292,13 +346,13 @@ const NotFound = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center relative overflow-hidden">
         
         {/* Enhanced Dynamic Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10">
           {/* Animated gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-shimmer"></div>
         </div>
         
         {/* Enhanced Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {[...Array(20)].map((_, i) => (
             <div
               key={i}
@@ -424,6 +478,8 @@ const NotFound = () => {
               }`} style={{ animationDelay: '1s' }}>
                 <Link
                   to="/"
+                  onMouseEnter={() => prefetchRoute('/')}
+                  onFocus={() => prefetchRoute('/')}
                   className="group bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-2xl relative overflow-hidden"
                   onClick={() => trackEvent('404_home_clicked')}
                 >
@@ -512,6 +568,8 @@ const NotFound = () => {
                     <Link
                       key={index}
                       to={page.path}
+                      onMouseEnter={() => prefetchRoute(page.path)}
+                      onFocus={() => prefetchRoute(page.path)}
                       className={`group bg-gradient-to-r ${page.color} text-white p-6 rounded-2xl text-center hover:scale-110 transition-all duration-300 shadow-lg relative overflow-hidden`}
                       onClick={() => trackEvent('404_popular_page_clicked', { page: page.name })}
                     >

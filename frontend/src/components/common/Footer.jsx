@@ -290,8 +290,8 @@ const Footer = memo(() => {
               
               {!isSubscribed ? (
                 <form onSubmit={handleNewsletterSubmit} className="mb-8">
-                  <div className="glass rounded-lg p-1">
-                    <div className="flex">
+                  <div className="glass rounded-lg p-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <label htmlFor="newsletter-email" className="sr-only">
                         Email address for newsletter
                       </label>
@@ -301,12 +301,12 @@ const Footer = memo(() => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
-                        className="flex-1 bg-transparent px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-l-lg"
+                        className="w-full sm:flex-1 bg-transparent px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg sm:rounded-l-lg sm:rounded-r-none"
                         aria-describedby="newsletter-description"
                       />
                       <button
                         type="submit"
-                        className="btn-premium px-6 py-3 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                        className="btn-premium px-6 py-3 rounded-lg sm:rounded-r-lg sm:rounded-l-none font-medium w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
                         aria-label="Subscribe to newsletter"
                       >
                         Subscribe
@@ -328,7 +328,7 @@ const Footer = memo(() => {
               {/* Social Media */}
               <div>
                 <h4 className="text-white font-medium mb-4">Follow Us</h4>
-                <div className="grid grid-cols-3 gap-3" role="list" aria-label="Social media links">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3" role="list" aria-label="Social media links">
                   {socialLinks.map((social, index) => (
                     <a
                       key={index}

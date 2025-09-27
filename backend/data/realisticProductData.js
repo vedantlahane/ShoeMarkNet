@@ -399,6 +399,162 @@ const realisticProducts = [
 
   // Puma Products
   {
+    name: "Nike LeBron XX 'South Beach'",
+    description: "The Nike LeBron XX 'South Beach' brings Miami-inspired colors to LeBron's twentieth signature shoe, featuring a low-cut knit upper, Zoom Air cushioning, and carbon fiber support.",
+    brand: "Nike",
+    price: 210,
+    originalPrice: 220,
+    discountPercentage: 5,
+    images: [
+      "https://images.stockx.com/images/Nike-LeBron-20-South-Beach-Product.jpg",
+      "https://images.stockx.com/images/Nike-LeBron-20-South-Beach-2.jpg"
+    ],
+    countInStock: 34,
+    rating: 4.7,
+    numReviews: 142,
+    isFeatured: true,
+    isNewArrival: true,
+    gender: "men",
+    variants: [
+      {
+        color: "Laser Blue/Pink Prime",
+        colorCode: "#1C9CF1",
+        images: ["https://images.stockx.com/images/Nike-LeBron-20-South-Beach-Product.jpg"],
+        sizes: [
+          { size: 8, countInStock: 6, price: 210 },
+          { size: 9, countInStock: 8, price: 210 },
+          { size: 10, countInStock: 10, price: 210 },
+          { size: 11, countInStock: 7, price: 210 },
+          { size: 12, countInStock: 3, price: 210 }
+        ]
+      }
+    ],
+    specifications: {
+      "Style Code": "DM0087-400",
+      "Colorway": "Laser Blue/Pink Prime-Blue Lightning",
+      "Technology": "Zoom Air",
+      "Release Date": "2023-07-12"
+    }
+  },
+
+  {
+    name: "Adidas Harden Vol. 7 'Pulse Aqua'",
+    description: "James Harden's seventh signature sneaker delivers a quilted textile upper, Lightstrike cushioning, and a bold Pulse Aqua palette for quick cuts and step-backs.",
+    brand: "Adidas",
+    price: 160,
+    originalPrice: 160,
+    discountPercentage: 0,
+    images: [
+      "https://images.stockx.com/images/adidas-Harden-Vol-7-Pulse-Aqua-Product.jpg",
+      "https://images.stockx.com/images/adidas-Harden-Vol-7-Pulse-Aqua-2.jpg"
+    ],
+    countInStock: 41,
+    rating: 4.4,
+    numReviews: 96,
+    isFeatured: false,
+    isNewArrival: true,
+    gender: "men",
+    variants: [
+      {
+        color: "Pulse Aqua/Core Black",
+        colorCode: "#36C3D2",
+        images: ["https://images.stockx.com/images/adidas-Harden-Vol-7-Pulse-Aqua-Product.jpg"],
+        sizes: [
+          { size: 8, countInStock: 7, price: 160 },
+          { size: 9, countInStock: 9, price: 160 },
+          { size: 10, countInStock: 11, price: 160 },
+          { size: 11, countInStock: 8, price: 160 },
+          { size: 12, countInStock: 6, price: 160 }
+        ]
+      }
+    ],
+    specifications: {
+      "Style Code": "IE2692",
+      "Colorway": "Pulse Aqua/Core Black/Cloud White",
+      "Technology": "Lightstrike",
+      "Release Date": "2023-03-02"
+    }
+  },
+
+  {
+    name: "ASICS Gel-Kayano 30 'Glacier Grey'",
+    description: "The ASICS Gel-Kayano 30 celebrates thirty years of stability with 4D Guidance and PureGEL technology to support long-distance runners.",
+    brand: "ASICS",
+    price: 160,
+    originalPrice: 165,
+    discountPercentage: 3,
+    images: [
+      "https://images.stockx.com/images/ASICS-Gel-Kayano-30-White-Glacier-Grey-Product.jpg",
+      "https://images.stockx.com/images/ASICS-Gel-Kayano-30-White-Glacier-Grey-2.jpg"
+    ],
+    countInStock: 52,
+    rating: 4.6,
+    numReviews: 74,
+    isFeatured: false,
+    isNewArrival: true,
+    gender: "unisex",
+    variants: [
+      {
+        color: "Glacier Grey/White",
+        colorCode: "#D1D5DB",
+        images: ["https://images.stockx.com/images/ASICS-Gel-Kayano-30-White-Glacier-Grey-Product.jpg"],
+        sizes: [
+          { size: 6, countInStock: 6, price: 160 },
+          { size: 7, countInStock: 8, price: 160 },
+          { size: 8, countInStock: 10, price: 160 },
+          { size: 9, countInStock: 12, price: 160 },
+          { size: 10, countInStock: 10, price: 160 },
+          { size: 11, countInStock: 6, price: 160 }
+        ]
+      }
+    ],
+    specifications: {
+      "Style Code": "1011B548-020",
+      "Colorway": "Glacier Grey/White",
+      "Technology": "PureGEL & FF Blast Plus",
+      "Release Date": "2023-08-15"
+    }
+  },
+
+  {
+    name: "Hoka Speedgoat 5 'Fiesta'",
+    description: "Built for technical trails, the Hoka Speedgoat 5 'Fiesta' uses a Vibram Megagrip outsole and lightweight mesh upper for confident traction and breathability.",
+    brand: "Hoka",
+    price: 155,
+    originalPrice: 155,
+    discountPercentage: 0,
+    images: [
+      "https://images.stockx.com/images/HOKA-Speedgoat-5-Fiesta-Camellia-Product.jpg",
+      "https://images.stockx.com/images/HOKA-Speedgoat-5-Fiesta-Camellia-2.jpg"
+    ],
+    countInStock: 47,
+    rating: 4.8,
+    numReviews: 65,
+    isFeatured: true,
+    isNewArrival: true,
+    gender: "unisex",
+    variants: [
+      {
+        color: "Fiesta/Camellia",
+        colorCode: "#F97316",
+        images: ["https://images.stockx.com/images/HOKA-Speedgoat-5-Fiesta-Camellia-Product.jpg"],
+        sizes: [
+          { size: 7, countInStock: 7, price: 155 },
+          { size: 8, countInStock: 9, price: 155 },
+          { size: 9, countInStock: 11, price: 155 },
+          { size: 10, countInStock: 10, price: 155 },
+          { size: 11, countInStock: 6, price: 155 }
+        ]
+      }
+    ],
+    specifications: {
+      "Style Code": "1123157-FSTCM",
+      "Colorway": "Fiesta/Camellia",
+      "Technology": "Vibram Megagrip",
+      "Release Date": "2023-05-20"
+    }
+  },
+  {
     name: "Puma Suede Classic XXI 'Peacoat'",
     description: "The Puma Suede Classic XXI brings back the iconic basketball shoe with premium suede upper and classic formstrip.",
     brand: "Puma",

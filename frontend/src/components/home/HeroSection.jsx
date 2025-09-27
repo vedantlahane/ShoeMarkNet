@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -15,11 +14,13 @@ import {
   Sparkles,
   TrendingUp
 } from 'lucide-react';
+import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HeroSection = () => {
   const dispatch = useDispatch();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const heroRef = useRef(null);
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
@@ -38,13 +39,12 @@ const HeroSection = () => {
 
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Animated statistics
-  const stats = [
+  const stats = useMemo(() => ([
     { icon: Users, value: '50K+', label: 'Happy Customers', color: 'text-blue-400' },
     { icon: Zap, value: '24h', label: 'Fast Delivery', color: 'text-yellow-400' },
     { icon: Star, value: '4.9★', label: 'Rating', color: 'text-pink-400' },
     { icon: TrendingUp, value: '99%', label: 'Satisfaction', color: 'text-green-400' }
-  ];
+  ]), []);
 
   useEffect(() => {
     // Countdown timer
@@ -77,6 +77,14 @@ const HeroSection = () => {
 
   // GSAP Animations with proper cleanup
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsLoaded(true);
+      if (particlesRef.current) {
+        particlesRef.current.innerHTML = '';
+      }
+      return undefined;
+    }
+
     gsapContextRef.current = gsap.context(() => {
       const tl = gsap.timeline({ delay: 0.5 });
       
@@ -91,7 +99,8 @@ const HeroSection = () => {
       // Create floating particles animation
       const createParticles = () => {
         if (particlesRef.current) {
-          for (let i = 0; i < 50; i++) {
+          particlesRef.current.innerHTML = '';
+          for (let i = 0; i < 20; i++) {
             const particle = document.createElement('div');
             particle.className = 'absolute rounded-full bg-white/20 pointer-events-none';
             const size = Math.random() * 8 + 2;
@@ -145,17 +154,23 @@ const HeroSection = () => {
       createParticles();
 
       // Scroll-triggered animations
+      const heroContent = heroRef.current?.querySelector('.hero-content');
+      const scrollTween = heroContent ? gsap.to(heroContent, {
+        y: -50,
+        opacity: 0.5,
+        ease: 'none',
+        paused: true
+      }) : null;
+
       ScrollTrigger.create({
         trigger: heroRef.current,
         start: 'top center',
         end: 'bottom center',
         scrub: 1,
         onUpdate: (self) => {
-          gsap.to('.hero-content', {
-            y: -50 * self.progress,
-            opacity: 1 - self.progress * 0.5,
-            duration: 0.3
-          });
+          if (scrollTween) {
+            scrollTween.progress(self.progress);
+          }
         }
       });
     }, heroRef);
@@ -166,8 +181,11 @@ const HeroSection = () => {
       if (gsapContextRef.current) {
         gsapContextRef.current.revert();
       }
+      if (particlesRef.current) {
+        particlesRef.current.innerHTML = '';
+      }
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   const handleAddToCart = useCallback((product) => {
     dispatch(addToCart({
@@ -176,15 +194,16 @@ const HeroSection = () => {
       product
     }));
 
-    // Add to cart animation
-    gsap.to('.add-to-cart-btn', {
-      scale: 0.95,
-      duration: 0.1,
-      yoyo: true,
-      repeat: 1,
-      ease: 'power2.inOut'
-    });
-  }, [dispatch]);
+    if (!prefersReducedMotion) {
+      gsap.to('.add-to-cart-btn', {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.inOut'
+      });
+    }
+  }, [dispatch, prefersReducedMotion]);
 
   const scrollToSection = useCallback((sectionId) => {
     const section = document.getElementById(sectionId);
@@ -193,10 +212,10 @@ const HeroSection = () => {
       const elementPosition = section.offsetTop - headerHeight;
       window.scrollTo({
         top: elementPosition,
-        behavior: 'smooth'
+        behavior: prefersReducedMotion ? 'auto' : 'smooth'
       });
     }
-  }, []);
+  }, [prefersReducedMotion]);
 
   return (
     <section 
@@ -215,11 +234,11 @@ const HeroSection = () => {
       {/* Glassmorphism overlay */}
       <div className="absolute inset-0 glass opacity-10" aria-hidden="true"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           
           {/* Hero Content */}
-          <div className="hero-content text-center lg:text-left">
+          <div className={`hero-content text-center lg:text-left transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
             
             {/* Premium Badge */}
             <div className="inline-flex items-center space-x-2 glass-card px-6 py-3 mb-8 animate-float">
@@ -319,7 +338,7 @@ const HeroSection = () => {
           </div>
 
           {/* Hero Product Showcase */}
-          <div ref={productRef} className="relative">
+          <div ref={productRef} className={`relative transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
             
             {/* Main Featured Product */}
             <div className="card-premium overflow-hidden mb-6 hover-lift">
@@ -328,6 +347,8 @@ const HeroSection = () => {
                   src="/api/placeholder/600/400"
                   alt="Premium Sneakers Collection"
                   className="w-full h-64 lg:h-80 object-cover transition-transform duration-700 hover:scale-110"
+                  loading="eager"
+                  decoding="async"
                   onError={(e) => {
                     e.target.src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop';
                   }}
@@ -405,6 +426,8 @@ const HeroSection = () => {
                     src={product.image}
                     alt={product.name}
                     className="w-full h-32 object-cover rounded-lg mb-3 transition-transform duration-300 hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <h4 className="font-semibold text-white text-sm mb-2">
                     {product.name}

@@ -20,7 +20,7 @@ const SectionSkeleton = ({ title, rows = 3 }) => {
   return (
     <section
       aria-label={`${title} loading state`}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-pulse"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 animate-pulse"
     >
       <div className="h-8 w-48 bg-white/40 dark:bg-gray-700 rounded-full mb-6"></div>
       <div className={`grid gap-6 sm:grid-cols-2 ${gridColsClass}`}>

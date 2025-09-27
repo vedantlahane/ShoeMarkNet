@@ -27,10 +27,10 @@ const OffersSection = memo(() => {
   return (
     <section 
       id="offers"
-      className="py-12 bg-blue-50 dark:bg-gray-800"
+      className="py-16 md:py-20 bg-blue-50 dark:bg-gray-800"
       aria-label="Special offers and deals"
     >
-      <div className="container mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
             <Tag size={16} className="animate-pulse" aria-hidden="true" />

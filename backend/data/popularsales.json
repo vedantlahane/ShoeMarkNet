@@ -33,6 +33,39 @@
       "price": "200",
       "color": "rgb(153, 155, 160)",
       "shadow": "shadow-lg shadow-black-700"
+    },
+    {
+      "id": "0p0x4",
+      "title": "Nike Adapt BB Smart",
+      "text": "Men's Basketball Shoes",
+      "rating": "4.8",
+      "btn": "Buy Now",
+      "img": "/assets/nike-adapt-bb-smart.png",
+      "price": "350",
+      "color": "rgb(59, 130, 246)",
+      "shadow": "shadow-lg shadow-blue-500/40"
+    },
+    {
+      "id": "0p0x5",
+      "title": "Hoka Speedgoat 5",
+      "text": "Trail Running Shoes",
+      "rating": "4.7",
+      "btn": "Buy Now",
+      "img": "/assets/product9.png",
+      "price": "155",
+      "color": "rgb(249, 115, 22)",
+      "shadow": "shadow-lg shadow-orange-500/30"
+    },
+    {
+      "id": "0p0x6",
+      "title": "ASICS Gel-Kayano 30",
+      "text": "Stability Running Shoes",
+      "rating": "4.6",
+      "btn": "Buy Now",
+      "img": "/assets/product10.png",
+      "price": "160",
+      "color": "rgb(56, 189, 248)",
+      "shadow": "shadow-lg shadow-sky-400/30"
     }
   ]
 }
