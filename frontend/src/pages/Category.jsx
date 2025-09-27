@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -462,46 +462,42 @@ const Category = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://shoemarknet.com/category/${categoryName}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://shoemarknet.com/category/${categoryName}`} />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": `${categoryName} Collection`,
-            "description": metaDescription,
-            "url": `https://shoemarknet.com/category/${categoryName}`,
-            "mainEntity": {
-              "@type": "ItemList",
-              "numberOfItems": categoryStats.total,
-              "itemListElement": productsList.slice(0, 5).map((product, index) => ({
-                "@type": "Product",
-                "position": index + 1,
-                "name": product.name,
-                "description": product.description,
-                "image": product.images?.[0],
-                "offers": {
-                  "@type": "Offer",
-                  "price": product.price,
-                  "priceCurrency": "USD",
-                  "availability": product.countInStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-                }
-              }))
-            }
-          })}
-        </script>
-      </Helmet>
+      <PageMeta
+        title={metaTitle}
+        description={metaDescription}
+        robots="index, follow"
+        canonical={`https://shoemarknet.com/category/${categoryName}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
+        openGraph={{
+          title: metaTitle,
+          description: metaDescription,
+          type: 'website',
+          url: `https://shoemarknet.com/category/${categoryName}`,
+        }}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: `${categoryName} Collection`,
+          description: metaDescription,
+          url: `https://shoemarknet.com/category/${categoryName}`,
+          mainEntity: {
+            '@type': 'ItemList',
+            numberOfItems: categoryStats.total,
+            itemListElement: productsList.slice(0, 5).map((product, index) => ({
+              '@type': 'Product',
+              position: index + 1,
+              name: product.name,
+              description: product.description,
+              image: product.images?.[0],
+              offers: {
+                '@type': 'Offer',
+                price: product.price,
+                priceCurrency: 'USD',
+                availability: product.countInStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+              },
+            })),
+          },
+        }}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         

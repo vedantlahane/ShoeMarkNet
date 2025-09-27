@@ -16,6 +16,7 @@ const Cart = lazy(() => import('../pages/Cart'));
 const Checkout = lazy(() => import('../pages/Checkout'));
 const Wishlist = lazy(() => import('../pages/Wishlist'));
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
+const AccessDenied = lazy(() => import('../pages/AccessDeniedPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 // Route configuration with metadata
@@ -70,6 +71,12 @@ export const routeConfig = {
       component: Contact,
       title: 'Contact Us',
       description: 'Get in touch with us'
+    },
+    {
+      path: '/access-denied',
+      component: AccessDenied,
+      title: 'Access Restricted',
+      description: 'You do not have permission to view this page'
     }
   ],
 

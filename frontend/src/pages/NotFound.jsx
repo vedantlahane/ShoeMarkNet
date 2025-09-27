@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-toastify';
+
+import PageMeta from '../components/seo/PageMeta';
 
 // Redux actions
 import { fetchFeaturedProducts } from '../redux/slices/productSlice';
@@ -277,17 +278,16 @@ const NotFound = () => {
 
   return (
     <ErrorBoundary>
-      {/* SEO Meta Tags */}
-      <Helmet>
-        <title>Page Not Found (404) | ShoeMarkNet</title>
-        <meta name="description" content="The page you're looking for couldn't be found. Explore our shoe collection and find what you need at ShoeMarkNet." />
-        <meta name="robots" content="noindex, nofollow" />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content="Page Not Found | ShoeMarkNet" />
-        <meta property="og:description" content="The page you're looking for couldn't be found. Explore our shoe collection instead!" />
-        <meta property="og:type" content="website" />
-      </Helmet>
+      <PageMeta
+        title="Page Not Found (404) | ShoeMarkNet"
+        description="The page you're looking for couldn't be found. Explore our shoe collection and find what you need at ShoeMarkNet."
+        robots="noindex, nofollow"
+        openGraph={{
+          title: 'Page Not Found | ShoeMarkNet',
+          description: "The page you're looking for couldn't be found. Explore our shoe collection instead!",
+          type: 'website'
+        }}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center relative overflow-hidden">
         

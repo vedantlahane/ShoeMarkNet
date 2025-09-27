@@ -24,6 +24,7 @@ ShoeMarkNet is a comprehensive e-commerce platform designed specifically for foo
 - **📈 Lead Scoring**: AI-powered customer behavior analysis
 - **🎯 Campaign Management**: Marketing campaigns and promotions
 - **📦 Order Management**: Complete order lifecycle tracking
+- **📬 Contact Center**: Unified inbox with SLA tracking for customer inquiries
 - **🌙 Dark Mode**: Beautiful dark theme support
 
 ## 🏗️ Technology Stack
@@ -165,6 +166,7 @@ ShoeMarkNet/
 - **Wishlist**: Save favorite products
 - **Order Management**: Track order status and history
 - **User Profile**: Manage personal information and addresses
+- **Support Access**: Submit contact or support tickets with attachments
 - **Reviews**: Leave product reviews and ratings
 
 ### Admin Features
@@ -175,6 +177,7 @@ ShoeMarkNet/
 - **Campaign Management**: Create promotional campaigns
 - **Lead Scoring**: Track customer engagement metrics
 - **Inventory Management**: Stock level monitoring
+- **Contact Operations**: Triage, assign, and close customer support tickets
 
 ### Technical Features
 - **Responsive Design**: Mobile-first approach
@@ -184,6 +187,7 @@ ShoeMarkNet/
 - **Security**: CORS, Helmet, and input sanitization
 - **Performance**: Image optimization and lazy loading
 - **SEO Friendly**: Meta tags and semantic HTML
+- **Service Desk Ready**: API endpoints for contact submissions, status updates, and analytics
 
 ## 🛠️ API Endpoints
 
@@ -211,6 +215,15 @@ ShoeMarkNet/
 - `POST /api/cart` - Add item to cart
 - `GET /api/wishlist` - Get user wishlist
 - `POST /api/wishlist` - Add item to wishlist
+
+### Contact Center
+- `POST /api/contact` - Submit a support request (public)
+- `GET /api/admin/contacts` - List contact tickets with filters (Admin)
+- `GET /api/admin/contacts/:id` - View a specific ticket (Admin)
+- `PATCH /api/admin/contacts/:id/status` - Update ticket status or assignment (Admin)
+- `POST /api/admin/contacts/:id/respond` - Record responses and timeline events (Admin)
+- `DELETE /api/admin/contacts/:id` - Remove a ticket (Admin)
+- `GET /api/admin/contacts/stats` - Retrieve SLA and workload analytics (Admin)
 
 ## � Environment Setup
 

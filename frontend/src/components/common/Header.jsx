@@ -24,6 +24,10 @@ const useReducedMotion = () => {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return undefined;
+    }
+
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
 
@@ -31,8 +35,13 @@ const useReducedMotion = () => {
       setPrefersReducedMotion(event.matches);
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    try {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } catch (error) {
+      mediaQuery.addListener(handleChange);
+      return () => mediaQuery.removeListener(handleChange);
+    }
   }, []);
 
   return prefersReducedMotion;
@@ -79,6 +88,19 @@ const useFocusTrap = (isOpen, containerRef) => {
   }, [isOpen, containerRef]);
 };
 
+const getInitialTheme = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const storedTheme = localStorage.getItem('theme');
+  if (storedTheme) {
+    return storedTheme === 'dark';
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+};
+
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,10 +114,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark' || 
-           (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
+  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const prefersReducedMotion = useReducedMotion();
@@ -123,8 +142,12 @@ const Header = () => {
 
   // Handle scroll effect with throttling
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
     let timeoutId;
-    
+
     const handleScroll = () => {
       if (timeoutId) clearTimeout(timeoutId);
       
@@ -143,6 +166,10 @@ const Header = () => {
 
   // Handle theme toggle
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -154,7 +181,7 @@ const Header = () => {
 
   // Optimized GSAP Animations with proper cleanup
   useLayoutEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || typeof window === 'undefined') return;
 
     gsapContextRef.current = gsap.context(() => {
       gsap.fromTo(headerRef.current, 
@@ -172,6 +199,10 @@ const Header = () => {
 
   // Close menus on escape key
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
         setIsMenuOpen(false);
@@ -186,6 +217,10 @@ const Header = () => {
 
   // Close menus when clicking outside
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);

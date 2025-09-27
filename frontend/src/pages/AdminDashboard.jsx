@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -457,11 +457,11 @@ const AdminDashboard = ({ section = "overview" }) => {
   return (
     <ErrorBoundary>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={`ShoeMarkNet admin panel - ${currentSection?.description || 'Manage your e-commerce platform'}`} />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      <PageMeta
+        title={metaTitle}
+        description={`ShoeMarkNet admin panel - ${currentSection?.description || 'Manage your e-commerce platform'}`}
+        robots="noindex, nofollow"
+      />
 
       <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
         

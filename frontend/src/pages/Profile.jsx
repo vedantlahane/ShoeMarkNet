@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -345,11 +345,11 @@ const Profile = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>Profile - {user.name} | ShoeMarkNet</title>
-        <meta name="description" content="Manage your ShoeMarkNet profile, update personal information, and change security settings." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      <PageMeta
+        title={`Profile - ${user.name} | ShoeMarkNet`}
+        description="Manage your ShoeMarkNet profile, update personal information, and change security settings."
+        robots="noindex, nofollow"
+      />
 
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

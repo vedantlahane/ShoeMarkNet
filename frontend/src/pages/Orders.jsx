@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -426,12 +426,12 @@ const Orders = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>My Orders - ShoeMarkNet | Track Your Orders</title>
-        <meta name="description" content="Track and manage your ShoeMarkNet orders. View order history, status updates, and download invoices." />
-        <meta name="robots" content="noindex, nofollow" />
-        <link rel="canonical" href="https://shoemarknet.com/orders" />
-      </Helmet>
+      <PageMeta
+        title="My Orders - ShoeMarkNet | Track Your Orders"
+        description="Track and manage your ShoeMarkNet orders. View order history, status updates, and download invoices."
+        robots="noindex, nofollow"
+        canonical="https://shoemarknet.com/orders"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         

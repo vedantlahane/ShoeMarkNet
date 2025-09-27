@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 import { debounce } from 'lodash';
 
@@ -361,46 +361,42 @@ const Products = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDescription} />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://shoemarknet.com/products${location.search}`} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={seoDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://shoemarknet.com/products${location.search}`} />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            "name": seoTitle,
-            "description": seoDescription,
-            "url": `https://shoemarknet.com/products${location.search}`,
-            "mainEntity": {
-              "@type": "ItemList",
-              "numberOfItems": totalCount,
-              "itemListElement": productsList.slice(0, 10).map((product, index) => ({
-                "@type": "Product",
-                "position": index + 1,
-                "name": product.name,
-                "description": product.description,
-                "image": product.images?.[0],
-                "offers": {
-                  "@type": "Offer",
-                  "price": product.price,
-                  "priceCurrency": "USD",
-                  "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-                }
-              }))
-            }
-          })}
-        </script>
-      </Helmet>
+      <PageMeta
+        title={seoTitle}
+        description={seoDescription}
+        robots="index, follow"
+        canonical={`https://shoemarknet.com/products${location.search}`}
+        openGraph={{
+          title: seoTitle,
+          description: seoDescription,
+          type: 'website',
+          url: `https://shoemarknet.com/products${location.search}`,
+        }}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: seoTitle,
+          description: seoDescription,
+          url: `https://shoemarknet.com/products${location.search}`,
+          mainEntity: {
+            '@type': 'ItemList',
+            numberOfItems: totalCount,
+            itemListElement: productsList.slice(0, 10).map((product, index) => ({
+              '@type': 'Product',
+              position: index + 1,
+              name: product.name,
+              description: product.description,
+              image: product.images?.[0],
+              offers: {
+                '@type': 'Offer',
+                price: product.price,
+                priceCurrency: 'USD',
+                availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+              },
+            })),
+          },
+        }}
+      />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8">

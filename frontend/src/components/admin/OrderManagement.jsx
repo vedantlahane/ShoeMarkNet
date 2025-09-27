@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-toastify';
+
+import PageMeta from '../seo/PageMeta';
 
 // Redux actions
 import { 
@@ -402,12 +403,11 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
 
   return (
     <>
-      {/* SEO Meta Tags */}
-      <Helmet>
-        <title>Order Management | Admin Dashboard - ShoeMarkNet</title>
-        <meta name="description" content="Manage customer orders, track payments, handle fulfillment, and analyze order data with comprehensive admin tools." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      <PageMeta
+        title="Order Management | Admin Dashboard - ShoeMarkNet"
+        description="Manage customer orders, track payments, handle fulfillment, and analyze order data with comprehensive admin tools."
+        robots="noindex, nofollow"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
         

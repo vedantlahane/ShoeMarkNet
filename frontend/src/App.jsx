@@ -1,46 +1,77 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from 'react-helmet-async';
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
 import { initAuth } from "./redux/slices/authSlice";
 
-// Layout
+// Layout & core components
 import MainLayout from "./components/layouts/MainLayout";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 
-// Pages
-import Home from "./pages/Home";
+// Routing helpers
+import routeConfig from "./routes/routeConfig";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
+const SuspenseFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <LoadingSpinner size="xl" message="Crafting your ShoeMarkNet experience…" />
+  </div>
+);
+
+const renderRoute = ({ path, component: Component, index = false }) => {
+  if (index) {
+    return <Route key="index" index element={<Component />} />;
+  }
+
+  return <Route key={path} path={path} element={<Component />} />;
+};
 
 const AppContent = () => {
   const dispatch = useDispatch();
-  const { isLoading } = useSelector(state => state.auth);
+  const { isLoading, isInitialized } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(initAuth());
   }, [dispatch]);
 
-  if (isLoading) {
+  if (!isInitialized && isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <LoadingSpinner />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <LoadingSpinner size="xl" message="Getting everything ready…" />
       </div>
     );
   }
 
   return (
     <ErrorBoundary>
-      <HelmetProvider>
-        <BrowserRouter>
-          <MainLayout>
+      <BrowserRouter>
+          <Suspense fallback={<SuspenseFallback />}>
             <Routes>
-              <Route path="/" element={<Home />} />
-              {/* Add more routes here as you share components */}
+              <Route element={<MainLayout />}>
+                {routeConfig.public.map(renderRoute)}
+
+                {routeConfig.protected.length > 0 && (
+                  <Route element={<ProtectedRoute />}>
+                    {routeConfig.protected.map(renderRoute)}
+                  </Route>
+                )}
+
+                {routeConfig.admin.length > 0 && (
+                  <Route element={<ProtectedRoute requiredRole="admin" />}>
+                    {routeConfig.admin.map(renderRoute)}
+                  </Route>
+                )}
+
+                {routeConfig.fallback && renderRoute(routeConfig.fallback)}
+              </Route>
+
+              {routeConfig.auth.map(({ path, component: Component }) => (
+                <Route key={path} path={path} element={<Component />} />
+              ))}
             </Routes>
-          </MainLayout>
+          </Suspense>
         </BrowserRouter>
-      </HelmetProvider>
     </ErrorBoundary>
   );
 };

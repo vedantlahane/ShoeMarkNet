@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -471,12 +471,12 @@ const Wishlist = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>My Wishlist - {totalItems} Items | ShoeMarkNet</title>
-        <meta name="description" content={`Your wishlist contains ${totalItems} carefully selected items worth ${formatPrice(totalValue)}. Save and organize your favorite products.`} />
-        <meta name="robots" content="noindex, nofollow" />
-        <link rel="canonical" href="https://shoemarknet.com/wishlist" />
-      </Helmet>
+      <PageMeta
+        title={`My Wishlist - ${totalItems} Items | ShoeMarkNet`}
+        description={`Your wishlist contains ${totalItems} carefully selected items worth ${formatPrice(totalValue)}. Save and organize your favorite products.`}
+        robots="noindex, nofollow"
+        canonical="https://shoemarknet.com/wishlist"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         

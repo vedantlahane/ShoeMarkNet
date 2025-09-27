@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -468,58 +468,73 @@ const ProductDetail = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://shoemarknet.com/products/${product._id}`} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="product" />
-        <meta property="og:url" content={`https://shoemarknet.com/products/${product._id}`} />
-        <meta property="og:image" content={mainImage || product.images?.[0]} />
-        <meta property="product:brand" content={product.brand} />
-        <meta property="product:availability" content={maxStock > 0 ? "in stock" : "out of stock"} />
-        <meta property="product:condition" content="new" />
-        <meta property="product:price:amount" content={discountedPrice || currentPrice} />
-        <meta property="product:price:currency" content="USD" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
-        <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content={mainImage || product.images?.[0]} />
-        
-        {/* Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org/",
-            "@type": "Product",
-            "name": product.name,
-            "image": product.images,
-            "description": product.description,
-            "brand": {
-              "@type": "Brand",
-              "name": product.brand
-            },
-            "offers": {
-              "@type": "Offer",
-              "url": `https://shoemarknet.com/products/${product._id}`,
-              "priceCurrency": "USD",
-              "price": discountedPrice || currentPrice,
-              "itemCondition": "https://schema.org/NewCondition",
-              "availability": maxStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-            },
-            "aggregateRating": product.rating && product.numReviews ? {
-              "@type": "AggregateRating",
-              "ratingValue": product.rating,
-              "reviewCount": product.numReviews
-            } : undefined
-          })}
-        </script>
-      </Helmet>
+      <PageMeta
+        title={metaTitle}
+        description={metaDescription}
+        robots="index, follow"
+        canonical={`https://shoemarknet.com/products/${product._id}`}
+        openGraph={{
+          title: metaTitle,
+          description: metaDescription,
+          type: 'product',
+          url: `https://shoemarknet.com/products/${product._id}`,
+          image: mainImage || product.images?.[0],
+        }}
+        twitter={{
+          card: 'summary_large_image',
+          title: metaTitle,
+          description: metaDescription,
+          image: mainImage || product.images?.[0],
+        }}
+        meta={[
+          {
+            property: 'product:brand',
+            content: product.brand,
+          },
+          {
+            property: 'product:availability',
+            content: maxStock > 0 ? 'in stock' : 'out of stock',
+          },
+          {
+            property: 'product:condition',
+            content: 'new',
+          },
+          {
+            property: 'product:price:amount',
+            content: `${discountedPrice || currentPrice}`,
+          },
+          {
+            property: 'product:price:currency',
+            content: 'USD',
+          },
+        ]}
+        jsonLd={{
+          '@context': 'https://schema.org/',
+          '@type': 'Product',
+          name: product.name,
+          image: product.images,
+          description: product.description,
+          brand: {
+            '@type': 'Brand',
+            name: product.brand,
+          },
+          offers: {
+            '@type': 'Offer',
+            url: `https://shoemarknet.com/products/${product._id}`,
+            priceCurrency: 'USD',
+            price: discountedPrice || currentPrice,
+            itemCondition: 'https://schema.org/NewCondition',
+            availability: maxStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          },
+          aggregateRating: product.rating && product.numReviews
+            ? {
+                '@type': 'AggregateRating',
+                ratingValue: product.rating,
+                reviewCount: product.numReviews,
+              }
+            : undefined,
+        }}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         

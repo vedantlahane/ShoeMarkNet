@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
 import { toast } from 'react-toastify';
+
+import PageMeta from '../seo/PageMeta';
 
 // Redux actions
 import { 
@@ -561,12 +562,11 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
 
   return (
     <ErrorBoundary>
-      {/* SEO Meta Tags */}
-      <Helmet>
-        <title>User Management | Admin Dashboard - ShoeMarkNet</title>
-        <meta name="description" content="Manage user accounts, roles, permissions, and user analytics with comprehensive admin tools." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      <PageMeta
+        title="User Management | Admin Dashboard - ShoeMarkNet"
+        description="Manage user accounts, roles, permissions, and user analytics with comprehensive admin tools."
+        robots="noindex, nofollow"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
         

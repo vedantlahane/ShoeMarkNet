@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -223,12 +223,12 @@ const Login = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>Sign In - ShoeMarkNet | Premium Footwear Store</title>
-        <meta name="description" content="Sign in to ShoeMarkNet to access exclusive deals, track orders, and enjoy a personalized shopping experience." />
-        <meta name="robots" content="noindex, nofollow" />
-        <link rel="canonical" href="https://shoemarknet.com/login" />
-      </Helmet>
+      <PageMeta
+        title="Sign In - ShoeMarkNet | Premium Footwear Store"
+        description="Sign in to ShoeMarkNet to access exclusive deals, track orders, and enjoy a personalized shopping experience."
+        robots="noindex, nofollow"
+        canonical="https://shoemarknet.com/login"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
         {/* Enhanced Background Elements */}

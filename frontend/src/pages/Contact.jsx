@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions (you'll need to create these)
@@ -476,56 +476,52 @@ const Contact = () => {
   return (
     <>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`https://shoemarknet.com/contact${location.search}`} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://shoemarknet.com/contact${location.search}`} />
-        
-        {/* Contact Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ContactPage",
-            "name": "ShoeMarkNet Contact",
-            "description": metaDescription,
-            "url": `https://shoemarknet.com/contact${location.search}`,
-            "mainEntity": {
-              "@type": "Organization",
-              "name": "ShoeMarkNet",
-              "contactPoint": [
-                {
-                  "@type": "ContactPoint",
-                  "telephone": "+1-555-123-4567",
-                  "contactType": "customer service",
-                  "email": "support@shoemarknet.com",
-                  "availableLanguage": ["en"],
-                  "hoursAvailable": {
-                    "@type": "OpeningHoursSpecification",
-                    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                    "opens": "08:00",
-                    "closes": "18:00"
-                  }
-                }
-              ],
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "123 Shoe Street",
-                "addressLocality": "New York",
-                "addressRegion": "NY",
-                "postalCode": "10001",
-                "addressCountry": "US"
-              }
-            }
-          })}
-        </script>
-      </Helmet>
+      <PageMeta
+        title={metaTitle}
+        description={metaDescription}
+        robots="index, follow"
+        canonical={`https://shoemarknet.com/contact${location.search}`}
+        openGraph={{
+          title: metaTitle,
+          description: metaDescription,
+          type: 'website',
+          url: `https://shoemarknet.com/contact${location.search}`,
+        }}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'ContactPage',
+          name: 'ShoeMarkNet Contact',
+          description: metaDescription,
+          url: `https://shoemarknet.com/contact${location.search}`,
+          mainEntity: {
+            '@type': 'Organization',
+            name: 'ShoeMarkNet',
+            contactPoint: [
+              {
+                '@type': 'ContactPoint',
+                telephone: '+1-555-123-4567',
+                contactType: 'customer service',
+                email: 'support@shoemarknet.com',
+                availableLanguage: ['en'],
+                hoursAvailable: {
+                  '@type': 'OpeningHoursSpecification',
+                  dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                  opens: '08:00',
+                  closes: '18:00',
+                },
+              },
+            ],
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: '123 Shoe Street',
+              addressLocality: 'New York',
+              addressRegion: 'NY',
+              postalCode: '10001',
+              addressCountry: 'US',
+            },
+          },
+        }}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         

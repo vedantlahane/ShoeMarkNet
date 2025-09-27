@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../seo/PageMeta';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronUp } from 'lucide-react';
@@ -39,6 +39,11 @@ const ROUTE_CONFIG = {
     title: 'Order History - ShoeMarkNet',
     description: 'Track and manage your orders.',
     background: 'gradient-primary'
+  },
+  '/access-denied': {
+    title: 'Access Restricted • ShoeMarkNet',
+    description: 'Your current role does not have permission to view this page.',
+    background: 'gradient-tertiary'
   }
 };
 
@@ -47,6 +52,10 @@ const useReducedMotion = () => {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return undefined;
+    }
+
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
 
@@ -54,11 +63,30 @@ const useReducedMotion = () => {
       setPrefersReducedMotion(event.matches);
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    try {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } catch (error) {
+      // Fallback for older browsers
+      mediaQuery.addListener(handleChange);
+      return () => mediaQuery.removeListener(handleChange);
+    }
   }, []);
 
   return prefersReducedMotion;
+};
+
+const getPreferredTheme = () => {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+
+  const storedTheme = localStorage.getItem('theme');
+  if (storedTheme) {
+    return storedTheme;
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
 const MainLayout = () => {
@@ -69,10 +97,7 @@ const MainLayout = () => {
   
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState(() => {
-    return localStorage.getItem('theme') || 
-           (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  });
+  const [currentTheme, setCurrentTheme] = useState(getPreferredTheme);
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -85,19 +110,23 @@ const MainLayout = () => {
 
   // Optimized scroll handling with debouncing
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
     let timeoutId;
-    
+
     const handleScroll = () => {
       if (timeoutId) clearTimeout(timeoutId);
-      
+
       timeoutId = setTimeout(() => {
         const scrollY = window.pageYOffset;
         setShowScrollTop(scrollY > 400);
-      }, 16); // ~60fps
+      }, 16);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (timeoutId) clearTimeout(timeoutId);
@@ -134,23 +163,34 @@ const MainLayout = () => {
 
   // Theme change handler with improved performance
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
     const handleThemeChange = () => {
-      const newTheme = localStorage.getItem('theme') || 
-                      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      setCurrentTheme(newTheme);
+      setCurrentTheme(getPreferredTheme());
     };
 
     window.addEventListener('storage', handleThemeChange);
-    
-    const observer = new MutationObserver(handleThemeChange);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
+
+    let observer;
+    if (
+      typeof MutationObserver !== 'undefined' &&
+      typeof document !== 'undefined' &&
+      document.documentElement
+    ) {
+      observer = new MutationObserver(handleThemeChange);
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
 
     return () => {
       window.removeEventListener('storage', handleThemeChange);
-      observer.disconnect();
+      if (observer) {
+        observer.disconnect();
+      }
     };
   }, []);
 
@@ -182,11 +222,14 @@ const MainLayout = () => {
 
   return (
     <ErrorBoundary>
-      <Helmet>
-        <title>{currentRoute.title}</title>
-        <meta name="description" content={currentRoute.description} />
-        <meta name="theme-color" content={currentTheme === 'dark' ? '#0f172a' : '#ffffff'} />
-      </Helmet>
+      <PageMeta
+        title={currentRoute.title}
+        description={currentRoute.description}
+        meta={[{
+          name: 'theme-color',
+          content: currentTheme === 'dark' ? '#0f172a' : '#ffffff',
+        }]}
+      />
 
       <div 
         ref={layoutRef}

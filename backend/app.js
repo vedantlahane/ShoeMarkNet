@@ -1,10 +1,10 @@
 const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const path = require('path');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const helmet = require('helmet');
+const morgan = require('morgan');
 const compression = require('compression');
+const path = require('path');
 
 // Load environment variables first
 dotenv.config();
@@ -31,6 +31,9 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+const contactAdminRoutes = require('./routes/contactAdminRoutes');
+
 
 // Import middleware
 const { errorMiddleware, notFound } = require('./middleware/errorMiddleware');
@@ -106,6 +109,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/admin/contacts', contactAdminRoutes);
 app.use('/api/reviews', reviewRoutes);
 
 // Health check route with detailed information

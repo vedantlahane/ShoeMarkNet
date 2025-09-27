@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+
+import PageMeta from '../seo/PageMeta';
 
 // Redux actions
 import { fetchProducts } from '../../redux/slices/productSlice';
@@ -293,12 +294,11 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
 
   return (
     <>
-      {/* SEO Meta Tags */}
-      <Helmet>
-        <title>Admin Dashboard | ShoeMarkNet Control Center</title>
-        <meta name="description" content="Comprehensive admin dashboard with real-time analytics, order management, and business insights for ShoeMarkNet." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      <PageMeta
+        title="Admin Dashboard | ShoeMarkNet Control Center"
+        description="Comprehensive admin dashboard with real-time analytics, order management, and business insights for ShoeMarkNet."
+        robots="noindex, nofollow"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
         

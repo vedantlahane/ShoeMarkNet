@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+
+import PageMeta from '../components/seo/PageMeta';
 
 // Components
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -215,10 +216,9 @@ const COMPANY_MILESTONES = [
 
 const About = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   // Redux state
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   // Local state
   const [animateElements, setAnimateElements] = useState(false);
@@ -338,61 +338,56 @@ const About = () => {
 
   return (
     <ErrorBoundary>
-      {/* SEO Meta Tags */}
-      <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://shoemarknet.com/about" />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://shoemarknet.com/about" />
-        <meta property="og:image" content="https://shoemarknet.com/og-about.jpg" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
-        <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content="https://shoemarknet.com/twitter-about.jpg" />
-        
-        {/* Organization Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "ShoeMarkNet",
-            "url": "https://shoemarknet.com",
-            "logo": "https://shoemarknet.com/logo.png",
-            "description": metaDescription,
-            "foundingDate": "2018",
-            "founder": [
-              {
-                "@type": "Person",
-                "name": "Sarah Johnson",
-                "jobTitle": "CEO & Founder"
-              }
-            ],
-            "address": {
-              "@type": "PostalAddress",
-              "addressCountry": "US"
-            },
-            "contactPoint": {
-              "@type": "ContactPoint",
-              "contactType": "customer service",
-              "email": "hello@shoemarknet.com",
-              "availableLanguage": ["en"]
-            },
-            "sameAs": [
-              "https://twitter.com/shoemarknet",
-              "https://linkedin.com/company/shoemarknet",
-              "https://instagram.com/shoemarknet"
-            ]
-          })}
-        </script>
-      </Helmet>
+      <PageMeta
+        title={metaTitle}
+        description={metaDescription}
+        robots="index, follow"
+        canonical="https://shoemarknet.com/about"
+        openGraph={{
+          title: metaTitle,
+          description: metaDescription,
+          type: 'website',
+          url: 'https://shoemarknet.com/about',
+          image: 'https://shoemarknet.com/og-about.jpg'
+        }}
+        twitter={{
+          card: 'summary_large_image',
+          title: metaTitle,
+          description: metaDescription,
+          image: 'https://shoemarknet.com/twitter-about.jpg'
+        }}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'ShoeMarkNet',
+          url: 'https://shoemarknet.com',
+          logo: 'https://shoemarknet.com/logo.png',
+          description: metaDescription,
+          foundingDate: '2018',
+          founder: [
+            {
+              '@type': 'Person',
+              name: 'Sarah Johnson',
+              jobTitle: 'CEO & Founder'
+            }
+          ],
+          address: {
+            '@type': 'PostalAddress',
+            addressCountry: 'US'
+          },
+          contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'customer service',
+            email: 'hello@shoemarknet.com',
+            availableLanguage: ['en']
+          },
+          sameAs: [
+            'https://twitter.com/shoemarknet',
+            'https://linkedin.com/company/shoemarknet',
+            'https://instagram.com/shoemarknet'
+          ]
+        }}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -326,15 +326,32 @@ const Search = () => {
     [cartItems]
   );
 
+  const metaTitle = useMemo(
+    () => `${searchQuery ? `Search results for "${searchQuery}"` : 'Search'} - ShoeMarkNet`,
+    [searchQuery]
+  );
+
+  const metaDescription = useMemo(
+    () => searchQuery
+      ? `Find the best shoes for "${searchQuery}". Browse our collection of premium footwear.`
+      : 'Search for your perfect pair of shoes from our extensive collection of premium footwear.',
+    [searchQuery]
+  );
+
+  const metaKeywords = useMemo(
+    () => (searchQuery ? `${searchQuery}, shoes, footwear, sneakers, ShoeMarkNet` : undefined),
+    [searchQuery]
+  );
+
   return (
     <ErrorBoundary>
       {/* SEO Meta Tags */}
-      <Helmet>
-        <title>{searchQuery ? `Search results for "${searchQuery}"` : 'Search'} - ShoeMarkNet</title>
-        <meta name="description" content={searchQuery ? `Find the best shoes for "${searchQuery}". Browse our collection of premium footwear.` : 'Search for your perfect pair of shoes from our extensive collection of premium footwear.'} />
-        <meta name="robots" content="index, follow" />
-        {searchQuery && <meta name="keywords" content={`${searchQuery}, shoes, footwear, sneakers, ShoeMarkNet`} />}
-      </Helmet>
+      <PageMeta
+        title={metaTitle}
+        description={metaDescription}
+        robots="index, follow"
+        keywords={metaKeywords}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         

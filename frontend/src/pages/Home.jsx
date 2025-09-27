@@ -1,7 +1,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet-async';
+import PageMeta from '../components/seo/PageMeta';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 // Redux actions
@@ -95,11 +95,11 @@ const Home = () => {
   return (
     <>
       {/* SEO metadata for search engines */}
-      <Helmet>
-        <title>ShoeMarkNet - Premium Footwear Online</title>
-        <meta name="description" content="Discover premium footwear brands and styles with AI-powered recommendations and lightning-fast delivery" />
-        <meta name="keywords" content="shoes, footwear, sneakers, premium, online shopping, AI recommendations" />
-      </Helmet>
+      <PageMeta
+        title="ShoeMarkNet - Premium Footwear Online"
+        description="Discover premium footwear brands and styles with AI-powered recommendations and lightning-fast delivery"
+        keywords="shoes, footwear, sneakers, premium, online shopping, AI recommendations"
+      />
 
       {/* Main page content with gradient background */}
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-500">
