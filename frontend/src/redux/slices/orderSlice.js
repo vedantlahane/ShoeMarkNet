@@ -258,11 +258,13 @@ export const updateOrderStatus = createAsyncThunk(
     try {
       const loadingToast = toast.loading("⚡ Updating order status...");
       
-      const result = await orderService.updateOrderStatus(orderId, updates);
-      
-      toast.dismiss(loadingToast);
-      showSuccessToast(`✅ Order #${result.orderNumber || orderId} status updated to: ${updates.status}`);
-      
+  const result = await orderService.updateOrderStatus(orderId, updates);
+
+  toast.dismiss(loadingToast);
+  const resolvedStatus = updates.status ?? result.status ?? (result.isDelivered ? 'delivered' : undefined);
+  const statusSuffix = resolvedStatus ? ` (status: ${resolvedStatus})` : '';
+  showSuccessToast(`✅ Order #${result.orderId || orderId} updated successfully${statusSuffix}`);
+
       return result;
     } catch (error) {
       const errorPayload = createErrorPayload(error, 'Failed to update order status');

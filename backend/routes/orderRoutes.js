@@ -7,6 +7,7 @@ const {
   updateOrderPayment,
   cancelOrder,
   getAllOrders,
+  getOrderStats,
   updateOrderStatus,
   deleteOrder
 } = require('../controllers/orderController');
@@ -76,7 +77,7 @@ router.get('/admin/all', protect, admin, getAllOrders);
  * @route GET /api/orders/admin/stats
  * @access Private/Admin
  */
-router.get('/admin/stats', protect, admin, getAllOrders); // Using same function for now
+router.get('/admin/stats', protect, admin, getOrderStats);
 
 /**
  * @description Update the status of a specific order.

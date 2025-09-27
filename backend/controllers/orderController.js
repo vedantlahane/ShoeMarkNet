@@ -216,30 +216,167 @@ const getAllOrders = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @description Get aggregate statistics for orders (admin dashboard).
+ * @route GET /api/orders/admin/stats
+ * @access Private/Admin
+ */
+const getOrderStats = asyncHandler(async (req, res) => {
+  const { startDate, endDate, status } = req.query;
+
+  const filters = {};
+
+  if (status && status !== 'all') {
+    filters.status = status;
+  }
+
+  let start = null;
+  let end = null;
+
+  if (startDate) {
+    const parsedStart = new Date(startDate);
+    if (!Number.isNaN(parsedStart.getTime())) {
+      start = parsedStart;
+    }
+  }
+
+  if (endDate) {
+    const parsedEnd = new Date(endDate);
+    if (!Number.isNaN(parsedEnd.getTime())) {
+      end = parsedEnd;
+    }
+  }
+
+  if (start || end) {
+    filters.createdAt = {};
+    if (start) {
+      filters.createdAt.$gte = start;
+    }
+    if (end) {
+      filters.createdAt.$lte = end;
+    }
+  }
+
+  const orders = await Order.find(filters).select('totalPrice grandTotal isPaid isDelivered status createdAt');
+
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.grandTotal ?? order.totalPrice ?? 0), 0);
+  const paidOrders = orders.filter(order => order.isPaid).length;
+  const deliveredOrders = orders.filter(order => order.isDelivered).length;
+  const cancelledOrders = orders.filter(order => order.status === 'cancelled').length;
+  const processingOrders = orders.filter(order => order.status === 'processing').length;
+  const pendingOrders = orders.filter(order => order.status === 'pending').length;
+  const pendingPayments = orders.filter(order => !order.isPaid).length;
+
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const conversionRate = totalOrders > 0 ? (paidOrders / totalOrders) * 100 : 0;
+
+  res.status(200).json({
+    totalOrders,
+    totalRevenue,
+    paidOrders,
+    deliveredOrders,
+    cancelledOrders,
+    processingOrders,
+    pendingOrders,
+  pendingPayments,
+    avgOrderValue: averageOrderValue,
+    conversionRate,
+    filters: {
+      startDate: start ? start.toISOString() : null,
+      endDate: end ? end.toISOString() : null,
+      status: status || 'all'
+    }
+  });
+});
+
+/**
  * @description Update the status of an order (e.g., from 'processing' to 'shipped').
  * @route PUT /api/orders/admin/:orderId/status
  * @access Private/Admin
  */
 const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
-  
+  const {
+    status,
+    isPaid,
+    paidAt,
+    paymentResult,
+    isDelivered,
+    deliveredAt,
+    trackingNumber,
+    estimatedDelivery
+  } = req.body;
+
   const order = await Order.findById(req.params.orderId);
   if (!order) {
     res.status(404);
     throw new Error('Order not found');
   }
-  
-  order.status = status;
-  
-  // If the status is 'delivered', update the delivery details
-  if (status === 'delivered') {
-    order.isDelivered = true;
-    order.deliveredAt = Date.now();
+
+  // Update primary status if provided
+  if (status && order.status !== status) {
+    order.status = status;
+
+    if (status === 'delivered') {
+      order.isDelivered = true;
+      order.deliveredAt = new Date();
+    }
+
+    if (status === 'cancelled') {
+      order.isDelivered = false;
+      order.deliveredAt = undefined;
+    }
   }
-  
-  await order.save();
-  
-  res.status(200).json({ message: 'Order status updated', order });
+
+  // Update payment state
+  if (typeof isPaid === 'boolean') {
+    order.isPaid = isPaid;
+    if (isPaid) {
+      order.paidAt = paidAt ? new Date(paidAt) : order.paidAt || new Date();
+    } else {
+      order.paidAt = null;
+    }
+  }
+
+  // Merge payment result metadata if supplied
+  if (paymentResult && typeof paymentResult === 'object') {
+    const existingPaymentResult = order.paymentResult && typeof order.paymentResult.toObject === 'function'
+      ? order.paymentResult.toObject()
+      : (order.paymentResult ? { ...order.paymentResult } : {});
+
+    order.paymentResult = {
+      ...existingPaymentResult,
+      ...paymentResult
+    };
+  }
+
+  // Update delivery flags if provided explicitly
+  if (typeof isDelivered === 'boolean') {
+    order.isDelivered = isDelivered;
+    if (isDelivered) {
+      order.deliveredAt = deliveredAt ? new Date(deliveredAt) : order.deliveredAt || new Date();
+      if (!status) {
+        order.status = 'delivered';
+      }
+    } else {
+      order.deliveredAt = null;
+      if (!status && order.status === 'delivered') {
+        order.status = 'processing';
+      }
+    }
+  }
+
+  if (trackingNumber !== undefined) {
+    order.trackingNumber = trackingNumber || null;
+  }
+
+  if (estimatedDelivery !== undefined) {
+    order.estimatedDelivery = estimatedDelivery ? new Date(estimatedDelivery) : null;
+  }
+
+  const savedOrder = await order.save();
+  const populatedOrder = await savedOrder.populate('user', 'name email');
+
+  res.status(200).json(populatedOrder);
 });
 
 /**
@@ -267,6 +404,7 @@ module.exports = {
   updateOrderPayment,
   cancelOrder,
   getAllOrders,
+  getOrderStats,
   updateOrderStatus,
   deleteOrder
 };

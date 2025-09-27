@@ -84,7 +84,10 @@ const getProducts = async (filters = {}) => {
  */
 const searchProducts = async (query, filters = {}) => {
   try {
-    const queryParams = new URLSearchParams({ search: query });
+    const queryParams = new URLSearchParams();
+    if (query !== null && query !== undefined && query !== '') {
+      queryParams.append('q', query);
+    }
     
     // Add additional filters
     Object.entries(filters).forEach(([key, value]) => {

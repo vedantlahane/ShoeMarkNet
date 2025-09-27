@@ -616,12 +616,14 @@ const getRelatedProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/products/search
 // @access  Public
 const searchProducts = asyncHandler(async (req, res) => {
-  const { q, limit = 10 } = req.query;
+  const { limit = 10 } = req.query;
+  const rawQuery = req.query.q ?? req.query.search;
   
-  if (!q || q.trim().length === 0) {
+  if (!rawQuery || rawQuery.trim().length === 0) {
     res.status(400);
     throw new Error('Search query is required');
   }
+  const q = rawQuery.trim();
   
   // Use MongoDB's text search feature, which requires a text index on the schema
   const products = await Product.find(
