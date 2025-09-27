@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import PageMeta from '../components/seo/PageMeta';
@@ -45,6 +45,7 @@ const Register = () => {
     password: false,
     confirmPassword: false
   });
+  const nameInputRef = useRef(null);
 
   // Redux state
   const dispatch = useDispatch();
@@ -58,6 +59,15 @@ const Register = () => {
     retryCount,
     isInitialized 
   } = useSelector((state) => state.auth);
+
+  const errorMessage = useMemo(() => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object') {
+      return error.userMessage || error.message || error.error || '';
+    }
+    return '';
+  }, [error]);
 
   // Local storage for form persistence
   const [savedFormData, setSavedFormData] = useLocalStorage('registerFormData', {});
@@ -152,6 +162,9 @@ const Register = () => {
   useEffect(() => {
     dispatch(clearAllErrors());
     dispatch(resetRetryCount());
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
     
     // Restore form data from localStorage
     if (Object.keys(savedFormData).length > 0) {
@@ -361,7 +374,7 @@ const Register = () => {
               <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 mb-6">
                 
                 {/* Enhanced Error Display */}
-                {error && (
+                {errorMessage && (
                   <div className="bg-red-500/20 backdrop-blur-lg border border-red-300/50 text-red-100 px-6 py-4 rounded-2xl mb-6 animate-shake">
                     <div className="flex items-start">
                       <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-1">
@@ -369,7 +382,7 @@ const Register = () => {
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-sm mb-1">Registration Failed</p>
-                        <p className="text-xs text-red-200">{error.message || error}</p>
+                        <p className="text-xs text-red-200">{errorMessage}</p>
                         {retryCount >= 2 && (
                           <div className="mt-2 flex items-center space-x-2">
                             <button 
@@ -405,6 +418,7 @@ const Register = () => {
                         type="text"
                         id="name"
                         name="name"
+                        ref={nameInputRef}
                         className={`w-full px-4 py-4 pl-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
                           formTouched.name && !validation.name.isValid
                             ? 'border-red-400 focus:ring-red-400'

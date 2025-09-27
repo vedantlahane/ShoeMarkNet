@@ -270,6 +270,15 @@ const productSlice = createSlice({
     setProducts: (state, action) => {
       state.products = action.payload;
     },
+
+    hydrateFeaturedProducts: (state, action) => {
+      const cached = Array.isArray(action.payload) ? action.payload : [];
+      if (cached.length > 0) {
+        state.featuredProducts = cached;
+        state.featuredLoading = false;
+        state.error = null;
+      }
+    },
   },
   
   extraReducers: (builder) => {
@@ -523,6 +532,7 @@ export const {
   clearProductDetails,
   clearSuccessFlags,
   setProducts,
+  hydrateFeaturedProducts,
 } = productSlice.actions;
 
 export default productSlice.reducer;

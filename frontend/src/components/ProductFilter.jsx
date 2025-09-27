@@ -1,5 +1,5 @@
 // src/components/ProductFilter.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 
@@ -82,13 +82,65 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
   const { products } = useSelector((state) => state.product);
   const brands = [...new Set(products?.map(product => product.brand).filter(Boolean))];
 
-  // Enhanced options
   const genderOptions = [
     { value: 'men', label: 'Men', icon: 'fa-mars', color: 'from-blue-500 to-cyan-500' },
     { value: 'women', label: 'Women', icon: 'fa-venus', color: 'from-pink-500 to-rose-500' },
     { value: 'unisex', label: 'Unisex', icon: 'fa-venus-mars', color: 'from-purple-500 to-indigo-500' }
   ];
 
+  const activeFilters = useMemo(() => {
+    const filters = [];
+
+    if (currentFilters.category) {
+      const categoryMatch = categories?.find(category => (category._id || category.name) === currentFilters.category);
+      filters.push({
+        key: 'category',
+        label: `Category: ${categoryMatch?.name || currentFilters.category}`
+      });
+    }
+
+    if (currentFilters.brand) {
+      filters.push({ key: 'brand', label: `Brand: ${currentFilters.brand}` });
+    }
+
+    if (currentFilters.gender) {
+      const genderLabel = genderOptions.find(option => option.value === currentFilters.gender)?.label || currentFilters.gender;
+      filters.push({ key: 'gender', label: `Gender: ${genderLabel}` });
+    }
+
+    const minPrice = Number(currentFilters.priceRange?.min ?? 0);
+    const maxPrice = Number(currentFilters.priceRange?.max ?? 1000);
+    if (minPrice > 0 || maxPrice < 1000) {
+      filters.push({
+        key: 'priceRange',
+        label: `Price: $${minPrice} - $${maxPrice >= 1000 ? '1000+' : maxPrice}`
+      });
+    }
+
+    return filters;
+  }, [categories, currentFilters.category, currentFilters.brand, currentFilters.gender, currentFilters.priceRange]);
+
+  const handleRemoveFilter = (key) => {
+    switch (key) {
+      case 'category':
+        onFilterChange({ category: '' });
+        break;
+      case 'brand':
+        onFilterChange({ brand: '' });
+        break;
+      case 'gender':
+        onFilterChange({ gender: '' });
+        break;
+      case 'priceRange':
+        onFilterChange({ priceRange: { min: 0, max: 1000 } });
+        setPriceRange({ min: 0, max: 1000 });
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Enhanced options
   const featureOptions = [
     { value: 'waterproof', label: 'Waterproof', icon: 'fa-tint' },
     { value: 'breathable', label: 'Breathable', icon: 'fa-wind' },
@@ -109,6 +161,29 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
 
   return (
     <div className="space-y-6">
+      {activeFilters.length > 0 && (
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up">
+          <div className="flex flex-wrap gap-2">
+            {activeFilters.map(filter => (
+              <button
+                key={filter.key}
+                onClick={() => handleRemoveFilter(filter.key)}
+                className="px-3 py-1.5 rounded-full bg-white/20 text-gray-900 dark:text-white text-xs font-semibold flex items-center space-x-2 hover:bg-white/30 transition-all duration-200"
+                aria-label={`Remove ${filter.label}`}
+              >
+                <span>{filter.label}</span>
+                <i className="fas fa-times text-[10px]"></i>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={clearAllFilters}
+            className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 hover:text-blue-500"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
       
       {/* Enhanced Category Filter */}
       <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden shadow-2xl ${

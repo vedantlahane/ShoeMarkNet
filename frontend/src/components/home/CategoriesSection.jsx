@@ -422,6 +422,8 @@ const CategoriesSection = ({
                 style={{ transitionDelay: `${index * 100}ms` }}
                 onMouseEnter={() => handleCategoryHover(category.id)}
                 onMouseLeave={handleCategoryLeave}
+                onFocus={() => handleCategoryHover(category.id)}
+                onBlur={handleCategoryLeave}
                 role="gridcell"
                 aria-label={`${category.name} category with ${category.count} products`}
               >

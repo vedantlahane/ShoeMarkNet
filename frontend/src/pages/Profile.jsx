@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
@@ -61,6 +61,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useLocalStorage('profileActiveTab', 'profile');
   const [formTouched, setFormTouched] = useState({});
   const [passwordTouched, setPasswordTouched] = useState({});
+  const profileNameInputRef = useRef(null);
 
   // Memoized profile completeness calculation
   const profileCompleteness = useMemo(() => {
@@ -124,6 +125,15 @@ const Profile = () => {
     };
   }, [passwordData]);
 
+  const profileErrorMessage = useMemo(() => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object') {
+      return error.userMessage || error.message || 'An error occurred while updating your profile';
+    }
+    return 'An unknown error occurred.';
+  }, [error]);
+
   // Initialize form data when user changes
   useEffect(() => {
     if (user) {
@@ -135,6 +145,12 @@ const Profile = () => {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (isEditing && profileNameInputRef.current) {
+      profileNameInputRef.current.focus();
+    }
+  }, [isEditing]);
 
   // Clear errors on component mount
   useEffect(() => {
@@ -470,7 +486,7 @@ const Profile = () => {
                 </div>
                 
                 {/* Error Display */}
-                {error && (
+                {profileErrorMessage && (
                   <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-6 mt-4">
                     <div className="flex">
                       <div className="flex-shrink-0">
@@ -478,7 +494,7 @@ const Profile = () => {
                       </div>
                       <div className="ml-3">
                         <p className="text-sm text-red-700">
-                          {error.message || 'An error occurred while updating your profile'}
+                          {profileErrorMessage}
                         </p>
                       </div>
                     </div>
@@ -499,6 +515,7 @@ const Profile = () => {
                             type="text"
                             name="name"
                             id="name"
+                            ref={profileNameInputRef}
                             value={formData.name}
                             onChange={handleInputChange('name')}
                             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 ${

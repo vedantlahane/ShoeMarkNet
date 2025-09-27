@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -54,6 +54,7 @@ const ProductCard = ({
   };
 
   const productData = { ...defaultProduct, ...product };
+  const productId = productData.id || productData._id;
   const dispatch = useDispatch();
   
   // Redux state
@@ -65,9 +66,40 @@ const ProductCard = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [selectedSize, setSelectedSize] = useState('');
 
-  const isInWishlist = wishlistItems.some(item => item.id === productData.id);
-  const isInCart = cartItems.some(item => item.productId === productData.id);
+  const availableSizes = useMemo(() => {
+    const rawSizes = productData?.sizes;
+    if (!Array.isArray(rawSizes)) return [];
+
+    return rawSizes
+      .map(entry => {
+        if (typeof entry === 'string') return entry;
+        if (entry && typeof entry === 'object') return entry.size;
+        return null;
+      })
+      .filter(Boolean)
+      .slice(0, 6);
+  }, [productData?.sizes]);
+
+  const isInWishlist = wishlistItems.some(item => (item.id || item._id) === productId);
+  const isInCart = cartItems.some(item => {
+    const cartProductId = item.productId || item.product?._id || item.product?.id || item.product;
+    const variantSize = item.variant?.size || item.size;
+    if (availableSizes.length > 0 && variantSize) {
+      return cartProductId === productId && variantSize === selectedSize;
+    }
+    return cartProductId === productId;
+  });
+
+  useEffect(() => {
+    if (availableSizes.length === 0) {
+      setSelectedSize('');
+      return;
+    }
+
+    setSelectedSize(prev => (prev && availableSizes.includes(prev) ? prev : availableSizes[0]));
+  }, [availableSizes]);
 
   // GSAP Animations
   useEffect(() => {
@@ -139,11 +171,17 @@ const ProductCard = ({
       showErrorToast("This product is currently out of stock");
       return;
     }
+
+    if (availableSizes.length > 0 && !selectedSize) {
+      showErrorToast('Please select a size first');
+      return;
+    }
     
     dispatch(addToCart({
-      productId: productData.id,
+      productId,
       quantity: 1,
-      product: productData
+      product: productData,
+      size: selectedSize || undefined
     }));
 
     // Animation feedback
@@ -302,6 +340,28 @@ const ProductCard = ({
           <div className="mb-4">
             <h3 className="text-2xl font-bold text-white mb-2">{productData.name}</h3>
             <p className="text-blue-200 mb-3">{productData.brand}</p>
+            {availableSizes.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {availableSizes.map(size => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setSelectedSize(size);
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
+                      selectedSize === size
+                        ? 'bg-white text-slate-900 shadow-lg'
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                    aria-label={`Select size ${size}`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
             
             <div className="flex items-center space-x-1 mb-4">
               {renderStars()}
@@ -461,6 +521,31 @@ const ProductCard = ({
           <h3 className="font-semibold text-white mb-2 text-lg leading-tight line-clamp-2">
             {productData.name}
           </h3>
+
+          {/* Sizes */}
+          {availableSizes.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {availableSizes.map(size => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setSelectedSize(size);
+                  }}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-xl transition-all duration-200 ${
+                    selectedSize === size
+                      ? 'bg-white text-slate-900 shadow-lg'
+                      : 'bg-white/10 text-gray-200 hover:bg-white/20'
+                  }`}
+                  aria-label={`Select size ${size}`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Rating */}
           <div className="flex items-center space-x-2 mb-3">

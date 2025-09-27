@@ -4,7 +4,7 @@ import PageMeta from '../components/seo/PageMeta';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 // Redux actions
-import { fetchFeaturedProducts } from '../redux/slices/productSlice';
+import { fetchFeaturedProducts, hydrateFeaturedProducts } from '../redux/slices/productSlice';
 import { addToCart } from '../redux/slices/cartSlice';
 
 // Components
@@ -66,9 +66,34 @@ const Home = () => {
     }
 
     if (featuredCount === 0) {
+      try {
+        const cached = sessionStorage.getItem('shoemarknet:featured-products');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            dispatch(hydrateFeaturedProducts(parsed));
+            return;
+          }
+        }
+      } catch (storageError) {
+        console.warn('Unable to read featured products cache:', storageError);
+      }
+
       dispatch(fetchFeaturedProducts());
     }
   }, [dispatch, featuredLoading, featuredCount, error]);
+
+  useEffect(() => {
+    if (featuredList.length === 0) {
+      return;
+    }
+
+    try {
+      sessionStorage.setItem('shoemarknet:featured-products', JSON.stringify(featuredList.slice(0, 16)));
+    } catch (storageError) {
+      console.warn('Unable to cache featured products:', storageError);
+    }
+  }, [featuredList]);
 
   /**
    * Handles adding a product to the cart.

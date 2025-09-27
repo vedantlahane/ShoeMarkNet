@@ -1,31 +1,36 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { addToCart } from '../../redux/slices/cartSlice';
-import { 
-  ShoppingBag, 
-  Star, 
-  ArrowRight, 
-  Zap, 
-  Users, 
-  Clock, 
-  Gift,
+import { toast } from 'react-hot-toast';
+import {
+  ShoppingBag,
+  Star,
+  ArrowRight,
+  ArrowUpRight,
+  Zap,
+  Users,
+  Clock,
+  History,
   Sparkles,
-  TrendingUp
+  Sparkle,
+  TrendingUp,
+  ShieldCheck,
+  Truck,
+  Layers3,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const HeroSection = () => {
   const dispatch = useDispatch();
   const prefersReducedMotion = usePrefersReducedMotion();
+
   const heroRef = useRef(null);
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
   const ctaRef = useRef(null);
-  const particlesRef = useRef(null);
   const productRef = useRef(null);
   const statsRef = useRef([]);
   const gsapContextRef = useRef(null);
@@ -36,18 +41,54 @@ const HeroSection = () => {
     minutes: 23,
     seconds: 42
   });
-
   const [isLoaded, setIsLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const stats = useMemo(() => ([
-    { icon: Users, value: '50K+', label: 'Happy Customers', color: 'text-blue-400' },
-    { icon: Zap, value: '24h', label: 'Fast Delivery', color: 'text-yellow-400' },
-    { icon: Star, value: '4.9★', label: 'Rating', color: 'text-pink-400' },
-    { icon: TrendingUp, value: '99%', label: 'Satisfaction', color: 'text-green-400' }
+    { icon: Users, value: '50K+', label: 'Happy customers' },
+    { icon: Zap, value: '24h', label: 'Lightning delivery' },
+    { icon: Star, value: '4.9★', label: 'Average rating' },
+    { icon: TrendingUp, value: '99%', label: 'Fit satisfaction' }
   ]), []);
 
+  const featurePills = useMemo(() => ([
+    { icon: ShieldCheck, label: '30-day easy returns' },
+    { icon: Truck, label: 'Free express shipping' },
+    { icon: Sparkles, label: 'AI size guidance' }
+  ]), []);
+
+  const floatingShapes = useMemo(() => ([
+    { left: '8%', top: '18%', size: 220, blur: 180, color: 'bg-sky-500/20' },
+    { left: '70%', top: '12%', size: 160, blur: 140, color: 'bg-violet-500/25' },
+    { left: '16%', top: '70%', size: 140, blur: 120, color: 'bg-cyan-400/25' },
+    { left: '82%', top: '66%', size: 260, blur: 210, color: 'bg-pink-500/20' }
+  ]), []);
+
+  const heroProduct = useMemo(() => ({
+    id: 'hero-premium-1',
+    name: 'Nimbus Runner X',
+    price: 129.99,
+    originalPrice: 189.99,
+    discount: 32,
+    image: '/assets/hero.png'
+  }), []);
+
+  const productHighlights = useMemo(() => ([
+    { icon: Sparkle, label: 'FeatherLite cushioning' },
+    { icon: CheckCircle2, label: 'Adaptive heel lock' },
+    { icon: Layers3, label: 'Breathable knit weave' }
+  ]), []);
+
+  const formatTimeUnit = useCallback((value) => value.toString().padStart(2, '0'), []);
+
+  const countdownSegments = useMemo(() => ([
+    { label: 'Days', value: formatTimeUnit(timeLeft.days) },
+    { label: 'Hours', value: formatTimeUnit(timeLeft.hours) },
+    { label: 'Mins', value: formatTimeUnit(timeLeft.minutes) },
+    { label: 'Secs', value: formatTimeUnit(timeLeft.seconds) }
+  ]), [timeLeft, formatTimeUnit]);
+
   useEffect(() => {
-    // Countdown timer
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         let { days, hours, minutes, seconds } = prev;
@@ -75,135 +116,84 @@ const HeroSection = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // GSAP Animations with proper cleanup
   useEffect(() => {
     if (prefersReducedMotion) {
       setIsLoaded(true);
-      if (particlesRef.current) {
-        particlesRef.current.innerHTML = '';
-      }
       return undefined;
     }
 
     gsapContextRef.current = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.5 });
-      
-      // Animate background gradient
-      gsap.to('.hero-bg', {
-        backgroundPosition: '200% center',
-        duration: 20,
-        ease: 'none',
-        repeat: -1
+      const heroEl = heroRef.current;
+      if (!heroEl) {
+        setIsLoaded(true);
+        return;
+      }
+
+      const statNodes = statsRef.current.filter(Boolean);
+      const floatingNodes = heroEl.querySelectorAll('.floating-shape');
+      const gradientNode = heroEl.querySelector('.hero-gradient');
+
+      const timeline = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.9 } });
+
+      timeline
+        .from(titleRef.current, { y: 60, opacity: 0 })
+        .from(subtitleRef.current, { y: 40, opacity: 0 }, '-=0.5')
+        .from(statNodes, { y: 30, opacity: 0, stagger: 0.12 }, '-=0.5')
+        .from(ctaRef.current, { y: 30, opacity: 0 }, '-=0.4')
+        .from(productRef.current, { x: 80, opacity: 0, rotateY: -10 }, '-=0.7');
+
+      if (gradientNode) {
+        gsap.to(gradientNode, {
+          backgroundPosition: '200% 50%',
+          duration: 18,
+          repeat: -1,
+          ease: 'none'
+        });
+      }
+
+      gsap.utils.toArray(floatingNodes).forEach((shape, index) => {
+        gsap.to(shape, {
+          y: 30,
+          duration: 6 + index,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+          delay: index * 0.4
+        });
       });
 
-      // Create floating particles animation
-      const createParticles = () => {
-        if (particlesRef.current) {
-          particlesRef.current.innerHTML = '';
-          for (let i = 0; i < 20; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'absolute rounded-full bg-white/20 pointer-events-none';
-            const size = Math.random() * 8 + 2;
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            particle.style.left = `${Math.random() * 100}%`;
-            particle.style.top = `${Math.random() * 100}%`;
-            
-            particlesRef.current.appendChild(particle);
-            
-            // Animate particles
-            gsap.to(particle, {
-              y: -100,
-              x: Math.random() * 100 - 50,
-              opacity: 0,
-              duration: Math.random() * 3 + 2,
-              repeat: -1,
-              delay: Math.random() * 2,
-              ease: 'none'
-            });
-          }
-        }
-      };
-
-      // Hero entrance animations
-      tl.fromTo(titleRef.current, 
-        { y: 100, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1.2, ease: 'power4.out' }
-      )
-      .fromTo(subtitleRef.current,
-        { y: 50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-        '-=0.8'
-      )
-      .fromTo(statsRef.current,
-        { y: 30, opacity: 0, scale: 0.9 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.6, stagger: 0.1, ease: 'back.out(1.7)' },
-        '-=0.4'
-      )
-      .fromTo(ctaRef.current,
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-        '-=0.3'
-      )
-      .fromTo(productRef.current,
-        { x: 100, opacity: 0, rotationY: -15 },
-        { x: 0, opacity: 1, rotationY: 0, duration: 1.2, ease: 'power4.out' },
-        '-=1'
-      );
-
-      createParticles();
-
-      // Scroll-triggered animations
-      const heroContent = heroRef.current?.querySelector('.hero-content');
-      const scrollTween = heroContent ? gsap.to(heroContent, {
-        y: -50,
-        opacity: 0.5,
-        ease: 'none',
-        paused: true
-      }) : null;
-
-      ScrollTrigger.create({
-        trigger: heroRef.current,
-        start: 'top center',
-        end: 'bottom center',
-        scrub: 1,
-        onUpdate: (self) => {
-          if (scrollTween) {
-            scrollTween.progress(self.progress);
-          }
-        }
-      });
+      setIsLoaded(true);
     }, heroRef);
-
-    setIsLoaded(true);
 
     return () => {
       if (gsapContextRef.current) {
         gsapContextRef.current.revert();
-      }
-      if (particlesRef.current) {
-        particlesRef.current.innerHTML = '';
+        gsapContextRef.current = null;
       }
     };
   }, [prefersReducedMotion]);
 
-  const handleAddToCart = useCallback((product) => {
+  const handleAddToCart = useCallback((productOverride) => {
+    const product = productOverride || heroProduct;
+
     dispatch(addToCart({
       productId: product.id,
       quantity: 1,
       product
     }));
 
+    toast.success(`${product.name} added to cart`);
+
     if (!prefersReducedMotion) {
       gsap.to('.add-to-cart-btn', {
         scale: 0.95,
-        duration: 0.1,
+        duration: 0.12,
         yoyo: true,
         repeat: 1,
         ease: 'power2.inOut'
       });
     }
-  }, [dispatch, prefersReducedMotion]);
+  }, [dispatch, prefersReducedMotion, heroProduct]);
 
   const scrollToSection = useCallback((sectionId) => {
     const section = document.getElementById(sectionId);
@@ -218,234 +208,235 @@ const HeroSection = () => {
   }, [prefersReducedMotion]);
 
   return (
-    <section 
+    <section
       ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
+      className={`relative isolate overflow-hidden pt-28 pb-32 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       aria-label="Hero section"
     >
-      {/* Animated Background */}
-      <div className="hero-bg absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 bg-[length:200%_200%]">
-        <div className="absolute inset-0 bg-black/20"></div>
-      </div>
+      <div className="hero-gradient absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-black" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.28),_transparent_55%)]" aria-hidden="true" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/70 to-transparent" aria-hidden="true" />
 
-      {/* Floating Particles */}
-      <div ref={particlesRef} className="absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+      {floatingShapes.map((shape, index) => (
+        <span
+          key={`shape-${index}`}
+          className={`floating-shape absolute rounded-full ${shape.color}`}
+          style={{
+            left: shape.left,
+            top: shape.top,
+            width: `${shape.size}px`,
+            height: `${shape.size}px`,
+            filter: `blur(${shape.blur}px)`
+          }}
+          aria-hidden="true"
+        />
+      ))}
 
-      {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 glass opacity-10" aria-hidden="true"></div>
-
-  <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          
-          {/* Hero Content */}
-          <div className={`hero-content text-center lg:text-left transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-            
-            {/* Premium Badge */}
-            <div className="inline-flex items-center space-x-2 glass-card px-6 py-3 mb-8 animate-float">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" aria-hidden="true"></div>
-              <Sparkles size={16} className="text-yellow-400" aria-hidden="true" />
-              <span className="text-sm font-semibold text-white">AI-Powered Shopping Experience</span>
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+          <div className="space-y-10 text-white">
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-white/80 shadow-lg shadow-slate-900/40 backdrop-blur-xl">
+              <Sparkles className="h-4 w-4 text-cyan-300" aria-hidden="true" />
+              <span className="text-xs font-semibold uppercase tracking-[0.28em]">Premium drop</span>
+              <span className="flex items-center gap-1 text-xs text-white/60">
+                <History className="h-3.5 w-3.5" aria-hidden="true" />
+                Ends in {formatTimeUnit(timeLeft.hours)}h {formatTimeUnit(timeLeft.minutes)}m
+              </span>
             </div>
 
-            {/* Main Heading */}
-            <div ref={titleRef} className="mb-6">
-              <h1 className="text-5xl lg:text-7xl font-heading font-bold leading-tight">
-                <span className="block text-white">Discover Your</span>
-                <span className="block gradient-text bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-400 bg-clip-text text-transparent animate-gradient-shift">
-                  Perfect Style
+            <div ref={titleRef} className="space-y-5">
+              <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight">
+                Elevate your stride with
+                <span className="block bg-gradient-to-r from-sky-400 via-indigo-300 to-rose-400 bg-clip-text text-transparent">
+                  Nimbus Runner X
                 </span>
-                <span className="block text-white">Today</span>
               </h1>
             </div>
 
-            {/* Subtitle */}
-            <div ref={subtitleRef} className="mb-8">
-              <p className="text-xl lg:text-2xl text-blue-100 max-w-lg mx-auto lg:mx-0">
-                Premium footwear collection with up to <span className="font-bold text-yellow-400">75% off</span> and lightning-fast delivery.
-              </p>
-            </div>
+            <p
+              ref={subtitleRef}
+              className="max-w-2xl text-base text-white/70 sm:text-lg md:text-xl md:leading-relaxed"
+            >
+              Engineered with adaptive cushioning and breathable knit mesh, Nimbus Runner X keeps pace with every sprint, stride, and slowdown. Join a community of sneaker obsessives discovering their perfect fit.
+            </p>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {stats.map((stat, index) => {
-                const IconComponent = stat.icon;
+                const Icon = stat.icon;
                 return (
                   <div
-                    key={index}
-                    ref={el => statsRef.current[index] = el}
-                    className="glass-card p-4 text-center hover-lift cursor-pointer"
+                    key={stat.label}
+                    ref={(el) => { statsRef.current[index] = el; }}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-white/80 shadow-[0_14px_50px_rgba(15,23,42,0.45)] backdrop-blur-xl"
                   >
-                    <IconComponent size={24} className={`${stat.color} mx-auto mb-2`} aria-hidden="true" />
-                    <div className="text-2xl lg:text-3xl font-bold text-white mb-1">
-                      {stat.value}
-                    </div>
-                    <div className="text-xs lg:text-sm text-blue-100">
-                      {stat.label}
-                    </div>
+                    <Icon className="mb-3 h-5 w-5 text-cyan-300" aria-hidden="true" />
+                    <div className="text-2xl font-semibold text-white">{stat.value}</div>
+                    <div className="text-xs uppercase tracking-[0.28em] text-white/50">{stat.label}</div>
                   </div>
                 );
               })}
             </div>
 
-            {/* CTA Buttons */}
-            <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 mb-8 justify-center lg:justify-start">
+            <div ref={ctaRef} className="flex flex-col gap-4 sm:flex-row">
               <button
-                onClick={() => scrollToSection('featured')}
-                className="btn-premium inline-flex items-center justify-center space-x-3 hover-scale group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                aria-label="Start shopping for featured products"
+                onClick={() => handleAddToCart()}
+                className="add-to-cart-btn inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-3 text-sm font-semibold text-slate-900 shadow-[0_20px_40px_rgba(148,163,184,0.35)] transition-all duration-300 hover:shadow-[0_26px_56px_rgba(148,163,184,0.4)] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-950"
+                aria-label="Add Nimbus Runner X to cart"
               >
-                <ShoppingBag size={20} aria-hidden="true" />
-                <span>Start Shopping</span>
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" aria-hidden="true" />
+                <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+                Shop Nimbus Runner X
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
-              
+
               <button
-                onClick={() => scrollToSection('offers')}
-                className="btn-glass inline-flex items-center justify-center space-x-3 text-white hover:text-white hover-scale group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                aria-label="View current deals and offers"
+                type="button"
+                onClick={() => scrollToSection('new-arrivals')}
+                className="inline-flex items-center justify-center gap-3 rounded-full border border-white/20 bg-transparent px-8 py-3 text-sm font-medium text-white/80 transition-all duration-300 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
+                aria-label="Explore the new arrivals section"
               >
-                <Gift size={20} aria-hidden="true" />
-                <span>View Deals</span>
+                Explore collection
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
-            {/* Countdown Timer */}
-            <div className="glass-card max-w-md mx-auto lg:mx-0">
-              <div className="flex items-center justify-center mb-4 space-x-2">
-                <Clock size={20} className="text-yellow-400" aria-hidden="true" />
-                <Zap size={16} className="text-pink-400" aria-hidden="true" />
-                <span className="text-lg font-bold text-white">Flash Sale Ends In</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {featurePills.map((pill) => {
+                const Icon = pill.icon;
+                return (
+                  <div
+                    key={pill.label}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/70 backdrop-blur-lg"
+                  >
+                    <Icon className="h-4 w-4 text-cyan-300" aria-hidden="true" />
+                    {pill.label}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="max-w-lg rounded-3xl border border-white/15 bg-white/5 px-6 py-5 text-white/80 shadow-[0_22px_60px_rgba(12,17,28,0.55)] backdrop-blur-2xl">
+              <div className="flex items-center gap-3 text-white">
+                <Clock className="h-5 w-5 text-amber-300" aria-hidden="true" />
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Flash drop ends in</span>
               </div>
-              
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { value: timeLeft.days, label: 'Days' },
-                  { value: timeLeft.hours, label: 'Hours' },
-                  { value: timeLeft.minutes, label: 'Min' },
-                  { value: timeLeft.seconds, label: 'Sec' }
-                ].map((time, index) => (
-                  <div key={index} className="glass text-center p-3 rounded-xl animate-pulse-glow">
-                    <div className="text-2xl lg:text-3xl font-bold text-white">
-                      {time.value.toString().padStart(2, '0')}
-                    </div>
-                    <div className="text-xs text-blue-100">
-                      {time.label}
-                    </div>
+              <div className="mt-4 flex items-center gap-3">
+                {countdownSegments.map((segment) => (
+                  <div
+                    key={segment.label}
+                    className="flex-1 rounded-2xl border border-white/10 bg-black/35 py-3 text-center"
+                  >
+                    <div className="text-2xl font-semibold text-white">{segment.value}</div>
+                    <div className="text-[0.65rem] uppercase tracking-[0.32em] text-white/45">{segment.label}</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Hero Product Showcase */}
-          <div ref={productRef} className={`relative transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-            
-            {/* Main Featured Product */}
-            <div className="card-premium overflow-hidden mb-6 hover-lift">
-              <div className="relative">
-                <img
-                  src="/api/placeholder/600/400"
-                  alt="Premium Sneakers Collection"
-                  className="w-full h-64 lg:h-80 object-cover transition-transform duration-700 hover:scale-110"
-                  loading="eager"
-                  decoding="async"
-                  onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop';
-                  }}
+          <div ref={productRef} className="relative">
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 text-white backdrop-blur-2xl shadow-[0_46px_120px_rgba(15,15,35,0.6)]">
+              <div className="absolute inset-x-6 top-6 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/60">
+                <span className="inline-flex items-center gap-2">
+                  <Sparkle className="h-4 w-4 text-cyan-300" aria-hidden="true" />
+                  Limited release
+                </span>
+                <span className="inline-flex items-center gap-1 text-emerald-300">
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
+                  {heroProduct.discount}% off
+                </span>
+              </div>
+
+              <div className="relative mt-16">
+                <div
+                  className="pointer-events-none absolute inset-0 -translate-y-6 scale-105 rounded-full bg-gradient-to-t from-cyan-500/30 via-indigo-500/20 to-transparent blur-3xl"
+                  aria-hidden="true"
                 />
-                
-                {/* Floating discount badge */}
-                <div className="absolute top-4 right-4 bg-gradient-secondary px-4 py-2 rounded-full text-white font-bold animate-bounce-in">
-                  <span className="text-sm">-35% OFF</span>
+                {imageError ? (
+                  <div className="relative mx-auto flex h-64 w-full max-w-md items-center justify-center rounded-[2rem] bg-slate-900/60 text-sm text-white/60">
+                    Image coming soon
+                  </div>
+                ) : (
+                  <img
+                    src={heroProduct.image}
+                    alt={heroProduct.name}
+                    className="relative mx-auto h-64 w-full max-w-md object-contain drop-shadow-[0_26px_48px_rgba(14,14,30,0.55)]"
+                    loading="eager"
+                    decoding="async"
+                    onError={() => setImageError(true)}
+                  />
+                )}
+              </div>
+
+              <div className="mt-10 space-y-6 text-white/80">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.32em] text-white/50">Nimbus Runner X</p>
+                    <h3 className="text-2xl font-semibold text-white">{heroProduct.name}</h3>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-white/50 line-through">${heroProduct.originalPrice.toFixed(2)}</p>
+                    <p className="text-3xl font-semibold text-white">${heroProduct.price.toFixed(2)}</p>
+                  </div>
                 </div>
 
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end">
-                  <div className="p-6 text-white w-full">
-                    <p className="text-sm mb-2">Limited Time Offer</p>
-                    <button className="btn-premium w-full add-to-cart-btn focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      Quick Add to Cart
-                    </button>
-                  </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {productHighlights.map((highlight) => {
+                    const Icon = highlight.icon;
+                    return (
+                      <div
+                        key={highlight.label}
+                        className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white/70"
+                      >
+                        <Icon className="mb-2 h-4 w-4 text-cyan-300" aria-hidden="true" />
+                        {highlight.label}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-              
-              <div className="p-6">
-                <div className="flex items-center space-x-2 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} className="text-yellow-400 fill-current" aria-hidden="true" />
-                  ))}
-                  <span className="text-sm text-gray-300">(4.9)</span>
-                </div>
-                
-                <h3 className="text-xl lg:text-2xl font-bold text-white mb-2">
-                  Premium Athletic Collection
-                </h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl font-bold text-white">$129.99</span>
-                    <span className="text-lg text-gray-400 line-through">$199.99</span>
-                  </div>
-                  
-                  <button
-                    onClick={() => handleAddToCart({
-                      id: 'hero-premium-1',
-                      name: 'Premium Athletic Collection',
-                      price: 129.99,
-                      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop'
-                    })}
-                    className="btn-premium text-sm px-6 py-2 add-to-cart-btn focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    aria-label="Add Premium Athletic Collection to cart"
-                  >
-                    <ShoppingBag size={16} className="mr-2" aria-hidden="true" />
-                    Add to Cart
-                  </button>
-                </div>
+
+                <button
+                  onClick={() => handleAddToCart(heroProduct)}
+                  className="add-to-cart-btn inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_22px_60px_rgba(14,116,232,0.5)] transition-all duration-300 hover:shadow-[0_28px_72px_rgba(14,116,232,0.55)] focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2 focus:ring-offset-slate-950"
+                  aria-label="Add Nimbus Runner X to cart"
+                >
+                  <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+                  Add to cart
+                </button>
               </div>
             </div>
 
-            {/* Quick Product Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                {
-                  id: 'hero-2',
-                  name: 'Sport Runners',
-                  price: 89.99,
-                  image: 'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?q=80&w=300&auto=format&fit=crop'
-                },
-                {
-                  id: 'hero-3',
-                  name: 'Classic Lifestyle',
-                  price: 119.99,
-                  image: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=300&auto=format&fit=crop'
-                }
-              ].map((product) => (
-                <div key={product.id} className="glass-card p-4 hover-lift">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-32 object-cover rounded-lg mb-3 transition-transform duration-300 hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <h4 className="font-semibold text-white text-sm mb-2">
-                    {product.name}
-                  </h4>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-cyan-400">
-                      ${product.price}
-                    </span>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      className="text-white hover:text-cyan-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-1"
-                      aria-label={`Add ${product.name} to cart`}
-                    >
-                      <ShoppingBag size={16} />
-                    </button>
+            <div className="relative mx-auto mt-8 w-full max-w-sm rounded-2xl border border-white/10 bg-black/65 px-6 py-5 text-white/70 shadow-[0_28px_90px_rgba(12,12,30,0.65)] backdrop-blur-2xl">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.32em] text-white/50">
+                <span className="inline-flex items-center gap-2 text-white/60">
+                  <Clock className="h-4 w-4 text-amber-300" aria-hidden="true" />
+                  Next drop in
+                </span>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('new-arrivals')}
+                  className="inline-flex items-center gap-2 text-white/60 transition-colors duration-200 hover:text-white"
+                >
+                  Set reminder
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <div className="mt-4 flex justify-between gap-3">
+                {countdownSegments.map((segment) => (
+                  <div
+                    key={`mini-${segment.label}`}
+                    className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-center"
+                  >
+                    <span className="block text-lg font-semibold text-white">{segment.value}</span>
+                    <span className="text-[0.6rem] uppercase tracking-[0.34em] text-white/45">{segment.label}</span>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 text-xs text-white/40">
+                <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                Members get early colorway access via ShoeMark+ notifications.
+              </div>
             </div>
           </div>
         </div>

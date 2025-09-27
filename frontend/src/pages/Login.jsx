@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import PageMeta from '../components/seo/PageMeta';
@@ -36,6 +36,7 @@ const Login = () => {
     email: false,
     password: false
   });
+  const emailInputRef = useRef(null);
 
   // Redux state
   const dispatch = useDispatch();
@@ -49,6 +50,15 @@ const Login = () => {
     retryCount,
     isInitialized 
   } = useSelector((state) => state.auth);
+
+  const errorMessage = useMemo(() => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object') {
+      return error.userMessage || error.message || error.error || '';
+    }
+    return '';
+  }, [error]);
   
   // Navigation state
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -94,6 +104,9 @@ const Login = () => {
   useEffect(() => {
     dispatch(clearAllErrors());
     dispatch(resetRetryCount());
+    if (emailInputRef.current) {
+      emailInputRef.current.focus();
+    }
     
     // Track page view
     trackEvent('page_view', {
@@ -183,6 +196,18 @@ const Login = () => {
       source: 'login_page'
     });
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleShortcut = (event) => {
+      if ((event.altKey || event.metaKey) && event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        handleDemoLogin();
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [handleDemoLogin]);
 
   // Handle social login
   const handleSocialLogin = useCallback((provider) => {
@@ -335,7 +360,13 @@ const Login = () => {
                 )}
                 
                 <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-                  
+                  {errorMessage && (
+                    <div className="bg-red-500/15 border border-red-400/30 text-red-100 text-sm rounded-2xl px-4 py-3 flex items-center space-x-2">
+                      <i className="fas fa-exclamation-triangle"></i>
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
                   {/* Enhanced Email Field */}
                   <div className="space-y-2">
                     <label htmlFor="email" className="block text-white font-semibold text-sm">
@@ -347,6 +378,7 @@ const Login = () => {
                         type="email"
                         id="email"
                         name="email"
+                        ref={emailInputRef}
                         className={`w-full px-4 py-4 pl-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
                           formTouched.email && !validation.email.isValid
                             ? 'border-red-400 focus:ring-red-400'

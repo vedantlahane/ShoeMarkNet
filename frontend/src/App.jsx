@@ -6,6 +6,7 @@ import { initAuth } from "./redux/slices/authSlice";
 
 // Layout & core components
 import MainLayout from "./components/layouts/MainLayout";
+import AdminLayout from "./components/layouts/AdminLayout";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 
@@ -48,18 +49,20 @@ const AppContent = () => {
       <BrowserRouter>
           <Suspense fallback={<SuspenseFallback />}>
             <Routes>
-              <Route element={<MainLayout />}>
+              {routeConfig.admin.length > 0 && (
+                <Route path="/admin/*" element={<ProtectedRoute requiredRole="admin" />}>
+                  <Route element={<AdminLayout />}>
+                    {routeConfig.admin.map(renderRoute)}
+                  </Route>
+                </Route>
+              )}
+
+              <Route path="/*" element={<MainLayout />}>
                 {routeConfig.public.map(renderRoute)}
 
                 {routeConfig.protected.length > 0 && (
                   <Route element={<ProtectedRoute />}>
                     {routeConfig.protected.map(renderRoute)}
-                  </Route>
-                )}
-
-                {routeConfig.admin.length > 0 && (
-                  <Route element={<ProtectedRoute requiredRole="admin" />}>
-                    {routeConfig.admin.map(renderRoute)}
                   </Route>
                 )}
 
