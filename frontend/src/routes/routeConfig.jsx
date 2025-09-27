@@ -25,62 +25,62 @@ export const routeConfig = {
   // Public routes
   public: [
     {
-      path: '/',
+      index: true,
       component: Home,
       exact: true,
       title: 'Home',
       description: 'Welcome to our store'
     },
     {
-      path: '/products',
+      path: 'products',
       component: Products,
       title: 'Products',
       description: 'Browse our product catalog'
     },
     {
-      path: '/products/:slug',
+      path: 'products/:slug',
       component: ProductDetail,
       title: 'Product Details',
       description: 'View product information'
     },
     {
-      path: '/categories',
+      path: 'categories',
       component: Category,
       title: 'Categories',
       description: 'Browse product categories'
     },
     {
-      path: '/sale',
+      path: 'sale',
       component: Products,
       title: 'Sale',
       description: 'Shop discounted products and limited-time offers'
     },
     {
-      path: '/categories/:categoryId',
+      path: 'categories/:categoryId',
       component: Category,
       title: 'Category',
       description: 'View category products'
     },
     {
-      path: '/search',
+      path: 'search',
       component: Search,
       title: 'Search Results',
       description: 'Search results'
     },
     {
-      path: '/about',
+      path: 'about',
       component: About,
       title: 'About Us',
       description: 'Learn more about our company'
     },
     {
-      path: '/contact',
+      path: 'contact',
       component: Contact,
       title: 'Contact Us',
       description: 'Get in touch with us'
     },
     {
-      path: '/access-denied',
+      path: 'access-denied',
       component: AccessDenied,
       title: 'Access Restricted',
       description: 'You do not have permission to view this page'
@@ -106,49 +106,49 @@ export const routeConfig = {
   // Protected user routes
   protected: [
     {
-      path: '/profile',
+      path: 'profile',
       component: Profile,
       title: 'Profile',
       description: 'Manage your profile',
       requiredRole: 'user'
     },
     {
-      path: '/orders',
+      path: 'orders',
       component: Orders,
       title: 'Orders',
       description: 'View your orders',
       requiredRole: 'user'
     },
     {
-      path: '/orders/:orderId',
+      path: 'orders/:orderId',
       component: Orders,
       title: 'Order Details',
       description: 'View order details',
       requiredRole: 'user'
     },
     {
-      path: '/cart',
+      path: 'cart',
       component: Cart,
       title: 'Shopping Cart',
       description: 'Review items in your cart',
       requiredRole: 'user'
     },
     {
-      path: '/checkout',
+      path: 'checkout',
       component: Checkout,
       title: 'Checkout',
       description: 'Complete your purchase',
       requiredRole: 'user'
     },
     {
-      path: '/wishlist',
+      path: 'wishlist',
       component: Wishlist,
       title: 'Wishlist',
       description: 'Your saved items',
       requiredRole: 'user'
     },
     {
-      path: '/logout',
+      path: 'logout',
       component: Logout,
       title: 'Logout',
       description: 'Sign out of your account',
@@ -159,84 +159,94 @@ export const routeConfig = {
   // Admin routes
   admin: [
     {
-      path: '/admin',
+      index: true,
       component: AdminDashboard,
       title: 'Admin Dashboard',
       description: 'Administration panel',
       requiredRole: 'admin',
-      section: 'overview'
+      section: 'overview',
+      componentProps: { section: 'overview' }
     },
     {
-      path: '/admin/dashboard',
+      path: 'dashboard',
       component: AdminDashboard,
       title: 'Dashboard',
       description: 'Admin dashboard overview',
       requiredRole: 'admin',
-      section: 'overview'
+      section: 'overview',
+      componentProps: { section: 'overview' }
     },
     {
-      path: '/admin/products',
+      path: 'products',
       component: AdminDashboard,
       title: 'Manage Products',
       description: 'Product management',
       requiredRole: 'admin',
-      section: 'products'
+      section: 'products',
+      componentProps: { section: 'products' }
     },
     {
-      path: '/admin/orders',
+      path: 'orders',
       component: AdminDashboard,
       title: 'Manage Orders',
       description: 'Order management',
       requiredRole: 'admin',
-      section: 'orders'
+      section: 'orders',
+      componentProps: { section: 'orders' }
     },
     {
-      path: '/admin/users',
+      path: 'users',
       component: AdminDashboard,
       title: 'Manage Users',
       description: 'User management',
       requiredRole: 'admin',
-      section: 'users'
+      section: 'users',
+      componentProps: { section: 'users' }
     },
     {
-      path: '/admin/categories',
+      path: 'categories',
       component: AdminDashboard,
       title: 'Manage Categories',
       description: 'Category management',
       requiredRole: 'admin',
-      section: 'categories'
+      section: 'categories',
+      componentProps: { section: 'categories' }
     },
     {
-      path: '/admin/reviews',
+      path: 'reviews',
       component: AdminDashboard,
       title: 'Manage Reviews',
       description: 'Review management',
       requiredRole: 'admin',
-      section: 'reviews'
+      section: 'reviews',
+      componentProps: { section: 'reviews' }
     },
     {
-      path: '/admin/reports',
+      path: 'reports',
       component: AdminDashboard,
       title: 'Reports',
       description: 'View reports',
       requiredRole: 'admin',
-      section: 'reports'
+      section: 'reports',
+      componentProps: { section: 'reports' }
     },
     {
-      path: '/admin/settings',
+      path: 'settings',
       component: AdminDashboard,
       title: 'Settings',
       description: 'System settings',
       requiredRole: 'admin',
-      section: 'settings'
+      section: 'settings',
+      componentProps: { section: 'settings' }
     },
     {
-      path: '/admin/campaigns',
+      path: 'campaigns',
       component: AdminDashboard,
       title: 'Campaigns',
       description: 'Marketing campaigns',
       requiredRole: 'admin',
-      section: 'campaigns'
+      section: 'campaigns',
+      componentProps: { section: 'campaigns' }
     }
   ],
 

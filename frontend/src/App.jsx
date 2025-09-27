@@ -20,12 +20,18 @@ const SuspenseFallback = () => (
   </div>
 );
 
-const renderRoute = ({ path, component: Component, index = false }) => {
-  if (index) {
-    return <Route key="index" index element={<Component />} />;
+const renderRoute = ({ path, component: Component, element, index = false, componentProps = {} }) => {
+  const routeElement = element ?? (Component ? <Component {...componentProps} /> : null);
+
+  if (!routeElement) {
+    return null;
   }
 
-  return <Route key={path} path={path} element={<Component />} />;
+  if (index) {
+    return <Route key={`index-${Component?.name || path || 'route'}`} index element={routeElement} />;
+  }
+
+  return <Route key={path} path={path} element={routeElement} />;
 };
 
 const AppContent = () => {

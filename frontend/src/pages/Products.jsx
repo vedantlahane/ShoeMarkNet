@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
-import { toast } from 'react-toastify';
 import { debounce } from 'lodash';
 
 // Redux actions
@@ -16,9 +15,7 @@ import {
 } from '../redux/slices/productSlice';
 
 // Components
-import ProductCard from '../components/ProductCard';
 import ProductFilter from '../components/ProductFilter';
-import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import SearchBar from '../components/common/SearchBar';
 import SortDropdown from '../components/products/SortDropdown';
@@ -27,6 +24,8 @@ import ProductGrid from '../components/products/ProductGrid';
 import ProductList from '../components/products/ProductList';
 import Pagination from '../components/common/Pagination';
 import FilterChips from '../components/products/FilterChips';
+import PageLayout from '../components/common/PageLayout';
+import GlassPanel from '../components/common/GlassPanel';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -59,17 +58,16 @@ const Products = () => {
   const isSalePage = location.pathname === '/sale';
   
   // Redux state
-  const { 
-    products, 
+  const {
+    products,
     searchResults,
-    categories,
-    loading, 
+    loading,
     searchLoading,
     error,
     pagination,
-    totalProducts,
-    lastSearchQuery
+    totalProducts
   } = useSelector((state) => state.product);
+  const categories = useSelector((state) => state.product.categories || []);
 
   // Local state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -383,6 +381,52 @@ const Products = () => {
     return queryString ? `?${queryString}` : '';
   }, [location.search, isSalePage]);
 
+  const headerTitle = useMemo(() => {
+    if (filters.search) {
+      return (
+        <>
+          Search results for{' '}
+          <span className="text-blue-600 dark:text-blue-300">"{filters.search}"</span>
+        </>
+      );
+    }
+
+    if (filters.category) {
+      return `${filters.category} Collection`;
+    }
+
+    if (isSalePage || filters.onSale) {
+      return 'Exclusive Sale Picks';
+    }
+
+    return 'All Products';
+  }, [filters.search, filters.category, filters.onSale, isSalePage]);
+
+  const headerSubtitle = useMemo(() => {
+    if (currentLoading) {
+      return 'Fetching the latest picks for you…';
+    }
+
+    const count = Number.isFinite(totalCount) ? totalCount : 0;
+
+    if (count === 0) {
+      return 'No products match your filters yet—try adjusting the filters below to discover more styles.';
+    }
+
+    return `${count.toLocaleString()} products curated for your style`;
+  }, [currentLoading, totalCount]);
+
+  const headerActions = useMemo(() => (
+    <div className="w-full md:w-80 lg:w-96">
+      <SearchBar
+        value={filters.search}
+        onChange={handleSearch}
+        placeholder="Search products..."
+        className="w-full"
+      />
+    </div>
+  ), [filters.search, handleSearch]);
+
   return (
     <>
       {/* SEO Meta Tags */}
@@ -423,97 +467,63 @@ const Products = () => {
         }}
       />
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto px-4 py-8">
-          
-          {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                  {filters.search ? (
-                    <>Search Results for "<span className="text-blue-600">{filters.search}</span>"</>
-                  ) : filters.category ? (
-                    `${filters.category} Collection`
-                  ) : (
-                    'All Products'
-                  )}
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {currentLoading ? 'Loading products...' : `${totalCount.toLocaleString()} products found`}
-                </p>
-              </div>
-              
-              {/* Search Bar */}
-              <div className="lg:w-96">
-                <SearchBar
-                  value={filters.search}
-                  onChange={handleSearch}
-                  placeholder="Search products..."
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            {/* Filter Chips */}
-            {activeFilters.size > 0 && (
-              <FilterChips
-                filters={activeFilters}
-                onRemove={handleRemoveFilter}
-                onClearAll={handleClearAllFilters}
-                className="mb-6"
-              />
-            )}
-          </div>
-
-          {/* Mobile filter toggle */}
-          <div className="lg:hidden mb-6">
+      <PageLayout
+        title={headerTitle}
+        description={headerSubtitle}
+        actions={headerActions}
+      >
+        <div className="space-y-6">
+          <div className="lg:hidden">
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-              className="w-full py-3 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-between shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              className="flex w-full items-center justify-between rounded-2xl border border-white/40 bg-white/70 px-4 py-3 font-semibold text-gray-900 shadow-sm transition-colors duration-200 hover:bg-white/90 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
             >
-              <span className="font-medium text-gray-900 dark:text-white flex items-center">
-                <i className="fas fa-filter mr-2"></i>
+              <span className="flex items-center gap-2">
+                <i className="fas fa-sliders-h text-blue-500"></i>
                 Filters
                 {activeFilters.size > 0 && (
-                  <span className="ml-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
                     {activeFilters.size}
                   </span>
                 )}
               </span>
-              <i className={`fas fa-chevron-${isMobileFilterOpen ? 'up' : 'down'} text-gray-400`}></i>
+              <i className={`fas fa-chevron-${isMobileFilterOpen ? 'up' : 'down'} text-sm opacity-60`}></i>
             </button>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8">
-            
-            {/* Filters Sidebar */}
-            <div className={`${isMobileFilterOpen ? 'block' : 'hidden'} lg:block w-full lg:w-80 transition-all duration-300 ease-in-out`}>
-              <div className="sticky top-4">
+          {activeFilters.size > 0 && (
+            <GlassPanel padding="p-4" className="shadow-[0_25px_45px_-24px_rgba(15,23,42,0.45)]">
+              <FilterChips
+                filters={activeFilters}
+                onRemove={handleRemoveFilter}
+                onClearAll={handleClearAllFilters}
+                className="mb-0"
+              />
+            </GlassPanel>
+          )}
+
+          <div className="flex flex-col gap-8 lg:flex-row">
+            <div className={`${isMobileFilterOpen ? 'block' : 'hidden'} lg:block w-full transition-all duration-300 lg:w-80`}>
+              <div className="space-y-6 lg:sticky lg:top-6">
                 <ProductFilter
                   currentFilters={filters}
                   onFilterChange={handleFilterChange}
                   onClose={() => setIsMobileFilterOpen(false)}
-                  categories={categories}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                 />
               </div>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
-              
-              {/* Controls Bar */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-4">
+            <div className="flex-1 min-w-0 space-y-6">
+              <GlassPanel padding="p-4" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                   <SortDropdown
                     value={filters.sort}
                     options={SORT_OPTIONS}
                     onChange={handleSortChange}
                   />
-                  
+
                   <select
-                    className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                    className="rounded-2xl border border-white/40 bg-white/70 px-3 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white"
                     value={itemsPerPage}
                     onChange={(e) => handlePerPageChange(parseInt(e.target.value, 10))}
                     aria-label="Products per page"
@@ -525,34 +535,37 @@ const Products = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <ViewToggle
                   value={viewMode}
                   onChange={handleViewModeChange}
                 />
-              </div>
+              </GlassPanel>
 
-              {/* Error State */}
               {error && (
-                <ErrorMessage
-                  message={error.message || 'Failed to load products'}
-                  onRetry={handleRetry}
-                  className="mb-6"
-                />
+                <GlassPanel padding="p-0">
+                  <ErrorMessage
+                    message={error.message || 'Failed to load products'}
+                    onRetry={handleRetry}
+                    className="mb-0"
+                  />
+                </GlassPanel>
               )}
 
-              {/* Loading State */}
-              {currentLoading && (
-                <div className="space-y-6">
+              {currentLoading ? (
+                <GlassPanel padding="p-6" className="space-y-6">
                   {viewMode === 'grid' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {[...Array(itemsPerPage)].map((_, index) => (
-                        <div key={`skeleton-${index}`} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 h-80">
-                          <div className="animate-pulse flex flex-col h-full">
-                            <div className="bg-gray-200 dark:bg-gray-600 h-40 mb-4 rounded-lg"></div>
-                            <div className="bg-gray-200 dark:bg-gray-600 h-4 w-3/4 mb-2 rounded"></div>
-                            <div className="bg-gray-200 dark:bg-gray-600 h-4 w-1/2 mb-4 rounded"></div>
-                            <div className="bg-gray-200 dark:bg-gray-600 h-8 w-1/3 mt-auto rounded"></div>
+                        <div
+                          key={`skeleton-${index}`}
+                          className="h-80 rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
+                        >
+                          <div className="flex h-full flex-col space-y-4 animate-pulse">
+                            <div className="h-40 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
+                            <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                            <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                            <div className="mt-auto h-8 w-1/3 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
                           </div>
                         </div>
                       ))}
@@ -560,80 +573,77 @@ const Products = () => {
                   ) : (
                     <div className="space-y-4">
                       {[...Array(itemsPerPage)].map((_, index) => (
-                        <div key={`skeleton-list-${index}`} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                          <div className="animate-pulse flex gap-4">
-                            <div className="bg-gray-200 dark:bg-gray-600 h-24 w-24 rounded-lg flex-shrink-0"></div>
-                            <div className="flex-1">
-                              <div className="bg-gray-200 dark:bg-gray-600 h-4 w-3/4 mb-2 rounded"></div>
-                              <div className="bg-gray-200 dark:bg-gray-600 h-4 w-1/2 mb-2 rounded"></div>
-                              <div className="bg-gray-200 dark:bg-gray-600 h-6 w-1/4 rounded"></div>
+                        <div
+                          key={`skeleton-list-${index}`}
+                          className="rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
+                        >
+                          <div className="flex gap-4 animate-pulse">
+                            <div className="h-24 w-24 flex-shrink-0 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
+                            <div className="flex flex-1 flex-col gap-3">
+                              <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                              <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                              <div className="h-6 w-1/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Products Display */}
-              {!currentLoading && (
+                </GlassPanel>
+              ) : (
                 <>
                   {productsList.length === 0 ? (
-                    <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                      <div className="max-w-md mx-auto">
-                        <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                          <i className="fas fa-search text-3xl text-gray-400"></i>
-                        </div>
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                          No products found
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">
-                          {filters.search 
-                            ? `No products match your search for "${filters.search}"`
-                            : 'No products match your current filters'
-                          }
-                        </p>
-                        <div className="space-y-3">
-                          <button 
-                            onClick={handleClearAllFilters}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-                          >
-                            <i className="fas fa-times mr-2"></i>
-                            Clear All Filters
-                          </button>
-                          {filters.search && (
-                            <button 
-                              onClick={() => handleSearch('')}
-                              className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-                            >
-                              <i className="fas fa-search mr-2"></i>
-                              Clear Search
-                            </button>
-                          )}
-                        </div>
+                    <GlassPanel padding="p-12" className="text-center">
+                      <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/40 text-blue-500 dark:bg-slate-800/60">
+                        <i className="fas fa-search text-3xl"></i>
                       </div>
-                    </div>
+                      <h3 className="mb-3 text-2xl font-semibold text-gray-900 dark:text-white">
+                        No products found
+                      </h3>
+                      <p className="mb-6 text-gray-600 dark:text-gray-400">
+                        {filters.search
+                          ? `No products match your search for "${filters.search}"`
+                          : 'No products match your current filters'}
+                      </p>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                        <button
+                          onClick={handleClearAllFilters}
+                          className="rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
+                        >
+                          <i className="fas fa-times mr-2"></i>
+                          Clear All Filters
+                        </button>
+                        {filters.search && (
+                          <button
+                            onClick={() => handleSearch('')}
+                            className="rounded-2xl border border-white/40 bg-white/60 px-6 py-3 font-semibold text-gray-900 transition-colors duration-200 hover:bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
+                          >
+                            <i className="fas fa-search mr-2"></i>
+                            Clear Search
+                          </button>
+                        )}
+                      </div>
+                    </GlassPanel>
                   ) : (
                     <>
-                      {/* Products Grid/List */}
-                      {viewMode === 'grid' ? (
-                        <ProductGrid
-                          products={productsList}
-                          onAddToCart={(product) => console.log('Add to cart:', product)}
-                          onToggleWishlist={(product) => console.log('Toggle wishlist:', product)}
-                        />
-                      ) : (
-                        <ProductList
-                          products={productsList}
-                          onAddToCart={(product) => console.log('Add to cart:', product)}
-                          onToggleWishlist={(product) => console.log('Toggle wishlist:', product)}
-                        />
-                      )}
+                      <GlassPanel padding="p-6" className="space-y-6">
+                        {viewMode === 'grid' ? (
+                          <ProductGrid
+                            products={productsList}
+                            onAddToCart={(product) => console.log('Add to cart:', product)}
+                            onToggleWishlist={(product) => console.log('Toggle wishlist:', product)}
+                          />
+                        ) : (
+                          <ProductList
+                            products={productsList}
+                            onAddToCart={(product) => console.log('Add to cart:', product)}
+                            onToggleWishlist={(product) => console.log('Toggle wishlist:', product)}
+                          />
+                        )}
+                      </GlassPanel>
 
-                      {/* Pagination */}
                       {totalPages > 1 && (
-                        <div className="mt-8">
+                        <GlassPanel padding="p-4" className="flex justify-center">
                           <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
@@ -642,7 +652,7 @@ const Products = () => {
                             totalItems={totalCount}
                             itemsPerPage={itemsPerPage}
                           />
-                        </div>
+                        </GlassPanel>
                       )}
                     </>
                   )}
@@ -651,7 +661,7 @@ const Products = () => {
             </div>
           </div>
         </div>
-      </div>
+      </PageLayout>
     </>
   );
 };
