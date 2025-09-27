@@ -18,6 +18,7 @@ const Wishlist = lazy(() => import('../pages/Wishlist'));
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
 const AccessDenied = lazy(() => import('../pages/AccessDeniedPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
+const Logout = lazy(() => import('../pages/Logout'));
 
 // Route configuration with metadata
 export const routeConfig = {
@@ -138,6 +139,13 @@ export const routeConfig = {
       component: Wishlist,
       title: 'Wishlist',
       description: 'Your saved items',
+      requiredRole: 'user'
+    },
+    {
+      path: '/logout',
+      component: Logout,
+      title: 'Logout',
+      description: 'Sign out of your account',
       requiredRole: 'user'
     }
   ],

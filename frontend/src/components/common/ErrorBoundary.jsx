@@ -31,6 +31,9 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const { error, errorInfo } = this.state;
+      const stackTrace = errorInfo?.componentStack || 'Stack trace unavailable. The component did not provide additional information.';
+
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
@@ -81,9 +84,9 @@ class ErrorBoundary extends React.Component {
                 </summary>
                 <div className="mt-2 p-3 bg-gray-100 rounded text-xs text-gray-700 overflow-auto max-h-40">
                   <div className="font-semibold mb-2">Error:</div>
-                  <pre>{this.state.error && this.state.error.toString()}</pre>
+                  <pre>{error ? error.toString() : 'No error captured.'}</pre>
                   <div className="font-semibold mt-2 mb-2">Stack Trace:</div>
-                  <pre>{this.state.errorInfo.componentStack}</pre>
+                  <pre>{stackTrace}</pre>
                 </div>
               </details>
             )}

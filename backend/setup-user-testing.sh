@@ -11,8 +11,8 @@ cd /home/vedant/Desktop/ShoeMarkNet/backend
 npm install axios --save-dev
 
 echo ""
-echo "🗃️  Setting up test data in database..."
-node scripts/setupTestData.js
+echo "🗃️  Seeding default user and admin accounts..."
+npm run seed:accounts
 
 echo ""
 echo "✅ Setup completed successfully!"
@@ -23,7 +23,7 @@ echo "  - Start server: npm start"
 echo "  - Start dev server: npm run dev"
 echo ""
 echo "📝 Test Credentials:"
-echo "  Regular User: vedant@example.com / password123"
-echo "  Admin User: admin@shoemarnet.com / adminpass123"
+echo "  Regular User: user@shoemarknet.test / User@123!"
+echo "  Admin User: admin@shoemarknet.test / Admin@123!"
 echo ""
 echo "📋 Postman Collection: scripts/postman-collection.json"

@@ -111,6 +111,9 @@ Frontend `.env`:
 ```env
 VITE_API_URL=http://localhost:5000/api
 VITE_APP_NAME=ShoeMarkNet
+# Optional: enable realtime WebSocket features
+# VITE_WS_BASE_URL=ws://localhost:5000
+# VITE_WS_ENABLED=true
 ```
 
 5. **Start Development Servers**
@@ -126,6 +129,22 @@ Frontend (in new terminal):
 cd frontend
 npm run dev
 ```
+
+### Seed Default Accounts
+
+Need ready-to-use credentials for testing? Run the backend seeding script after configuring your `.env`:
+
+```bash
+cd backend
+npm run seed:accounts
+```
+
+This command creates or updates two accounts:
+
+- **Admin** — `admin@shoemarknet.test` / `Admin@123!`
+- **User** — `user@shoemarknet.test` / `User@123!`
+
+The script is idempotent: rerunning it refreshes the passwords without duplicating users.
 
 6. **Access the Application**
 - Frontend: http://localhost:5173
@@ -302,6 +321,10 @@ For detailed documentation, please visit:
 **Environment Variables**: Double-check all required environment variables are set
 
 **Port Conflicts**: Make sure ports 5000 and 5173 are available
+
+**Noisy Vite Dev Logs**: The frontend development server now filters repetitive `[vite]` HMR connection messages. If you need the original verbosity, remove or adjust the `noisyLogPatterns` array in `frontend/vite.config.js`.
+
+**WebSocket Console Errors**: Real-time dashboard updates are disabled unless `VITE_WS_BASE_URL` is set. Configure the variable (and optionally `VITE_WS_ENABLED=true`) once a WebSocket backend is available to avoid repeated connection warnings during development.
 
 If you encounter any issues or have questions:
 1. Check the [Issues](https://github.com/vedantlahane/ShoeMarkNet/issues) page

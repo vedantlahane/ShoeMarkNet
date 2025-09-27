@@ -33,6 +33,7 @@ import CompareDrawer from '../components/products/CompareDrawer';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useDebounce from '../hooks/useDebounce';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
+import usePermissions from '../hooks/usePermissions';
 
 // Utils
 import { trackEvent } from '../utils/analytics';
@@ -78,6 +79,8 @@ const Category = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const { hasRole, userRole } = usePermissions();
+
   // Redux state
   const { 
     products, 
@@ -118,6 +121,8 @@ const Category = () => {
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const canViewAnalytics = hasRole('admin');
   
   // Debounced search
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -705,12 +710,30 @@ const Category = () => {
         </section>
 
         {/* Category Stats Section */}
-        <CategoryStats
-          stats={categoryStats}
-          categoryName={categoryName}
-          animateElements={animateElements}
-          className="py-16 bg-white/5"
-        />
+        {canViewAnalytics ? (
+          <CategoryStats
+            stats={categoryStats}
+            categoryName={categoryName}
+            animateElements={animateElements}
+            className="py-16 bg-white/5"
+          />
+        ) : (
+          userRole !== 'guest' && (
+            <div className="py-16">
+              <div className="max-w-5xl mx-auto bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-8 text-center shadow-2xl">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white mb-4">
+                  <i className="fas fa-user-shield text-2xl"></i>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  Admin access required
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                  Category analytics and performance insights are limited to administrators. If you believe you need access, please contact your store administrator.
+                </p>
+              </div>
+            </div>
+          )
+        )}
 
         {/* Floating Action Buttons */}
         <div className="fixed bottom-8 right-8 flex flex-col space-y-4 z-40">

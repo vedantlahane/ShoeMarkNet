@@ -1,5 +1,4 @@
-
-import { useEffect, useCallback } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PageMeta from '../components/seo/PageMeta';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -10,10 +9,31 @@ import { addToCart } from '../redux/slices/cartSlice';
 
 // Components
 import HeroSection from '../components/home/HeroSection';
-import FeaturedProducts from '../components/home/FeaturedProducts';
-import CategoriesSection from '../components/home/CategoriesSection';
-import OffersSection from '../components/home/OffersSection';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+
+const FeaturedProducts = lazy(() => import('../components/home/FeaturedProducts'));
+const CategoriesSection = lazy(() => import('../components/home/CategoriesSection'));
+const OffersSection = lazy(() => import('../components/home/OffersSection'));
+
+const SectionSkeleton = ({ title, rows = 3 }) => {
+  const gridColsClass = rows > 2 ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
+
+  return (
+    <section
+      aria-label={`${title} loading state`}
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-pulse"
+    >
+      <div className="h-8 w-48 bg-white/40 dark:bg-gray-700 rounded-full mb-6"></div>
+      <div className={`grid gap-6 sm:grid-cols-2 ${gridColsClass}`}>
+        {Array.from({ length: rows }).map((_, index) => (
+          <div
+            key={index}
+            className="rounded-3xl bg-white/40 dark:bg-gray-800 border border-white/30 dark:border-gray-700 h-48"
+          ></div>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 /**
  * Home page component for ShoeMarkNet e-commerce application.
@@ -33,10 +53,22 @@ const Home = () => {
     error
   } = useSelector(state => state.product);
 
+  const featuredList = useMemo(
+    () => (Array.isArray(featuredProducts) ? featuredProducts : []),
+    [featuredProducts]
+  );
+  const featuredCount = featuredList.length;
+
   // Initialize component by fetching featured products on mount
   useEffect(() => {
-    dispatch(fetchFeaturedProducts());
-  }, [dispatch]);
+    if (featuredLoading || error) {
+      return;
+    }
+
+    if (featuredCount === 0) {
+      dispatch(fetchFeaturedProducts());
+    }
+  }, [dispatch, featuredLoading, featuredCount, error]);
 
   /**
    * Handles adding a product to the cart.
@@ -53,15 +85,6 @@ const Home = () => {
       product
     }));
   }, [dispatch]);
-
-  // Show loading spinner while fetching featured products
-  if (featuredLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <LoadingSpinner size="large" message="Loading premium products..." />
-      </div>
-    );
-  }
 
   // Show error state if featured products failed to load
   if (error) {
@@ -102,22 +125,32 @@ const Home = () => {
       />
 
       {/* Main page content with gradient background */}
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-500">
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-500">
         {/* Hero section - Main banner and call-to-action */}
         <HeroSection />
 
         {/* Featured products section with add-to-cart functionality */}
-        <FeaturedProducts
-          products={featuredProducts}
-          onAddToCart={handleAddToCart}
-        />
+        <Suspense fallback={<SectionSkeleton title="Featured products" />}>
+          {featuredLoading && featuredList.length === 0 ? (
+            <SectionSkeleton title="Featured products" />
+          ) : (
+            <FeaturedProducts
+              products={featuredList}
+              onAddToCart={handleAddToCart}
+            />
+          )}
+        </Suspense>
 
         {/* Product categories navigation */}
-        <CategoriesSection />
+        <Suspense fallback={<SectionSkeleton title="Shop by category" rows={4} />}>
+          <CategoriesSection />
+        </Suspense>
 
         {/* Special offers and promotions */}
-        <OffersSection />
-      </div>
+        <Suspense fallback={<SectionSkeleton title="Exclusive offers" rows={2} />}>
+          <OffersSection />
+        </Suspense>
+      </main>
     </>
   );
 };

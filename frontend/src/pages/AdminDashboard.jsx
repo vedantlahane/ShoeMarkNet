@@ -119,6 +119,7 @@ const AdminDashboard = ({ section = "overview" }) => {
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [dataLoadingStatus, setDataLoadingStatus] = useState({
+    overview: false,
     dashboard: false,
     products: false,
     orders: false,
@@ -186,9 +187,9 @@ const AdminDashboard = ({ section = "overview" }) => {
     
     try {
       // Load dashboard statistics
-      const statsData = await adminService.getDashboardStats();
-      setDashboardStats(statsData);
-      setDataLoadingStatus(prev => ({ ...prev, dashboard: true }));
+  const statsData = await adminService.getDashboardStats();
+  setDashboardStats(statsData);
+  setDataLoadingStatus(prev => ({ ...prev, overview: true, dashboard: true }));
 
       // Load initial notifications
       const initialNotifications = await loadNotifications();

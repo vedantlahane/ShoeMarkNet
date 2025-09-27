@@ -1,115 +1,233 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
-const useWebSocket = (url, options = {}) => {
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionQuality, setConnectionQuality] = useState('unknown');
-  const [lastMessage, setLastMessage] = useState(null);
-  const [error, setError] = useState(null);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  
-  const reconnectTimeoutRef = useRef(null);
-  const pingIntervalRef = useRef(null);
-  
+const toWebSocketOrigin = (value) => {
+  if (!value) return null;
+
+  try {
+    const parsed = new URL(value, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+    if (parsed.protocol === 'http:') {
+      parsed.protocol = 'ws:';
+    } else if (parsed.protocol === 'https:') {
+      parsed.protocol = 'wss:';
+    }
+    parsed.pathname = '';
+    parsed.search = '';
+    parsed.hash = '';
+    return parsed.toString().replace(/\/$/, '');
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('[useWebSocket] Unable to derive WebSocket origin from value:', value, error);
+    }
+    return null;
+  }
+};
+
+const normalizeUrl = (rawUrl, baseOrigin) => {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+
+  if (/^wss?:\/\//i.test(rawUrl)) {
+    return rawUrl;
+  }
+
+  if (/^https?:\/\//i.test(rawUrl)) {
+    return rawUrl.replace(/^http/i, rawUrl.startsWith('https') ? 'wss' : 'ws');
+  }
+
+  const origin = baseOrigin || (typeof window !== 'undefined' ? toWebSocketOrigin(window.location.origin) : null);
+  if (!origin) {
+    return null;
+  }
+
+  if (rawUrl.startsWith('/')) {
+    return `${origin}${rawUrl}`;
+  }
+
+  return `${origin}/${rawUrl}`.replace(/([^:]\/)\/+/g, '$1');
+};
+
+const deriveDefaultConfig = () => {
+  const envEnabled = import.meta.env?.VITE_WS_ENABLED ?? import.meta.env?.VITE_ENABLE_WEBSOCKETS;
+
+  const explicitBase = import.meta.env?.VITE_WS_BASE_URL || import.meta.env?.VITE_WS_URL;
+  const explicitOrigin = toWebSocketOrigin(explicitBase);
+  const fallbackOrigin = explicitOrigin || toWebSocketOrigin(import.meta.env?.VITE_API_URL);
+
+  const enabled = envEnabled === undefined ? Boolean(explicitOrigin) : envEnabled !== 'false';
+
+  return { enabled, baseOrigin: fallbackOrigin };
+};
+
+const baseDefaults = deriveDefaultConfig();
+
+const useWebSocket = (input, overrides = {}) => {
+  const config = typeof input === 'string' ? { url: input, ...overrides } : { ...(input || {}), ...overrides };
+
   const {
+    url: rawUrl,
     maxReconnectAttempts = 5,
     reconnectInterval = 3000,
     pingInterval = 30000,
-    enabled = true,
+    enabled = baseDefaults.enabled,
     onConnect,
     onDisconnect,
     onMessage,
     onError
-  } = options;
+  } = config;
+
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionQuality, setConnectionQuality] = useState('unknown');
+  const [connectionStatus, setConnectionStatus] = useState('idle');
+  const [lastMessage, setLastMessage] = useState(null);
+  const [error, setError] = useState(null);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+
+  const reconnectTimeoutRef = useRef(null);
+  const pingIntervalRef = useRef(null);
+  const reconnectAttemptsRef = useRef(0);
+  const hasWarnedRef = useRef(false);
+
+  const baseOrigin = useMemo(() => baseDefaults.baseOrigin, []);
+  const resolvedUrl = useMemo(() => normalizeUrl(rawUrl, baseOrigin), [rawUrl, baseOrigin]);
+  const effectiveEnabled = useMemo(() => enabled && Boolean(resolvedUrl), [enabled, resolvedUrl]);
+
+  const clearTimers = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
+    }
+  }, []);
+
+  const disconnect = useCallback(() => {
+    clearTimers();
+
+    if (socket) {
+      try {
+        socket.close();
+      } catch (closeError) {
+        if (import.meta.env?.DEV) {
+          console.warn('[useWebSocket] Error closing socket:', closeError);
+        }
+      }
+    }
+
+    setSocket(null);
+    setIsConnected(false);
+    setConnectionStatus('disconnected');
+  }, [clearTimers, socket]);
 
   const connect = useCallback(() => {
-    if (!enabled || !url) return;
+    if (!effectiveEnabled) {
+      return;
+    }
+
+    clearTimers();
+    setConnectionStatus('connecting');
 
     try {
-      const wsUrl = url.startsWith('/') 
-        ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${url}`
-        : url;
-        
-      const ws = new WebSocket(wsUrl);
-      
+      const ws = new WebSocket(resolvedUrl);
+
       ws.onopen = () => {
-        setIsConnected(true);
-        setError(null);
+        reconnectAttemptsRef.current = 0;
         setReconnectAttempts(0);
+        setIsConnected(true);
+        setConnectionStatus('connected');
+        setError(null);
         setConnectionQuality('good');
+        hasWarnedRef.current = false;
         onConnect?.();
-        
-        // Start ping interval
+
         pingIntervalRef.current = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'ping' }));
           }
         }, pingInterval);
       };
-      
+
       ws.onmessage = (event) => {
+        let parsedData = null;
+
         try {
-          const data = JSON.parse(event.data);
-          setLastMessage(data);
-          onMessage?.(data);
-          
-          // Handle pong response for connection quality
-          if (data.type === 'pong') {
+          parsedData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        } catch (parseError) {
+          if (import.meta.env?.DEV) {
+            console.warn('[useWebSocket] Failed to parse message payload:', parseError);
+          }
+        }
+
+        if (parsedData) {
+          setLastMessage(parsedData);
+
+          if (parsedData.type === 'pong') {
             setConnectionQuality('excellent');
           }
-        } catch (error) {
-          console.warn('Failed to parse WebSocket message:', error);
+
+          onMessage?.(parsedData, event);
+        } else {
+          onMessage?.(null, event);
         }
       };
-      
+
       ws.onclose = (event) => {
         setIsConnected(false);
         setSocket(null);
+        setConnectionStatus('disconnected');
         onDisconnect?.(event);
-        
-        // Clear ping interval
-        if (pingIntervalRef.current) {
-          clearInterval(pingIntervalRef.current);
-          pingIntervalRef.current = null;
-        }
-        
-        // Attempt reconnection
-        if (reconnectAttempts < maxReconnectAttempts && enabled) {
-          reconnectTimeoutRef.current = setTimeout(() => {
-            setReconnectAttempts(prev => prev + 1);
-            connect();
-          }, reconnectInterval);
-        }
-      };
-      
-      ws.onerror = (error) => {
-        setError(error);
-        setConnectionQuality('poor');
-        onError?.(error);
-      };
-      
-      setSocket(ws);
-    } catch (error) {
-      setError(error);
-      onError?.(error);
-    }
-  }, [url, enabled, maxReconnectAttempts, reconnectInterval, pingInterval, reconnectAttempts, onConnect, onDisconnect, onMessage, onError]);
 
-  const disconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
+        clearTimers();
+
+        if (!effectiveEnabled) {
+          return;
+        }
+
+        reconnectAttemptsRef.current += 1;
+        setReconnectAttempts(reconnectAttemptsRef.current);
+
+        if (reconnectAttemptsRef.current <= maxReconnectAttempts) {
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connect();
+          }, reconnectInterval * Math.min(reconnectAttemptsRef.current, 5));
+        } else if (!hasWarnedRef.current && import.meta.env?.DEV) {
+          console.warn('[useWebSocket] Max reconnect attempts exceeded for', resolvedUrl);
+          hasWarnedRef.current = true;
+        }
+      };
+
+      ws.onerror = (socketError) => {
+        setError(socketError);
+        setConnectionQuality('poor');
+        setConnectionStatus('error');
+        onError?.(socketError);
+      };
+
+      setSocket(ws);
+    } catch (connectionError) {
+      setError(connectionError);
+      setConnectionStatus('error');
+      onError?.(connectionError);
     }
-    
-    if (pingIntervalRef.current) {
-      clearInterval(pingIntervalRef.current);
-      pingIntervalRef.current = null;
+  }, [clearTimers, effectiveEnabled, maxReconnectAttempts, onConnect, onDisconnect, onError, onMessage, pingInterval, reconnectInterval, resolvedUrl]);
+
+  useEffect(() => {
+    if (!effectiveEnabled) {
+      if (!hasWarnedRef.current && enabled && rawUrl && import.meta.env?.DEV) {
+        console.info('[useWebSocket] Skipping WebSocket connection. Provide VITE_WS_BASE_URL to enable real-time updates for', rawUrl);
+        hasWarnedRef.current = true;
+      }
+      return undefined;
     }
-    
-    if (socket) {
-      socket.close();
-    }
-  }, [socket]);
+
+    connect();
+
+    return () => {
+      disconnect();
+    };
+  }, [connect, disconnect, effectiveEnabled, enabled, rawUrl]);
 
   const sendMessage = useCallback((message) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
@@ -119,20 +237,11 @@ const useWebSocket = (url, options = {}) => {
     return false;
   }, [socket]);
 
-  useEffect(() => {
-    if (enabled) {
-      connect();
-    }
-    
-    return () => {
-      disconnect();
-    };
-  }, [enabled, connect, disconnect]);
-
   return {
     socket,
     isConnected,
     connectionQuality,
+    connectionStatus,
     lastMessage,
     error,
     reconnectAttempts,

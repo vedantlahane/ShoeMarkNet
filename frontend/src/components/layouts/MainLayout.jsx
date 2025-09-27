@@ -40,6 +40,11 @@ const ROUTE_CONFIG = {
     description: 'Track and manage your orders.',
     background: 'gradient-primary'
   },
+  '/logout': {
+    title: 'Signing Out • ShoeMarkNet',
+    description: 'Securely ending your session and keeping your account protected.',
+    background: 'gradient-tertiary'
+  },
   '/access-denied': {
     title: 'Access Restricted • ShoeMarkNet',
     description: 'Your current role does not have permission to view this page.',

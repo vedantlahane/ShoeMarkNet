@@ -56,42 +56,92 @@ const showInfoToast = (message, options = {}) => {
   });
 };
 
+const normalizeUser = (user, fallbackUser = {}) => {
+  const base = { ...(fallbackUser || {}) };
+
+  if (user && typeof user === "object") {
+    Object.assign(base, user);
+  }
+
+  if (Object.keys(base).length === 0) {
+    return null;
+  }
+
+  if (base._id && !base.id) {
+    base.id = base._id;
+  } else if (base.id && !base._id) {
+    base._id = base.id;
+  }
+
+  return base;
+};
+
+const persistLastActivity = () => {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem("lastActivity", Date.now().toString());
+    }
+  } catch (error) {
+    console.warn("Unable to persist lastActivity", error);
+  }
+};
+
 // Enhanced login thunk
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
-    try {
-      const loadingToast = toast.loading("🔐 Signing you in...");
+    const loadingToast = toast.loading("🔐 Signing you in...");
 
+    try {
       const response = await authService.login(
         credentials.email,
         credentials.password
       );
 
-      toast.dismiss(loadingToast);
-      showSuccessToast(`🎉 Welcome back, ${response.user.name}!`);
+      let profileData = null;
+      try {
+        profileData = await authService.getProfile();
+      } catch (profileError) {
+        console.warn("Failed to fetch profile after login:", profileError);
+      }
+
+      const normalizedUser = normalizeUser(
+        profileData?.user || profileData,
+        response.user
+      );
+
+      persistLastActivity();
+
+      showSuccessToast(
+        `🎉 Welcome back, ${normalizedUser?.name || response.user?.name || "there"}!`
+      );
 
       // Track login analytics
-      if (typeof window !== 'undefined' && window.gtag) {
+      if (typeof window !== "undefined" && window.gtag) {
         window.gtag("event", "login", {
           method: "email",
-          user_id: response.user._id,
+          user_id: normalizedUser?._id || normalizedUser?.id,
         });
       }
 
-      return response;
+      return {
+        ...response,
+        user: normalizedUser,
+      };
     } catch (error) {
       const errorPayload = createErrorPayload(error, "Login failed");
       showErrorToast(`❌ ${errorPayload.message}`);
 
       // Track failed login
-      if (typeof window !== 'undefined' && window.gtag) {
+      if (typeof window !== "undefined" && window.gtag) {
         window.gtag("event", "login_failed", {
           error_message: errorPayload.message,
         });
       }
 
       return rejectWithValue(errorPayload);
+    } finally {
+      toast.dismiss(loadingToast);
     }
   }
 );
@@ -100,13 +150,28 @@ export const loginUser = createAsyncThunk(
 export const registerUser = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
-    try {
-      const loadingToast = toast.loading("🚀 Creating your account...");
+    const loadingToast = toast.loading("🚀 Creating your account...");
 
+    try {
       const response = await authService.register(userData);
 
-      toast.dismiss(loadingToast);
-      showSuccessToast(`🎉 Welcome to ShoeMarkNet, ${response.user.name}!`);
+      let profileData = null;
+      try {
+        profileData = await authService.getProfile();
+      } catch (profileError) {
+        console.warn("Failed to fetch profile after registration:", profileError);
+      }
+
+      const normalizedUser = normalizeUser(
+        profileData?.user || profileData,
+        response.user
+      );
+
+      persistLastActivity();
+
+      showSuccessToast(
+        `🎉 Welcome to ShoeMarkNet, ${normalizedUser?.name || response.user?.name || "there"}!`
+      );
 
       // Show welcome series of toasts
       setTimeout(() => {
@@ -117,18 +182,23 @@ export const registerUser = createAsyncThunk(
       }, 2000);
 
       // Track registration
-      if (typeof window !== 'undefined' && window.gtag) {
+      if (typeof window !== "undefined" && window.gtag) {
         window.gtag("event", "sign_up", {
           method: "email",
-          user_id: response.user._id,
+          user_id: normalizedUser?._id || normalizedUser?.id,
         });
       }
 
-      return response;
+      return {
+        ...response,
+        user: normalizedUser,
+      };
     } catch (error) {
       const errorPayload = createErrorPayload(error, "Registration failed");
       showErrorToast(`❌ ${errorPayload.message}`);
       return rejectWithValue(errorPayload);
+    } finally {
+      toast.dismiss(loadingToast);
     }
   }
 );
@@ -524,9 +594,10 @@ const authSlice = createSlice({
         state.loginLoading = false;
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload.user;
+        state.user = action.payload.user || null;
         state.lastActivity = Date.now();
         state.retryCount = 0;
+        state.isInitialized = true;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -546,8 +617,9 @@ const authSlice = createSlice({
         state.registerLoading = false;
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload.user;
+        state.user = action.payload.user || null;
         state.lastActivity = Date.now();
+        state.isInitialized = true;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {

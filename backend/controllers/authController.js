@@ -21,6 +21,21 @@ const generateRefreshToken = (user) =>
     { expiresIn: '30d' }
   );
 
+const buildAuthUserResponse = (user) => ({
+  id: user._id,
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  isEmailVerified: user.isEmailVerified,
+  isActive: user.isActive,
+  profilePic: user.profilePic || null,
+  preferences: user.preferences ? { ...user.preferences } : { newsletter: false, marketing: false },
+  lastLogin: user.lastLogin || null,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt
+});
+
 /** Register */
 const register = async (req, res) => {
   try {
@@ -55,16 +70,13 @@ const register = async (req, res) => {
       });
     }
 
+    const responseUser = buildAuthUserResponse(user);
+
     res.status(201).json({
       message: 'User registered successfully',
       token,
       refreshToken: process.env.NODE_ENV !== 'production' ? refreshToken : undefined,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: responseUser
     });
   } catch (error) {
     if (error.code === 11000)
@@ -94,6 +106,8 @@ const login = async (req, res) => {
     user.lastLogin = Date.now();
     await user.save();
 
+    const responseUser = buildAuthUserResponse(user);
+
     try { await updateLeadScore(user._id, 'login'); } catch (e) {}
 
     if (process.env.NODE_ENV === 'production') {
@@ -108,12 +122,7 @@ const login = async (req, res) => {
     res.status(200).json({
       token,
       refreshToken: process.env.NODE_ENV !== 'production' ? refreshToken : undefined,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: responseUser
     });
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error: process.env.NODE_ENV === 'production' ? 'Server error' : error.message });

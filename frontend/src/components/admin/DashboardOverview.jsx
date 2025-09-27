@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
@@ -19,15 +19,13 @@ import OrdersChart from './dashboard/OrdersChart';
 import RecentOrdersTable from './dashboard/RecentOrdersTable';
 import InventoryAlerts from './dashboard/InventoryAlerts';
 import QuickActionGrid from './dashboard/QuickActionGrid';
-// import PerformanceMetrics from './dashboard/PerformanceMetrics';
-// import TopProductsWidget from './dashboard/TopProductsWidget';
-// import CustomerAnalytics from './dashboard/CustomerAnalytics';
-// import LiveActivityFeed from './dashboard/LiveActivityFeed';
+import TopProductsWidget from './dashboard/TopProductsWidget';
+import CustomerAnalytics from './dashboard/CustomerAnalytics';
+import LiveActivityFeed from './dashboard/LiveActivityFeed';
 
 // Hooks
 import useWebSocket from '../../hooks/useWebSocket';
 import useLocalStorage from '../../hooks/useLocalStorage';
-import useDebounce from '../../hooks/useDebounce';
 
 // Utils
 import { trackEvent } from '../../utils/analytics';
@@ -67,52 +65,17 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
   });
   const [activeMetric, setActiveMetric] = useState('revenue');
   const [showAdvancedMetrics, setShowAdvancedMetrics] = useState(false);
-
-  // Debounced refresh function
-  const debouncedRefresh = useDebounce(() => {
-    fetchDashboardData();
-  }, 1000);
-
-  // Initialize component
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimateStats(true), 100);
-    fetchDashboardData();
-    
-    // Track dashboard view
-    trackEvent('admin_dashboard_viewed', {
-      time_range: selectedTimeRange,
-      timestamp: new Date().toISOString()
-    });
-
-    return () => clearTimeout(timer);
-  }, [selectedTimeRange]);
-
-  // Auto-refresh dashboard data
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!refreshing) {
-        debouncedRefresh();
-      }
-    }, REFRESH_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [refreshing, debouncedRefresh]);
-
-  // Handle real-time updates
-  useEffect(() => {
-    if (lastMessage && isConnected) {
-      const data = JSON.parse(lastMessage.data);
-      if (data.type === 'dashboard_update') {
-        setDashboardData(prev => ({
-          ...prev,
-          ...data.payload
-        }));
-      }
-    }
-  }, [lastMessage, isConnected]);
+  const isFetchingRef = useRef(false);
+  const refreshTimeoutRef = useRef(null);
 
   // Fetch comprehensive dashboard data
   const fetchDashboardData = useCallback(async () => {
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+
     try {
       setRefreshing(true);
       
@@ -128,7 +91,6 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
         customerAnalytics
       });
 
-      // Update chart data
       setChartData({
         revenue: salesReport.revenueChart || [],
         orders: salesReport.ordersChart || [],
@@ -143,8 +105,64 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
       console.error('Failed to fetch dashboard data:', error);
     } finally {
       setRefreshing(false);
+      isFetchingRef.current = false;
     }
   }, [selectedTimeRange, onDataUpdate]);
+
+  const scheduleRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    refreshTimeoutRef.current = setTimeout(() => {
+      fetchDashboardData();
+    }, 1000);
+  }, [fetchDashboardData]);
+
+  // Initialize component
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimateStats(true), 100);
+    fetchDashboardData();
+    
+    // Track dashboard view
+    trackEvent('admin_dashboard_viewed', {
+      time_range: selectedTimeRange,
+      timestamp: new Date().toISOString()
+    });
+
+    return () => clearTimeout(timer);
+  }, [selectedTimeRange, fetchDashboardData]);
+
+  // Auto-refresh dashboard data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!refreshing) {
+        scheduleRefresh();
+      }
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [refreshing, scheduleRefresh]);
+
+  // Handle real-time updates
+  useEffect(() => {
+    if (lastMessage && isConnected) {
+      if (lastMessage.type === 'dashboard_update') {
+        setDashboardData(prev => ({
+          ...prev,
+          ...lastMessage.payload
+        }));
+      }
+    }
+  }, [lastMessage, isConnected]);
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Calculate enhanced metrics
   const enhancedMetrics = useMemo(() => {
