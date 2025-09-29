@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation, Link } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
 import { debounce } from 'lodash';
 
@@ -10,9 +10,10 @@ import {
   fetchCategories,
   searchProducts,
   clearProductError,
-  clearSearchResults,
-  setProducts
+  clearSearchResults
 } from '../redux/slices/productSlice';
+import { addToCart } from '../redux/slices/cartSlice';
+import { toggleWishlistItem } from '../redux/slices/wishlistSlice';
 
 // Components
 import ProductFilter from '../components/ProductFilter';
@@ -29,10 +30,11 @@ import GlassPanel from '../components/common/GlassPanel';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
-import useDebounce from '../hooks/useDebounce';
 
 // Utils
 import { trackEvent } from '../utils/analytics';
+
+const DEFAULT_PRICE_RANGE = { min: 0, max: 1000 };
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First', icon: 'fa-clock' },
@@ -68,6 +70,7 @@ const Products = () => {
     totalProducts
   } = useSelector((state) => state.product);
   const categories = useSelector((state) => state.product.categories || []);
+  const wishlistItems = useSelector((state) => state.wishlist?.items || []);
 
   // Local state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -80,10 +83,11 @@ const Products = () => {
   const [filters, setFilters] = useState(() => ({
     category: searchParams.get('category') || '',
     brand: searchParams.get('brand') || '',
+    gender: searchParams.get('gender') || '',
     search: searchParams.get('search') || '',
     priceRange: {
-      min: parseInt(searchParams.get('minPrice') || '0', 10),
-      max: parseInt(searchParams.get('maxPrice') || '1000', 10),
+      min: parseInt(searchParams.get('minPrice') || String(DEFAULT_PRICE_RANGE.min), 10),
+      max: parseInt(searchParams.get('maxPrice') || String(DEFAULT_PRICE_RANGE.max), 10),
     },
     rating: parseInt(searchParams.get('rating') || '0', 10),
     inStock: searchParams.get('inStock') === 'true',
@@ -93,7 +97,47 @@ const Products = () => {
     limit: itemsPerPage
   }));
 
+  const wishlistProductIds = useMemo(() => (
+    wishlistItems
+      .map((item) => {
+        if (item.product?._id) return item.product._id;
+        if (item.product?.id) return item.product.id;
+        if (item._id) return item._id;
+        if (item.id) return item.id;
+        return null;
+      })
+      .filter(Boolean)
+  ), [wishlistItems]);
+
   // Debounced search and filter functions
+  const buildFilterParams = useCallback((baseFilters, overrides = {}) => {
+    const merged = { ...baseFilters, ...overrides };
+    const { priceRange, ...rest } = merged;
+
+    if (priceRange) {
+      const min = Number(priceRange.min);
+      const max = Number(priceRange.max);
+
+      if (Number.isFinite(min) && min > DEFAULT_PRICE_RANGE.min) {
+        rest.minPrice = min;
+      } else {
+        delete rest.minPrice;
+      }
+
+      if (Number.isFinite(max) && max < DEFAULT_PRICE_RANGE.max) {
+        rest.maxPrice = max;
+      } else {
+        delete rest.maxPrice;
+      }
+    }
+
+    if (!rest.search || !rest.search.trim()) {
+      delete rest.search;
+    }
+
+    return rest;
+  }, []);
+
   const debouncedSearch = useCallback(
     debounce((query, filterParams) => {
       if (query.trim()) {
@@ -115,6 +159,13 @@ const Products = () => {
     }, 300),
     [dispatch]
   );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel?.();
+      debouncedFetchProducts.cancel?.();
+    };
+  }, [debouncedSearch, debouncedFetchProducts]);
 
   // Memoized values
   const isSearchMode = useMemo(() => !!filters.search.trim(), [filters.search]);
@@ -142,10 +193,11 @@ const Products = () => {
     const active = new Set();
     if (filters.category) active.add(`category:${filters.category}`);
     if (filters.brand) active.add(`brand:${filters.brand}`);
+  if (filters.gender) active.add(`gender:${filters.gender}`);
     if (filters.rating > 0) active.add(`rating:${filters.rating}`);
     if (filters.inStock) active.add('inStock');
     if (filters.onSale) active.add('onSale');
-    if (filters.priceRange.min > 0 || filters.priceRange.max < 1000) {
+    if (filters.priceRange?.min > DEFAULT_PRICE_RANGE.min || filters.priceRange.max < DEFAULT_PRICE_RANGE.max) {
       active.add(`price:${filters.priceRange.min}-${filters.priceRange.max}`);
     }
     setActiveFilters(active);
@@ -182,9 +234,10 @@ const Products = () => {
     const params = new URLSearchParams();
     if (filters.category) params.set('category', filters.category);
     if (filters.brand) params.set('brand', filters.brand);
+  if (filters.gender) params.set('gender', filters.gender);
     if (filters.search) params.set('search', filters.search);
-    if (filters.priceRange?.min > 0) params.set('minPrice', filters.priceRange.min.toString());
-    if (filters.priceRange?.max < 1000) params.set('maxPrice', filters.priceRange.max.toString());
+  if (filters.priceRange?.min > DEFAULT_PRICE_RANGE.min) params.set('minPrice', filters.priceRange.min.toString());
+  if (filters.priceRange?.max < DEFAULT_PRICE_RANGE.max) params.set('maxPrice', filters.priceRange.max.toString());
     if (filters.rating > 0) params.set('rating', filters.rating.toString());
     if (filters.inStock) params.set('inStock', 'true');
   if (filters.onSale) params.set('onSale', 'true');
@@ -200,19 +253,18 @@ const Products = () => {
     }
 
     // Fetch products with current filters
-    const filterParams = {
-      ...filters,
+    const filterParams = buildFilterParams(filters, {
       onSale: isSalePage ? true : filters.onSale,
       page: currentPage,
       limit: itemsPerPage
-    };
+    });
 
     if (filters.search.trim()) {
       debouncedSearch(filters.search, filterParams);
     } else {
       debouncedFetchProducts(filterParams);
     }
-  }, [filters, currentPage, itemsPerPage, debouncedSearch, debouncedFetchProducts, setSearchParams, searchParams, isSalePage]);
+  }, [filters, currentPage, itemsPerPage, debouncedSearch, debouncedFetchProducts, setSearchParams, searchParams, isSalePage, buildFilterParams]);
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters) => {
@@ -272,10 +324,44 @@ const Products = () => {
     });
   }, [setViewMode]);
 
+  const handleAddProductToCart = useCallback((product) => {
+    const productId = product?._id || product?.id;
+    if (!productId) return;
+
+    dispatch(addToCart({
+      productId,
+      quantity: 1,
+      product
+    }));
+
+    trackEvent('add_to_cart', {
+      product_id: productId,
+      product_name: product?.name,
+      price: product?.price
+    });
+  }, [dispatch]);
+
+  const handleToggleProductWishlist = useCallback((product) => {
+    const productId = product?._id || product?.id;
+    if (!productId) return;
+
+    const isCurrentlySaved = wishlistProductIds.includes(productId);
+
+    dispatch(toggleWishlistItem({
+      productId,
+      product
+    }));
+
+    trackEvent(isCurrentlySaved ? 'wishlist_removed' : 'wishlist_added', {
+      product_id: productId,
+      product_name: product?.name
+    });
+  }, [dispatch, wishlistProductIds]);
+
   // Handle retry
   const handleRetry = useCallback(() => {
     dispatch(clearProductError());
-    const filterParams = { ...filters, page: currentPage, limit: itemsPerPage };
+    const filterParams = buildFilterParams(filters, { page: currentPage, limit: itemsPerPage });
     
     if (filters.search.trim()) {
       dispatch(searchProducts({ query: filters.search, filters: filterParams }));
@@ -293,8 +379,9 @@ const Products = () => {
     const clearedFilters = {
       category: '',
       brand: '',
+      gender: '',
       search: '',
-      priceRange: { min: 0, max: 1000 },
+      priceRange: { ...DEFAULT_PRICE_RANGE },
       rating: 0,
       inStock: false,
       onSale: isSalePage,
@@ -321,6 +408,9 @@ const Products = () => {
       case 'brand':
         handleFilterChange({ brand: '' });
         break;
+      case 'gender':
+        handleFilterChange({ gender: '' });
+        break;
       case 'rating':
         handleFilterChange({ rating: 0 });
         break;
@@ -331,7 +421,7 @@ const Products = () => {
         handleFilterChange({ onSale: false });
         break;
       case 'price':
-        handleFilterChange({ priceRange: { min: 0, max: 1000 } });
+        handleFilterChange({ priceRange: { ...DEFAULT_PRICE_RANGE } });
         break;
       default:
         break;
@@ -427,6 +517,37 @@ const Products = () => {
     </div>
   ), [filters.search, handleSearch]);
 
+  const headerBreadcrumbs = useMemo(() => (
+    <nav
+      aria-label="Breadcrumb"
+      className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400"
+    >
+      <Link
+        to="/"
+        className="transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400"
+      >
+        Home
+      </Link>
+      <span className="opacity-60">/</span>
+      {isSalePage ? (
+        <>
+          <Link
+            to="/products"
+            className="transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400"
+          >
+            Products
+          </Link>
+          <span className="opacity-60">/</span>
+          <span className="text-gray-900 dark:text-gray-200">Sale</span>
+        </>
+      ) : (
+        <span className="text-gray-900 dark:text-gray-200">Products</span>
+      )}
+    </nav>
+  ), [isSalePage]);
+
+  
+
   return (
     <>
       {/* SEO Meta Tags */}
@@ -471,8 +592,9 @@ const Products = () => {
         title={headerTitle}
         description={headerSubtitle}
         actions={headerActions}
+        breadcrumbs={headerBreadcrumbs}
       >
-        <div className="space-y-6">
+  <div className="space-y-6">
           <div className="lg:hidden">
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
@@ -502,162 +624,197 @@ const Products = () => {
             </GlassPanel>
           )}
 
-          <div className="flex flex-col gap-8 lg:flex-row">
-            <div className={`${isMobileFilterOpen ? 'block' : 'hidden'} lg:block w-full transition-all duration-300 lg:w-80`}>
-              <div className="space-y-6 lg:sticky lg:top-6">
-                <ProductFilter
-                  currentFilters={filters}
-                  onFilterChange={handleFilterChange}
-                  onClose={() => setIsMobileFilterOpen(false)}
-                />
-              </div>
-            </div>
+          <div className="relative">
+            {isMobileFilterOpen && (
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="fixed inset-0 z-30 bg-slate-900/55 backdrop-blur-sm lg:hidden"
+                aria-label="Close filters"
+              />
+            )}
 
-            <div className="flex-1 min-w-0 space-y-6">
-              <GlassPanel padding="p-4" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                  <SortDropdown
-                    value={filters.sort}
-                    options={SORT_OPTIONS}
-                    onChange={handleSortChange}
-                  />
-
-                  <select
-                    className="rounded-2xl border border-white/40 bg-white/70 px-3 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white"
-                    value={itemsPerPage}
-                    onChange={(e) => handlePerPageChange(parseInt(e.target.value, 10))}
-                    aria-label="Products per page"
-                  >
-                    {ITEMS_PER_PAGE_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <ViewToggle
-                  value={viewMode}
-                  onChange={handleViewModeChange}
-                />
-              </GlassPanel>
-
-              {error && (
-                <GlassPanel padding="p-0">
-                  <ErrorMessage
-                    message={error.message || 'Failed to load products'}
-                    onRetry={handleRetry}
-                    className="mb-0"
-                  />
-                </GlassPanel>
-              )}
-
-              {currentLoading ? (
-                <GlassPanel padding="p-6" className="space-y-6">
-                  {viewMode === 'grid' ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {[...Array(itemsPerPage)].map((_, index) => (
-                        <div
-                          key={`skeleton-${index}`}
-                          className="h-80 rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
-                        >
-                          <div className="flex h-full flex-col space-y-4 animate-pulse">
-                            <div className="h-40 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
-                            <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                            <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                            <div className="mt-auto h-8 w-1/3 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {[...Array(itemsPerPage)].map((_, index) => (
-                        <div
-                          key={`skeleton-list-${index}`}
-                          className="rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
-                        >
-                          <div className="flex gap-4 animate-pulse">
-                            <div className="h-24 w-24 flex-shrink-0 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
-                            <div className="flex flex-1 flex-col gap-3">
-                              <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                              <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                              <div className="h-6 w-1/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </GlassPanel>
-              ) : (
-                <>
-                  {productsList.length === 0 ? (
-                    <GlassPanel padding="p-12" className="text-center">
-                      <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/40 text-blue-500 dark:bg-slate-800/60">
-                        <i className="fas fa-search text-3xl"></i>
-                      </div>
-                      <h3 className="mb-3 text-2xl font-semibold text-gray-900 dark:text-white">
-                        No products found
+            <div className="space-y-6">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+                <aside
+                  className={`transition-all duration-200 ease-out lg:relative lg:top-auto lg:block lg:h-auto lg:w-[250px] xl:w-[280px] ${
+                    isMobileFilterOpen
+                      ? 'fixed inset-y-0 left-0 z-40 h-full w-4/5 max-w-sm translate-x-0 lg:static'
+                      : 'pointer-events-none fixed inset-y-0 left-0 z-40 h-full w-4/5 max-w-sm -translate-x-full lg:pointer-events-auto lg:static lg:translate-x-0'
+                  }`}
+                >
+                  <div className="flex h-full flex-col overflow-y-auto bg-white/95 p-4 shadow-2xl dark:bg-slate-900/95 lg:h-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:shadow-none">
+                    <div className="mb-4 flex items-center justify-between lg:hidden">
+                      <h3 className="text-sm font-semibold uppercase tracking-[0.4em] text-gray-600">
+                        Filters
                       </h3>
-                      <p className="mb-6 text-gray-600 dark:text-gray-400">
-                        {filters.search
-                          ? `No products match your search for "${filters.search}"`
-                          : 'No products match your current filters'}
-                      </p>
-                      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                        <button
-                          onClick={handleClearAllFilters}
-                          className="rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
-                        >
-                          <i className="fas fa-times mr-2"></i>
-                          Clear All Filters
-                        </button>
-                        {filters.search && (
-                          <button
-                            onClick={() => handleSearch('')}
-                            className="rounded-2xl border border-white/40 bg-white/60 px-6 py-3 font-semibold text-gray-900 transition-colors duration-200 hover:bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
-                          >
-                            <i className="fas fa-search mr-2"></i>
-                            Clear Search
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsMobileFilterOpen(false)}
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-gray-600"
+                        aria-label="Close filters"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    <div className="space-y-4 lg:sticky lg:top-24 xl:top-28">
+                      <ProductFilter
+                        currentFilters={filters}
+                        onFilterChange={handleFilterChange}
+                        onClose={() => setIsMobileFilterOpen(false)}
+                      />
+                    </div>
+                  </div>
+                </aside>
+
+                <section className="min-w-0 flex-1 space-y-5">
+                  <GlassPanel padding="p-4" className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <SortDropdown
+                        value={filters.sort}
+                        options={SORT_OPTIONS}
+                        onChange={handleSortChange}
+                      />
+
+                      <select
+                        className="rounded-2xl border border-white/40 bg-white/70 px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white"
+                        value={itemsPerPage}
+                        onChange={(e) => handlePerPageChange(parseInt(e.target.value, 10))}
+                        aria-label="Products per page"
+                      >
+                        {ITEMS_PER_PAGE_OPTIONS.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <ViewToggle
+                      value={viewMode}
+                      onChange={handleViewModeChange}
+                    />
+                  </GlassPanel>
+
+                  {error && (
+                    <GlassPanel padding="p-0">
+                      <ErrorMessage
+                        message={error.message || 'Failed to load products'}
+                        onRetry={handleRetry}
+                        className="mb-0"
+                      />
+                    </GlassPanel>
+                  )}
+
+                  {currentLoading ? (
+                    <GlassPanel padding="p-5" className="space-y-5">
+                      {viewMode === 'grid' ? (
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                          {[...Array(itemsPerPage)].map((_, index) => (
+                            <div
+                              key={`skeleton-${index}`}
+                              className="h-72 rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
+                            >
+                              <div className="flex h-full flex-col space-y-4 animate-pulse">
+                                <div className="h-36 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
+                                <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                <div className="mt-auto h-7 w-1/3 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-3.5">
+                          {[...Array(itemsPerPage)].map((_, index) => (
+                            <div
+                              key={`skeleton-list-${index}`}
+                              className="rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
+                            >
+                              <div className="flex gap-4 animate-pulse">
+                                <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
+                                <div className="flex flex-1 flex-col gap-3">
+                                  <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                  <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                  <div className="h-6 w-1/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </GlassPanel>
                   ) : (
                     <>
-                      <GlassPanel padding="p-6" className="space-y-6">
-                        {viewMode === 'grid' ? (
-                          <ProductGrid
-                            products={productsList}
-                            onAddToCart={(product) => console.log('Add to cart:', product)}
-                            onToggleWishlist={(product) => console.log('Toggle wishlist:', product)}
-                          />
-                        ) : (
-                          <ProductList
-                            products={productsList}
-                            onAddToCart={(product) => console.log('Add to cart:', product)}
-                            onToggleWishlist={(product) => console.log('Toggle wishlist:', product)}
-                          />
-                        )}
-                      </GlassPanel>
-
-                      {totalPages > 1 && (
-                        <GlassPanel padding="p-4" className="flex justify-center">
-                          <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                            showInfo={true}
-                            totalItems={totalCount}
-                            itemsPerPage={itemsPerPage}
-                          />
+                      {productsList.length === 0 ? (
+                        <GlassPanel padding="p-12" className="text-center">
+                          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/40 text-blue-500 dark:bg-slate-800/60">
+                            <i className="fas fa-search text-3xl"></i>
+                          </div>
+                          <h3 className="mb-3 text-2xl font-semibold text-gray-900 dark:text-white">
+                            No products found
+                          </h3>
+                          <p className="mb-6 text-gray-600 dark:text-gray-400">
+                            {filters.search
+                              ? `No products match your search for "${filters.search}"`
+                              : 'No products match your current filters'}
+                          </p>
+                          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                            <button
+                              onClick={handleClearAllFilters}
+                              className="rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
+                            >
+                              <i className="fas fa-times mr-2"></i>
+                              Clear All Filters
+                            </button>
+                            {filters.search && (
+                              <button
+                                onClick={() => handleSearch('')}
+                                className="rounded-2xl border border-white/40 bg-white/60 px-6 py-3 font-semibold text-gray-900 transition-colors duration-200 hover:bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
+                              >
+                                <i className="fas fa-search mr-2"></i>
+                                Clear Search
+                              </button>
+                            )}
+                          </div>
                         </GlassPanel>
+                      ) : (
+                        <>
+                          <GlassPanel padding="p-4 md:p-5" className="space-y-5">
+                            {viewMode === 'grid' ? (
+                              <ProductGrid
+                                products={productsList}
+                                onAddToCart={handleAddProductToCart}
+                                onToggleWishlist={handleToggleProductWishlist}
+                              />
+                            ) : (
+                              <ProductList
+                                products={productsList}
+                                onAddToCart={handleAddProductToCart}
+                                onToggleWishlist={handleToggleProductWishlist}
+                                wishlistProductIds={wishlistProductIds}
+                              />
+                            )}
+                          </GlassPanel>
+
+                          {totalPages > 1 && (
+                            <GlassPanel padding="p-3.5" className="flex justify-center">
+                              <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                                showInfo={true}
+                                totalItems={totalCount}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            </GlassPanel>
+                          )}
+                        </>
                       )}
                     </>
                   )}
-                </>
-              )}
+                </section>
+              </div>
             </div>
           </div>
         </div>

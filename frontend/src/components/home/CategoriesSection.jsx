@@ -121,13 +121,17 @@ const CategoriesSection = ({
   const [isGridVisible, setIsGridVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const enableAnimations = animateOnScroll && !prefersReducedMotion;
+  const pulseClass = enableAnimations ? 'animate-pulse-slow' : '';
+  const bounceClass = enableAnimations ? 'animate-bounce' : '';
+  const pingClass = enableAnimations ? 'animate-ping' : '';
+  const spinSlowClass = enableAnimations ? 'animate-spin-slow' : '';
   
   // Refs
   const sectionRef = useRef(null);
   const headerRef = useRef(null);
   const gridRef = useRef(null);
   const ctaRef = useRef(null);
-  const gsapContextRef = useRef(null);
 
   const categories = useMemo(() => {
     if (propCategories && Array.isArray(propCategories)) {
@@ -136,13 +140,38 @@ const CategoriesSection = ({
     return DEFAULT_CATEGORIES;
   }, [propCategories]);
 
+  const statsSummary = useMemo(() => {
+    if (!categories?.length) {
+      return { totalProducts: 0, avgRating: 0 };
+    }
+
+    const totalProducts = categories.reduce((total, cat) => total + (cat.count || 0), 0);
+    const totalRating = categories.reduce(
+      (total, cat) => total + (cat?.stats?.avgRating || 0),
+      0
+    );
+    const trendingCount = categories.reduce(
+      (total, cat) => total + (cat?.stats?.trending ? 1 : 0),
+      0
+    );
+
+    return {
+      totalProducts,
+      avgRating: Number((totalRating / categories.length).toFixed(1)),
+      trendingCount
+    };
+  }, [categories]);
+
   // GSAP Animations with proper cleanup
   useEffect(() => {
-    if (!animateOnScroll || !sectionRef.current || prefersReducedMotion) return;
+    if (!enableAnimations || !sectionRef.current) {
+      return undefined;
+    }
 
-    gsapContextRef.current = gsap.context(() => {
+    const ctx = gsap.context(() => {
       // Section entrance animation
-      gsap.fromTo(sectionRef.current,
+      gsap.fromTo(
+        sectionRef.current,
         { opacity: 0 },
         {
           opacity: 1,
@@ -157,7 +186,8 @@ const CategoriesSection = ({
 
       // Header animation
       if (headerRef.current) {
-        gsap.fromTo(headerRef.current.children,
+        gsap.fromTo(
+          headerRef.current.children,
           { opacity: 0, y: 50 },
           {
             opacity: 1,
@@ -176,7 +206,8 @@ const CategoriesSection = ({
 
       // Grid animation
       if (gridRef.current) {
-        gsap.fromTo(gridRef.current.children,
+        gsap.fromTo(
+          gridRef.current.children,
           { opacity: 0, y: 100, scale: 0.8 },
           {
             opacity: 1,
@@ -196,7 +227,8 @@ const CategoriesSection = ({
 
       // CTA animation
       if (ctaRef.current) {
-        gsap.fromTo(ctaRef.current,
+        gsap.fromTo(
+          ctaRef.current,
           { opacity: 0, y: 30 },
           {
             opacity: 1,
@@ -211,28 +243,12 @@ const CategoriesSection = ({
           }
         );
       }
-
-      // Floating animation for active category
-      if (activeCategory) {
-        const activeCard = gridRef.current?.querySelector(`[data-category-id="${activeCategory}"]`);
-        if (activeCard) {
-          gsap.to(activeCard, {
-            y: -10,
-            duration: 2,
-            yoyo: true,
-            repeat: -1,
-            ease: 'sine.inOut'
-          });
-        }
-      }
     }, sectionRef);
 
     return () => {
-      if (gsapContextRef.current) {
-        gsapContextRef.current.revert();
-      }
+      ctx.revert();
     };
-  }, [animateOnScroll, activeCategory, prefersReducedMotion]);
+  }, [enableAnimations]);
 
   // Stagger visibility animation
   useEffect(() => {
@@ -243,7 +259,7 @@ const CategoriesSection = ({
       return undefined;
     }
 
-    if (!animateOnScroll || prefersReducedMotion) {
+    if (!enableAnimations) {
       setVisibleCategories(categories.map((_, index) => index));
       setIsGridVisible(true);
       return undefined;
@@ -262,10 +278,15 @@ const CategoriesSection = ({
     observer.observe(gridRef.current);
 
     return () => observer.disconnect();
-  }, [categories, animateOnScroll, prefersReducedMotion]);
+  }, [categories, enableAnimations]);
 
   useEffect(() => {
     if (!isGridVisible) {
+      return undefined;
+    }
+
+    if (!enableAnimations) {
+      setVisibleCategories(categories.map((_, index) => index));
       return undefined;
     }
 
@@ -285,7 +306,34 @@ const CategoriesSection = ({
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [categories, isGridVisible]);
+  }, [categories, enableAnimations, isGridVisible]);
+
+  useEffect(() => {
+    if (!enableAnimations || !activeCategory || !gridRef.current) {
+      return undefined;
+    }
+
+    const activeCard = gridRef.current.querySelector(
+      `[data-category-id="${activeCategory}"]`
+    );
+
+    if (!activeCard) {
+      return undefined;
+    }
+
+    const animation = gsap.to(activeCard, {
+      y: -10,
+      duration: 2,
+      yoyo: true,
+      repeat: -1,
+      ease: 'sine.inOut'
+    });
+
+    return () => {
+      animation?.kill();
+      gsap.set(activeCard, { clearProps: 'transform' });
+    };
+  }, [activeCategory, enableAnimations]);
 
   // Handle category interactions
   const handleCategoryHover = useCallback((categoryId) => {
@@ -309,10 +357,17 @@ const CategoriesSection = ({
     }
   }, [prefersReducedMotion]);
 
-  const handleCategoryLeave = useCallback(() => {
+  const handleCategoryLeave = useCallback((event) => {
     const previousCategory = hoveredCategory;
     setHoveredCategory(null);
-    
+    setActiveCategory(null);
+
+    const cardElement = event?.currentTarget;
+    if (cardElement) {
+      cardElement.style.removeProperty('--hover-x');
+      cardElement.style.removeProperty('--hover-y');
+    }
+
     // Reset hover animation
     if (previousCategory && !prefersReducedMotion) {
       const card = gridRef.current?.querySelector(`[data-category-id="${previousCategory}"]`);
@@ -328,6 +383,23 @@ const CategoriesSection = ({
     }
   }, [hoveredCategory, prefersReducedMotion]);
 
+  const handleCardPointerMove = useCallback((event) => {
+    if (prefersReducedMotion) {
+      return;
+    }
+
+    const card = event.currentTarget;
+    const rect = card.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return;
+    }
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+    card.style.setProperty('--hover-x', `${x}%`);
+    card.style.setProperty('--hover-y', `${y}%`);
+  }, [prefersReducedMotion]);
+
   return (
     <section 
       ref={sectionRef}
@@ -337,14 +409,29 @@ const CategoriesSection = ({
     >
       {/* Enhanced Background Elements */}
       <div className="absolute inset-0" aria-hidden="true">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-400/10 to-teal-400/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+        <div className={`absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl ${pulseClass}`}></div>
+        <div
+          className={`absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl ${pulseClass}`}
+          style={{ animationDelay: '1s' }}
+        ></div>
+        <div
+          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-400/10 to-teal-400/10 rounded-full blur-3xl ${pulseClass}`}
+          style={{ animationDelay: '2s' }}
+        ></div>
         
         {/* Floating particles */}
-        <div className="absolute top-20 right-1/4 w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
-        <div className="absolute bottom-32 left-1/3 w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '1.2s' }}></div>
-        <div className="absolute top-1/3 right-10 w-1 h-1 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '2.1s' }}></div>
+        <div
+          className={`absolute top-20 right-1/4 w-2 h-2 bg-blue-400 rounded-full ${bounceClass}`}
+          style={{ animationDelay: '0.5s' }}
+        ></div>
+        <div
+          className={`absolute bottom-32 left-1/3 w-3 h-3 bg-purple-400 rounded-full ${bounceClass}`}
+          style={{ animationDelay: '1.2s' }}
+        ></div>
+        <div
+          className={`absolute top-1/3 right-10 w-1 h-1 bg-pink-400 rounded-full ${pingClass}`}
+          style={{ animationDelay: '2.1s' }}
+        ></div>
       </div>
 
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -352,14 +439,18 @@ const CategoriesSection = ({
         {showHeader && (
           <div ref={headerRef} className="text-center mb-16">
             <div className="inline-flex items-center space-x-3 glass bg-gradient-to-r from-purple-100/50 to-blue-100/50 dark:from-purple-900/30 dark:to-blue-900/30 text-purple-600 dark:text-purple-400 rounded-full px-8 py-4 mb-8 shadow-lg">
-              <Grid3X3 size={20} className="animate-pulse" aria-hidden="true" />
+              <Grid3X3 size={20} className={enableAnimations ? 'animate-pulse' : ''} aria-hidden="true" />
               <span className="text-sm font-semibold tracking-wide">Shop by Style</span>
-              <Sparkles size={16} className="animate-spin-slow" aria-hidden="true" />
+              <Sparkles size={16} className={spinSlowClass} aria-hidden="true" />
             </div>
 
             <h2 className="text-4xl lg:text-7xl font-heading font-bold mb-6 text-gray-900 dark:text-white">
               Explore{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
+              <span
+                className={`bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent ${
+                  enableAnimations ? 'animate-gradient' : ''
+                }`}
+              >
                 Categories
               </span>
             </h2>
@@ -373,18 +464,22 @@ const CategoriesSection = ({
             {showStats && (
               <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
                 <div className="glass px-4 py-2 rounded-full">
-                  <span className="text-2xl font-bold text-blue-600 mr-2">{categories.length}</span>
+                  <span className="text-2xl font-bold text-blue-600 mr-2">{categories.length.toLocaleString()}</span>
                   <span className="text-gray-600 dark:text-gray-400 text-sm">Categories</span>
                 </div>
                 <div className="glass px-4 py-2 rounded-full">
                   <span className="text-2xl font-bold text-purple-600 mr-2">
-                    {categories.reduce((total, cat) => total + cat.count, 0)}
+                    {statsSummary.totalProducts.toLocaleString()}
                   </span>
                   <span className="text-gray-600 dark:text-gray-400 text-sm">Products</span>
                 </div>
                 <div className="glass px-4 py-2 rounded-full">
-                  <span className="text-2xl font-bold text-pink-600 mr-2">4.8</span>
+                  <span className="text-2xl font-bold text-pink-600 mr-2">{statsSummary.avgRating}</span>
                   <span className="text-gray-600 dark:text-gray-400 text-sm">Avg Rating</span>
+                </div>
+                <div className="glass px-4 py-2 rounded-full">
+                  <span className="text-2xl font-bold text-orange-500 mr-2">{statsSummary.trendingCount}</span>
+                  <span className="text-gray-600 dark:text-gray-400 text-sm">Trending Now</span>
                 </div>
               </div>
             )}
@@ -406,9 +501,9 @@ const CategoriesSection = ({
         >
           {categories.map((category, index) => {
             const IconComponent = category.lucideIcon;
-            const hoverClass = prefersReducedMotion
-              ? 'transition-opacity duration-500'
-              : 'transition-all duration-700 transform hover:scale-105 hover:-translate-y-4 hover:rotate-1 perspective-1000';
+            const hoverClass = enableAnimations
+              ? 'transition-all duration-700 transform-gpu hover:scale-105 hover:-translate-y-4 hover:rotate-1 perspective-1000'
+              : 'transition-opacity duration-500';
             return (
               <Link
                 key={category.id}
@@ -420,6 +515,7 @@ const CategoriesSection = ({
                     : 'opacity-0 translate-y-8'
                 }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
+                onPointerMove={handleCardPointerMove}
                 onMouseEnter={() => handleCategoryHover(category.id)}
                 onMouseLeave={handleCategoryLeave}
                 onFocus={() => handleCategoryHover(category.id)}
@@ -427,6 +523,17 @@ const CategoriesSection = ({
                 role="gridcell"
                 aria-label={`${category.name} category with ${category.count} products`}
               >
+                {/* Pointer gradient highlight */}
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300"
+                  style={{
+                    background:
+                      'radial-gradient(220px circle at var(--hover-x, 50%) var(--hover-y, 50%), rgba(59,130,246,0.25), transparent 65%)',
+                    mixBlendMode: 'screen'
+                  }}
+                  aria-hidden="true"
+                />
+
                 {/* Premium Glassmorphism Card */}
                 <div className="card-premium rounded-3xl overflow-hidden h-full shadow-2xl hover:shadow-3xl relative z-10">
                   
@@ -460,7 +567,11 @@ const CategoriesSection = ({
 
                     {/* Trending Indicator */}
                     {category.stats.trending && (
-                      <div className="absolute bottom-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse flex items-center space-x-1">
+                      <div
+                        className={`absolute bottom-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center space-x-1 ${
+                          enableAnimations ? 'animate-pulse' : ''
+                        }`}
+                      >
                         <TrendingUp size={12} aria-hidden="true" />
                         <span>Trending</span>
                       </div>
@@ -571,7 +682,11 @@ const CategoriesSection = ({
             </div>
             
             <div className="relative z-10">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl animate-bounce-slow">
+              <div
+                className={`w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl ${
+                  enableAnimations ? 'animate-bounce-slow' : ''
+                }`}
+              >
                 <Grid3X3 size={32} className="text-white" aria-hidden="true" />
               </div>
               

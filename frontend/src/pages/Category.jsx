@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
+import PageLayout from '../components/common/PageLayout';
+import GlassPanel from '../components/common/GlassPanel';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -23,7 +25,6 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Pagination from '../components/common/Pagination';
 import CategoryFilters from '../components/category/CategoryFilters';
-import CategoryHeader from '../components/category/CategoryHeader';
 import CategoryStats from '../components/category/CategoryStats';
 import SubcategoryNav from '../components/category/SubcategoryNav';
 import ProductQuickView from '../components/products/ProductQuickView';
@@ -75,7 +76,6 @@ const ITEMS_PER_PAGE_OPTIONS = [
 
 const Category = () => {
   const { categoryName } = useParams();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -380,7 +380,8 @@ const Category = () => {
       return;
     }
 
-    setCompareItems(prev => [...prev, product]);
+  setCompareItems(prev => [...prev, product]);
+  setShowCompareModal(true);
     toast.success(`${product.name} added to comparison`);
     
     trackEvent('product_added_to_compare', {
@@ -409,47 +410,6 @@ const Category = () => {
     });
   }, [categoryName]);
 
-  // Category icon and color mapping
-  const getCategoryIcon = useCallback((category) => {
-    const iconMap = {
-      'electronics': 'fa-laptop',
-      'fashion': 'fa-tshirt',
-      'home': 'fa-home',
-      'beauty': 'fa-spa',
-      'sports': 'fa-running',
-      'books': 'fa-book',
-      'toys': 'fa-gamepad',
-      'automotive': 'fa-car',
-      'health': 'fa-heartbeat',
-      'jewelry': 'fa-gem',
-      'shoes': 'fa-shoe-prints',
-      'bags': 'fa-shopping-bag',
-      'accessories': 'fa-glasses',
-      'outdoor': 'fa-mountain'
-    };
-    return iconMap[category?.toLowerCase()] || 'fa-box';
-  }, []);
-
-  const getCategoryColor = useCallback((category) => {
-    const colorMap = {
-      'electronics': 'from-blue-500 to-cyan-500',
-      'fashion': 'from-pink-500 to-rose-500',
-      'home': 'from-green-500 to-emerald-500',
-      'beauty': 'from-purple-500 to-violet-500',
-      'sports': 'from-orange-500 to-red-500',
-      'books': 'from-indigo-500 to-purple-500',
-      'toys': 'from-yellow-500 to-orange-500',
-      'automotive': 'from-gray-500 to-slate-500',
-      'health': 'from-green-400 to-teal-500',
-      'jewelry': 'from-yellow-400 to-amber-500',
-      'shoes': 'from-brown-500 to-amber-600',
-      'bags': 'from-purple-600 to-pink-600',
-      'accessories': 'from-indigo-400 to-blue-500',
-      'outdoor': 'from-green-600 to-lime-500'
-    };
-    return colorMap[category?.toLowerCase()] || 'from-blue-500 to-purple-500';
-  }, []);
-
   // SEO meta data
   const metaTitle = useMemo(() => {
     const baseTitle = `${categoryName} Collection | ShoeMarkNet`;
@@ -464,9 +424,91 @@ const Category = () => {
     return `Discover ${total} premium ${categoryName?.toLowerCase()} products. ${onSale > 0 ? `${onSale} items on sale.` : ''} Free shipping, easy returns, and expert customer service.`;
   }, [categoryName, categoryStats]);
 
+  const displayCategoryName = useMemo(() => {
+    if (currentCategory?.name) return currentCategory.name;
+    if (!categoryName) return 'Category';
+    return categoryName
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }, [currentCategory?.name, categoryName]);
+
+  const headerTitle = useMemo(() => `${displayCategoryName} Collection`, [displayCategoryName]);
+
+  const headerDescription = useMemo(() => {
+    const total = categoryStats.total;
+    if (loading) {
+      return 'Fetching the freshest drops in this category...';
+    }
+    if (searchTerm) {
+      return `Showing matches for "${searchTerm}" with ${total} curated picks.`;
+    }
+    if (total === 0) {
+      return `No listings match your filters yet—tune the filters below to explore more styles.`;
+    }
+    return `${total.toLocaleString()} items, ${categoryStats.onSale} on sale, averaging ${Number(categoryStats.averageRating || 0).toFixed(1)}★ from the community.`;
+  }, [categoryStats, displayCategoryName, loading, searchTerm]);
+
+  const headerBreadcrumbs = useMemo(() => {
+    const crumbs = Array.isArray(breadcrumb) ? breadcrumb : [];
+    return (
+      <nav className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400" aria-label="Breadcrumb">
+        <Link to="/" className="transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400">
+          Home
+        </Link>
+        <span className="opacity-60">/</span>
+        <Link to="/products" className="transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400">
+          Products
+        </Link>
+        {crumbs.map((crumb, index) => {
+          const isLast = index === crumbs.length - 1;
+          if (isLast) {
+            return null;
+          }
+          return (
+            <React.Fragment key={crumb._id || crumb.slug || index}>
+              <span className="opacity-60">/</span>
+              <Link
+                to={`/category/${crumb.slug || crumb._id}`}
+                className="transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                {crumb.name}
+              </Link>
+            </React.Fragment>
+          );
+        })}
+        <span className="opacity-60">/</span>
+        <span className="text-gray-900 dark:text-gray-200">{displayCategoryName}</span>
+      </nav>
+    );
+  }, [breadcrumb, displayCategoryName]);
+
+  const headerAfter = useMemo(() => (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="rounded-2xl border border-white/30 bg-white/60 p-4 text-sm font-semibold text-gray-700 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60 dark:text-gray-200">
+        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Products</div>
+        <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{categoryStats.total}</div>
+      </div>
+      <div className="rounded-2xl border border-white/30 bg-white/60 p-4 text-sm font-semibold text-gray-700 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60 dark:text-gray-200">
+        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">On Sale</div>
+        <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{categoryStats.onSale}</div>
+      </div>
+      <div className="rounded-2xl border border-white/30 bg-white/60 p-4 text-sm font-semibold text-gray-700 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60 dark:text-gray-200">
+        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Avg Rating</div>
+        <div className="mt-1 flex items-baseline gap-1 text-2xl font-bold text-gray-900 dark:text-white">
+          {Number(categoryStats.averageRating || 0).toFixed(1)}
+          <span className="text-sm text-yellow-500"><i className="fas fa-star"></i></span>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-white/30 bg-white/60 p-4 text-sm font-semibold text-gray-700 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/60 dark:text-gray-200">
+        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">New Arrivals</div>
+        <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{categoryStats.newArrivals}</div>
+      </div>
+    </div>
+  ), [categoryStats]);
+
   return (
     <>
-      {/* SEO Meta Tags */}
       <PageMeta
         title={metaTitle}
         description={metaDescription}
@@ -481,7 +523,7 @@ const Category = () => {
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
-          name: `${categoryName} Collection`,
+          name: `${displayCategoryName} Collection`,
           description: metaDescription,
           url: `https://shoemarknet.com/category/${categoryName}`,
           mainEntity: {
@@ -504,47 +546,24 @@ const Category = () => {
         }}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        
-        {/* Animated Background Elements */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          {[...Array(15)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 8}s`,
-                animationDuration: `${4 + Math.random() * 6}s`
-              }}
-            />
-          ))}
-        </div>
+      <PageLayout
+        title={headerTitle}
+        description={headerDescription}
+        breadcrumbs={headerBreadcrumbs}
+        afterHeader={headerAfter}
+      >
+        <div className="space-y-8">
+          {subcategories && subcategories.length > 0 && (
+            <GlassPanel padding="p-4" className="overflow-x-auto">
+              <SubcategoryNav
+                subcategories={subcategories}
+                currentCategory={categoryName}
+                animateElements={animateElements}
+              />
+            </GlassPanel>
+          )}
 
-        {/* Enhanced Header Section */}
-        <CategoryHeader
-          categoryName={categoryName}
-          breadcrumb={breadcrumb}
-          categoryIcon={getCategoryIcon(categoryName)}
-          categoryColor={getCategoryColor(categoryName)}
-          stats={categoryStats}
-          animateElements={animateElements}
-          onNavigate={navigate}
-        />
-
-        {/* Subcategory Navigation */}
-        {subcategories && subcategories.length > 0 && (
-          <SubcategoryNav
-            subcategories={subcategories}
-            currentCategory={categoryName}
-            animateElements={animateElements}
-          />
-        )}
-
-        {/* Enhanced Controls Section */}
-        <section className="py-8 bg-white/50 dark:bg-gray-900/50 backdrop-blur-lg border-y border-white/20">
-          <div className="container mx-auto px-4">
+          <GlassPanel padding="p-6">
             <CategoryFilters
               searchTerm={searchTerm}
               onSearchChange={handleSearchChange}
@@ -574,15 +593,10 @@ const Category = () => {
               itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
               loading={loading}
             />
-          </div>
-        </section>
+          </GlassPanel>
 
-        {/* Enhanced Products Section */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            
-            {/* Error State */}
-            {error && (
+          {error && (
+            <GlassPanel padding="p-0">
               <ErrorMessage
                 message={error.message || 'Failed to load products'}
                 onRetry={() => dispatch(getProductsByCategory(categoryName, {
@@ -590,94 +604,89 @@ const Category = () => {
                   limit: itemsPerPage,
                   sort: sortBy
                 }))}
-                className="max-w-md mx-auto"
+                className="mb-0"
               />
-            )}
+            </GlassPanel>
+          )}
 
-            {/* Loading State */}
-            {loading && productsList.length === 0 && (
-              <div className={`grid gap-8 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+          {loading && productsList.length === 0 ? (
+            <GlassPanel padding="p-6">
+              <div className={`grid gap-6 ${
+                viewMode === 'grid'
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
                   : viewMode === 'list'
-                  ? 'grid-cols-1 max-w-4xl mx-auto'
-                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                    ? 'grid-cols-1 max-w-4xl mx-auto'
+                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
               }`}>
-                {Array.from({ length: itemsPerPage }).map((_, i) => (
-                  <div key={i} className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden animate-pulse">
-                    <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600"></div>
-                    <div className="p-6 space-y-4">
-                      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full"></div>
-                      <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full w-3/4"></div>
-                      <div className="h-6 bg-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-800 dark:to-purple-800 rounded-full w-1/2"></div>
-                      <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-2xl"></div>
+                {Array.from({ length: itemsPerPage }).map((_, index) => (
+                  <div
+                    key={`category-skeleton-${index}`}
+                    className="rounded-2xl border border-white/30 bg-white/60 p-4 shadow-inner dark:border-slate-800/60 dark:bg-slate-900/60"
+                  >
+                    <div className="flex h-full flex-col space-y-4 animate-pulse">
+                      <div className="h-44 rounded-xl bg-white/70 dark:bg-slate-800/70"></div>
+                      <div className="h-4 w-3/4 rounded-full bg-white/80 dark:bg-slate-800/80"></div>
+                      <div className="h-4 w-1/2 rounded-full bg-white/80 dark:bg-slate-800/80"></div>
+                      <div className="mt-auto h-10 w-2/3 rounded-2xl bg-white/80 dark:bg-slate-800/80"></div>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-
-            {/* Products Grid/List */}
-            {!loading && !error && (
-              <>
-                {productsList.length === 0 ? (
-                  /* Enhanced Empty State */
-                  <div className={`text-center py-20 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-                    <div className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 max-w-lg mx-auto">
-                      <div className={`w-24 h-24 bg-gradient-to-r ${getCategoryColor(categoryName)} rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse`}>
-                        <i className={`fas ${getCategoryIcon(categoryName)} text-4xl text-white`}></i>
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                        No Products Found
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-8">
-                        {searchTerm 
-                          ? `No results found for "${searchTerm}" in ${categoryName?.toLowerCase()}`
-                          : `We couldn't find any ${categoryName?.toLowerCase()} products matching your criteria.`
-                        }
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <button
-                          onClick={handleClearFilters}
-                          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-200"
-                        >
-                          <i className="fas fa-undo mr-2"></i>
-                          Clear Filters
-                        </button>
-                        <Link
-                          to="/products"
-                          className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-2xl hover:bg-white/20 transition-all duration-200 text-center"
-                        >
-                          <i className="fas fa-search mr-2"></i>
-                          Browse All Products
-                        </Link>
-                      </div>
-                    </div>
+            </GlassPanel>
+          ) : (
+            <>
+              {!loading && !error && productsList.length === 0 ? (
+                <GlassPanel padding="p-12" className="text-center">
+                  <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/60 text-blue-500 shadow-inner dark:bg-slate-800/70">
+                    <i className="fas fa-search text-3xl"></i>
                   </div>
-                ) : (
-                  <>
-                    {/* Loading overlay */}
-                    {loading && productsList.length > 0 && (
-                      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-                        <LoadingSpinner size="medium" message="Updating products..." />
-                      </div>
-                    )}
+                  <h3 className="mb-3 text-2xl font-semibold text-gray-900 dark:text-white">No products found</h3>
+                  <p className="mb-6 text-gray-600 dark:text-gray-400">
+                    {searchTerm
+                      ? `No results for "${searchTerm}" in ${displayCategoryName.toLowerCase()}`
+                      : `We couldn't find any ${displayCategoryName.toLowerCase()} products matching your filters.`}
+                  </p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                    <button
+                      onClick={handleClearFilters}
+                      className="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
+                    >
+                      <i className="fas fa-times mr-2"></i>
+                      Clear Filters
+                    </button>
+                    <Link
+                      to="/products"
+                      className="rounded-2xl border border-white/40 bg-white/60 px-6 py-3 font-semibold text-gray-900 shadow-sm transition-colors duration-200 hover:bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
+                    >
+                      <i className="fas fa-compass mr-2"></i>
+                      Browse All Products
+                    </Link>
+                  </div>
+                </GlassPanel>
+              ) : (
+                <>
+                  {loading && productsList.length > 0 && (
+                    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                      <LoadingSpinner size="medium" message="Updating products..." />
+                    </div>
+                  )}
 
-                    <div className={`grid gap-8 ${
-                      viewMode === 'grid' 
-                        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                  <GlassPanel padding="p-6" className="space-y-6">
+                    <div className={`grid gap-6 ${
+                      viewMode === 'grid'
+                        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
                         : viewMode === 'list'
-                        ? 'grid-cols-1 max-w-4xl mx-auto'
-                        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
-                    } ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
+                          ? 'grid-cols-1 max-w-4xl mx-auto'
+                          : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                    }`}>
                       {productsList.map((product, index) => (
                         <div
-                          key={product._id || index}
+                          key={product._id || product.id || index}
                           className="animate-fade-in"
                           style={{ animationDelay: `${index * 0.05}s` }}
                         >
-                          <ProductCard 
-                            product={product} 
+                          <ProductCard
+                            product={product}
                             viewMode={viewMode}
                             showCompareButton={true}
                             onAddToCompare={() => handleAddToCompare(product)}
@@ -687,104 +696,104 @@ const Category = () => {
                         </div>
                       ))}
                     </div>
-                  </>
-                )}
-              </>
-            )}
+                  </GlassPanel>
 
-            {/* Enhanced Pagination */}
-            {!loading && !error && productsList.length > 0 && pagination && pagination.totalPages > 1 && (
-              <div className={`mt-16 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                  showInfo={true}
-                  totalItems={categoryStats.total}
-                  itemsPerPage={itemsPerPage}
-                  className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
-                />
-              </div>
-            )}
-          </div>
-        </section>
+                  {!loading && !error && pagination && pagination.totalPages > 1 && (
+                    <GlassPanel padding="p-4" className="flex justify-center">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={handlePageChange}
+                        showInfo={true}
+                        totalItems={categoryStats.total}
+                        itemsPerPage={itemsPerPage}
+                      />
+                    </GlassPanel>
+                  )}
+                </>
+              )}
+            </>
+          )}
 
-        {/* Category Stats Section */}
-        {canViewAnalytics ? (
-          <CategoryStats
-            stats={categoryStats}
-            categoryName={categoryName}
-            animateElements={animateElements}
-            className="py-16 bg-white/5"
-          />
-        ) : (
-          userRole !== 'guest' && (
-            <div className="py-16">
-              <div className="max-w-5xl mx-auto bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-3xl p-8 text-center shadow-2xl">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white mb-4">
+          {canViewAnalytics ? (
+            <GlassPanel padding="p-6">
+              <CategoryStats
+                stats={categoryStats}
+                categoryName={displayCategoryName}
+                animateElements={animateElements}
+              />
+            </GlassPanel>
+          ) : (
+            userRole !== 'guest' && (
+              <GlassPanel padding="p-8" className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white">
                   <i className="fas fa-user-shield text-2xl"></i>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
                   Admin access required
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                  Category analytics and performance insights are limited to administrators. If you believe you need access, please contact your store administrator.
+                <p className="mt-3 text-gray-600 dark:text-gray-400">
+                  Category analytics are limited to administrators. Reach out to your store admin if you need access.
                 </p>
-              </div>
-            </div>
-          )
-        )}
-
-        {/* Floating Action Buttons */}
-        <div className="fixed bottom-8 right-8 flex flex-col space-y-4 z-40">
-          {/* Compare Button */}
-          {compareItems.length > 0 && (
-            <button
-              onClick={() => setShowCompareModal(true)}
-              className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 flex items-center justify-center relative"
-              title={`Compare ${compareItems.length} products`}
-            >
-              <i className="fas fa-balance-scale text-lg"></i>
-              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                {compareItems.length}
-              </span>
-            </button>
-          )}
-
-          {/* Back to Top Button */}
-          {showScrollTop && (
-            <button
-              onClick={scrollToTop}
-              className="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 flex items-center justify-center"
-              title="Back to top"
-            >
-              <i className="fas fa-chevron-up text-lg"></i>
-            </button>
+              </GlassPanel>
+            )
           )}
         </div>
+      </PageLayout>
 
-        {/* Modals */}
-        {quickViewProduct && (
-          <ProductQuickView
-            product={quickViewProduct}
-            onClose={() => setQuickViewProduct(null)}
-            onAddToCompare={() => handleAddToCompare(quickViewProduct)}
-          />
-        )}
-
+      <div className="fixed bottom-8 right-8 z-40 flex flex-col space-y-4">
         {compareItems.length > 0 && (
-          <CompareDrawer
-            items={compareItems}
-            onRemoveItem={(productId) => {
-              setCompareItems(prev => prev.filter(item => item._id !== productId));
-            }}
-            onClearAll={() => setCompareItems([])}
-            onClose={() => setCompareItems([])}
-          />
+          <button
+            onClick={() => setShowCompareModal(true)}
+            className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-2xl transition-all duration-200 hover:scale-105 hover:from-purple-500 hover:to-pink-500"
+            title={`Compare ${compareItems.length} products`}
+          >
+            <i className="fas fa-balance-scale text-lg"></i>
+            <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+              {compareItems.length}
+            </span>
+          </button>
         )}
 
-        {/* Custom Styles */}
+        {showScrollTop && (
+          <button
+            onClick={scrollToTop}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl transition-all duration-200 hover:scale-105 hover:from-blue-500 hover:to-purple-500"
+            title="Back to top"
+          >
+            <i className="fas fa-chevron-up text-lg"></i>
+          </button>
+        )}
       </div>
+
+      {quickViewProduct && (
+        <ProductQuickView
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+          onAddToCompare={() => handleAddToCompare(quickViewProduct)}
+        />
+      )}
+
+      {compareItems.length > 0 && (
+        <CompareDrawer
+          isOpen={showCompareModal}
+          items={compareItems}
+          onRemoveItem={(productId) => {
+            setCompareItems(prev => {
+              const next = prev.filter(item => item._id !== productId);
+              if (next.length === 0) {
+                setShowCompareModal(false);
+              }
+              return next;
+            });
+          }}
+          onClearAll={() => {
+            setCompareItems([]);
+            setShowCompareModal(false);
+          }}
+          onClose={() => setShowCompareModal(false)}
+        />
+      )}
     </>
   );
 };

@@ -12,17 +12,32 @@ import {
 } from 'lucide-react';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 
+const AUTO_PLAY_INTERVAL = 4000;
+
 const FeaturedProducts = ({ products, onAddToCart }) => {
   const { featuredLoading: loading } = useSelector(state => state.product);
   const [currentIndex, setCurrentIndex] = useState(0);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [isPlaying, setIsPlaying] = useState(!prefersReducedMotion);
+  const enableAnimations = !prefersReducedMotion;
+  const [isPlaying, setIsPlaying] = useState(enableAnimations);
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchEndX, setTouchEndX] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const autoplayRef = useRef(null);
+  const [hoveredProduct, setHoveredProduct] = useState(null);
 
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  const pulseClass = enableAnimations ? 'animate-pulse-slow' : '';
+  const floatClass = enableAnimations ? 'animate-bounce' : '';
+  const shimmerClass = enableAnimations ? 'animate-gradient' : '';
+  const navigationButtonClass = `flex h-11 w-11 items-center justify-center rounded-full border border-slate-800 bg-slate-900/70 text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:cursor-not-allowed disabled:opacity-40 ${
+    enableAnimations ? 'hover:-translate-y-0.5 hover:border-slate-600 hover:text-white hover:shadow-[0_8px_20px_-12px_rgba(15,23,42,0.9)]' : 'hover:border-slate-700 hover:text-white'
+  }`;
+  const dotBaseClass = 'w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const dotActiveClass = enableAnimations
+    ? 'w-8 bg-slate-100 shadow-[0_0_16px_rgba(226,232,240,0.4)]'
+    : 'w-8 bg-slate-100';
+  const dotInactiveClass = 'bg-slate-700 hover:bg-slate-500';
   
   // Use passed products or fallback to empty array
   const displayProducts = useMemo(() => products || [], [products]);
@@ -38,6 +53,12 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   }, [displayProducts.length, slidesToShow]);
   const maxIndex = Math.max(0, totalSlides - 1);
 
+  const formatCurrency = useCallback((value) => {
+    const numeric = typeof value === 'number' ? value : parseFloat(value ?? '');
+    if (Number.isNaN(numeric)) return null;
+    return numeric.toFixed(2);
+  }, []);
+
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
@@ -49,36 +70,33 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   }, []);
 
   useEffect(() => {
-    if (prefersReducedMotion) {
+    if (!enableAnimations) {
       setIsPlaying(false);
     }
-  }, [prefersReducedMotion]);
+  }, [enableAnimations]);
 
   // Auto-play functionality
   useEffect(() => {
-    if (prefersReducedMotion) {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current);
-      }
+    if (autoplayRef.current) {
+      clearInterval(autoplayRef.current);
+      autoplayRef.current = null;
+    }
+
+    if (!enableAnimations || !isPlaying || displayProducts.length <= slidesToShow) {
       return undefined;
     }
 
-    if (isPlaying && displayProducts.length > slidesToShow) {
-      autoplayRef.current = setInterval(() => {
-        setCurrentIndex(prev => prev >= maxIndex ? 0 : prev + 1);
-      }, 4000);
-    } else {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current);
-      }
-    }
+    autoplayRef.current = setInterval(() => {
+      setCurrentIndex(prev => (prev >= maxIndex ? 0 : prev + 1));
+    }, AUTO_PLAY_INTERVAL);
 
     return () => {
       if (autoplayRef.current) {
         clearInterval(autoplayRef.current);
+        autoplayRef.current = null;
       }
     };
-  }, [isPlaying, maxIndex, displayProducts.length, slidesToShow, prefersReducedMotion]);
+  }, [enableAnimations, isPlaying, maxIndex, displayProducts.length, slidesToShow]);
 
   // Clamp index when layout changes
   useEffect(() => {
@@ -90,10 +108,10 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   // Touch handlers
   const handleTouchStart = useCallback((e) => {
     setTouchStartX(e.touches[0].clientX);
-    if (!prefersReducedMotion) {
+    if (enableAnimations) {
       setIsPlaying(false);
     }
-  }, [prefersReducedMotion]);
+  }, [enableAnimations]);
 
   const handleTouchMove = useCallback((e) => {
     setTouchEndX(e.touches[0].clientX);
@@ -114,60 +132,125 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
 
   setTouchStartX(null);
   setTouchEndX(null);
-    if (!prefersReducedMotion) {
+    if (enableAnimations) {
       setTimeout(() => setIsPlaying(true), 1000);
     }
-  }, [touchStartX, touchEndX, currentIndex, maxIndex, prefersReducedMotion]);
+  }, [touchStartX, touchEndX, currentIndex, maxIndex, enableAnimations]);
 
   const nextSlide = useCallback(() => {
     if (isTransitioning) return;
     setIsTransitioning(true);
+    const wasPlaying = isPlaying;
+    if (enableAnimations && wasPlaying) {
+      setIsPlaying(false);
+    }
     setCurrentIndex(prev => prev >= maxIndex ? 0 : prev + 1);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning, maxIndex]);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      if (enableAnimations && wasPlaying) {
+        setIsPlaying(true);
+      }
+    }, 500);
+  }, [enableAnimations, isPlaying, isTransitioning, maxIndex]);
 
   const prevSlide = useCallback(() => {
     if (isTransitioning) return;
     setIsTransitioning(true);
+    const wasPlaying = isPlaying;
+    if (enableAnimations && wasPlaying) {
+      setIsPlaying(false);
+    }
     setCurrentIndex(prev => prev <= 0 ? maxIndex : prev - 1);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning, maxIndex]);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      if (enableAnimations && wasPlaying) {
+        setIsPlaying(true);
+      }
+    }, 500);
+  }, [enableAnimations, isPlaying, isTransitioning, maxIndex]);
 
   const goToSlide = useCallback((index) => {
     if (isTransitioning) return;
     setIsTransitioning(true);
+    const wasPlaying = enableAnimations && isPlaying;
+    if (wasPlaying) {
+      setIsPlaying(false);
+    }
     setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning]);
+    setTimeout(() => {
+      setIsTransitioning(false);
+      if (wasPlaying) {
+        setIsPlaying(true);
+      }
+    }, 500);
+  }, [enableAnimations, isPlaying, isTransitioning]);
 
   const toggleAutoplay = useCallback(() => {
-    if (prefersReducedMotion) return;
+    if (!enableAnimations) return;
     setIsPlaying(prev => !prev);
-  }, [prefersReducedMotion]);
+  }, [enableAnimations]);
+
+  const handleCardPointerMove = useCallback((event, productId) => {
+    if (!enableAnimations) {
+      return;
+    }
+
+    setHoveredProduct(prev => (prev === productId ? prev : productId));
+    const card = event.currentTarget;
+    const rect = card.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return;
+    }
+
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    card.style.setProperty('--hover-x', `${x}%`);
+    card.style.setProperty('--hover-y', `${y}%`);
+  }, [enableAnimations]);
+
+  const handleCardLeave = useCallback((event) => {
+    setHoveredProduct(null);
+    if (!enableAnimations) {
+      return;
+    }
+
+    const card = event.currentTarget;
+    card.style.removeProperty('--hover-x');
+    card.style.removeProperty('--hover-y');
+  }, [enableAnimations]);
+
+  const handleCardFocus = useCallback((event, productId) => {
+    setHoveredProduct(productId);
+    if (!enableAnimations) {
+      return;
+    }
+
+    const card = event.currentTarget;
+    card.style.setProperty('--hover-x', '50%');
+    card.style.setProperty('--hover-y', '50%');
+  }, [enableAnimations]);
 
   if (loading) {
     return (
-      <section className="py-20 bg-white dark:bg-gray-900 relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16 reveal">
-            <div className="inline-flex items-center space-x-2 glass bg-blue-100/50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
-              <Star size={16} className="animate-pulse" aria-hidden="true" />
-              <span className="text-sm font-medium">Featured Collection</span>
+      <section className="py-16 bg-slate-950 text-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-14 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-800/80 bg-slate-900/80 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <Star size={14} className="animate-pulse" aria-hidden="true" />
+              Featured Collection
             </div>
-            <h2 className="text-4xl lg:text-6xl font-heading font-bold mb-6 text-gray-900 dark:text-white">
-              <span className="text-gradient">Trending</span> Now
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              <Truck size={20} className="inline mr-2" aria-hidden="true" />
-              Discover premium products with exclusive discounts and lightning-fast delivery
+            <h2 className="mt-6 text-3xl font-semibold text-white md:text-4xl">Trending Picks</h2>
+            <p className="mt-3 text-sm text-slate-400 md:text-base">
+              <Truck size={18} className="mr-2 inline" aria-hidden="true" />
+              Curating the latest drops while we load your recommendations
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[...Array(8)].map((_, index) => (
-              <div key={index} className="animate-pulse">
-                <div className="bg-gray-200 aspect-square rounded-2xl mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div key={index} className="space-y-3 rounded-2xl border border-slate-900/80 bg-slate-900/60 p-5">
+                <div className="aspect-square w-full rounded-xl bg-slate-800/70"></div>
+                <div className="h-3 w-3/4 rounded bg-slate-800/70"></div>
+                <div className="h-3 w-2/5 rounded bg-slate-800/70"></div>
               </div>
             ))}
           </div>
@@ -177,36 +260,61 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   }
 
   return (
-    <section 
-      id="featured" 
-      className="py-16 md:py-20 bg-white dark:bg-gray-900 relative overflow-hidden"
+    <section
+      id="featured"
+      className="relative overflow-hidden bg-slate-950 py-16 text-slate-100 md:py-20"
       aria-label="Featured products"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className={`absolute -top-24 left-1/4 h-64 w-64 rotate-12 rounded-full bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 blur-3xl ${pulseClass}`}></div>
+        <div className={`absolute bottom-[-6rem] right-1/5 h-72 w-72 rounded-full bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-rose-500/10 blur-3xl ${pulseClass}`} style={{ animationDelay: '1.2s' }}></div>
+        <div className={`absolute top-1/3 right-10 h-16 w-16 rounded-3xl border border-slate-700/40 bg-slate-900/60 backdrop-blur ${floatClass}`} style={{ animationDelay: '0.6s' }}></div>
+        <div className={`absolute bottom-1/4 left-10 h-10 w-10 rounded-full border border-slate-800/60 bg-slate-900/50 ${floatClass}`} style={{ animationDelay: '1.8s' }}></div>
+        <div className="absolute inset-0 mix-blend-soft-light">
+          <div className={`absolute left-1/2 top-12 h-[1px] w-40 -translate-x-1/2 bg-gradient-to-r from-transparent via-slate-500/40 to-transparent ${shimmerClass}`} aria-hidden="true" />
+        </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16 reveal">
-          <div className="inline-flex items-center space-x-2 glass bg-blue-100/50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
-            <Star size={16} className="animate-pulse" aria-hidden="true" />
-            <span className="text-sm font-medium">Featured Collection</span>
+        <div className="mb-14 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/80 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <Star size={14} className={enableAnimations ? 'animate-pulse' : ''} aria-hidden="true" />
+            Featured collection
           </div>
 
-          <h2 className="text-4xl lg:text-6xl font-heading font-bold mb-6 text-gray-900 dark:text-white">
-            <span className="text-gradient">Trending</span> Now
+          <h2 className="mt-6 text-3xl font-semibold text-white md:text-4xl">
+            Curated{' '}
+            <span
+              className={`bg-gradient-to-r from-slate-100 via-blue-200 to-violet-200 bg-clip-text text-transparent ${shimmerClass}`}
+            >
+              Highlights
+            </span>
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            <Truck size={20} className="inline mr-2" aria-hidden="true" />
-            Discover premium products with exclusive discounts and lightning-fast delivery
+          <p className="mt-3 text-sm text-slate-400 md:text-base">
+            <Truck size={18} className="mr-2 inline" aria-hidden="true" />
+            Discover the pieces people keep coming back for, refreshed every few minutes.
           </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs uppercase tracking-widest text-slate-400">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-800/70 bg-slate-900/60 px-4 py-2">
+              <span className="text-slate-500">Slide</span>
+              <span className="font-semibold text-white">{String(Math.min(currentIndex + 1, totalSlides || 1)).padStart(2, '0')}</span>
+              <span className="text-slate-500">/ {String(totalSlides || 1).padStart(2, '0')}</span>
+            </div>
+            <div className="hidden items-center gap-2 rounded-full border border-slate-800/70 bg-slate-900/60 px-4 py-2 sm:inline-flex">
+              <ShoppingCart size={14} aria-hidden="true" />
+              <span>{displayProducts.length} curated picks</span>
+            </div>
+          </div>
         </div>
 
         {/* Enhanced Carousel Container */}
         <div className="relative">
           {/* Carousel Navigation */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={prevSlide}
-                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={navigationButtonClass}
                 disabled={currentIndex === 0}
                 aria-label="Previous products"
               >
@@ -214,7 +322,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
               </button>
               <button
                 onClick={nextSlide}
-                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={navigationButtonClass}
                 disabled={currentIndex >= maxIndex}
                 aria-label="Next products"
               >
@@ -226,7 +334,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
             <div className="flex items-center space-x-4">
               <button
                 onClick={toggleAutoplay}
-                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 micro-bounce focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={navigationButtonClass}
                 aria-label={isPlaying ? "Pause carousel" : "Play carousel"}
               >
                 {isPlaying ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
@@ -235,11 +343,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                 {Array.from({ length: totalSlides || 0 }, (_, i) => (
                   <button
                     key={i}
-                    className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      i === currentIndex 
-                        ? 'bg-blue-600 w-8' 
-                        : 'bg-gray-300 dark:bg-gray-600 hover:bg-blue-400'
-                    }`}
+                    className={`${dotBaseClass} ${i === currentIndex ? dotActiveClass : dotInactiveClass}`}
                     onClick={() => goToSlide(i)}
                     role="tab"
                     aria-selected={i === currentIndex}
@@ -263,86 +367,106 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
               role="tabpanel"
               aria-live="polite"
             >
-              {displayProducts.map((product, index) => (
-                <div
-                  key={product._id || product.id}
-                  className="carousel-slide flex-shrink-0 px-4"
-                  style={{
-                    width: `${100 / slidesToShow}%`
-                  }}
-                >
-                  <div className="product-card glass rounded-2xl overflow-hidden group reveal h-full">
-                    <div className="relative">
-                      <img
-                        src={product.images?.[0] || product.image || '/api/placeholder/400/300'}
-                        alt={product.name}
-                        className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                        loading={index < slidesToShow ? 'eager' : 'lazy'}
-                        decoding="async"
+              {displayProducts.map((product, index) => {
+                const discountValue = typeof product.discountPercentage === 'number'
+                  ? `${Math.round(product.discountPercentage)}% off`
+                  : typeof product.discount === 'number'
+                    ? `${Math.round(product.discount)}% off`
+                    : product.discount || null;
+                const currentPrice = formatCurrency(product.price ?? product.currentPrice);
+                const originalPrice = formatCurrency(product.originalPrice);
+                const productId = product._id || product.id || index;
+                const isActiveCard = enableAnimations && hoveredProduct === productId;
+
+                return (
+                  <div
+                    key={productId}
+                    className="carousel-slide flex-shrink-0 px-3 sm:px-4"
+                    style={{
+                      width: `${100 / slidesToShow}%`
+                    }}
+                  >
+                    <div
+                      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border ${
+                        isActiveCard ? 'border-slate-600/60 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.95)]' : 'border-slate-800/80 shadow-[0_8px_30px_-24px_rgba(15,23,42,0.9)]'
+                      } bg-slate-900/70 transform-gpu transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_38px_-20px_rgba(15,23,42,0.9)] focus-within:-translate-y-1 focus-within:shadow-[0_18px_38px_-20px_rgba(15,23,42,0.9)]`}
+                      onPointerMove={(event) => handleCardPointerMove(event, productId)}
+                      onPointerLeave={handleCardLeave}
+                      onFocus={(event) => handleCardFocus(event, productId)}
+                      onBlur={handleCardLeave}
+                      role="group"
+                    >
+                      <div
+                        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100"
+                        style={{
+                          background:
+                            'radial-gradient(220px circle at var(--hover-x, 50%) var(--hover-y, 50%), rgba(148,163,184,0.25), transparent 65%)',
+                          mixBlendMode: 'screen',
+                          opacity: isActiveCard ? 1 : undefined
+                        }}
+                        aria-hidden="true"
                       />
-                      <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        <Percent size={12} className="inline mr-1" aria-hidden="true" />
-                        {product.discount || '20%'}
-                      </div>
-                      <div className="absolute top-4 left-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        <Star size={12} aria-hidden="true" />
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center mb-3">
-                        <div className="flex text-yellow-400 text-sm" aria-label={`Rating: ${product.rating || 4.8} out of 5 stars`}>
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              size={16} 
-                              className={`${
-                                i < Math.floor(product.rating || 4.5) 
-                                  ? 'fill-current' 
-                                  : i < (product.rating || 4.5) 
-                                  ? 'fill-current opacity-50' 
-                                  : ''
-                              }`}
-                              aria-hidden="true"
-                            />
-                          ))}
-                        </div>
-                        <span className="text-gray-600 dark:text-gray-400 ml-2 text-sm">
-                          ({product.rating || 4.8})
-                        </span>
-                      </div>
-                      <div className="flex items-center mb-4">
-                        <span className="text-2xl font-bold text-blue-600">
-                          ${product.price?.toFixed(2) || '99.99'}
-                        </span>
-                        {product.originalPrice && (
-                          <span className="text-gray-500 line-through ml-2">
-                            ${product.originalPrice.toFixed(2)}
-                          </span>
+                      <div className="relative">
+                        <img
+                          src={product.images?.[0] || product.image || '/api/placeholder/400/300'}
+                          alt={product.name}
+                          className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading={index < slidesToShow ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                        {discountValue && (
+                          <div className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
+                            <Percent size={12} aria-hidden="true" />
+                            {discountValue}
+                          </div>
                         )}
+                        <div className="pointer-events-none absolute inset-0 bg-slate-950/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       </div>
-                      <button
-                        className="add-to-cart w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 micro-bounce focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        onClick={() => onAddToCart(product)}
-                        aria-label={`Add ${product.name} to cart`}
-                      >
-                        <ShoppingCart size={16} className="inline mr-2" aria-hidden="true" />
-                        Add to Cart
-                      </button>
+                      <div className="flex flex-1 flex-col gap-4 p-6">
+                        <div>
+                          <h3 className="text-lg font-semibold text-white line-clamp-2">
+                            {product.name}
+                          </h3>
+                          <div className="mt-2 flex items-center text-xs text-slate-400" aria-label={`Rating: ${product.rating || 4.8} out of 5`}>
+                            <span className="flex items-center gap-1 text-amber-300">
+                              <Star size={14} aria-hidden="true" />
+                              {Number(product.rating || 4.8).toFixed(1)}
+                            </span>
+                            {product.numReviews ? (
+                              <span className="ml-2">• {product.numReviews} reviews</span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex items-baseline gap-2 text-sm">
+                          <span className="text-xl font-semibold text-white">
+                            {currentPrice ? `$${currentPrice}` : '—'}
+                          </span>
+                          {originalPrice && (
+                            <span className="text-xs text-slate-500 line-through">
+                              ${originalPrice}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 bg-white/90 py-3 text-sm font-semibold text-slate-950 transition-colors duration-200 hover:bg-white"
+                          onClick={() => onAddToCart(product)}
+                          aria-label={`Add ${product.name} to cart`}
+                        >
+                          <ShoppingCart size={16} aria-hidden="true" />
+                          Add to cart
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-8 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
+          <div className="mt-8 h-1 w-full rounded-full bg-slate-800">
             <div
-              className="h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full transition-all duration-300"
+              className="h-1 rounded-full bg-slate-100 transition-all duration-300"
               style={{
                 width: `${totalSlides ? ((currentIndex + 1) / totalSlides) * 100 : 0}%`
               }}

@@ -94,7 +94,6 @@ const Wishlist = () => {
   const [compareItems, setCompareItems] = useState([]);
   
   // Animation and interaction states
-  const [animateElements, setAnimateElements] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [processingItems, setProcessingItems] = useState(new Set());
   
@@ -102,10 +101,6 @@ const Wishlist = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Initialize animations
-  useEffect(() => {
-    setTimeout(() => setAnimateElements(true), 100);
-  }, []);
-
   // Authentication and initialization check
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
@@ -444,8 +439,8 @@ const Wishlist = () => {
   // Loading state
   if (loading && !wishlistItems?.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="mx-auto flex max-w-4xl items-center justify-center px-4 py-24">
           <LoadingSpinner size="large" message="Loading your wishlist..." />
         </div>
       </div>
@@ -455,12 +450,14 @@ const Wishlist = () => {
   // Error state
   if (error && !wishlistItems?.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-        <ErrorMessage
-          message={error || 'Failed to load wishlist'}
-          onRetry={() => dispatch(fetchWishlist())}
-          className="max-w-md"
-        />
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="mx-auto flex max-w-4xl items-center justify-center px-4 py-24">
+          <ErrorMessage
+            message={error || 'Failed to load wishlist'}
+            onRetry={() => dispatch(fetchWishlist())}
+            className="max-w-md"
+          />
+        </div>
       </div>
     );
   }
@@ -478,122 +475,77 @@ const Wishlist = () => {
         canonical="https://shoemarknet.com/wishlist"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        
-        {/* Animated Background Elements */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-pink-400/20 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 8}s`,
-                animationDuration: `${4 + Math.random() * 6}s`
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          
-          {/* Enhanced Header */}
-          <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                <div>
-                  <button 
-                    onClick={() => navigate(-1)} 
-                    className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors font-semibold mb-4 group"
-                  >
-                    <i className="fas fa-arrow-left mr-3 text-lg group-hover:-translate-x-1 transition-transform duration-200"></i>
-                    Back
-                  </button>
-                  
-                  <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 bg-clip-text text-transparent mb-2">
-                    <i className="fas fa-heart mr-3"></i>
-                    Your Wishlist
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-lg">
-                    <i className="fas fa-sparkles mr-2"></i>
-                    Save your favorite items for later
-                  </p>
-                  
-                  {items.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {items.length} items • Total value: {formatPrice(totalValue)}
-                        {totalSavings > 0 && (
-                          <span className="text-green-600 ml-2">
-                            (Save {formatPrice(totalSavings)})
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Quick Stats */}
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 transition-colors hover:text-white"
+              >
+                <i className="fas fa-arrow-left text-xs"></i>
+                Back
+              </button>
+              <div>
+                <h1 className="text-3xl font-semibold text-white md:text-4xl">Wishlist</h1>
+                <p className="mt-1 max-w-xl text-sm text-slate-400 md:text-base">
+                  Keep the shoes you love within reach. Move them to your cart whenever you’re ready.
+                </p>
                 {items.length > 0 && (
-                  <div className="flex flex-wrap gap-3">
-                    <div className="bg-pink-500/20 backdrop-blur-lg border border-pink-300/50 rounded-2xl px-4 py-2 text-pink-800 dark:text-pink-200">
-                      <i className="fas fa-heart mr-2"></i>
-                      {items.length} Items
-                    </div>
-                    <div className="bg-green-500/20 backdrop-blur-lg border border-green-300/50 rounded-2xl px-4 py-2 text-green-800 dark:text-green-200">
-                      <i className="fas fa-check-circle mr-2"></i>
-                      {availableItems.length} Available
-                    </div>
-                    {compareItems.length > 0 && (
-                      <button
-                        onClick={() => setShowCompareModal(true)}
-                        className="bg-purple-500/20 backdrop-blur-lg border border-purple-300/50 rounded-2xl px-4 py-2 text-purple-800 dark:text-purple-200 hover:bg-purple-500/30 transition-colors duration-200"
-                      >
-                        <i className="fas fa-balance-scale mr-2"></i>
-                        Compare ({compareItems.length})
-                      </button>
+                  <p className="mt-3 text-xs uppercase tracking-wide text-slate-500 md:text-sm">
+                    {items.length} saved • value {formatPrice(totalValue)}
+                    {totalSavings > 0 && (
+                      <span className="ml-2 text-emerald-300">(saving {formatPrice(totalSavings)})</span>
                     )}
-                  </div>
+                  </p>
                 )}
               </div>
             </div>
+
+            {items.length > 0 && (
+              <div className="flex flex-wrap gap-3 text-sm text-slate-300">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-2">
+                  {availableItems.length} in stock
+                </div>
+                {compareItems.length > 0 && (
+                  <button
+                    onClick={() => setShowCompareModal(true)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-2 text-slate-200 transition-colors hover:border-slate-600 hover:text-white"
+                  >
+                    <i className="fas fa-balance-scale"></i>
+                    Compare ({compareItems.length})
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {items.length === 0 ? (
-            /* Enhanced Empty State */
-            <div className={`text-center py-16 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 shadow-2xl max-w-2xl mx-auto">
-                <div className="w-24 h-24 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                  <i className="fas fa-heart text-4xl text-white animate-pulse"></i>
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                  Your Wishlist is Empty
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg leading-relaxed">
-                  Start adding items you love to your wishlist. 
-                  It's a great way to keep track of products you want to buy later!
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link to="/products">
-                    <button className="bg-gradient-to-r from-pink-600 via-red-600 to-rose-600 hover:from-pink-700 hover:via-red-700 hover:to-rose-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-2xl">
-                      <i className="fas fa-search mr-3"></i>
-                      Discover Products
-                      <i className="fas fa-arrow-right ml-3"></i>
-                    </button>
-                  </Link>
-                  <Link to="/categories">
-                    <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-4 px-8 rounded-2xl hover:bg-white/30 transition-all duration-200">
-                      <i className="fas fa-th-large mr-3"></i>
-                      Browse Categories
-                    </button>
-                  </Link>
-                </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-12 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/80">
+                <i className="fas fa-heart text-2xl text-slate-300"></i>
+              </div>
+              <h2 className="mt-6 text-2xl font-semibold text-white">Nothing saved yet</h2>
+              <p className="mt-3 text-sm text-slate-400 md:text-base">
+                Tap the heart on any product to store it here. It’s the easiest way to compare styles and come back later.
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link
+                  to="/products"
+                  className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+                >
+                  Browse products
+                </Link>
+                <Link
+                  to="/categories"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-700 px-6 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                >
+                  View categories
+                </Link>
               </div>
             </div>
           ) : (
             <>
-              {/* Enhanced Filters and Controls */}
               <WishlistFilters
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
@@ -614,31 +566,29 @@ const Wishlist = () => {
                 bulkLoading={bulkLoading}
                 sortOptions={SORT_OPTIONS}
                 itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-                className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}
-                style={{ animationDelay: '0.2s' }}
+                className="mb-8"
               />
 
-              {/* Loading overlay for pagination */}
               {loading && items.length > 0 && (
-                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                   <LoadingSpinner size="medium" message="Updating wishlist..." />
                 </div>
               )}
 
-              {/* Enhanced Wishlist Items */}
-              <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-                <div className={`grid gap-6 ${
-                  viewMode === VIEW_MODES.GRID 
-                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : viewMode === VIEW_MODES.LIST
-                    ? 'grid-cols-1'
-                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
-                }`}>
-                  {filteredAndSortedItems.map((item, index) => (
+              <div className="mb-10">
+                <div
+                  className={`grid gap-6 ${
+                    viewMode === VIEW_MODES.GRID
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                      : viewMode === VIEW_MODES.LIST
+                      ? 'grid-cols-1'
+                      : 'grid-cols-2 lg:grid-cols-4'
+                  }`}
+                >
+                  {filteredAndSortedItems.map((item) => (
                     <WishlistItem
                       key={item._id}
                       item={item}
-                      index={index}
                       viewMode={viewMode}
                       isSelected={selectedItems.includes(item._id)}
                       isProcessing={processingItems.has(item._id)}
@@ -648,16 +598,14 @@ const Wishlist = () => {
                       onAddToCart={handleAddToCart}
                       onShare={handleShare}
                       onAddToCompare={handleAddToCompare}
-                      animateElements={animateElements}
-                      className="transition-all duration-300 hover:scale-105"
+                      className="transition-colors hover:border-slate-600"
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Enhanced Pagination */}
               {totalPages > 1 && (
-                <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
+                <div className="mb-10">
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
@@ -665,68 +613,59 @@ const Wishlist = () => {
                     showInfo={true}
                     totalItems={totalItems}
                     itemsPerPage={itemsPerPage}
-                    className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
+                    className="rounded-2xl border border-slate-800 bg-slate-900/70"
                   />
                 </div>
               )}
 
-              {/* Continue Shopping CTA */}
-              <div className={`text-center ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    <i className="fas fa-search mr-3 text-blue-500"></i>
-                    Looking for More?
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Discover more amazing products from our curated collection
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link to="/products">
-                      <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105">
-                        <i className="fas fa-store mr-2"></i>
-                        Continue Shopping
-                      </button>
-                    </Link>
-                    <Link to="/products?sort=rating:desc">
-                      <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-3 px-8 rounded-2xl hover:bg-white/30 transition-all duration-200">
-                        <i className="fas fa-star mr-2"></i>
-                        Top Rated
-                      </button>
-                    </Link>
-                  </div>
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center">
+                <h3 className="text-xl font-semibold text-white">Still browsing?</h3>
+                <p className="mt-2 text-sm text-slate-400">
+                  Jump back into the catalog or head straight to best sellers.
+                </p>
+                <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                  <Link
+                    to="/products"
+                    className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+                  >
+                    Continue shopping
+                  </Link>
+                  <Link
+                    to="/products?sort=rating:desc"
+                    className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-700 px-6 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                  >
+                    Top rated picks
+                  </Link>
                 </div>
               </div>
             </>
           )}
         </div>
-
-        {/* Modals */}
-        {showShareModal && shareItem && (
-          <ShareModal
-            item={shareItem}
-            onClose={() => {
-              setShowShareModal(false);
-              setShareItem(null);
-            }}
-            shareUrl={`${window.location.origin}/products/${shareItem._id}`}
-            title={`Check out this amazing ${shareItem.name}!`}
-            description={`I found this on ShoeMarkNet and thought you'd love it! Only ${formatPrice(shareItem.price)}.`}
-          />
-        )}
-
-        {showCompareModal && (
-          <CompareModal
-            items={compareItems}
-            onClose={() => setShowCompareModal(false)}
-            onRemoveItem={(itemId) => {
-              setCompareItems(prev => prev.filter(item => item._id !== itemId));
-            }}
-            onClearAll={() => setCompareItems([])}
-          />
-        )}
-
-        {/* Custom Styles */}
       </div>
+
+      {showShareModal && shareItem && (
+        <ShareModal
+          item={shareItem}
+          onClose={() => {
+            setShowShareModal(false);
+            setShareItem(null);
+          }}
+          shareUrl={`${window.location.origin}/products/${shareItem._id}`}
+          title={`Check out this amazing ${shareItem.name}!`}
+          description={`I found this on ShoeMarkNet and thought you'd love it! Only ${formatPrice(shareItem.price)}.`}
+        />
+      )}
+
+      {showCompareModal && (
+        <CompareModal
+          items={compareItems}
+          onClose={() => setShowCompareModal(false)}
+          onRemoveItem={(itemId) => {
+            setCompareItems(prev => prev.filter(item => item._id !== itemId));
+          }}
+          onClearAll={() => setCompareItems([])}
+        />
+      )}
     </>
   );
 };

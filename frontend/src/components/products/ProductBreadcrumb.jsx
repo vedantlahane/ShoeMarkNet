@@ -1,7 +1,40 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+const resolveCategoryMeta = (category) => {
+  if (!category) {
+    return { label: '', value: '' };
+  }
+
+  if (Array.isArray(category)) {
+    for (const entry of category) {
+      const meta = resolveCategoryMeta(entry);
+      if (meta.label) {
+        return meta;
+      }
+    }
+    return { label: '', value: '' };
+  }
+
+  if (typeof category === 'string') {
+    return { label: category, value: category };
+  }
+
+  if (typeof category === 'object') {
+    const label = category?.name || category?.title || category?.label || category?.slug || category?._id || '';
+    const value = category?.slug || category?.name || category?._id || label;
+    return { label, value };
+  }
+
+  return { label: '', value: '' };
+};
+
 const ProductBreadcrumb = ({ product, onBack }) => {
+  const { label: categoryLabel, value: categoryValue } = resolveCategoryMeta(product?.category);
+  const categoryHref = categoryValue
+    ? `/products?category=${encodeURIComponent(String(categoryValue))}`
+    : '/products';
+
   return (
     <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-6 shadow-2xl">
       <div className="flex items-center justify-between">
@@ -23,14 +56,14 @@ const ProductBreadcrumb = ({ product, onBack }) => {
           <Link to="/products" className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Products
           </Link>
-          {product?.category && (
+          {categoryLabel && (
             <>
               <i className="fas fa-chevron-right text-gray-400"></i>
               <Link 
-                to={`/products?category=${encodeURIComponent(product.category)}`}
+                to={categoryHref}
                 className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                {product.category}
+                {categoryLabel}
               </Link>
             </>
           )}

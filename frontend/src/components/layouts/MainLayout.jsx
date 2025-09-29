@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import PageMeta from '../seo/PageMeta';
 import { gsap } from 'gsap';
@@ -9,6 +9,10 @@ import { ChevronUp } from 'lucide-react';
 import Header from '../common/Header';
 import Footer from '../common/Footer';
 import ErrorBoundary from '../common/ErrorBoundary';
+
+// Hooks
+import useGsap from '../../hooks/useGsap';
+import useReducedMotion from '../../hooks/useReducedMotion';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -57,35 +61,6 @@ const ROUTE_CONFIG = {
   }
 };
 
-// Custom hook for reduced motion
-const useReducedMotion = () => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) {
-      return undefined;
-    }
-
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (event) => {
-      setPrefersReducedMotion(event.matches);
-    };
-
-    try {
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } catch (error) {
-      // Fallback for older browsers
-      mediaQuery.addListener(handleChange);
-      return () => mediaQuery.removeListener(handleChange);
-    }
-  }, []);
-
-  return prefersReducedMotion;
-};
-
 const getPreferredTheme = () => {
   if (typeof window === 'undefined') {
     return 'light';
@@ -101,9 +76,7 @@ const getPreferredTheme = () => {
 
 const MainLayout = () => {
   const location = useLocation();
-  const layoutRef = useRef(null);
   const scrollButtonRef = useRef(null);
-  const gsapContextRef = useRef(null);
   
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
@@ -117,6 +90,26 @@ const MainLayout = () => {
     description: 'Premium footwear online',
     background: 'gradient-primary'
   };
+
+  // Page transition animations
+  const layoutRef = useGsap((_, element) => {
+    if (prefersReducedMotion) {
+      setIsPageTransitioning(false);
+      return;
+    }
+
+    setIsPageTransitioning(true);
+    
+    const tl = gsap.timeline({
+      onComplete: () => setIsPageTransitioning(false)
+    });
+
+    tl.fromTo(
+      element?.querySelector('.page-content') || '.page-content', 
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+    );
+  }, [location.pathname, prefersReducedMotion]);
 
   // Optimized scroll handling with debouncing
   useEffect(() => {
@@ -142,34 +135,6 @@ const MainLayout = () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
-
-  // Page transition animations with proper cleanup
-  useLayoutEffect(() => {
-    if (prefersReducedMotion) {
-      setIsPageTransitioning(false);
-      return;
-    }
-
-    setIsPageTransitioning(true);
-    
-    // Create GSAP context for proper cleanup
-    gsapContextRef.current = gsap.context(() => {
-      const tl = gsap.timeline({
-        onComplete: () => setIsPageTransitioning(false)
-      });
-
-      tl.fromTo('.page-content', 
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
-      );
-    }, layoutRef);
-
-    return () => {
-      if (gsapContextRef.current) {
-        gsapContextRef.current.revert();
-      }
-    };
-  }, [location.pathname, prefersReducedMotion]);
 
   // Theme change handler with improved performance
   useEffect(() => {

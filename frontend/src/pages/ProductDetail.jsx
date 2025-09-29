@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 // Redux actions
 import { 
   fetchProductById, 
+  fetchProductBySlug,
   fetchRelatedProducts,
   clearProductError 
 } from '../redux/slices/productSlice';
@@ -17,16 +18,16 @@ import {
 } from '../redux/slices/wishlistSlice';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Rating from '../components/common/Rating';
-import ReviewForm from '../components/ReviewForm';
 import ProductCard from '../components/ProductCard';
 import ImageZoom from '../components/products/ImageZoom';
 import ProductBreadcrumb from '../components/products/ProductBreadcrumb';
 import StockIndicator from '../components/products/StockIndicator';
-// import SocialShare from '../components/common/SocialShare';
-// import RecentlyViewed from '../components/product/RecentlyViewed';
+import SocialShare from '../components/common/SocialShare';
+import PriceDisplay from '../components/products/PriceDisplay';
+import ProductTabs from '../components/products/ProductTabs';
+import RecentlyViewed from '../components/products/RecentlyViewed';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -34,10 +35,10 @@ import useScrollToTop from '../hooks/useScrollToTop';
 
 // Utils
 import { trackEvent } from '../utils/analytics';
-import { formatPrice, calculateDiscount } from '../utils/helpers';
+import { calculateDiscount, truncateText } from '../utils/helpers';
 
 const ProductDetail = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
@@ -45,7 +46,7 @@ const ProductDetail = () => {
   const { 
     product, 
     relatedProducts,
-    loading, 
+    productLoading,
     error 
   } = useSelector((state) => state.product);
   
@@ -62,13 +63,13 @@ const ProductDetail = () => {
   const [mainImage, setMainImage] = useState('');
   const [imageLoading, setImageLoading] = useState(true);
   const [showImageZoom, setShowImageZoom] = useState(false);
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
-  const [animateElements, setAnimateElements] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [viewStartTime] = useState(Date.now());
   
   // Recently viewed products
   const [recentlyViewed, setRecentlyViewed] = useLocalStorage('recentlyViewed', []);
+
+  const isSlugId = useMemo(() => /^[0-9a-fA-F]{24}$/.test(slug ?? ''), [slug]);
   
   // Scroll to top on mount
   useScrollToTop();
@@ -108,9 +109,34 @@ const ProductDetail = () => {
     return product?.price || 0;
   }, [product, selectedVariant]);
 
+  const originalPrice = useMemo(() => {
+    if (selectedVariant?.price) {
+      return product?.originalPrice ?? selectedVariant.price;
+    }
+    if (product?.originalPrice) {
+      return product.originalPrice;
+    }
+    return product?.price || 0;
+  }, [product, selectedVariant]);
+
   const discountedPrice = useMemo(() => {
     return calculateDiscount(currentPrice, product?.discountPercentage);
   }, [currentPrice, product?.discountPercentage]);
+
+  const productUrl = useMemo(() => {
+    if (!product) return undefined;
+    if (product.slug) {
+      return `https://shoemarknet.com/products/${product.slug}`;
+    }
+    if (product._id) {
+      return `https://shoemarknet.com/products/${product._id}`;
+    }
+    return undefined;
+  }, [product]);
+
+  const shareDescription = useMemo(() => {
+    return truncateText(product?.description ?? '', 140);
+  }, [product?.description]);
 
   const isInWishlist = useMemo(() => {
     return wishlistItems?.some(item => 
@@ -127,27 +153,23 @@ const ProductDetail = () => {
     });
   }, [cartItems, product, selectedSize, selectedColor]);
 
-  // Initialize animations
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimateElements(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
   // Fetch product and related data
   useEffect(() => {
-    if (id) {
-      dispatch(clearProductError());
-      dispatch(fetchProductById(id));
-      
-      // Track page view
-      trackEvent('page_view', {
-        page_title: 'Product Detail',
-        page_location: window.location.href,
-        content_type: 'product',
-        content_id: id
-      });
-    }
-  }, [dispatch, id]);
+    if (!slug) return;
+
+    dispatch(clearProductError());
+
+    const action = isSlugId ? fetchProductById(slug) : fetchProductBySlug(slug);
+    dispatch(action);
+
+    trackEvent('page_view', {
+      page_title: 'Product Detail',
+      page_location: window.location.href,
+      content_type: 'product',
+      content_id: slug,
+      identifier_type: isSlugId ? 'id' : 'slug'
+    });
+  }, [dispatch, slug, isSlugId]);
 
   // Fetch related products when product loads
   useEffect(() => {
@@ -161,9 +183,10 @@ const ProductDetail = () => {
 
   // Update recently viewed
   useEffect(() => {
-    if (product && !loading) {
+  if (product && !productLoading) {
       const productSummary = {
         _id: product._id,
+        slug: product.slug,
         name: product.name,
         price: product.price,
         image: product.images?.[0],
@@ -176,7 +199,7 @@ const ProductDetail = () => {
         return [productSummary, ...filtered].slice(0, 10);
       });
     }
-  }, [product, loading, setRecentlyViewed]);
+  }, [product, productLoading, setRecentlyViewed]);
 
   // Set main image
   useEffect(() => {
@@ -184,6 +207,12 @@ const ProductDetail = () => {
       setMainImage(availableImages[currentImageIndex] || availableImages[0]);
     }
   }, [availableImages, currentImageIndex]);
+
+  useEffect(() => {
+    if (mainImage) {
+      setImageLoading(true);
+    }
+  }, [mainImage]);
 
   // Track view duration on unmount
   useEffect(() => {
@@ -395,7 +424,7 @@ const ProductDetail = () => {
     'Discover premium footwear at ShoeMarkNet. Shop the latest styles with competitive prices and fast shipping.';
 
   // Loading state
-  if (loading && !product) {
+  if (productLoading && !product) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="container mx-auto px-4 py-8">
@@ -432,7 +461,11 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
         <ErrorMessage
           message={error.message || 'Failed to load product'}
-          onRetry={() => dispatch(fetchProductById(id))}
+          onRetry={() => {
+            if (!slug) return;
+            const action = isSlugId ? fetchProductById(slug) : fetchProductBySlug(slug);
+            dispatch(action);
+          }}
           className="max-w-md"
         />
       </div>
@@ -440,7 +473,7 @@ const ProductDetail = () => {
   }
 
   // Product not found
-  if (!loading && !product) {
+  if (!productLoading && !product) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl max-w-md">
@@ -472,12 +505,12 @@ const ProductDetail = () => {
         title={metaTitle}
         description={metaDescription}
         robots="index, follow"
-        canonical={`https://shoemarknet.com/products/${product._id}`}
+        canonical={productUrl || 'https://shoemarknet.com/products'}
         openGraph={{
           title: metaTitle,
           description: metaDescription,
           type: 'product',
-          url: `https://shoemarknet.com/products/${product._id}`,
+          url: productUrl || 'https://shoemarknet.com/products',
           image: mainImage || product.images?.[0],
         }}
         twitter={{
@@ -520,7 +553,7 @@ const ProductDetail = () => {
           },
           offers: {
             '@type': 'Offer',
-            url: `https://shoemarknet.com/products/${product._id}`,
+            url: productUrl || 'https://shoemarknet.com/products',
             priceCurrency: 'USD',
             price: discountedPrice || currentPrice,
             itemCondition: 'https://schema.org/NewCondition',
@@ -557,7 +590,7 @@ const ProductDetail = () => {
         <div className="container mx-auto px-4 py-8 relative z-10">
           
           {/* Enhanced Breadcrumb Navigation */}
-          <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
+          <div className="mb-8">
             <ProductBreadcrumb 
               product={product}
               onBack={() => navigate(-1)}
@@ -567,7 +600,7 @@ const ProductDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
             
             {/* Enhanced Product Images */}
-            <div className={`space-y-6 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+            <div className="space-y-6">
               
               {/* Main Image Container */}
               <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden shadow-2xl group">
@@ -695,7 +728,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Enhanced Product Info */}
-            <div className={`space-y-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+            <div className="space-y-8">
               
               {/* Header Section */}
               <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
@@ -741,18 +774,19 @@ const ProductDetail = () => {
                     {product.numReviews || 0} {product.numReviews === 1 ? 'review' : 'reviews'}
                   </div>
                   <SocialShare
-                    url={window.location.href}
+                    url={productUrl}
                     title={product.name}
-                    description={product.description}
+                    description={shareDescription}
                     image={mainImage}
                   />
                 </div>
 
                 {/* Enhanced Price Display */}
                 <PriceDisplay
-                  originalPrice={currentPrice}
+                  currentPrice={currentPrice}
+                  originalPrice={originalPrice}
                   discountedPrice={discountedPrice}
-                  discountPercentage={product.discountPercentage}
+                  discountPercentage={product.discountPercentage || 0}
                   className="mb-8"
                 />
               </div>
@@ -839,17 +873,7 @@ const ProductDetail = () => {
                     })}
                   </div>
                   
-                  {/* Size Guide */}
-                  <div className="mt-6 pt-6 border-t border-white/20 dark:border-gray-700/20">
-                    <button 
-                      onClick={() => setShowSizeGuide(true)}
-                      className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors text-sm font-medium"
-                    >
-                      <i className="fas fa-ruler-combined mr-2"></i>
-                      Size Guide
-                      <i className="fas fa-external-link-alt ml-2 text-xs"></i>
-                    </button>
-                  </div>
+                  {/* Size Guide removed for minimalism */}
                 </div>
               )}
 
@@ -968,13 +992,12 @@ const ProductDetail = () => {
             user={user}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            className={`mb-16 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}
-            style={{ animationDelay: '0.6s' }}
+            className="mb-16"
           />
 
           {/* Related Products */}
           {relatedProducts?.length > 0 && (
-            <div className={`mb-16 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
+            <div className="mb-16">
               <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-8 text-center">
                   <i className="fas fa-heart mr-3"></i>
@@ -996,28 +1019,8 @@ const ProductDetail = () => {
           {/* Recently Viewed */}
           <RecentlyViewed
             products={recentlyViewed.slice(1)} // Exclude current product
-            className={`${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}
-            style={{ animationDelay: '1s' }}
           />
         </div>
-
-        {/* Modals */}
-        {/* {showImageZoom && (
-          <ImageZoom
-            images={availableImages}
-            currentIndex={currentImageIndex}
-            onClose={() => setShowImageZoom(false)}
-            onImageChange={setCurrentImageIndex}
-            productName={product.name}
-          />
-        )} */}
-
-        {/* {showSizeGuide && (
-          <SizeGuide
-            onClose={() => setShowSizeGuide(false)}
-            productType={product.category}
-          />
-        )} */}
 
         {/* Custom Styles */}
       </div>

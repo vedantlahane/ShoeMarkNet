@@ -86,17 +86,17 @@ const searchProducts = async (query, filters = {}) => {
   try {
     const queryParams = new URLSearchParams();
     if (query !== null && query !== undefined && query !== '') {
-      queryParams.append('q', query);
+      queryParams.set('q', query);
     }
-    
-    // Add additional filters
+
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        queryParams.append(key, value);
-      }
+      if (value === null || value === undefined || value === '') return;
+      queryParams.set(key, value);
     });
-    
-    const response = await api.get(`/products/search?${queryParams.toString()}`);
+
+    const queryString = queryParams.toString();
+    const url = queryString ? `/search?${queryString}` : '/search';
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error('Error searching products:', error);

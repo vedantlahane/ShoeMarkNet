@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -7,16 +7,23 @@ import {
   ShoppingBag,
   Star,
   Eye,
-  Share2,
   Zap,
   TrendingUp,
   Award,
   ShoppingCart
 } from 'lucide-react';
+
+// Redux
 import { addToCart } from '../redux/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
+
+// Utils
 import { formatCurrency } from '../utils/helpers';
-import { showCartToast, showWishlistToast, showErrorToast, showSuccessToast } from '../utils/toast';
+import { showCartToast, showWishlistToast, showErrorToast } from '../utils/toast';
+
+// Hooks
+import useGsap from '../hooks/useGsap';
+import useReducedMotion from '../hooks/useReducedMotion';
 
 const ProductCard = ({
   product = {},
@@ -25,9 +32,10 @@ const ProductCard = ({
   showQuickView = true,
   className = '',
   onQuickView = null,
-  index = 0
+  index = 0,
+  onAddToCart = null,
+  onToggleWishlist = null
 }) => {
-  const cardRef = useRef(null);
   const imageRef = useRef(null);
   const actionsRef = useRef(null);
   const badgeRef = useRef(null);
@@ -54,7 +62,8 @@ const ProductCard = ({
   };
 
   const productData = { ...defaultProduct, ...product };
-  const productId = productData.id || productData._id;
+  const productId = productData._id || productData.id;
+  const productSlug = productData.slug || productId;
   const dispatch = useDispatch();
   
   // Redux state
@@ -67,6 +76,8 @@ const ProductCard = ({
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
+
+  const prefersReducedMotion = useReducedMotion();
 
   const availableSizes = useMemo(() => {
     const rawSizes = productData?.sizes;
@@ -82,6 +93,62 @@ const ProductCard = ({
       .slice(0, 6);
   }, [productData?.sizes]);
 
+  const displayedSizes = useMemo(() => availableSizes.slice(0, 4), [availableSizes]);
+  const remainingSizeCount = Math.max(availableSizes.length - displayedSizes.length, 0);
+
+  const productImages = Array.isArray(productData.images) && productData.images.length > 0
+    ? productData.images
+    : defaultProduct.images;
+
+  const primaryImage = productImages[0];
+  const secondaryImage = productImages[1];
+
+  const discountPercentage = useMemo(() => {
+    if (productData.discount) return Math.round(productData.discount);
+    if (productData.discountPercentage) return Math.round(productData.discountPercentage);
+    if (productData.originalPrice && productData.originalPrice > productData.price) {
+      const discount = 100 - (productData.price / productData.originalPrice) * 100;
+      return Math.round(discount);
+    }
+    return null;
+  }, [productData.discount, productData.discountPercentage, productData.originalPrice, productData.price]);
+
+  const ratingValue = Number(productData.rating ?? defaultProduct.rating ?? 0);
+  const reviewCount = Number(productData.reviewCount ?? defaultProduct.reviewCount ?? 0);
+  const ratingLabel = ratingValue > 0 ? ratingValue.toFixed(1) : 'New';
+  const reviewLabel = reviewCount > 0 ? `${reviewCount.toLocaleString()} reviews` : 'Be the first to review';
+
+  const categoryLabel = useMemo(() => {
+    if (!productData.category) return null;
+    if (typeof productData.category === 'string') return productData.category;
+    return productData.category?.name || productData.category?.title || null;
+  }, [productData.category]);
+
+  const stockStatus = useMemo(() => {
+    const status = productData.stockStatus;
+    if (status === 'out-of-stock') {
+      return { label: 'Out of stock', badgeClass: 'bg-rose-500/15 text-rose-300', dotClass: 'bg-rose-400' };
+    }
+    if (status === 'low-stock') {
+      return { label: 'Low stock', badgeClass: 'bg-amber-500/15 text-amber-300', dotClass: 'bg-amber-400' };
+    }
+
+    const total = productData.calculatedCountInStock ?? productData.countInStock ?? (productData.inStock ? 10 : 0);
+    if (!productData.inStock || total <= 0) {
+      return { label: 'Out of stock', badgeClass: 'bg-rose-500/15 text-rose-300', dotClass: 'bg-rose-400' };
+    }
+    if (total <= 5) {
+      return { label: 'Low stock', badgeClass: 'bg-amber-500/15 text-amber-300', dotClass: 'bg-amber-400' };
+    }
+    return { label: 'In stock', badgeClass: 'bg-emerald-500/15 text-emerald-300', dotClass: 'bg-emerald-400' };
+  }, [productData.calculatedCountInStock, productData.countInStock, productData.inStock, productData.stockStatus]);
+
+  useEffect(() => {
+    if (!secondaryImage) return;
+    const targetIndex = isHovered ? 1 : 0;
+    setCurrentImage(prev => (prev === targetIndex ? prev : targetIndex));
+  }, [isHovered, secondaryImage]);
+
   const isInWishlist = wishlistItems.some(item => (item.id || item._id) === productId);
   const isInCart = cartItems.some(item => {
     const cartProductId = item.productId || item.product?._id || item.product?.id || item.product;
@@ -92,6 +159,7 @@ const ProductCard = ({
     return cartProductId === productId;
   });
 
+  // Set default size
   useEffect(() => {
     if (availableSizes.length === 0) {
       setSelectedSize('');
@@ -102,16 +170,20 @@ const ProductCard = ({
   }, [availableSizes]);
 
   // GSAP Animations
-  useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
+  const cardRef = useGsap((_, card) => {
+    if (prefersReducedMotion || !card) {
+      return undefined;
+    }
 
-    // Entrance animation
-    gsap.fromTo(card, 
+    const imageEl = imageRef.current;
+    const badgeEl = card.querySelector('.badge');
+
+    gsap.fromTo(
+      card,
       { y: 50, opacity: 0, scale: 0.9 },
-      { 
-        y: 0, 
-        opacity: 1, 
+      {
+        y: 0,
+        opacity: 1,
         scale: 1,
         duration: 0.6,
         delay: index * 0.1,
@@ -119,49 +191,79 @@ const ProductCard = ({
       }
     );
 
-    // Hover animations setup
+    if (badgeEl && (productData.isNew || productData.isTrending || productData.isBestseller)) {
+      gsap.fromTo(
+        badgeEl,
+        { scale: 0, rotation: -180 },
+        { scale: 1, rotation: 0, duration: 0.6, ease: 'bounce.out', delay: 0.3 }
+      );
+    }
+
+    let rafId = null;
+
     const handleMouseEnter = () => {
       setIsHovered(true);
       setShowActions(true);
-      
+
       gsap.to(card, { y: -8, duration: 0.3, ease: 'power2.out' });
-      gsap.to(imageRef.current, { scale: 1.1, duration: 0.4, ease: 'power2.out' });
-      gsap.fromTo(actionsRef.current, 
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
-      );
+
+      if (imageEl) {
+        gsap.to(imageEl, { scale: 1.1, duration: 0.4, ease: 'power2.out' });
+      }
+
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      rafId = requestAnimationFrame(() => {
+        const actionsEl = actionsRef.current;
+        if (actionsEl) {
+          gsap.fromTo(
+            actionsEl,
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
+          );
+        }
+      });
     };
 
     const handleMouseLeave = () => {
       setIsHovered(false);
-      
+
       gsap.to(card, { y: 0, duration: 0.3, ease: 'power2.out' });
-      gsap.to(imageRef.current, { scale: 1, duration: 0.4, ease: 'power2.out' });
-      gsap.to(actionsRef.current, 
-        { opacity: 0, y: 20, duration: 0.2, ease: 'power2.in',
+
+      if (imageEl) {
+        gsap.to(imageEl, { scale: 1, duration: 0.4, ease: 'power2.out' });
+      }
+
+      const actionsEl = actionsRef.current;
+      if (actionsEl) {
+        gsap.to(actionsEl, {
+          opacity: 0,
+          y: 20,
+          duration: 0.2,
+          ease: 'power2.in',
           onComplete: () => setShowActions(false)
-        }
-      );
+        });
+      } else {
+        setShowActions(false);
+      }
     };
 
     card.addEventListener('mouseenter', handleMouseEnter);
     card.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+
       card.removeEventListener('mouseenter', handleMouseEnter);
       card.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, [index]);
 
-  // Badge animation
-  useEffect(() => {
-    if (badgeRef.current && (productData.isNew || productData.isTrending || productData.isBestseller)) {
-      gsap.fromTo(badgeRef.current,
-        { scale: 0, rotation: -180 },
-        { scale: 1, rotation: 0, duration: 0.6, ease: 'bounce.out', delay: 0.3 }
-      );
-    }
-  }, [productData.isNew, productData.isTrending, productData.isBestseller]);
+      gsap.killTweensOf([card, imageRef.current, actionsRef.current]);
+      rafId = null;
+    };
+  }, [index, productData.isNew, productData.isTrending, productData.isBestseller, prefersReducedMotion]);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -177,60 +279,77 @@ const ProductCard = ({
       return;
     }
     
-    dispatch(addToCart({
-      productId,
-      quantity: 1,
-      product: productData,
-      size: selectedSize || undefined
-    }));
+    let addResult;
+
+    if (typeof onAddToCart === 'function') {
+      addResult = onAddToCart({
+        product: productData,
+        productId,
+        size: selectedSize || undefined
+      });
+    } else {
+      dispatch(addToCart({
+        productId,
+        quantity: 1,
+        product: productData,
+        size: selectedSize || undefined
+      }));
+      addResult = 'added';
+    }
 
     // Animation feedback
-    gsap.to(e.target, {
-      scale: 0.95,
-      duration: 0.1,
-      yoyo: true,
-      repeat: 1,
-      ease: 'power2.inOut'
-    });
+    if (!prefersReducedMotion) {
+      gsap.to(e.target, {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.inOut'
+      });
+    }
 
-    showCartToast.added(productData.name);
+    if (addResult !== false) {
+      showCartToast.added(productData.name);
+    }
   };
 
   const handleToggleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (isInWishlist) {
-      dispatch(removeFromWishlist(productData.id));
-      showWishlistToast.removed(productData.name);
+
+    let wishlistResult;
+
+    if (typeof onToggleWishlist === 'function') {
+      wishlistResult = onToggleWishlist({
+        product: productData,
+        productId,
+        isInWishlist
+      });
     } else {
-      dispatch(addToWishlist(productData));
-      showWishlistToast.added(productData.name);
+      if (isInWishlist) {
+        dispatch(removeFromWishlist(productId));
+        wishlistResult = 'removed';
+      } else {
+        dispatch(addToWishlist(productData));
+        wishlistResult = 'added';
+      }
     }
 
     // Heart animation
-    gsap.to(e.target, {
-      scale: 1.3,
-      duration: 0.2,
-      yoyo: true,
-      repeat: 1,
-      ease: 'power2.inOut'
-    });
-  };
-
-  const handleShare = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (navigator.share) {
-      navigator.share({
-        title: productData.name,
-        text: `Check out ${productData.name} for ${formatCurrency(productData.price)}`,
-        url: `/products/${productData.id}`
+    if (!prefersReducedMotion) {
+      gsap.to(e.target, {
+        scale: 1.3,
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.inOut'
       });
-    } else {
-      navigator.clipboard.writeText(`${window.location.origin}/products/${productData.id}`);
-      showSuccessToast('Link copied to clipboard!');
+    }
+
+    if (wishlistResult === 'added') {
+      showWishlistToast.added(productData.name);
+    } else if (wishlistResult === 'removed') {
+      showWishlistToast.removed(productData.name);
     }
   };
 
@@ -240,6 +359,8 @@ const ProductCard = ({
     if (productData.isBestseller) return { text: 'BESTSELLER', color: 'bg-gradient-gold', icon: Award };
     return null;
   };
+
+  const badgeInfo = getBadgeInfo();
 
   const renderStars = () => {
     const stars = [];
@@ -413,119 +534,106 @@ const ProductCard = ({
 
   // Default variant
   return (
-    <Link to={`/products/${productData.id}`} className="block">
-      <div 
+    <Link
+      to={`/products/${productSlug}`}
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+    >
+      <article
         ref={cardRef}
-        className={`card-premium overflow-hidden relative group cursor-pointer ${className}`}
+        className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 transition-all duration-200 hover:-translate-y-1 hover:border-white/20 ${className}`}
       >
-        {/* Product Image */}
-        <div className="relative overflow-hidden rounded-t-3xl">
+        <div className="relative aspect-[4/5] overflow-hidden bg-slate-900/30">
           <img
             ref={imageRef}
-            src={productData.images[currentImage]}
+            src={productImages[currentImage] || primaryImage}
             alt={productData.name}
-            className="w-full h-48 sm:h-56 lg:h-64 object-cover transition-transform duration-500"
+            className="h-full w-full scale-105 object-cover transition-transform duration-500 group-hover:scale-110"
             onLoad={() => setIsImageLoaded(true)}
+            loading="lazy"
           />
-          
-          {/* Image Loading Skeleton */}
           {!isImageLoaded && (
-            <div className="absolute inset-0 skeleton rounded-t-3xl"></div>
+            <div className="absolute inset-0 animate-pulse bg-slate-800/40" />
           )}
 
-          {/* Badge */}
-          {getBadgeInfo() && (
-            <div 
+          {badgeInfo && (
+            <div
               ref={badgeRef}
-              className={`absolute top-3 left-3 ${getBadgeInfo().color} px-3 py-1 rounded-full text-xs font-bold text-white flex items-center space-x-1 shadow-lg`}
+              className={`badge absolute left-3 top-3 flex items-center gap-2 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${badgeInfo.color}`}
             >
-              {React.createElement(getBadgeInfo().icon, { size: 12 })}
-              <span>{getBadgeInfo().text}</span>
+              {React.createElement(badgeInfo.icon, { size: 12 })}
+              <span>{badgeInfo.text}</span>
             </div>
           )}
 
-          {/* Discount Badge */}
-          {productData.originalPrice > productData.price && (
-            <div className="absolute top-3 right-3 bg-gradient-secondary px-2 py-1 rounded-full text-xs font-bold text-white">
-              -{productData.discount}%
-            </div>
+          {discountPercentage && (
+            <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-3 py-1 text-[11px] font-semibold text-white">
+              -{discountPercentage}%
+            </span>
           )}
 
-          {/* Hover Actions */}
-          {showActionsProp && showActions && isHovered && (
-            <div 
+          {showActionsProp && (
+            <div
               ref={actionsRef}
-              className="absolute inset-0 bg-black/40 flex items-center justify-center"
+              className={`absolute right-3 top-14 flex flex-col gap-2 transition-all duration-200 ${
+                isHovered && showActions ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0 pointer-events-none'
+              }`}
             >
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={handleToggleWishlist}
-                  className={`p-3 rounded-full transition-all duration-200 ${
-                    isInWishlist 
-                      ? 'bg-red-500 text-white' 
-                      : 'glass text-white hover:glass'
-                  }`}
-                >
-                  <Heart size={20} className={isInWishlist ? 'fill-current' : ''} />
-                </button>
-                
-                {onQuickView && showQuickView && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onQuickView(productData);
-                    }}
-                    className="p-3 glass rounded-full text-white hover:glass transition-all duration-200"
-                  >
-                    <Eye size={20} />
-                  </button>
-                )}
-                
-                <button
-                  onClick={handleShare}
-                  className="p-3 glass rounded-full text-white hover:glass transition-all duration-200"
-                >
-                  <Share2 size={20} />
-                </button>
-              </div>
-            </div>
-          )}
+              <button
+                onClick={handleToggleWishlist}
+                className={`flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-white transition-colors duration-150 ${
+                  isInWishlist ? 'bg-rose-500 hover:bg-rose-600' : 'hover:bg-slate-800'
+                }`}
+                aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <Heart size={16} className={isInWishlist ? 'fill-current' : ''} />
+              </button>
 
-          {/* Image Navigation Dots */}
-          {productData.images.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1">
-              {productData.images.map((_, index) => (
+              {onQuickView && showQuickView && (
                 <button
-                  key={index}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setCurrentImage(index);
+                    onQuickView(productData);
                   }}
-                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                    index === currentImage ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-white transition-colors duration-150 hover:bg-blue-500"
+                  aria-label="Quick view product"
+                >
+                  <Eye size={16} />
+                </button>
+              )}
             </div>
           )}
         </div>
 
-        {/* Product Info */}
-        <div className="p-4 sm:p-6">
-          {/* Brand */}
-          <p className="text-sm text-gray-400 mb-1">{productData.brand}</p>
-          
-          {/* Name */}
-          <h3 className="font-semibold text-white mb-2 text-lg leading-tight line-clamp-2">
-            {productData.name}
-          </h3>
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          {categoryLabel && (
+            <span className="inline-flex w-fit items-center rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-200">
+              {categoryLabel}
+            </span>
+          )}
 
-          {/* Sizes */}
-          {availableSizes.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {availableSizes.map(size => (
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-white transition-colors duration-150 group-hover:text-blue-200">
+              {productData.name}
+            </h3>
+            <p className="text-sm text-slate-300">{productData.brand ?? defaultProduct.brand}</p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-[11px] font-medium text-slate-300">
+            <span className="flex items-center gap-1">
+              <Star size={12} className="text-amber-400" />
+              {ratingLabel}
+            </span>
+            <span className="truncate text-center text-slate-400">{reviewLabel}</span>
+            <span className={`flex items-center justify-end gap-1 rounded-full px-2 py-1 ${stockStatus.badgeClass}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${stockStatus.dotClass}`}></span>
+              {stockStatus.label}
+            </span>
+          </div>
+
+          {displayedSizes.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              {displayedSizes.map(size => (
                 <button
                   key={size}
                   type="button"
@@ -534,63 +642,66 @@ const ProductCard = ({
                     event.stopPropagation();
                     setSelectedSize(size);
                   }}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-xl transition-all duration-200 ${
+                  className={`rounded-lg px-2.5 py-1 font-semibold transition-all duration-150 ${
                     selectedSize === size
-                      ? 'bg-white text-slate-900 shadow-lg'
-                      : 'bg-white/10 text-gray-200 hover:bg-white/20'
+                      ? 'bg-white text-slate-900 shadow'
+                      : 'bg-white/10 text-slate-200 hover:bg-white/20'
                   }`}
                   aria-label={`Select size ${size}`}
                 >
                   {size}
                 </button>
               ))}
+              {remainingSizeCount > 0 && (
+                <span className="rounded-lg bg-white/5 px-2.5 py-1 font-semibold text-slate-300">
+                  +{remainingSizeCount}
+                </span>
+              )}
             </div>
           )}
 
-          {/* Rating */}
-          <div className="flex items-center space-x-2 mb-3">
-            <div className="flex items-center space-x-1">
-              {renderStars()}
-            </div>
-            <span className="text-sm text-gray-400">
-              ({productData.reviewCount})
-            </span>
-          </div>
-
-          {/* Price */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-white">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-semibold text-white">
                 {formatCurrency(productData.price)}
               </span>
               {productData.originalPrice > productData.price && (
-                <span className="text-sm text-gray-400 line-through">
+                <span className="text-xs text-slate-400 line-through">
                   {formatCurrency(productData.originalPrice)}
                 </span>
               )}
             </div>
+
+            {discountPercentage && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-1 text-[11px] font-semibold text-rose-200">
+                <Zap size={12} className="text-rose-300" />
+                Save {discountPercentage}%
+              </span>
+            )}
           </div>
 
-          {/* Add to Cart Button */}
           <button
             onClick={handleAddToCart}
             disabled={!productData.inStock}
-            className={`w-full btn-premium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
-              isInCart ? 'bg-green-500 hover:bg-green-600' : ''
+            className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 ${
+              !productData.inStock
+                ? 'cursor-not-allowed bg-slate-700/60 text-slate-400'
+                : isInCart
+                  ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-500 hover:to-purple-500'
             }`}
           >
-            <ShoppingBag size={18} />
+            <ShoppingBag size={16} />
             <span>
-              {!productData.inStock 
-                ? 'Out of Stock' 
-                : isInCart 
-                  ? 'In Cart' 
-                  : 'Add to Cart'
-              }
+              {!productData.inStock
+                ? 'Out of Stock'
+                : isInCart
+                  ? 'In Cart'
+                  : 'Add to Cart'}
             </span>
           </button>
         </div>
-      </div>
+      </article>
     </Link>
   );
 };
