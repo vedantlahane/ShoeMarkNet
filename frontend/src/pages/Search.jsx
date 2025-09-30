@@ -25,7 +25,6 @@ import SearchResults from '../components/search/SearchResults';
 import NoResults from '../components/search/NoResults';
 import Pagination from '../components/common/Pagination';
 import PageLayout from '../components/common/PageLayout';
-import GlassPanel from '../components/common/GlassPanel';
 
 // Hooks
 import useDebounce from '../hooks/useDebounce';
@@ -579,7 +578,7 @@ const Search = () => {
           {!searchQuery && (
             <>
               {recentSearches.length > 0 && (
-                <GlassPanel padding="p-6" className="max-w-3xl">
+                <div className="max-w-3xl rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                   <RecentSearches
                     searches={recentSearches}
                     onSelect={(query) => {
@@ -587,10 +586,10 @@ const Search = () => {
                       performSearch(query, 1, sortBy);
                     }}
                   />
-                </GlassPanel>
+                </div>
               )}
 
-              <GlassPanel highlight padding="p-10" className="text-center space-y-6">
+              <div className="space-y-6 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-white p-10 text-center text-slate-900 shadow-md transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-xl dark:border-slate-700/60 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 dark:text-slate-100">
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-xl">
                   <i className="fas fa-search text-3xl" />
                 </div>
@@ -602,9 +601,9 @@ const Search = () => {
                     Start typing above to explore thousands of curated sneakers, trainers, and limited editions.
                   </p>
                 </div>
-              </GlassPanel>
+              </div>
 
-              <GlassPanel padding="p-6" className="flex flex-wrap justify-center gap-3">
+              <div className="flex flex-wrap justify-center gap-3 rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                 {['Nike Air Max', 'Jordan Retro', 'Adidas Ultraboost', 'Running Shoes', 'Basketball Shoes'].map((term, index) => (
                   <button
                     key={index}
@@ -617,13 +616,13 @@ const Search = () => {
                     {term}
                   </button>
                 ))}
-              </GlassPanel>
+              </div>
             </>
           )}
 
           {searchQuery && (
             <section className="space-y-6">
-              <GlassPanel padding="p-6" className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-6 rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">
                     Search overview
@@ -697,7 +696,7 @@ const Search = () => {
                     )}
                   </button>
                 </div>
-              </GlassPanel>
+              </div>
 
               <div className="flex flex-col-reverse gap-6 xl:flex-row">
                 {showFilters && (
@@ -714,11 +713,11 @@ const Search = () => {
 
                 <div className="flex-1 space-y-6" ref={resultsRef}>
                   {loading ? (
-                    <GlassPanel padding="p-12" className="flex items-center justify-center">
+                    <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white p-12 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       <LoadingSpinner size="large" message="Searching for products..." />
-                    </GlassPanel>
+                    </div>
                   ) : error ? (
-                    <GlassPanel padding="p-10" className="text-center">
+                    <div className="rounded-2xl border border-red-200/80 bg-white p-10 text-center text-slate-900 shadow-sm dark:border-red-900/60 dark:bg-slate-900 dark:text-slate-100">
                       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 text-red-500">
                         <i className="fas fa-exclamation-triangle text-2xl" />
                       </div>
@@ -735,9 +734,9 @@ const Search = () => {
                         <i className="fas fa-redo" />
                         Try again
                       </button>
-                    </GlassPanel>
+                    </div>
                   ) : results.length === 0 ? (
-                    <GlassPanel padding="p-10">
+                    <div className="rounded-2xl border border-slate-200/70 bg-white p-10 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       <NoResults
                         query={searchQuery}
                         onClearFilters={clearFilters}
@@ -748,9 +747,9 @@ const Search = () => {
                           performSearch(query, 1, sortBy);
                         }}
                       />
-                    </GlassPanel>
+                    </div>
                   ) : (
-                    <GlassPanel padding="p-6">
+                    <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       <SearchResults
                         results={results}
                         viewMode={viewMode}
@@ -760,11 +759,11 @@ const Search = () => {
                         isProductInWishlist={isProductInWishlist}
                         isProductInCart={isProductInCart}
                       />
-                    </GlassPanel>
+                    </div>
                   )}
 
                   {results.length > 0 && pagination && pagination.totalPages > 1 && (
-                    <GlassPanel padding="p-4" className="flex justify-center">
+                    <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       <Pagination
                         currentPage={currentPage}
                         totalPages={pagination.totalPages}
@@ -773,7 +772,7 @@ const Search = () => {
                         totalItems={totalResults}
                         itemsPerPage={pagination.limit || 24}
                       />
-                    </GlassPanel>
+                    </div>
                   )}
                 </div>
               </div>

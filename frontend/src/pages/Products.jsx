@@ -26,7 +26,6 @@ import ProductList from '../components/products/ProductList';
 import Pagination from '../components/common/Pagination';
 import FilterChips from '../components/products/FilterChips';
 import PageLayout from '../components/common/PageLayout';
-import GlassPanel from '../components/common/GlassPanel';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -615,14 +614,14 @@ const Products = () => {
           </div>
 
           {activeFilters.size > 0 && (
-            <GlassPanel padding="p-4" className="shadow-[0_25px_45px_-24px_rgba(15,23,42,0.45)] transition-all duration-300 animate-in slide-in-from-top-2">
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-[0_25px_45px_-24px_rgba(15,23,42,0.45)] transition-all duration-300 animate-in slide-in-from-top-2 hover:-translate-y-0.5 hover:shadow-xl dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <FilterChips
                 filters={activeFilters}
                 onRemove={handleRemoveFilter}
                 onClearAll={handleClearAllFilters}
                 className="mb-0"
               />
-            </GlassPanel>
+            </div>
           )}
 
           <div className="relative">
@@ -670,7 +669,7 @@ const Products = () => {
                 </aside>
 
                 <section className="min-w-0 flex-1 space-y-6">
-                  <GlassPanel padding="p-4" className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <SortDropdown
                         value={filters.sort}
@@ -696,20 +695,20 @@ const Products = () => {
                       value={viewMode}
                       onChange={handleViewModeChange}
                     />
-                  </GlassPanel>
+                  </div>
 
                   {error && (
-                    <GlassPanel padding="p-0">
+                    <div className="rounded-2xl border border-slate-200/70 bg-white p-0 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       <ErrorMessage
                         message={error.message || 'Failed to load products'}
                         onRetry={handleRetry}
                         className="mb-0"
                       />
-                    </GlassPanel>
+                    </div>
                   )}
 
                   {currentLoading ? (
-                    <GlassPanel padding="p-1" className="space-y-5">
+                    <div className="space-y-5 rounded-2xl border border-slate-200/70 bg-white p-1 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       {viewMode === 'grid' ? (
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                           {[...Array(itemsPerPage)].map((_, index) => (
@@ -763,11 +762,11 @@ const Products = () => {
                           ))}
                         </div>
                       )}
-                    </GlassPanel>
+                    </div>
                   ) : (
                     <>
                       {productsList.length === 0 ? (
-                        <GlassPanel padding="p-12" className="text-center">
+                        <div className="rounded-2xl border border-slate-200/70 bg-white p-12 text-center text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                           <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/40 text-blue-500 dark:bg-slate-800/60">
                             <i className="fas fa-search text-3xl"></i>
                           </div>
@@ -797,7 +796,7 @@ const Products = () => {
                               </button>
                             )}
                           </div>
-                        </GlassPanel>
+                        </div>
                       ) : (
                         <>
                           
@@ -821,7 +820,7 @@ const Products = () => {
                          
 
                           {totalPages > 1 && (
-                            <GlassPanel padding="p-3.5" className="flex justify-center">
+                            <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white p-3.5 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                               <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
@@ -830,7 +829,7 @@ const Products = () => {
                                 totalItems={totalCount}
                                 itemsPerPage={itemsPerPage}
                               />
-                            </GlassPanel>
+                            </div>
                           )}
                         </>
                       )}

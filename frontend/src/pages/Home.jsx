@@ -20,14 +20,14 @@ const SectionSkeleton = ({ title, rows = 3 }) => {
   return (
     <section
       aria-label={`${title} loading state`}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 animate-pulse"
+      className="mx-auto max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-16 animate-pulse"
     >
-      <div className="h-8 w-48 bg-white/40 dark:bg-gray-700 rounded-full mb-6"></div>
+      <div className="h-8 w-48 rounded-full bg-white/10 mb-6"></div>
       <div className={`grid gap-6 sm:grid-cols-2 ${gridColsClass}`}>
         {Array.from({ length: rows }).map((_, index) => (
           <div
             key={index}
-            className="rounded-3xl bg-white/40 dark:bg-gray-800 border border-white/30 dark:border-gray-700 h-48"
+            className="h-48 rounded-3xl border border-white/10 bg-white/5"
           ></div>
         ))}
       </div>
@@ -150,31 +150,41 @@ const Home = () => {
       />
 
       {/* Main page content with gradient background */}
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-500">
-        {/* Hero section - Main banner and call-to-action */}
-        <HeroSection />
+      <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 transition-colors duration-500">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-500/20 via-indigo-500/15 to-purple-500/20 blur-3xl" aria-hidden="true" />
+          <div className="absolute bottom-[-12rem] right-[15%] h-[32rem] w-[32rem] rounded-full bg-gradient-to-br from-fuchsia-500/10 via-purple-500/15 to-sky-500/10 blur-[220px]" aria-hidden="true" />
+          <div className="absolute bottom-[-14rem] left-[12%] h-[24rem] w-[24rem] rounded-full bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-blue-500/10 blur-[200px]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.12),_transparent_55%)]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(15,23,42,0.9)_0%,rgba(15,23,42,0.65)_40%,rgba(30,41,59,0.55)_100%)]" aria-hidden="true" />
+        </div>
 
-        {/* Featured products section with add-to-cart functionality */}
-        <Suspense fallback={<SectionSkeleton title="Featured products" />}>
-          {featuredLoading && featuredList.length === 0 ? (
-            <SectionSkeleton title="Featured products" />
-          ) : (
-            <FeaturedProducts
-              products={featuredList}
-              onAddToCart={handleAddToCart}
-            />
-          )}
-        </Suspense>
+        <div className="relative z-10 flex flex-col gap-24 pb-24">
+          {/* Hero section - Main banner and call-to-action */}
+          <HeroSection />
 
-        {/* Product categories navigation */}
-        <Suspense fallback={<SectionSkeleton title="Shop by category" rows={4} />}>
-          <CategoriesSection />
-        </Suspense>
+          {/* Featured products section with add-to-cart functionality */}
+          <Suspense fallback={<SectionSkeleton title="Featured products" />}>
+            {featuredLoading && featuredList.length === 0 ? (
+              <SectionSkeleton title="Featured products" />
+            ) : (
+              <FeaturedProducts
+                products={featuredList}
+                onAddToCart={handleAddToCart}
+              />
+            )}
+          </Suspense>
 
-        {/* Special offers and promotions */}
-        <Suspense fallback={<SectionSkeleton title="Exclusive offers" rows={2} />}>
-          <OffersSection />
-        </Suspense>
+          {/* Product categories navigation */}
+          <Suspense fallback={<SectionSkeleton title="Shop by category" rows={4} />}>
+            <CategoriesSection />
+          </Suspense>
+
+          {/* Special offers and promotions */}
+          <Suspense fallback={<SectionSkeleton title="Exclusive offers" rows={2} />}>
+            <OffersSection />
+          </Suspense>
+        </div>
       </main>
     </>
   );

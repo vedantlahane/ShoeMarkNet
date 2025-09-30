@@ -232,7 +232,7 @@ const HeroSection = () => {
         />
       ))}
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
         <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
           <div className="space-y-10 text-white">
             <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-white/80 shadow-lg shadow-slate-900/40 backdrop-blur-xl">

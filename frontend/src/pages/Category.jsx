@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
 import PageLayout from '../components/common/PageLayout';
-import GlassPanel from '../components/common/GlassPanel';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -554,16 +553,16 @@ const Category = () => {
       >
         <div className="space-y-8">
           {subcategories && subcategories.length > 0 && (
-            <GlassPanel padding="p-4" className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <SubcategoryNav
                 subcategories={subcategories}
                 currentCategory={categoryName}
                 animateElements={animateElements}
               />
-            </GlassPanel>
+            </div>
           )}
 
-          <GlassPanel padding="p-6">
+          <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
             <CategoryFilters
               searchTerm={searchTerm}
               onSearchChange={handleSearchChange}
@@ -593,10 +592,10 @@ const Category = () => {
               itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
               loading={loading}
             />
-          </GlassPanel>
+          </div>
 
           {error && (
-            <GlassPanel padding="p-0">
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-0 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <ErrorMessage
                 message={error.message || 'Failed to load products'}
                 onRetry={() => dispatch(getProductsByCategory(categoryName, {
@@ -606,11 +605,11 @@ const Category = () => {
                 }))}
                 className="mb-0"
               />
-            </GlassPanel>
+            </div>
           )}
 
           {loading && productsList.length === 0 ? (
-            <GlassPanel padding="p-6">
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <div className={`grid gap-6 ${
                 viewMode === 'grid'
                   ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
@@ -632,11 +631,11 @@ const Category = () => {
                   </div>
                 ))}
               </div>
-            </GlassPanel>
+            </div>
           ) : (
             <>
               {!loading && !error && productsList.length === 0 ? (
-                <GlassPanel padding="p-12" className="text-center">
+                <div className="rounded-2xl border border-slate-200/70 bg-white p-12 text-center text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                   <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/60 text-blue-500 shadow-inner dark:bg-slate-800/70">
                     <i className="fas fa-search text-3xl"></i>
                   </div>
@@ -662,7 +661,7 @@ const Category = () => {
                       Browse All Products
                     </Link>
                   </div>
-                </GlassPanel>
+                </div>
               ) : (
                 <>
                   {loading && productsList.length > 0 && (
@@ -671,7 +670,7 @@ const Category = () => {
                     </div>
                   )}
 
-                  <GlassPanel padding="p-6" className="space-y-6">
+                  <div className="space-y-6 rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                     <div className={`grid gap-6 ${
                       viewMode === 'grid'
                         ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
@@ -696,10 +695,10 @@ const Category = () => {
                         </div>
                       ))}
                     </div>
-                  </GlassPanel>
+                  </div>
 
                   {!loading && !error && pagination && pagination.totalPages > 1 && (
-                    <GlassPanel padding="p-4" className="flex justify-center">
+                    <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       <Pagination
                         currentPage={currentPage}
                         totalPages={pagination.totalPages}
@@ -708,7 +707,7 @@ const Category = () => {
                         totalItems={categoryStats.total}
                         itemsPerPage={itemsPerPage}
                       />
-                    </GlassPanel>
+                    </div>
                   )}
                 </>
               )}
@@ -716,16 +715,16 @@ const Category = () => {
           )}
 
           {canViewAnalytics ? (
-            <GlassPanel padding="p-6">
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <CategoryStats
                 stats={categoryStats}
                 categoryName={displayCategoryName}
                 animateElements={animateElements}
               />
-            </GlassPanel>
+            </div>
           ) : (
             userRole !== 'guest' && (
-              <GlassPanel padding="p-8" className="text-center">
+              <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white">
                   <i className="fas fa-user-shield text-2xl"></i>
                 </div>
@@ -735,7 +734,7 @@ const Category = () => {
                 <p className="mt-3 text-gray-600 dark:text-gray-400">
                   Category analytics are limited to administrators. Reach out to your store admin if you need access.
                 </p>
-              </GlassPanel>
+              </div>
             )
           )}
         </div>

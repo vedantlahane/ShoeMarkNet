@@ -414,7 +414,7 @@ const About = () => {
             ))}
           </div>
 
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 relative z-10">
             <div className="text-center">
               
               {/* Enhanced Company Logo */}
@@ -470,7 +470,7 @@ const About = () => {
 
         {/* Enhanced Statistics Section */}
         <section className="py-16 -mt-16 relative z-10">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {COMPANY_STATS.map((stat, index) => (
                 <StatsCounter
@@ -487,7 +487,7 @@ const About = () => {
 
         {/* Enhanced Navigation Tabs */}
         <section className="py-8">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-3 shadow-2xl max-w-4xl mx-auto ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.2s' }}>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                 {navigationSections.map((section) => (
@@ -512,7 +512,7 @@ const About = () => {
 
         {/* Enhanced Content Sections */}
         <section className="py-16">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             
             {/* Our Story */}
             {activeSection === 'story' && (
@@ -918,7 +918,7 @@ const About = () => {
 
         {/* Newsletter Signup Section */}
         <section className="py-16">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             <NewsletterSignup
               onSignup={handleNewsletterSignup}
               loading={loadingNewsletter}
@@ -931,7 +931,7 @@ const About = () => {
 
         {/* Testimonials */}
         <section className="py-16 bg-white/5">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             <TestimonialCarousel animateElements={animateElements} />
           </div>
         </section>

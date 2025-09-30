@@ -547,7 +547,7 @@ const Contact = () => {
             ))}
           </div>
 
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 relative z-10">
             <div className="text-center">
               <div className={`w-20 h-20 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl ${animateElements ? 'animate-bounce-in' : 'opacity-0'}`}>
                 <i className="fas fa-headset text-3xl text-white"></i>
@@ -585,7 +585,7 @@ const Contact = () => {
 
         {/* Enhanced Contact Methods */}
         <section className="py-16 -mt-16 relative z-10">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {CONTACT_METHODS.map((method, index) => (
                 <ContactMethodCard
@@ -603,7 +603,7 @@ const Contact = () => {
 
         {/* Enhanced Main Content */}
         <section className="py-16">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               
               {/* Enhanced Contact Form */}

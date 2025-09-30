@@ -384,8 +384,8 @@ const NotFound = () => {
           </div>
         ))}
 
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center max-w-6xl mx-auto">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 relative z-10">
+          <div className="text-center mx-auto w-full max-w-screen-2xl">
             
             {/* Enhanced Main 404 Section */}
             <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 md:p-12 shadow-2xl mb-8 ${

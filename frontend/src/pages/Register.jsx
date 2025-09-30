@@ -324,7 +324,7 @@ const Register = () => {
           ))}
         </div>
 
-        <div className="container mx-auto px-4 py-8 relative z-10">
+  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
           <div className="flex items-center justify-center min-h-screen">
             <div className="w-full max-w-lg">
               

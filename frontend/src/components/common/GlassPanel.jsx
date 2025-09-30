@@ -11,19 +11,20 @@ const GlassPanel = ({
   highlight = false,
   ...rest
 }) => {
-  const hoverClasses = hover ? 'transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_-20px_rgba(30,64,175,0.45)]' : '';
-  const borderClasses = border ? 'border border-white/40 dark:border-slate-700/50' : '';
+  const hoverClasses = hover ? 'transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg' : '';
+  const borderClasses = border ? 'border border-slate-200/70 dark:border-slate-700/60' : '';
   const backgroundClasses = highlight
-    ? 'bg-gradient-to-r from-white/75 via-white/55 to-white/40 dark:from-slate-900/70 dark:via-slate-900/60 dark:to-slate-900/40'
-    : 'bg-white/70 dark:bg-slate-900/60';
+    ? 'bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-950 dark:to-slate-900'
+    : 'bg-white dark:bg-slate-900';
+
+  const baseClasses = 'relative rounded-2xl shadow-md dark:shadow-none text-slate-900 dark:text-slate-100';
 
   return (
     <Component
-      className={`relative rounded-3xl backdrop-blur-xl shadow-[0_25px_50px_-20px_rgba(30,41,59,0.65)] ${backgroundClasses} ${borderClasses} ${hoverClasses} ${padding} ${className}`.trim()}
+      className={`${baseClasses} ${backgroundClasses} ${borderClasses} ${hoverClasses} ${padding} ${className}`.trim()}
       {...rest}
     >
-  {children}
-  <div className="pointer-events-none absolute inset-px rounded-[calc(1.5rem-1px)] border border-white/40 dark:border-white/5 opacity-40" aria-hidden />
+      {children}
     </Component>
   );
 };

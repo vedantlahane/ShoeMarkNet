@@ -33,7 +33,7 @@ const AccessDeniedPage = () => {
         robots="noindex, nofollow"
       />
 
-      <section className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 py-20 px-6 text-white">
+  <section className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 py-20 px-4 sm:px-5 lg:px-6 text-white">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-10 left-10 w-64 h-64 bg-white/10 blur-3xl rounded-full" />
           <div className="absolute bottom-10 right-16 w-72 h-72 bg-violet-400/30 blur-[90px] rounded-full" />

@@ -88,7 +88,7 @@ const OffersSection = memo(() => {
           <div className={`absolute left-1/2 top-12 h-px w-48 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent ${shimmerClass}`}></div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
             <Tag size={16} className={enableAnimations ? 'animate-pulse' : ''} aria-hidden="true" />

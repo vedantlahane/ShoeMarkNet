@@ -591,7 +591,7 @@ const Checkout = () => {
         
         {/* Checkout Header */}
         <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 py-6">
-          <div className="container mx-auto px-4">
+          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -615,8 +615,8 @@ const Checkout = () => {
         </div>
 
         {/* Main Checkout Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-7xl mx-auto">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
+          <div className="mx-auto w-full max-w-screen-2xl">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
               {/* Main Checkout Form */}

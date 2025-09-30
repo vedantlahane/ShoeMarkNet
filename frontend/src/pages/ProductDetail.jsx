@@ -427,7 +427,7 @@ const ProductDetail = () => {
   if (productLoading && !product) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto px-4 py-8">
+  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Image skeleton */}
             <div className="space-y-6">
@@ -587,7 +587,7 @@ const ProductDetail = () => {
           ))}
         </div>
 
-        <div className="container mx-auto px-4 py-8 relative z-10">
+  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
           
           {/* Enhanced Breadcrumb Navigation */}
           <div className="mb-8">

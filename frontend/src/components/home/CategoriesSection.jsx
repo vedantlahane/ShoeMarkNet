@@ -434,7 +434,7 @@ const CategoriesSection = ({
         ></div>
       </div>
 
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+  <div className="relative mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
         {/* Enhanced Section Header */}
         {showHeader && (
           <div ref={headerRef} className="text-center mb-16">

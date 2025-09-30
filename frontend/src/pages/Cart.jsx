@@ -116,7 +116,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-6xl px-4 py-12">
+  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-12">
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
             <button

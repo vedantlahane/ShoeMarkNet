@@ -227,7 +227,7 @@ const Footer = memo(() => {
       {/* Glass overlay */}
       <div className="absolute inset-0 glass-dark" aria-hidden="true"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
         
         {/* Features Banner */}
         <div className="py-8 border-b border-gray-700/50">
