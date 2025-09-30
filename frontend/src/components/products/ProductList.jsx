@@ -29,7 +29,8 @@ const ProductList = ({ products, onAddToCart, onToggleWishlist, wishlistProductI
         return (
           <div 
             key={productId || `product-${index}`} 
-            className="group rounded-2xl border border-white/30 bg-white/60 p-6 shadow-[0_25px_45px_-24px_rgba(15,23,42,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_35px_65px_-28px_rgba(15,23,42,0.45)] dark:border-slate-800/60 dark:bg-slate-900/60"
+            className="group rounded-2xl border border-white/30 bg-white/60 p-6 shadow-[0_25px_45px_-24px_rgba(15,23,42,0.35)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_35px_65px_-28px_rgba(15,23,42,0.45)] dark:border-slate-800/60 dark:bg-slate-900/60 animate-fadeInUp"
+            style={{ animationDelay: `${index * 0.1}s` }}
           >
             <div className="flex flex-col gap-6 md:flex-row">
               {/* Product Image */}

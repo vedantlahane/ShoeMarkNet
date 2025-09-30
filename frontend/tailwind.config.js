@@ -105,6 +105,16 @@ export default {
           '0%': { 'background-position': '-468px 0' },
           '100%': { 'background-position': '468px 0' },
         },
+        'fadeInUp': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(20px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
       },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',

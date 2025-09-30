@@ -593,28 +593,29 @@ const Products = () => {
         description={headerSubtitle}
         actions={headerActions}
         breadcrumbs={headerBreadcrumbs}
+        className="animate-fadeInUp"
       >
-  <div className="space-y-6">
+        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
           <div className="lg:hidden">
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-              className="flex w-full items-center justify-between rounded-2xl border border-white/40 bg-white/70 px-4 py-3 font-semibold text-gray-900 shadow-sm transition-colors duration-200 hover:bg-white/90 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
+              className="flex w-full items-center justify-between rounded-2xl border border-white/40 bg-white/70 px-4 py-3 font-semibold text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-lg active:scale-95 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
             >
               <span className="flex items-center gap-2">
-                <i className="fas fa-sliders-h text-blue-500"></i>
+                <i className={`fas fa-sliders-h text-blue-500 transition-transform duration-200 ${isMobileFilterOpen ? 'rotate-90' : ''}`}></i>
                 Filters
                 {activeFilters.size > 0 && (
-                  <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
+                  <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white animate-pulse">
                     {activeFilters.size}
                   </span>
                 )}
               </span>
-              <i className={`fas fa-chevron-${isMobileFilterOpen ? 'up' : 'down'} text-sm opacity-60`}></i>
+              <i className={`fas fa-chevron-${isMobileFilterOpen ? 'up' : 'down'} text-sm opacity-60 transition-transform duration-200 ${isMobileFilterOpen ? 'rotate-180' : ''}`}></i>
             </button>
           </div>
 
           {activeFilters.size > 0 && (
-            <GlassPanel padding="p-4" className="shadow-[0_25px_45px_-24px_rgba(15,23,42,0.45)]">
+            <GlassPanel padding="p-4" className="shadow-[0_25px_45px_-24px_rgba(15,23,42,0.45)] transition-all duration-300 animate-in slide-in-from-top-2">
               <FilterChips
                 filters={activeFilters}
                 onRemove={handleRemoveFilter}
@@ -629,21 +630,21 @@ const Products = () => {
               <button
                 type="button"
                 onClick={() => setIsMobileFilterOpen(false)}
-                className="fixed inset-0 z-30 bg-slate-900/55 backdrop-blur-sm lg:hidden"
+                className="fixed inset-0 z-30 bg-slate-900/55 backdrop-blur-sm lg:hidden animate-in fade-in duration-300"
                 aria-label="Close filters"
               />
             )}
 
-            <div className="space-y-6">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+            <div className="space-y-8">
+              <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
                 <aside
-                  className={`transition-all duration-200 ease-out lg:relative lg:top-auto lg:block lg:h-auto lg:w-[250px] xl:w-[280px] ${
+                  className={`transition-all duration-300 ease-out lg:relative lg:top-auto lg:block lg:h-auto lg:w-[250px] xl:w-[280px] ${
                     isMobileFilterOpen
-                      ? 'fixed inset-y-0 left-0 z-40 h-full w-4/5 max-w-sm translate-x-0 lg:static'
+                      ? 'fixed inset-y-0 left-0 z-40 h-full w-4/5 max-w-sm translate-x-0 lg:static animate-in slide-in-from-left-4 duration-300'
                       : 'pointer-events-none fixed inset-y-0 left-0 z-40 h-full w-4/5 max-w-sm -translate-x-full lg:pointer-events-auto lg:static lg:translate-x-0'
                   }`}
                 >
-                  <div className="flex h-full flex-col overflow-y-auto bg-white/95 p-4 shadow-2xl dark:bg-slate-900/95 lg:h-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:shadow-none">
+                  <div className="flex h-full flex-col overflow-y-auto bg-white/95 p-4 shadow-2xl backdrop-blur-xl dark:bg-slate-900/95 lg:h-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:shadow-none">
                     <div className="mb-4 flex items-center justify-between lg:hidden">
                       <h3 className="text-sm font-semibold uppercase tracking-[0.4em] text-gray-600">
                         Filters
@@ -651,7 +652,7 @@ const Products = () => {
                       <button
                         type="button"
                         onClick={() => setIsMobileFilterOpen(false)}
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-gray-600"
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-gray-600 transition-colors duration-200 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                         aria-label="Close filters"
                       >
                         Close
@@ -661,13 +662,14 @@ const Products = () => {
                       <ProductFilter
                         currentFilters={filters}
                         onFilterChange={handleFilterChange}
+                        categories={categories}
                         onClose={() => setIsMobileFilterOpen(false)}
                       />
                     </div>
                   </div>
                 </aside>
 
-                <section className="min-w-0 flex-1 space-y-5">
+                <section className="min-w-0 flex-1 space-y-6">
                   <GlassPanel padding="p-4" className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <SortDropdown
@@ -677,7 +679,7 @@ const Products = () => {
                       />
 
                       <select
-                        className="rounded-2xl border border-white/40 bg-white/70 px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white"
+                        className="rounded-2xl border border-white/40 bg-white/70 px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 active:scale-95 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white"
                         value={itemsPerPage}
                         onChange={(e) => handlePerPageChange(parseInt(e.target.value, 10))}
                         aria-label="Products per page"
@@ -707,19 +709,30 @@ const Products = () => {
                   )}
 
                   {currentLoading ? (
-                    <GlassPanel padding="p-5" className="space-y-5">
+                    <GlassPanel padding="p-1" className="space-y-5">
                       {viewMode === 'grid' ? (
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                           {[...Array(itemsPerPage)].map((_, index) => (
                             <div
                               key={`skeleton-${index}`}
-                              className="h-72 rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
+                              className="group relative overflow-hidden rounded-2xl border border-white/30 bg-white/40 p-4 shadow-lg backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-900/60 animate-pulse"
+                              style={{
+                                animationDelay: `${index * 0.1}s`,
+                                animation: 'fadeInUp 0.6s ease-out forwards, shimmer 2s infinite'
+                              }}
                             >
-                              <div className="flex h-full flex-col space-y-4 animate-pulse">
-                                <div className="h-36 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
-                                <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                                <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                                <div className="mt-auto h-7 w-1/3 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                              <div className="flex h-full flex-col space-y-4">
+                                <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/20">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                                </div>
+                                <div className="space-y-3">
+                                  <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                  <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="h-6 w-1/3 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                    <div className="h-8 w-20 rounded-xl bg-gradient-to-r from-blue-400/60 to-purple-400/60 dark:from-blue-500/60 dark:to-purple-500/60"></div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -729,14 +742,21 @@ const Products = () => {
                           {[...Array(itemsPerPage)].map((_, index) => (
                             <div
                               key={`skeleton-list-${index}`}
-                              className="rounded-2xl border border-white/30 bg-white/40 p-4 dark:border-slate-800/60 dark:bg-slate-900/60"
+                              className="flex gap-4 rounded-2xl border border-white/30 bg-white/40 p-4 shadow-lg backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-900/60 animate-pulse"
+                              style={{
+                                animationDelay: `${index * 0.05}s`,
+                                animation: 'fadeInUp 0.4s ease-out forwards, shimmer 2s infinite'
+                              }}
                             >
-                              <div className="flex gap-4 animate-pulse">
-                                <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-white/60 dark:bg-slate-800/60"></div>
-                                <div className="flex flex-1 flex-col gap-3">
-                                  <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                                  <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                              <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/20">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                              </div>
+                              <div className="flex flex-1 flex-col gap-3">
+                                <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                <div className="flex items-center justify-between">
                                   <div className="h-6 w-1/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                  <div className="h-8 w-24 rounded-xl bg-gradient-to-r from-blue-400/60 to-purple-400/60 dark:from-blue-500/60 dark:to-purple-500/60"></div>
                                 </div>
                               </div>
                             </div>
@@ -762,7 +782,7 @@ const Products = () => {
                           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                             <button
                               onClick={handleClearAllFilters}
-                              className="rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
+                              className="rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 active:scale-95"
                             >
                               <i className="fas fa-times mr-2"></i>
                               Clear All Filters
@@ -780,22 +800,25 @@ const Products = () => {
                         </GlassPanel>
                       ) : (
                         <>
-                          <GlassPanel padding="p-4 md:p-5" className="space-y-5">
-                            {viewMode === 'grid' ? (
-                              <ProductGrid
-                                products={productsList}
-                                onAddToCart={handleAddProductToCart}
-                                onToggleWishlist={handleToggleProductWishlist}
-                              />
-                            ) : (
-                              <ProductList
-                                products={productsList}
-                                onAddToCart={handleAddProductToCart}
-                                onToggleWishlist={handleToggleProductWishlist}
-                                wishlistProductIds={wishlistProductIds}
-                              />
-                            )}
-                          </GlassPanel>
+                          
+                            <div className="transition-all duration-500 ease-in-out">
+                              {viewMode === 'grid' ? (
+                                <ProductGrid
+                                  products={productsList}
+                                  onAddToCart={handleAddProductToCart}
+                                  onToggleWishlist={handleToggleProductWishlist}
+                                  wishlistProductIds={wishlistProductIds}
+                                />
+                              ) : (
+                                <ProductList
+                                  products={productsList}
+                                  onAddToCart={handleAddProductToCart}
+                                  onToggleWishlist={handleToggleProductWishlist}
+                                  wishlistProductIds={wishlistProductIds}
+                                />
+                              )}
+                            </div>
+                         
 
                           {totalPages > 1 && (
                             <GlassPanel padding="p-3.5" className="flex justify-center">
