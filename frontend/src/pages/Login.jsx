@@ -255,102 +255,150 @@ const Login = () => {
         canonical="https://shoemarknet.com/login"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
-        {/* Enhanced Background Elements */}
-        <div className="absolute inset-0">
-          {/* Animated Background Shapes */}
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-pink-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
-          
-          {/* Enhanced Floating Particles */}
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-white/30 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 8}s`,
-                animationDuration: `${6 + Math.random() * 6}s`
-              }}
-            />
-          ))}
-        </div>
-
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="w-full max-w-md">
-              
-              {/* Enhanced Header Section */}
-              <div className="text-center mb-8">
-                {/* Logo */}
-                <Link 
-                  to="/" 
-                  className="inline-flex items-center space-x-3 mb-6 group transition-transform duration-200 hover:scale-105"
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_480px]">
+          <section className="relative hidden overflow-hidden lg:flex">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />
+            <div className="absolute -top-32 -left-24 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
+            <div className="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-pink-400/25 blur-3xl" />
+            <div className="relative z-10 flex h-full flex-col justify-between px-12 py-16 text-white">
+              <div>
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-3 text-base font-semibold text-white/90 transition-colors duration-200 hover:text-white"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-white font-bold text-2xl shadow-2xl group-hover:shadow-3xl transition-all duration-200">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
                     S
-                  </div>
-                  <span className="text-3xl font-bold text-white">ShoeMarkNet</span>
+                  </span>
+                  ShoeMarkNet
                 </Link>
+                <p className="mt-6 max-w-sm text-sm text-white/70">
+                  Discover curated drops, personalized recommendations, and faster checkout with your ShoeMarkNet account.
+                </p>
+              </div>
 
-                {/* Enhanced Status Badge */}
-                <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl px-6 py-3 mb-6 inline-block">
-                  <div className="flex items-center space-x-2 text-white">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <i className="fas fa-shield-alt text-green-400"></i>
-                    <span className="text-sm font-medium">Secure Login</span>
-                    {retryCount > 0 && (
-                      <span className="text-xs bg-yellow-500/20 px-2 py-1 rounded-full">
-                        Attempt {retryCount + 1}
+              <div className="space-y-10">
+                <div>
+                  <h2 className="max-w-md text-4xl font-semibold leading-tight">
+                    Step back into your sneaker sanctuary.
+                  </h2>
+                  <p className="mt-4 max-w-md text-white/70">
+                    Keep track of orders, save wishlists, and unlock early access to limited releases tailored to your style.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
+                    <div className="flex items-center gap-3 text-sm font-semibold">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                        <i className="fas fa-shipping-fast"></i>
                       </span>
-                    )}
+                      Priority shipping
+                    </div>
+                    <p className="mt-3 text-xs text-white/70">
+                      Members receive faster delivery windows and live tracking updates.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
+                    <div className="flex items-center gap-3 text-sm font-semibold">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                        <i className="fas fa-heart"></i>
+                      </span>
+                      Wishlist sync
+                    </div>
+                    <p className="mt-3 text-xs text-white/70">
+                      Save sizes, monitor restocks, and share your collections instantly.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur sm:col-span-2">
+                    <div className="flex items-center gap-3 text-sm font-semibold">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                        <i className="fas fa-crown"></i>
+                      </span>
+                      Insider rewards
+                    </div>
+                    <p className="mt-3 text-xs text-white/70">
+                      Unlock member-only launches, early-bird pricing, and seasonal gifts.
+                    </p>
                   </div>
                 </div>
 
-                <h1 className="text-4xl font-bold text-white mb-2">Welcome Back!</h1>
-                <p className="text-blue-100 text-lg">
-                  <i className="fas fa-user-circle mr-2"></i>
-                  Sign in to your account to continue shopping
-                </p>
-
-                {/* Return path indicator */}
-                {redirectPath !== '/' && (
-                  <div className="mt-4 text-sm text-blue-200 bg-blue-500/20 rounded-lg px-3 py-2 inline-block">
-                    <i className="fas fa-arrow-left mr-1"></i>
-                    You'll return to: {redirectPath}
+                <div className="flex items-center gap-6 text-sm text-white/70">
+                  <div>
+                    <p className="text-3xl font-bold text-white">120k+</p>
+                    <p>Active members worldwide</p>
                   </div>
-                )}
+                  <div className="h-10 w-px bg-white/20" />
+                  <div>
+                    <p className="text-3xl font-bold text-white">4.9★</p>
+                    <p>Average member rating</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12">
+            <div className="w-full max-w-md space-y-10">
+              <div className="space-y-4">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-3 text-lg font-semibold text-slate-900 transition-colors duration-200 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 lg:hidden"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                    S
+                  </span>
+                  ShoeMarkNet
+                </Link>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+                    Welcome back
+                  </h1>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                    Sign in to manage your orders, wishlist, and personalized recommendations.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-200">
+                    <i className="fas fa-shield-alt"></i>
+                    Secure login
+                  </span>
+                  {retryCount > 0 && (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/30 dark:text-amber-200">
+                      <i className="fas fa-sync"></i>
+                      Attempt {retryCount + 1}
+                    </span>
+                  )}
+                  {redirectPath !== '/' && (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/30 dark:text-blue-200">
+                      <i className="fas fa-location-arrow"></i>
+                      Redirect to {redirectPath}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Enhanced Main Login Card */}
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 mb-6">
-                
-                {/* Enhanced Error Display */}
-                {error && (
-                  <div className="bg-red-500/20 backdrop-blur-lg border border-red-300/50 text-red-100 px-6 py-4 rounded-2xl mb-6 animate-shake">
-                    <div className="flex items-start">
-                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-1">
-                        <i className="fas fa-exclamation-triangle text-white text-sm"></i>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm mb-1">Login Failed</p>
-                        <p className="text-xs text-red-200">{error.message || error}</p>
+              <div className="space-y-6 rounded-3xl border border-slate-200/80 bg-white p-8 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                {errorMessage && (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-200">
+                        <i className="fas fa-exclamation-triangle"></i>
+                      </span>
+                      <div className="space-y-2">
+                        <p className="font-semibold">We couldn't sign you in</p>
+                        <p className="text-xs leading-5 text-red-600/80 dark:text-red-300">{errorMessage}</p>
                         {retryCount >= 2 && (
-                          <div className="mt-2 flex items-center space-x-2">
-                            <Link 
-                              to="/forgot-password" 
-                              className="text-xs text-red-200 hover:text-white underline"
-                            >
-                              Forgot your password?
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium">
+                            <Link to="/forgot-password" className="text-red-600 underline transition-colors hover:text-red-500 dark:text-red-200 dark:hover:text-red-100">
+                              Forgot password?
                             </Link>
-                            <span className="text-red-300">|</span>
-                            <button 
+                            <button
+                              type="button"
                               onClick={() => dispatch(clearAllErrors())}
-                              className="text-xs text-red-200 hover:text-white underline"
+                              className="text-red-600 underline transition-colors hover:text-red-500 dark:text-red-200 dark:hover:text-red-100"
                             >
-                              Clear error
+                              Clear message
                             </button>
                           </div>
                         )}
@@ -358,262 +406,195 @@ const Login = () => {
                     </div>
                   </div>
                 )}
-                
-                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-                  {errorMessage && (
-                    <div className="bg-red-500/15 border border-red-400/30 text-red-100 text-sm rounded-2xl px-4 py-3 flex items-center space-x-2">
-                      <i className="fas fa-exclamation-triangle"></i>
-                      <span>{errorMessage}</span>
-                    </div>
-                  )}
 
-                  {/* Enhanced Email Field */}
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-envelope mr-2 text-blue-300"></i>
-                      Email Address *
+                <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                  <div className="space-y-1.5">
+                    <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Email address
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-envelope"></i>
+                      </span>
                       <input
                         type="email"
                         id="email"
                         name="email"
                         ref={emailInputRef}
-                        className={`w-full px-4 py-4 pl-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        className={`w-full rounded-2xl border px-4 py-3 pl-11 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
                           formTouched.email && !validation.email.isValid
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'border-white/20 focus:ring-blue-400 focus:border-transparent'
-                        }`}
-                        placeholder="Enter your email address"
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
+                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900/70`}
+                        placeholder="name@example.com"
                         value={formData.email}
                         onChange={handleInputChange('email')}
                         onBlur={handleInputBlur('email')}
                         autoComplete="email"
-                        aria-describedby={formTouched.email && !validation.email.isValid ? "email-error" : undefined}
+                        aria-describedby={formTouched.email && !validation.email.isValid ? 'email-error' : undefined}
                         required
                       />
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-envelope text-blue-300"></i>
-                      </div>
                       {formData.email && validation.email.isValid && (
-                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                          <i className="fas fa-check-circle text-green-400"></i>
-                        </div>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500">
+                          <i className="fas fa-check-circle"></i>
+                        </span>
                       )}
                     </div>
-                    
-                    {/* Email validation message */}
                     {formTouched.email && !validation.email.isValid && (
-                      <p id="email-error" className="text-red-300 text-xs flex items-center">
-                        <i className="fas fa-exclamation-circle mr-1"></i>
+                      <p id="email-error" className="text-xs text-red-500 dark:text-red-300">
                         {validation.email.message}
                       </p>
                     )}
                   </div>
-                  
-                  {/* Enhanced Password Field */}
-                  <div className="space-y-2">
-                    <label htmlFor="password" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-lock mr-2 text-purple-300"></i>
-                      Password *
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Password
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-lock"></i>
+                      </span>
                       <input
-                        type={showPassword ? "text" : "password"}
+                        type={showPassword ? 'text' : 'password'}
                         id="password"
                         name="password"
-                        className={`w-full px-4 py-4 pl-12 pr-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        className={`w-full rounded-2xl border px-4 py-3 pl-11 pr-12 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
                           formTouched.password && !validation.password.isValid
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'border-white/20 focus:ring-purple-400 focus:border-transparent'
-                        }`}
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
+                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900/70`}
                         placeholder="Enter your password"
                         value={formData.password}
                         onChange={handleInputChange('password')}
                         onBlur={handleInputBlur('password')}
                         autoComplete="current-password"
-                        aria-describedby={formTouched.password && !validation.password.isValid ? "password-error" : undefined}
+                        aria-describedby={formTouched.password && !validation.password.isValid ? 'password-error' : undefined}
                         required
                       />
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-lock text-purple-300"></i>
-                      </div>
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors duration-200"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                       </button>
                     </div>
-                    
-                    {/* Password validation message */}
                     {formTouched.password && !validation.password.isValid && (
-                      <p id="password-error" className="text-red-300 text-xs flex items-center">
-                        <i className="fas fa-exclamation-circle mr-1"></i>
+                      <p id="password-error" className="text-xs text-red-500 dark:text-red-300">
                         {validation.password.message}
                       </p>
                     )}
-                    
-                    {/* Enhanced Password Strength Indicator */}
                     {formData.password && (
-                      <PasswordStrengthIndicator 
-                        password={formData.password} 
-                        className="mt-2"
-                      />
+                      <PasswordStrengthIndicator password={formData.password} className="mt-3" />
                     )}
                   </div>
 
-                  {/* Enhanced Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center space-x-3 cursor-pointer group">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={rememberMe}
-                          onChange={(e) => setRememberMe(e.target.checked)}
-                          className="sr-only"
-                        />
-                        <div className={`w-5 h-5 rounded-lg border-2 border-white/30 flex items-center justify-center transition-all duration-200 group-hover:scale-105 ${
-                          rememberMe ? 'bg-gradient-to-r from-blue-500 to-purple-500 border-blue-400' : 'bg-white/10'
-                        }`}>
-                          {rememberMe && <i className="fas fa-check text-white text-xs"></i>}
-                        </div>
-                      </div>
-                      <span className="text-blue-100 text-sm group-hover:text-white transition-colors duration-200">
-                        Remember me
-                      </span>
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+                      />
+                      Remember me
                     </label>
-                    
-                    <Link 
-                      to="/forgot-password" 
-                      className="text-blue-300 hover:text-white text-sm transition-colors duration-200 hover:underline group"
-                    >
-                      <i className="fas fa-question-circle mr-1 group-hover:animate-pulse"></i>
-                      Forgot Password?
+                    <Link to="/forgot-password" className="font-medium text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                      Forgot password?
                     </Link>
                   </div>
-                  
-                  {/* Enhanced Submit Button */}
+
                   <button
                     type="submit"
                     disabled={loginLoading || !validation.isValid}
-                    className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-200 transform relative overflow-hidden ${
-                      loginLoading || !validation.isValid
-                        ? 'bg-gray-500/50 cursor-not-allowed text-gray-300 scale-100'
-                        : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-2xl hover:scale-105 active:scale-95'
-                    }`}
+                    className="w-full rounded-2xl bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-50 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 dark:focus:ring-offset-slate-900 dark:hover:bg-blue-500 dark:disabled:bg-slate-600"
                   >
                     {loginLoading ? (
-                      <div className="flex items-center justify-center space-x-2">
+                      <span className="flex items-center justify-center gap-2">
                         <LoadingSpinner size="small" />
-                        <span>Signing In...</span>
-                      </div>
+                        Signing in...
+                      </span>
                     ) : (
-                      <div className="flex items-center justify-center space-x-2">
+                      <span className="flex items-center justify-center gap-2">
                         <i className="fas fa-sign-in-alt"></i>
-                        <span>Sign In</span>
-                        <i className="fas fa-arrow-right"></i>
-                      </div>
-                    )}
-                    
-                    {/* Button shine effect */}
-                    {!loginLoading && validation.isValid && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                        Sign in
+                      </span>
                     )}
                   </button>
 
-                  {/* Enhanced Demo Login Button */}
                   <button
                     type="button"
                     onClick={handleDemoLogin}
-                    className="w-full py-3 px-6 bg-white/10 backdrop-blur-lg border border-white/20 text-white rounded-2xl font-medium hover:bg-white/20 transition-all duration-200 transform hover:scale-105 group"
                     disabled={loginLoading}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-80 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                   >
-                    <i className="fas fa-user-circle mr-2 group-hover:animate-bounce"></i>
-                    Try Demo Login
-                    <span className="text-xs ml-2 text-blue-200">(Alt + D)</span>
+                    <span className="flex items-center justify-center gap-2">
+                      <i className="fas fa-magic"></i>
+                      Try demo login
+                      <span className="text-xs text-slate-400 dark:text-slate-500">(Alt + D)</span>
+                    </span>
                   </button>
                 </form>
-              </div>
 
-              {/* Enhanced Social Login Options */}
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6">
-                <div className="text-center mb-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/20"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-3 bg-white/10 text-blue-100 rounded-full">Or continue with</span>
-                    </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+                    <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                    Or continue with
+                    <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <SocialLoginButton
+                      provider="google"
+                      onClick={handleSocialLogin}
+                      disabled={loginLoading}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    >
+                      <i className="fab fa-google text-red-500"></i>
+                      Google
+                    </SocialLoginButton>
+                    <SocialLoginButton
+                      provider="facebook"
+                      onClick={handleSocialLogin}
+                      disabled={loginLoading}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    >
+                      <i className="fab fa-facebook-f text-blue-600"></i>
+                      Facebook
+                    </SocialLoginButton>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    By continuing you agree to our Terms of Service and Privacy Policy.
+                  </p>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <SocialLoginButton
-                    provider="google"
-                    onClick={() => handleSocialLogin('google')}
-                    disabled={loginLoading}
-                    className="flex items-center justify-center space-x-2 py-3 px-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl text-white hover:bg-white/20 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <i className="fab fa-google text-red-400"></i>
-                    <span className="text-sm font-medium">Google</span>
-                  </SocialLoginButton>
-                  
-                  <SocialLoginButton
-                    provider="facebook"
-                    onClick={() => handleSocialLogin('facebook')}
-                    disabled={loginLoading}
-                    className="flex items-center justify-center space-x-2 py-3 px-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl text-white hover:bg-white/20 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <i className="fab fa-facebook-f text-blue-400"></i>
-                    <span className="text-sm font-medium">Facebook</span>
-                  </SocialLoginButton>
-                </div>
-                
-                <p className="text-xs text-blue-200 text-center mt-3">
-                  By signing in with social media, you agree to our Terms & Privacy Policy
-                </p>
               </div>
 
-              {/* Enhanced Sign Up Link */}
-              <div className="text-center">
-                <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl px-6 py-4 inline-block transition-all duration-200 hover:bg-white/20">
-                  <span className="text-blue-100 text-sm">Don't have an account? </span>
-                  <Link 
-                    to="/register" 
-                    className="text-white font-semibold hover:text-blue-300 transition-colors duration-200 underline group"
-                  >
-                    <i className="fas fa-user-plus mr-1 group-hover:animate-pulse"></i>
-                    Create Account
+              <div className="space-y-4 text-center">
+                <div className="text-sm text-slate-600 dark:text-slate-300">
+                  Don&apos;t have an account?
+                  <Link to="/register" className="ml-2 font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                    Create one
                   </Link>
                 </div>
-              </div>
-
-              {/* Enhanced Security Note */}
-              <div className="text-center mt-6">
-                <div className="flex items-center justify-center space-x-4 text-blue-200 text-xs">
-                  <div className="flex items-center space-x-1 group">
-                    <i className="fas fa-shield-alt text-green-400 group-hover:animate-pulse"></i>
-                    <span>SSL Secured</span>
-                  </div>
-                  <div className="flex items-center space-x-1 group">
-                    <i className="fas fa-lock text-yellow-400 group-hover:animate-bounce"></i>
-                    <span>256-bit Encryption</span>
-                  </div>
-                  <div className="flex items-center space-x-1 group">
-                    <i className="fas fa-user-shield text-blue-400 group-hover:animate-pulse"></i>
-                    <span>Privacy Protected</span>
-                  </div>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400 dark:text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <i className="fas fa-shield-alt text-blue-500"></i>
+                    SSL secured
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <i className="fas fa-lock text-emerald-500"></i>
+                    256-bit encryption
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <i className="fas fa-user-shield text-purple-500"></i>
+                    Privacy protected
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-
-        {/* Enhanced Custom Styles */}
       </div>
     </>
   );
