@@ -80,8 +80,7 @@ export const fetchOrders = createAsyncThunk(
   'order/fetchOrders',
   async (options = {}, { rejectWithValue }) => {
     try {
-      const response = await orderService.getUserOrders(options);
-      const orders = extractOrdersArray(response);
+      const { orders = [], pagination, totalOrders } = await orderService.getUserOrders(options);
       
       if (orders.length === 0) {
         showInfoToast("📦 No orders found. Start shopping to see your orders here!");
@@ -91,8 +90,8 @@ export const fetchOrders = createAsyncThunk(
       
       return {
         orders,
-        pagination: extractPagination(response),
-        totalOrders: response?.totalOrders || orders.length,
+        pagination,
+        totalOrders: totalOrders ?? orders.length,
       };
     } catch (error) {
       const errorPayload = createErrorPayload(error, 'Failed to fetch orders');
@@ -129,10 +128,12 @@ export const createOrder = createAsyncThunk(
     try {
       const loadingToast = toast.loading("🛒 Creating your order...");
       
-      const result = await orderService.createOrder(orderData);
+      const { order, message } = await orderService.createOrder(orderData);
+      const resolvedOrder = order ?? null;
       
       toast.dismiss(loadingToast);
-      showSuccessToast(`🎉 Order #${result.orderNumber || result._id} placed successfully!`);
+      const orderReference = resolvedOrder?.orderId || resolvedOrder?.orderNumber || resolvedOrder?._id || 'order';
+      showSuccessToast(message ?? `🎉 Order #${orderReference} placed successfully!`);
       
       // Show follow-up information
       setTimeout(() => {
@@ -145,10 +146,10 @@ export const createOrder = createAsyncThunk(
       // Track order creation analytics
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag("event", "purchase", {
-          transaction_id: result._id,
-          value: result.totalPrice,
+          transaction_id: resolvedOrder?._id,
+          value: resolvedOrder?.grandTotal ?? resolvedOrder?.totalPrice ?? 0,
           currency: "USD",
-          items: result.items?.map(item => ({
+          items: resolvedOrder?.items?.map(item => ({
             item_id: item.product._id,
             item_name: item.product.name,
             quantity: item.quantity,
@@ -157,7 +158,7 @@ export const createOrder = createAsyncThunk(
         });
       }
       
-      return result;
+      return resolvedOrder;
     } catch (error) {
       const errorPayload = createErrorPayload(error, 'Failed to create order');
       showErrorToast(`❌ ${errorPayload.message}`);
@@ -181,15 +182,18 @@ export const payOrder = createAsyncThunk(
     try {
       const loadingToast = toast.loading("💳 Processing payment...");
       
-      const result = await orderService.updateOrderPayment(orderId, paymentResult);
+      const { order, message } = await orderService.updateOrderPayment(orderId, paymentResult);
+      const resolvedOrder = order ?? null;
       
       toast.dismiss(loadingToast);
-      showSuccessToast("✅ Payment completed successfully!");
+      showSuccessToast(message ?? "✅ Payment completed successfully!");
       
       // Show payment success details
+      const paymentAmount = resolvedOrder?.grandTotal ?? resolvedOrder?.totalPrice ?? paymentResult?.amount ?? 0;
+      const formattedPaymentAmount = Number(paymentAmount || 0).toFixed(2);
       setTimeout(() => {
         showInfoToast(
-          `💰 Payment of $${result.totalPrice} processed successfully`,
+          `💰 Payment of $${formattedPaymentAmount} processed successfully`,
           { autoClose: 5000 }
         );
       }, 1500);
@@ -199,11 +203,11 @@ export const payOrder = createAsyncThunk(
         window.gtag("event", "payment_completed", {
           transaction_id: orderId,
           payment_method: paymentResult.payment_method,
-          value: result.totalPrice,
+          value: Number(paymentAmount || 0),
         });
       }
       
-      return result;
+      return resolvedOrder;
     } catch (error) {
       const errorPayload = createErrorPayload(error, 'Payment failed');
       showErrorToast(`❌ ${errorPayload.message}`);
@@ -219,16 +223,18 @@ export const cancelOrder = createAsyncThunk(
     try {
       const loadingToast = toast.loading("🚫 Cancelling order...");
       
-      const result = await orderService.cancelOrder(orderId, reason);
+      const { order, message } = await orderService.cancelOrder(orderId, reason);
+      const resolvedOrder = order ?? null;
       
       toast.dismiss(loadingToast);
-      showSuccessToast("✅ Order cancelled successfully");
+      showSuccessToast(message ?? "✅ Order cancelled successfully");
       
       // Show cancellation details
-      if (result.refundAmount > 0) {
+      const refundAmount = resolvedOrder?.refundAmount ?? 0;
+      if (refundAmount > 0) {
         setTimeout(() => {
           showInfoToast(
-            `💰 Refund of $${result.refundAmount} will be processed within 3-5 business days`,
+            `💰 Refund of $${refundAmount} will be processed within 3-5 business days`,
             { autoClose: 6000 }
           );
         }, 2000);
@@ -242,7 +248,7 @@ export const cancelOrder = createAsyncThunk(
         });
       }
       
-      return result;
+      return resolvedOrder;
     } catch (error) {
       const errorPayload = createErrorPayload(error, 'Failed to cancel order');
       showErrorToast(`❌ ${errorPayload.message}`);
@@ -279,15 +285,14 @@ export const fetchAllOrders = createAsyncThunk(
   'order/fetchAllOrders',
   async (queryParams = {}, { rejectWithValue }) => {
     try {
-      const response = await orderService.getAllOrders(queryParams);
-      const orders = extractOrdersArray(response);
+      const { orders = [], pagination, totalOrders } = await orderService.getAllOrders(queryParams);
       
       showInfoToast(`📊 Loaded ${orders.length} orders for admin view`);
       
       return {
         orders,
-        pagination: extractPagination(response),
-        totalOrders: response?.totalOrders || response?.total || orders.length,
+        pagination,
+        totalOrders: totalOrders ?? orders.length,
       };
     } catch (error) {
       const errorPayload = createErrorPayload(error, 'Failed to fetch all orders');
@@ -302,11 +307,12 @@ export const trackOrder = createAsyncThunk(
   'order/trackOrder',
   async (orderId, { rejectWithValue }) => {
     try {
-      const response = await orderService.trackOrder(orderId);
+      const { order, message } = await orderService.trackOrder(orderId);
+      const trackingPayload = order ?? null;
       
-      showInfoToast(`📍 Order tracking updated for #${orderId}`);
+      showInfoToast(message ?? `📍 Order tracking updated for #${orderId}`);
       
-      return { orderId, trackingInfo: response };
+      return { orderId, trackingInfo: trackingPayload };
     } catch (error) {
       const errorPayload = createErrorPayload(error, 'Failed to track order');
       showErrorToast(`❌ ${errorPayload.message}`);

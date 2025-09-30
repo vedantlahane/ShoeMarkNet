@@ -1,155 +1,158 @@
 // src/services/orderService.js
 import api from '../utils/api';
 
-/**
- * Get all orders for the current user
- * @returns {Promise} - Promise resolving to an array of orders
- */
-const getUserOrders = async () => {
+const buildQueryString = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    searchParams.append(key, value);
+  });
+
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
+const unwrapOrder = (data) => (
+  data?.order ?? data ?? null
+);
+
+const normalizeOrderList = (data) => {
+  if (Array.isArray(data)) {
+    return {
+      orders: data,
+      pagination: null,
+      totalOrders: data.length,
+    };
+  }
+
+  if (data && Array.isArray(data.orders)) {
+    return {
+      orders: data.orders,
+      pagination: data.pagination ?? null,
+      totalOrders: data.total ?? data.totalOrders ?? data.pagination?.total ?? data.orders.length,
+      message: data.message,
+    };
+  }
+
+  return {
+    orders: [],
+    pagination: null,
+    totalOrders: 0,
+    message: data?.message,
+  };
+};
+
+const getUserOrders = async (params = {}) => {
   try {
-    const response = await api.get('/orders');
-    return response.data;
+    const queryString = buildQueryString(params);
+    const { data } = await api.get(`/orders${queryString}`);
+    return normalizeOrderList(data);
   } catch (error) {
     console.error('Error fetching user orders:', error);
     throw error;
   }
 };
 
-/**
- * Get a specific order by ID
- * @param {string} orderId - The ID of the order to fetch
- * @returns {Promise} - Promise resolving to the order details
- */
 const getOrderById = async (orderId) => {
   try {
-    const response = await api.get(`/orders/${orderId}`);
-    return response.data;
+    const { data } = await api.get(`/orders/${orderId}`);
+    return unwrapOrder(data);
   } catch (error) {
     console.error(`Error fetching order ${orderId}:`, error);
     throw error;
   }
 };
 
-/**
- * Create a new order
- * @param {Object} orderData - Order information including items, shipping address, payment method
- * @returns {Promise} - Promise resolving to the created order
- */
 const createOrder = async (orderData) => {
   try {
-    const response = await api.post('/orders', orderData);
-    return response.data;
+    const { data } = await api.post('/orders', orderData);
+    return {
+      order: unwrapOrder(data),
+      message: data?.message,
+    };
   } catch (error) {
     console.error('Error creating order:', error);
     throw error;
   }
 };
 
-/**
- * Update the payment status of an order
- * @param {string} orderId - The ID of the order to update
- * @param {Object} paymentResult - Payment information from payment processor
- * @returns {Promise} - Promise resolving to the updated order
- */
 const updateOrderPayment = async (orderId, paymentResult) => {
   try {
-    const response = await api.put(`/orders/${orderId}/pay`, paymentResult);
-    return response.data;
+    const { data } = await api.put(`/orders/${orderId}/pay`, { paymentResult });
+    return {
+      order: unwrapOrder(data),
+      message: data?.message,
+    };
   } catch (error) {
     console.error(`Error updating payment for order ${orderId}:`, error);
     throw error;
   }
 };
 
-/**
- * Cancel an order
- * @param {string} orderId - The ID of the order to cancel
- * @returns {Promise} - Promise resolving to the canceled order
- */
-const cancelOrder = async (orderId) => {
+const cancelOrder = async (orderId, reason) => {
   try {
-    const response = await api.put(`/orders/${orderId}/cancel`);
-    return response.data;
+    const payload = reason ? { reason } : undefined;
+    const { data } = await api.put(`/orders/${orderId}/cancel`, payload);
+    return {
+      order: unwrapOrder(data),
+      message: data?.message,
+    };
   } catch (error) {
     console.error(`Error canceling order ${orderId}:`, error);
     throw error;
   }
 };
 
-/**
- * Update the status of an order (admin only)
- * @param {string} orderId - The ID of the order to update
- * @param {Object} updates - Status updates to apply
- * @returns {Promise} - Promise resolving to the updated order
- */
 const updateOrderStatus = async (orderId, updates) => {
   try {
-    const response = await api.put(`/orders/admin/${orderId}`, updates);
-    return response.data;
+    const { data } = await api.put(`/orders/admin/${orderId}`, updates);
+    return unwrapOrder(data);
   } catch (error) {
     console.error(`Error updating status for order ${orderId}:`, error);
     throw error;
   }
 };
 
-/**
- * Get all orders (admin only)
- * @param {Object} queryParams - Optional query parameters for filtering
- * @returns {Promise} - Promise resolving to orders with pagination
- */
 const getAllOrders = async (queryParams = {}) => {
   try {
-    const queryString = new URLSearchParams(queryParams).toString();
-    const url = queryString ? `/orders/admin/all?${queryString}` : '/orders/admin/all';
-    const response = await api.get(url);
-    return response.data; // Returns { orders, pagination }
+    const queryString = buildQueryString(queryParams);
+    const { data } = await api.get(`/orders/admin/all${queryString}`);
+    return normalizeOrderList(data);
   } catch (error) {
     console.error('Error fetching all orders:', error);
     throw error;
   }
 };
 
-/**
- * Delete an order (admin only)
- * @param {string} orderId - The ID of the order to delete
- * @returns {Promise} - Promise resolving to success message
- */
 const deleteOrder = async (orderId) => {
   try {
-    const response = await api.delete(`/orders/admin/${orderId}`);
-    return response.data;
+    const { data } = await api.delete(`/orders/admin/${orderId}`);
+    return data;
   } catch (error) {
     console.error(`Error deleting order ${orderId}:`, error);
     throw error;
   }
 };
 
-/**
- * Get order statistics for dashboard
- * @param {Object} filters - Optional date range filters
- * @returns {Promise} - Promise resolving to order statistics
- */
 const getOrderStats = async (filters = {}) => {
   try {
-    const queryString = new URLSearchParams(filters).toString();
-    const url = queryString ? `/orders/admin/stats?${queryString}` : '/orders/admin/stats';
-    const response = await api.get(url);
-    return response.data;
+    const queryString = buildQueryString(filters);
+    const { data } = await api.get(`/orders/admin/stats${queryString}`);
+    return data;
   } catch (error) {
     console.error('Error fetching order statistics:', error);
     throw error;
   }
 };
 
-/**
- * Track order delivery status
- * @param {string} orderId - The ID of the order to track
- * @returns {Promise} - Promise resolving to tracking information
- */
 const trackOrder = async (orderId) => {
   try {
-    const response = await api.get(`/orders/${orderId}/track`);
-    return response.data;
+    const { data } = await api.get(`/orders/${orderId}/track`);
+    return {
+      order: unwrapOrder(data),
+      message: data?.message,
+    };
   } catch (error) {
     console.error(`Error tracking order ${orderId}:`, error);
     throw error;

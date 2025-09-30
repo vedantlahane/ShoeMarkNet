@@ -7,12 +7,8 @@ import { toast } from 'react-toastify';
 
 // Redux actions
 import { 
-  fetchProducts, 
-  searchProducts,
-  clearProductError 
-} from '../redux/slices/productSlice';
-import { 
   fetchCategories,
+  fetchCategoryTree,
   getCategoryById,
   getCategoryBreadcrumb,
   getProductsByCategory
@@ -32,12 +28,10 @@ import CompareDrawer from '../components/products/CompareDrawer';
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
 import useDebounce from '../hooks/useDebounce';
-import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import usePermissions from '../hooks/usePermissions';
 
 // Utils
 import { trackEvent } from '../utils/analytics';
-import { formatPrice } from '../utils/helpers';
 
 // Constants
 const SORT_OPTIONS = [
@@ -82,18 +76,15 @@ const Category = () => {
 
   // Redux state
   const { 
-    products, 
-    loading, 
-    error,
-    pagination,
-    totalProducts 
-  } = useSelector((state) => state.product);
-  
-  const { 
-    categories,
+    categoryTree,
     currentCategory,
     breadcrumb,
-    subcategories
+    products,
+    pagination,
+    totalProducts,
+    isLoading,
+    error,
+    categoryInfo
   } = useSelector((state) => state.category);
 
   // Local state
@@ -118,7 +109,6 @@ const Category = () => {
   const [compareItems, setCompareItems] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const canViewAnalytics = hasRole('admin');
@@ -150,7 +140,8 @@ const Category = () => {
           await Promise.all([
             dispatch(getCategoryById(categoryName)),
             dispatch(getCategoryBreadcrumb(categoryName)),
-            dispatch(fetchCategories())
+            dispatch(fetchCategories()),
+            dispatch(fetchCategoryTree())
           ]);
         }
 
@@ -177,18 +168,20 @@ const Category = () => {
       limit: itemsPerPage,
       sort: sortBy,
       ...(filterBy !== 'all' && { filter: filterBy }),
-      ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       ...(priceRange.min > 0 && { minPrice: priceRange.min }),
       ...(priceRange.max < 10000 && { maxPrice: priceRange.max }),
       ...(selectedBrands.length > 0 && { brands: selectedBrands.join(',') }),
       ...(selectedRating > 0 && { rating: selectedRating })
     };
 
-    if (debouncedSearchTerm) {
-      dispatch(searchProducts({ query: debouncedSearchTerm, filters }));
-    } else {
-      dispatch(getProductsByCategory(categoryName, filters));
-    }
+    dispatch(getProductsByCategory({
+      categoryId: categoryName,
+      filters: {
+        ...filters,
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm })
+      },
+      includeTree: true
+    }));
   }, [
     dispatch,
     categoryName,
@@ -256,9 +249,96 @@ const Category = () => {
   }, [productsList, totalProducts]);
 
   const availableBrands = useMemo(() => {
-    const brands = [...new Set(productsList.map(p => p.brand).filter(Boolean))];
-    return brands.sort();
-  }, [productsList]);
+    const fromProducts = productsList
+      .map((product) => product.brand || product.manufacturer || product?.metadata?.brand)
+      .filter(Boolean);
+
+    const fromCategoryInfo = Array.isArray(categoryInfo?.brands)
+      ? categoryInfo.brands
+      : Array.isArray(categoryInfo?.availableBrands)
+        ? categoryInfo.availableBrands
+        : Array.isArray(categoryInfo?.facets?.brands)
+          ? categoryInfo.facets.brands.map((brand) => (typeof brand === 'string' ? brand : brand?.name))
+          : [];
+
+    const uniqueBrands = new Set([
+      ...fromProducts.map((brand) => brand?.name || brand),
+      ...fromCategoryInfo.map((brand) => brand?.name || brand),
+    ].filter(Boolean));
+
+    return Array.from(uniqueBrands).sort((a, b) => a.localeCompare(b));
+  }, [productsList, categoryInfo]);
+
+  const subcategoryList = useMemo(() => {
+    const normalizeNode = (node) => {
+      if (!node || typeof node !== 'object') return null;
+      const normalized = {
+        ...node,
+        id: node.id || node._id || node.slug || node.name,
+        name: node.name || node.title || node.label || 'Unknown Category',
+        slug: node.slug || node.handle || node.seoHandle || node._id || node.id,
+        count: node.count || node.productCount || node.totalProducts || node.itemsCount || 0,
+      };
+
+      if (Array.isArray(node.subcategories)) {
+        normalized.subcategories = node.subcategories.map(normalizeNode).filter(Boolean);
+      } else if (Array.isArray(node.children)) {
+        normalized.subcategories = node.children.map(normalizeNode).filter(Boolean);
+      }
+
+      return normalized;
+    };
+
+    const normalizeList = (list = []) => list.map(normalizeNode).filter(Boolean);
+
+    if (Array.isArray(categoryInfo?.subcategories)) return normalizeList(categoryInfo.subcategories);
+    if (Array.isArray(categoryInfo?.children)) return normalizeList(categoryInfo.children);
+    if (Array.isArray(currentCategory?.subcategories)) return normalizeList(currentCategory.subcategories);
+    if (Array.isArray(currentCategory?.children)) return normalizeList(currentCategory.children);
+
+    const findInTree = (nodes = []) => {
+      for (const node of nodes) {
+        if (!node) continue;
+        const nodeSlug = node.slug || node.handle || node._id || node.id;
+        const nodeId = node._id || node.id || node.slug;
+
+        if (nodeSlug === categoryName || nodeId === categoryName) {
+          return node.children || node.subcategories || [];
+        }
+
+        if (Array.isArray(node.children) && node.children.length > 0) {
+          const found = findInTree(node.children);
+          if (found) return found;
+        }
+        if (Array.isArray(node.subcategories) && node.subcategories.length > 0) {
+          const found = findInTree(node.subcategories);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const resolved = findInTree(categoryTree);
+    return normalizeList(Array.isArray(resolved) ? resolved : []);
+  }, [categoryInfo, currentCategory, categoryTree, categoryName]);
+
+  const currentCategoryForNav = useMemo(() => {
+    if (!currentCategory) {
+      return categoryInfo
+        ? {
+            ...categoryInfo,
+            id: categoryInfo.id || categoryInfo._id || categoryInfo.slug || categoryName,
+            slug: categoryInfo.slug || categoryInfo.handle || categoryName,
+          }
+        : null;
+    }
+
+    return {
+      ...currentCategory,
+      id: currentCategory.id || currentCategory._id || currentCategory.slug || categoryName,
+      slug: currentCategory.slug || currentCategory.handle || categoryName,
+    };
+  }, [currentCategory, categoryInfo, categoryName]);
 
   // Enhanced handlers
   const handleSortChange = useCallback((newSort) => {
@@ -418,10 +498,23 @@ const Category = () => {
   }, [categoryName, searchTerm, selectedBrands]);
 
   const metaDescription = useMemo(() => {
-    const total = categoryStats.total;
-    const onSale = categoryStats.onSale;
-    return `Discover ${total} premium ${categoryName?.toLowerCase()} products. ${onSale > 0 ? `${onSale} items on sale.` : ''} Free shipping, easy returns, and expert customer service.`;
-  }, [categoryName, categoryStats]);
+    const fallback = () => {
+      const total = categoryStats.total;
+      const onSale = categoryStats.onSale;
+      return `Discover ${total} premium ${categoryName?.toLowerCase()} products. ${onSale > 0 ? `${onSale} items on sale.` : ''} Free shipping, easy returns, and expert customer service.`;
+    };
+
+    const descriptionCandidates = [
+      categoryInfo?.seoDescription,
+      categoryInfo?.metaDescription,
+      categoryInfo?.description,
+      currentCategory?.seoDescription,
+      currentCategory?.description,
+    ];
+
+    const firstDescription = descriptionCandidates.find((value) => typeof value === 'string' && value.trim().length > 0);
+    return firstDescription ? firstDescription.trim() : fallback();
+  }, [categoryInfo, currentCategory, categoryName, categoryStats]);
 
   const displayCategoryName = useMemo(() => {
     if (currentCategory?.name) return currentCategory.name;
@@ -436,17 +529,17 @@ const Category = () => {
 
   const headerDescription = useMemo(() => {
     const total = categoryStats.total;
-    if (loading) {
-      return 'Fetching the freshest drops in this category...';
+    if (isLoading) {
+      return `Fetching the freshest ${displayCategoryName.toLowerCase()} drops...`;
     }
     if (searchTerm) {
-      return `Showing matches for "${searchTerm}" with ${total} curated picks.`;
+      return `Showing ${total} ${displayCategoryName.toLowerCase()} results for "${searchTerm}".`;
     }
     if (total === 0) {
-      return `No listings match your filters yet—tune the filters below to explore more styles.`;
+      return `No ${displayCategoryName.toLowerCase()} listings match your filters yet—adjust them to explore more styles.`;
     }
-    return `${total.toLocaleString()} items, ${categoryStats.onSale} on sale, averaging ${Number(categoryStats.averageRating || 0).toFixed(1)}★ from the community.`;
-  }, [categoryStats, displayCategoryName, loading, searchTerm]);
+    return `${total.toLocaleString()} ${displayCategoryName.toLowerCase()} items, ${categoryStats.onSale} on sale, averaging ${Number(categoryStats.averageRating || 0).toFixed(1)}★ from the community.`;
+  }, [categoryStats, displayCategoryName, isLoading, searchTerm]);
 
   const headerBreadcrumbs = useMemo(() => {
     const crumbs = Array.isArray(breadcrumb) ? breadcrumb : [];
@@ -552,11 +645,11 @@ const Category = () => {
         afterHeader={headerAfter}
       >
         <div className="space-y-8">
-          {subcategories && subcategories.length > 0 && (
+          {subcategoryList.length > 0 && (
             <div className="overflow-x-auto rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <SubcategoryNav
-                subcategories={subcategories}
-                currentCategory={categoryName}
+                categories={subcategoryList}
+                currentCategory={currentCategoryForNav}
                 animateElements={animateElements}
               />
             </div>
@@ -590,25 +683,35 @@ const Category = () => {
               filterOptions={FILTER_OPTIONS}
               viewModes={VIEW_MODES}
               itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-              loading={loading}
+              loading={isLoading}
             />
           </div>
 
           {error && (
             <div className="rounded-2xl border border-slate-200/70 bg-white p-0 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <ErrorMessage
-                message={error.message || 'Failed to load products'}
-                onRetry={() => dispatch(getProductsByCategory(categoryName, {
-                  page: currentPage,
-                  limit: itemsPerPage,
-                  sort: sortBy
+                message={typeof error === 'string' ? error : error?.message || 'Failed to load products'}
+                onRetry={() => dispatch(getProductsByCategory({
+                  categoryId: categoryName,
+                  filters: {
+                    page: currentPage,
+                    limit: itemsPerPage,
+                    sort: sortBy,
+                    ...(filterBy !== 'all' && { filter: filterBy }),
+                    ...(selectedBrands.length > 0 && { brands: selectedBrands.join(',') }),
+                    ...(selectedRating > 0 && { rating: selectedRating }),
+                    ...(priceRange.min > 0 && { minPrice: priceRange.min }),
+                    ...(priceRange.max < 10000 && { maxPrice: priceRange.max }),
+                    ...(searchTerm && { search: searchTerm }),
+                  },
+                  includeTree: true,
                 }))}
                 className="mb-0"
               />
             </div>
           )}
 
-          {loading && productsList.length === 0 ? (
+          {isLoading && productsList.length === 0 ? (
             <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
               <div className={`grid gap-6 ${
                 viewMode === 'grid'
@@ -634,7 +737,7 @@ const Category = () => {
             </div>
           ) : (
             <>
-              {!loading && !error && productsList.length === 0 ? (
+              {!isLoading && !error && productsList.length === 0 ? (
                 <div className="rounded-2xl border border-slate-200/70 bg-white p-12 text-center text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                   <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/60 text-blue-500 shadow-inner dark:bg-slate-800/70">
                     <i className="fas fa-search text-3xl"></i>
@@ -664,7 +767,7 @@ const Category = () => {
                 </div>
               ) : (
                 <>
-                  {loading && productsList.length > 0 && (
+                  {isLoading && productsList.length > 0 && (
                     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
                       <LoadingSpinner size="medium" message="Updating products..." />
                     </div>
@@ -697,7 +800,7 @@ const Category = () => {
                     </div>
                   </div>
 
-                  {!loading && !error && pagination && pagination.totalPages > 1 && (
+                  {!isLoading && !error && pagination && pagination.totalPages > 1 && (
                     <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
                       <Pagination
                         currentPage={currentPage}

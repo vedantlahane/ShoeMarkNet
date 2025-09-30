@@ -24,10 +24,28 @@ const saveWishlistToStorage = (items) => {
 };
 
 // Helper to extract products from response
+const normalizeWishlistItems = (items = []) => {
+  return items
+    .map((item) => {
+      if (!item) return null;
+
+      const baseProduct = item.product && typeof item.product === 'object'
+        ? { ...item.product }
+        : { ...item };
+
+      return {
+        ...baseProduct,
+        wishlistAddedAt: item.wishlistAddedAt ?? item.addedAt ?? baseProduct?.wishlistAddedAt ?? null,
+      };
+    })
+    .filter(Boolean);
+};
+
 const extractWishlistProducts = (response) => {
-  if (Array.isArray(response)) return response;
-  if (response?.products && Array.isArray(response.products)) return response.products;
-  if (response?.items && Array.isArray(response.items)) return response.items;
+  if (!response) return [];
+  if (Array.isArray(response)) return normalizeWishlistItems(response);
+  if (Array.isArray(response?.products)) return normalizeWishlistItems(response.products);
+  if (Array.isArray(response?.items)) return normalizeWishlistItems(response.items);
   return [];
 };
 
@@ -50,14 +68,16 @@ export const fetchWishlist = createAsyncThunk(
   async ({ page = 1, limit = 20 } = {}, { rejectWithValue }) => {
     try {
       const response = await wishlistService.getWishlist(page, limit);
-      const products = extractWishlistProducts(response);
+      const products = Array.isArray(response?.products)
+        ? response.products
+        : extractWishlistProducts(response);
       
       saveWishlistToStorage(products);
       
       return {
         products,
         pagination: response?.pagination || null,
-        totalItems: response?.pagination?.total || products.length,
+        totalItems: response?.productCount ?? response?.pagination?.total ?? products.length,
       };
     } catch (error) {
       const message = error?.userMessage || error.response?.data?.message || "Failed to fetch wishlist";
@@ -102,13 +122,15 @@ export const addToWishlist = createAsyncThunk(
       saveWishlistToStorage(updatedItems);
 
       const response = await wishlistService.addToWishlist(productId);
-      const products = extractWishlistProducts(response);
+      const products = Array.isArray(response?.products)
+        ? response.products
+        : extractWishlistProducts(response);
       
       saveWishlistToStorage(products);
       
       return {
         products,
-        totalItems: response?.productCount || products.length,
+        totalItems: response?.productCount ?? products.length,
         addedProduct: optimisticItem,
       };
     } catch (error) {
@@ -136,13 +158,15 @@ export const removeFromWishlist = createAsyncThunk(
       saveWishlistToStorage(updatedItems);
 
       const response = await wishlistService.removeFromWishlist(productId);
-      const products = extractWishlistProducts(response);
+      const products = Array.isArray(response?.products)
+        ? response.products
+        : extractWishlistProducts(response);
       
       saveWishlistToStorage(products);
       
       return {
         products,
-        totalItems: response?.productCount || products.length,
+        totalItems: response?.productCount ?? products.length,
         removedProductId: productId,
         productName,
       };
@@ -184,7 +208,7 @@ export const clearWishlistAsync = createAsyncThunk(
   "wishlist/clearWishlistAsync",
   async (_, { rejectWithValue }) => {
     try {
-      await wishlistService.clearWishlist();
+  await wishlistService.clearWishlist();
       localStorage.removeItem("wishlist");
       return { products: [], totalItems: 0 };
     } catch (error) {
