@@ -178,16 +178,18 @@ const Login = () => {
 
   // Handle demo login
   const handleDemoLogin = useCallback(() => {
-    setFormData({
-      email: 'demo@shoemarknet.com',
-      password: 'Demo123456'
-    });
-    
+    const demoCreds = {
+      email: 'user@shoemarknet.test',
+      password: 'User@123!'
+    };
+
+    setFormData(demoCreds);
+
     // Auto-submit demo login
     setTimeout(() => {
       dispatch(loginUser({
-        email: 'demo@shoemarknet.com',
-        password: 'Demo123456'
+        email: demoCreds.email,
+        password: demoCreds.password
       }));
     }, 500);
 
