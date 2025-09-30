@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const CART_TTL_SECONDS = 30 * 24 * 60 * 60;
+const CART_TTL_MS = CART_TTL_SECONDS * 1000;
+
+const normaliseVariantForComparison = (variant = {}) => ({
+  color: variant.color ? String(variant.color).trim().toLowerCase() : undefined,
+  size: variant.size !== undefined && variant.size !== null ? String(variant.size).trim().toLowerCase() : undefined
+});
+
 /**
  * @description Mongoose schema for the Cart model.
  * This schema supports both authenticated users and guest sessions by
@@ -11,7 +19,7 @@ const CartSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   
   // A session ID for unauthenticated (guest) users.
-  sessionId: { type: String },
+  sessionId: { type: String, trim: true },
 
   // Array of items in the cart
   items: [{
@@ -19,9 +27,10 @@ const CartSchema = new mongoose.Schema({
     quantity: { type: Number, required: true, min: 1, max: 99 },
     // Details for product variants, if applicable
     variant: {
-      color: String,
-      size: String,
-      sku: String
+      color: { type: String, trim: true },
+      colorCode: { type: String, trim: true },
+      size: { type: String, trim: true },
+      sku: { type: String, trim: true }
     },
     price: { type: Number, required: true },
     originalPrice: Number,
@@ -53,8 +62,11 @@ const CartSchema = new mongoose.Schema({
   // A time-to-live (TTL) index that automatically deletes the document
   // from the database after a specified period (30 days in this case).
   // This is great for cleaning up old guest carts.
-  expiresAt: { type: Date, default: Date.now, expires: 30 * 24 * 60 * 60 }
+  expiresAt: { type: Date, default: () => new Date(Date.now() + CART_TTL_MS), expires: CART_TTL_SECONDS }
 }, { timestamps: true });
+
+CartSchema.path('items').default(() => []);
+CartSchema.path('appliedCoupons').default(() => []);
 
 // ====================================================================
 // ========================= INDEXES & HOOKS ==========================
@@ -75,19 +87,34 @@ CartSchema.index({ sessionId: 1, status: 1 });
 /**
  * @description Pre-save hook to automatically update timestamps and handle abandonment logic.
  */
+CartSchema.pre('validate', function(next) {
+  if (!this.user && !this.sessionId) {
+    return next(new Error('Cart must belong to a user or a guest session'));
+  }
+  next();
+});
+
 CartSchema.pre('save', function(next) {
-  // Update the last activity timestamp whenever the cart is saved
-  this.lastActivityAt = new Date();
-  
-  // Check for abandonment only if the cart has items and is currently active
-  if (this.items.length > 0 && this.status === 'active') {
-    const hoursSinceActivity = (Date.now() - this.lastActivityAt) / (1000 * 60 * 60);
-    // If no activity for more than 2 hours, mark as abandoned
+  const now = new Date();
+  const previousActivity = this.lastActivityAt || this.updatedAt || this.createdAt || now;
+
+  this.lastActivityAt = now;
+  this.expiresAt = new Date(now.getTime() + CART_TTL_MS);
+
+  if (this.items.length === 0) {
+    this.status = 'active';
+    this.abandonedAt = undefined;
+    return next();
+  }
+
+  if (this.status === 'active') {
+    const hoursSinceActivity = (now - previousActivity) / (1000 * 60 * 60);
     if (hoursSinceActivity > 2) {
       this.status = 'abandoned';
-      this.abandonedAt = new Date();
+      this.abandonedAt = now;
     }
   }
+
   next();
 });
 
@@ -115,10 +142,10 @@ CartSchema.virtual('isEmpty').get(function() {
  */
 CartSchema.methods.calculateTotalPrice = function() {
   this.subtotal = this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-  this.discountAmount = this.appliedCoupons.reduce((total, c) => total + c.discountAmount, 0);
+  this.discountAmount = this.appliedCoupons.reduce((total, c) => total + (c.discountAmount || 0), 0);
   // Example tax calculation (8%)
   this.taxAmount = (this.subtotal - this.discountAmount) * 0.08;
-  this.totalPrice = this.subtotal - this.discountAmount + this.taxAmount + this.shippingAmount;
+  this.totalPrice = Math.max(this.subtotal - this.discountAmount + this.taxAmount + this.shippingAmount, 0);
   return this.totalPrice;
 };
 
@@ -130,32 +157,82 @@ CartSchema.methods.calculateTotalPrice = function() {
  */
 CartSchema.methods.addItem = async function(productId, quantity, variant = {}) {
   // Check if item with same product and variant already exists
-  const existingItemIndex = this.items.findIndex(item =>
-    item.product.toString() === productId.toString() &&
-    item.variant.color === variant.color &&
-    item.variant.size === variant.size
-  );
-  
+  const Product = mongoose.model('Product');
+  const product = await Product.findById(productId);
+  if (!product) throw new Error('Product not found');
+  if (!product.isActive) throw new Error('Product is not available');
+
+  const variantToCompare = normaliseVariantForComparison(variant);
+
+  let matchedVariant;
+  let matchedSize;
+
+  if (Array.isArray(product.variants) && product.variants.length > 0) {
+    matchedVariant = product.variants.find(v => {
+      if (variantToCompare.color) {
+        return v.color && v.color.toLowerCase() === variantToCompare.color;
+      }
+      if (variantToCompare.size) {
+        return Array.isArray(v.sizes) && v.sizes.some(s => s.size && String(s.size).toLowerCase() === variantToCompare.size);
+      }
+      return false;
+    });
+
+    if (matchedVariant && variantToCompare.size && Array.isArray(matchedVariant.sizes)) {
+      matchedSize = matchedVariant.sizes.find(s =>
+        s.size && String(s.size).toLowerCase() === variantToCompare.size
+      );
+    }
+  }
+
+  const availableStock = matchedSize
+    ? matchedSize.countInStock
+    : matchedVariant && Array.isArray(matchedVariant.sizes)
+      ? matchedVariant.sizes.reduce((sum, s) => sum + (s.countInStock || 0), 0)
+      : product.countInStock;
+
+  if (availableStock < quantity) {
+    throw new Error('Insufficient stock');
+  }
+
+  const variantDetails = {
+    color: matchedVariant?.color || (variant.color ? String(variant.color).trim() : undefined),
+    colorCode: matchedVariant?.colorCode,
+    size: matchedSize?.size || (variant.size !== undefined ? String(variant.size).trim() : undefined),
+    sku: variant.sku ? String(variant.sku).trim() : undefined
+  };
+
+  const existingItemIndex = this.items.findIndex(item => {
+    if (item.product.toString() !== productId.toString()) return false;
+    const existingNormalised = normaliseVariantForComparison(item.variant || {});
+    return existingNormalised.color === variantToCompare.color &&
+      existingNormalised.size === variantToCompare.size;
+  });
+
+  const unitPrice = matchedSize?.price || product.price;
+
   if (existingItemIndex > -1) {
-    // If it exists, just update the quantity
-    this.items[existingItemIndex].quantity += quantity;
+    const newQuantity = this.items[existingItemIndex].quantity + quantity;
+    if (availableStock < newQuantity) {
+      throw new Error('Insufficient stock');
+    }
+    this.items[existingItemIndex].quantity = newQuantity;
+    this.items[existingItemIndex].price = unitPrice;
+    this.items[existingItemIndex].variant = variantDetails;
+    this.items[existingItemIndex].stockCheckedAt = new Date();
   } else {
-    // If it's a new item, fetch product details and validate stock
-    const Product = mongoose.model('Product');
-    const product = await Product.findById(productId);
-    if (!product) throw new Error('Product not found');
-    if (product.countInStock < quantity) throw new Error('Insufficient stock');
-    
     this.items.push({
       product: productId,
       quantity,
-      variant,
-      price: product.price,
+      variant: variantDetails,
+      price: unitPrice,
       originalPrice: product.originalPrice || product.price,
-      isInStock: true
+      isInStock: true,
+      stockCheckedAt: new Date(),
+      addedAt: new Date()
     });
   }
-  
+
   this.status = 'active';
   this.abandonedAt = undefined;
   this.calculateTotalPrice();
@@ -178,8 +255,41 @@ CartSchema.methods.updateQuantity = async function(itemId, newQuantity) {
     // Otherwise, validate stock and update the quantity
     const Product = mongoose.model('Product');
     const product = await Product.findById(this.items[itemIndex].product);
-    if (!product || product.countInStock < newQuantity) throw new Error('Insufficient stock');
+    if (!product) throw new Error('Product not found');
+
+    const variantToCompare = normaliseVariantForComparison(this.items[itemIndex].variant || {});
+
+    let availableStock = product.countInStock;
+    if (Array.isArray(product.variants) && product.variants.length > 0) {
+      const matchedVariant = product.variants.find(v => {
+        if (variantToCompare.color) {
+          return v.color && v.color.toLowerCase() === variantToCompare.color;
+        }
+        if (variantToCompare.size) {
+          return Array.isArray(v.sizes) && v.sizes.some(s => s.size && String(s.size).toLowerCase() === variantToCompare.size);
+        }
+        return false;
+      });
+
+      if (matchedVariant) {
+        if (variantToCompare.size && Array.isArray(matchedVariant.sizes)) {
+          const matchedSize = matchedVariant.sizes.find(s =>
+            s.size && String(s.size).toLowerCase() === variantToCompare.size
+          );
+          if (matchedSize) {
+            availableStock = matchedSize.countInStock;
+          }
+        } else {
+          availableStock = Array.isArray(matchedVariant.sizes)
+            ? matchedVariant.sizes.reduce((sum, s) => sum + (s.countInStock || 0), 0)
+            : availableStock;
+        }
+      }
+    }
+
+    if (availableStock < newQuantity) throw new Error('Insufficient stock');
     this.items[itemIndex].quantity = newQuantity;
+    this.items[itemIndex].stockCheckedAt = new Date();
   }
   
   this.calculateTotalPrice();
@@ -193,6 +303,10 @@ CartSchema.methods.updateQuantity = async function(itemId, newQuantity) {
 CartSchema.methods.removeItem = function(itemId) {
   this.items = this.items.filter(item => item._id.toString() !== itemId);
   this.calculateTotalPrice();
+  this.status = this.items.length > 0 ? this.status : 'active';
+  if (this.items.length === 0) {
+    this.abandonedAt = undefined;
+  }
   return this.save();
 };
 
@@ -203,6 +317,8 @@ CartSchema.methods.clear = function() {
   this.items = [];
   this.appliedCoupons = [];
   this.calculateTotalPrice();
+  this.status = 'active';
+  this.abandonedAt = undefined;
   return this.save();
 };
 

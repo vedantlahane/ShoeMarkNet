@@ -10,14 +10,14 @@ const AddressSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   
   // Basic Address Details
-  fullName: { type: String, required: true },
-  addressLine1: { type: String, required: true },
-  addressLine2: { type: String }, // Optional second line
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  postalCode: { type: String, required: true },
-  country: { type: String, required: true },
-  phone: { type: String, required: true },
+  fullName: { type: String, required: true, trim: true },
+  addressLine1: { type: String, required: true, trim: true },
+  addressLine2: { type: String, trim: true }, // Optional second line
+  city: { type: String, required: true, trim: true },
+  state: { type: String, required: true, trim: true },
+  postalCode: { type: String, required: true, trim: true },
+  country: { type: String, required: true, trim: true },
+  phone: { type: String, required: true, trim: true },
   
   // Flags and Address Type
   isDefault: { type: Boolean, default: false },

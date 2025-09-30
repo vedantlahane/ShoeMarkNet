@@ -14,7 +14,7 @@ const PaymentSchema = new mongoose.Schema({
   order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
   
   // Financial Details
-  amount: { type: Number, required: true },
+  amount: { type: Number, required: true, min: 0 },
   currency: { type: String, default: 'INR' }, // E.g., 'INR' for Indian Rupees, 'USD', 'EUR', etc.
   
   // Transaction Information
@@ -28,5 +28,9 @@ const PaymentSchema = new mongoose.Schema({
   refundStatus: { type: String, enum: ['not_requested', 'requested', 'processed'], default: 'not_requested' },
   failureReason: { type: String, default: null }, // Reason for a failed payment, if applicable
 }, { timestamps: true }); // Mongoose adds `createdAt` and `updatedAt` fields
+
+PaymentSchema.index({ transactionId: 1 }, { unique: true });
+PaymentSchema.index({ user: 1, status: 1 });
+PaymentSchema.index({ order: 1 });
 
 module.exports = mongoose.model('Payment', PaymentSchema);

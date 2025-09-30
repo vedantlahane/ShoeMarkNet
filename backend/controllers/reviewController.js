@@ -61,29 +61,6 @@ const moderateReview = asyncHandler(async (req, res) => {
 
   await review.save();
 
-  // If the review status changes to 'approved' or 'rejected',
-  // we need to recalculate the product's overall rating.
-  if (status === 'approved' || status === 'rejected') {
-    const product = await Product.findById(review.product);
-    if (product) {
-      // Find all approved reviews for the product
-      const approvedReviews = await Review.find({ product: review.product, status: 'approved' });
-      
-      if (approvedReviews.length > 0) {
-        // Recalculate average rating and review count
-        const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
-        product.rating = totalRating / approvedReviews.length;
-        product.numReviews = approvedReviews.length;
-        await product.save();
-      } else {
-        // If there are no approved reviews, reset the rating and count
-        product.rating = 0;
-        product.numReviews = 0;
-        await product.save();
-      }
-    }
-  }
-
   res.json({ message: 'Review moderated successfully', review: review.toObject() });
 });
 

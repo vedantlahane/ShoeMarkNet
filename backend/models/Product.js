@@ -8,10 +8,10 @@ const slugify = require('slugify');
  */
 const ProductSchema = new mongoose.Schema({
   // Basic Product Information
-  name: { type: String, required: true, trim: true },
+  name: { type: String, required: true, trim: true, minlength: 2 },
   slug: { type: String, unique: true }, // URL-friendly name, auto-generated
-  description: { type: String, required: true },
-  brand: { type: String, required: true },
+  description: { type: String, required: true, trim: true, minlength: 20 },
+  brand: { type: String, required: true, trim: true },
 
   // Categorization and Pricing
   // Using an index to improve the performance of category-based queries
@@ -19,7 +19,7 @@ const ProductSchema = new mongoose.Schema({
   price: { type: Number, required: true, min: 0 },
   originalPrice: { type: Number, min: 0 },
   discountPercentage: { type: Number, default: 0, min: 0, max: 100 },
-  images: [{ type: String }], // Array of image URLs
+  images: [{ type: String, trim: true }], // Array of image URLs
 
   // Inventory and Ratings
   countInStock: { type: Number, required: true, default: 0, min: 0 },
@@ -33,13 +33,13 @@ const ProductSchema = new mongoose.Schema({
 
   // Product Variants (e.g., different colors and sizes)
   variants: [{
-    color: { type: String },
-    colorCode: { type: String },
-    images: [{ type: String }],
+    color: { type: String, trim: true },
+    colorCode: { type: String, trim: true },
+    images: [{ type: String, trim: true }],
     sizes: [{
-      size: { type: Number },
-      countInStock: { type: Number, default: 0 },
-      price: { type: Number }
+      size: { type: String, trim: true },
+      countInStock: { type: Number, default: 0, min: 0 },
+      price: { type: Number, min: 0 }
     }]
   }],
 
@@ -62,23 +62,94 @@ const ProductSchema = new mongoose.Schema({
   },
 
   // Shipping information
-  weight: { type: Number },
+  weight: { type: Number, min: 0 },
   dimensions: {
-    length: { type: Number },
-    width: { type: Number },
-    height: { type: Number }
+    length: { type: Number, min: 0 },
+    width: { type: Number, min: 0 },
+    height: { type: Number, min: 0 }
   },
 
   isActive: { type: Boolean, default: true, index: true },
-}, { 
-  timestamps: true, 
+}, {
+  timestamps: true,
   toJSON: { virtuals: true }, // Enable virtuals when converting to JSON
   toObject: { virtuals: true } // Enable virtuals when converting to an object
 });
 
+// Require at least one image for active products
+ProductSchema.path('images').validate(function(images) {
+  if (this.isActive === false) return true;
+  return Array.isArray(images) && images.length > 0;
+}, 'Please provide at least one product image');
+
+// ====================================================================
+// ========================= HELPER METHODS ===========================
+// ====================================================================
+
+ProductSchema.methods.syncStockFromVariants = function() {
+  if (!Array.isArray(this.variants) || this.variants.length === 0) {
+    return;
+  }
+
+  const totalStock = this.variants.reduce((productTotal, variant) => {
+    if (!variant || !Array.isArray(variant.sizes)) return productTotal;
+    const variantTotal = variant.sizes.reduce((sizeTotal, size) => sizeTotal + (size?.countInStock || 0), 0);
+    return productTotal + variantTotal;
+  }, 0);
+
+  if (totalStock >= 0) {
+    this.countInStock = totalStock;
+  }
+};
+
+ProductSchema.statics.recalculateReviewStats = async function(productId) {
+  if (!mongoose.Types.ObjectId.isValid(productId)) return;
+
+  const Review = mongoose.model('Review');
+  const stats = await Review.aggregate([
+    { $match: { product: new mongoose.Types.ObjectId(productId), status: 'approved' } },
+    {
+      $group: {
+        _id: '$product',
+        averageRating: { $avg: '$rating' },
+        reviewCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const payload = stats.length > 0
+    ? { rating: Number(stats[0].averageRating.toFixed(2)), numReviews: stats[0].reviewCount }
+    : { rating: 0, numReviews: 0 };
+
+  await this.findByIdAndUpdate(productId, payload, { new: false });
+};
+
 // ====================================================================
 // ========================= SCHEMA HOOKS =============================
 // ====================================================================
+
+ProductSchema.pre('validate', function(next) {
+  if (this.price < 0) {
+    return next(new Error('Price cannot be negative'));
+  }
+
+  if (this.originalPrice && this.originalPrice < this.price) {
+    this.originalPrice = this.price;
+  }
+
+  if (this.originalPrice && this.originalPrice > 0) {
+    const computedDiscount = 100 - Math.round((this.price / this.originalPrice) * 100);
+    this.discountPercentage = Math.max(0, Math.min(100, computedDiscount));
+  } else if (this.discountPercentage > 0 && this.discountPercentage < 100) {
+    const divisor = 1 - this.discountPercentage / 100;
+    if (divisor <= 0) {
+      return next(new Error('Discount percentage cannot be 100 or more without original price'));
+    }
+    this.originalPrice = Number((this.price / divisor).toFixed(2));
+  }
+
+  next();
+});
 
 // Indexes for better performance on common queries
 // For text search, you can use .find({ $text: { $search: 'keyword' }})
@@ -90,9 +161,21 @@ ProductSchema.index({ price: 1, rating: -1 });
 
 // 'pre' save hook to handle automatic data generation and validation
 ProductSchema.pre('save', async function(next) {
+  if (this.isModified('variants')) {
+    this.syncStockFromVariants();
+  }
+
   // Generate a slug from the name if the name is modified
   if (this.isModified('name')) {
-    this.slug = slugify(this.name, { lower: true, strict: true });
+    const baseSlug = slugify(this.name, { lower: true, strict: true });
+    let slugCandidate = baseSlug;
+    let counter = 1;
+
+    while (await mongoose.models.Product.exists({ slug: slugCandidate, _id: { $ne: this._id } })) {
+      slugCandidate = `${baseSlug}-${counter++}`;
+    }
+
+    this.slug = slugCandidate;
   }
 
   // Ensure the autogenerated SKU is truly unique

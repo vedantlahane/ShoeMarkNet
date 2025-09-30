@@ -31,4 +31,50 @@ const ReviewSchema = new mongoose.Schema({
   moderatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // The admin who moderated the review
 }, { timestamps: true }); // Mongoose adds `createdAt` and `updatedAt`
 
+// Ensure a user can review a product only once
+ReviewSchema.index({ product: 1, user: 1 }, { unique: true });
+
+// Recalculate product rating after review changes
+ReviewSchema.statics.updateProductAggregates = async function(productId) {
+  if (!mongoose.Types.ObjectId.isValid(productId)) return;
+
+  const stats = await this.aggregate([
+    { $match: { product: new mongoose.Types.ObjectId(productId), status: 'approved' } },
+    {
+      $group: {
+        _id: '$product',
+        averageRating: { $avg: '$rating' },
+        reviewCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const Product = mongoose.model('Product');
+  if (stats.length === 0) {
+    await Product.findByIdAndUpdate(productId, { rating: 0, numReviews: 0 }, { new: false });
+  } else {
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        rating: Number(stats[0].averageRating.toFixed(2)),
+        numReviews: stats[0].reviewCount
+      },
+      { new: false }
+    );
+  }
+};
+
+const recalcProductRating = async (doc) => {
+  if (doc?.product) {
+    await doc.constructor.updateProductAggregates(doc.product);
+  }
+};
+
+ReviewSchema.post('save', recalcProductRating);
+ReviewSchema.post('findOneAndDelete', recalcProductRating);
+ReviewSchema.post('findOneAndUpdate', async function(result) {
+  if (result) await recalcProductRating(result);
+});
+ReviewSchema.post('remove', recalcProductRating);
+
 module.exports = mongoose.model('Review', ReviewSchema);

@@ -10,7 +10,7 @@ const DEFAULT_ACCOUNTS = [
     email: 'admin@shoemarknet.test',
     password: 'Admin@123!',
     role: 'admin',
-    phone: '+1-555-0001',
+    phone: '+155500001',
     preferences: {
       newsletter: true,
       marketing: true
@@ -22,7 +22,7 @@ const DEFAULT_ACCOUNTS = [
     email: 'user@shoemarknet.test',
     password: 'User@123!',
     role: 'user',
-    phone: '+1-555-0002',
+    phone: '+155500002',
     preferences: {
       newsletter: true,
       marketing: false

@@ -35,10 +35,9 @@ exports.addToCart = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Product not found');
   }
-
-  if (product.countInStock < quantity) {
+  if (!product.isActive) {
     res.status(400);
-    throw new Error(`Not enough stock. Available: ${product.countInStock}`);
+    throw new Error('Product is not available for purchase');
   }
 
   // Find the user's existing cart or create a new one if it doesn't exist
@@ -56,7 +55,8 @@ exports.addToCart = asyncHandler(async (req, res) => {
   }
 
   // Populate the cart again to include product details in the response
-  const populatedCart = await Cart.findById(cart._id).populate('items.product');
+  const populatedCart = await Cart.findById(cart._id)
+    .populate('items.product', 'name price images countInStock rating slug');
   res.status(200).json({ message: 'Product added to cart', cart: populatedCart });
 });
 
@@ -84,7 +84,8 @@ exports.updateCartItem = asyncHandler(async (req, res) => {
   await cart.updateQuantity(itemId, quantity);
 
   // Populate the cart again to include product details in the response
-  const populatedCart = await Cart.findById(cart._id).populate('items.product');
+  const populatedCart = await Cart.findById(cart._id)
+    .populate('items.product', 'name price images countInStock rating slug');
   res.status(200).json({ message: 'Cart updated', cart: populatedCart });
 });
 
@@ -106,7 +107,8 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
   await cart.removeItem(itemId);
   
   // Populate the cart again to include product details in the response
-  const populatedCart = await Cart.findById(cart._id).populate('items.product');
+  const populatedCart = await Cart.findById(cart._id)
+    .populate('items.product', 'name price images countInStock rating slug');
   res.status(200).json({ message: 'Item removed from cart', cart: populatedCart });
 });
 

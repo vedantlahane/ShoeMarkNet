@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "seed:accounts": "node scripts/seedDefaultAccounts.js"
+    "seed:accounts": "node scripts/seedDefaultAccounts.js",
+    "seed:sample": "node scripts/seedSampleData.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

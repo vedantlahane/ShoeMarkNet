@@ -15,7 +15,7 @@ const asyncHandler = require('express-async-handler');
  * @access Private
  */
 const createOrder = asyncHandler(async (req, res) => {
-  const { items, paymentMethod, shippingAddress, fromCart = false } = req.body;
+  const { items, paymentMethod, shippingAddress, fromCart = false, tax = 0, shippingFee = 0, discount = 0 } = req.body;
 
   // Validate that the order contains at least one item
   if (!items || items.length === 0) {
@@ -23,42 +23,112 @@ const createOrder = asyncHandler(async (req, res) => {
     throw new Error('No order items provided');
   }
 
-  let totalPrice = 0;
-  // A list to hold the products we need to update
-  const productsToUpdate = [];
+  if (!paymentMethod) {
+    res.status(400);
+    throw new Error('Payment method is required');
+  }
 
-  // Loop through each item to validate products, check stock, and calculate total price
+  if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.addressLine1) {
+    res.status(400);
+    throw new Error('Valid shipping address is required');
+  }
+
+  const orderItems = [];
+  const productUpdates = [];
+
   for (const item of items) {
     const product = await Product.findById(item.product);
     if (!product) {
       res.status(404);
       throw new Error(`Product not found: ${item.product}`);
     }
-    
-    // Check if enough stock is available
-    if (product.countInStock < item.quantity) {
+
+    if (!product.isActive) {
       res.status(400);
-      throw new Error(`Not enough stock for ${product.name}. Available: ${product.countInStock}`);
+      throw new Error(`${product.name} is not available for purchase`);
     }
-    
-    totalPrice += product.price * item.quantity;
-    
-    // Prepare the stock update without saving yet
-    product.countInStock -= item.quantity;
-    productsToUpdate.push(product.save());
+
+    let availableStock = product.countInStock;
+    let variantMeta = {};
+    if (item.variant && (item.variant.color || item.variant.size) && Array.isArray(product.variants)) {
+      const variantColor = item.variant.color ? String(item.variant.color).toLowerCase() : null;
+      const variantSize = item.variant.size ? String(item.variant.size).toLowerCase() : null;
+
+      const matchedVariant = product.variants.find(v => {
+        if (variantColor) {
+          return v.color && v.color.toLowerCase() === variantColor;
+        }
+        if (variantSize) {
+          return Array.isArray(v.sizes) && v.sizes.some(s => s.size && String(s.size).toLowerCase() === variantSize);
+        }
+        return false;
+      });
+
+      if (matchedVariant) {
+        variantMeta.color = matchedVariant.color;
+        variantMeta.colorCode = matchedVariant.colorCode;
+
+        if (variantSize && Array.isArray(matchedVariant.sizes)) {
+          const matchedSize = matchedVariant.sizes.find(s => s.size && String(s.size).toLowerCase() === variantSize);
+          if (matchedSize) {
+            availableStock = matchedSize.countInStock;
+            variantMeta.size = matchedSize.size;
+            variantMeta.price = matchedSize.price || product.price;
+          } else {
+            res.status(400);
+            throw new Error(`Selected size is not available for ${product.name}`);
+          }
+        } else if (Array.isArray(matchedVariant.sizes)) {
+          availableStock = matchedVariant.sizes.reduce((sum, s) => sum + (s.countInStock || 0), 0);
+        }
+      }
+    }
+
+    if (availableStock < item.quantity) {
+      res.status(400);
+      throw new Error(`Not enough stock for ${product.name}. Available: ${availableStock}`);
+    }
+
+    const unitPrice = variantMeta.price || product.price;
+    const orderItem = {
+      product: product._id,
+      quantity: item.quantity,
+      price: unitPrice,
+      color: variantMeta.color || item.variant?.color,
+      size: variantMeta.size || item.variant?.size
+    };
+
+    orderItems.push(orderItem);
+
+    product.countInStock = Math.max(product.countInStock - item.quantity, 0);
+    if (product.variants && product.variants.length > 0 && variantMeta.color) {
+      const variantIndex = product.variants.findIndex(v => v.color === variantMeta.color);
+      if (variantIndex > -1 && Array.isArray(product.variants[variantIndex].sizes) && variantMeta.size) {
+        const sizeIndex = product.variants[variantIndex].sizes.findIndex(s => String(s.size) === String(variantMeta.size));
+        if (sizeIndex > -1) {
+          product.variants[variantIndex].sizes[sizeIndex].countInStock = Math.max(
+            product.variants[variantIndex].sizes[sizeIndex].countInStock - item.quantity,
+            0
+          );
+        }
+      }
+      product.syncStockFromVariants();
+    }
+
+    productUpdates.push(product.save());
   }
-  
-  // Create the order document
+
   const order = new Order({
     user: req.user.id,
-    items,
-    totalPrice,
+    items: orderItems,
     paymentMethod,
     shippingAddress,
+    tax,
+    shippingFee,
+    discount
   });
-  
-  // Save the order and update all product stocks concurrently
-  await Promise.all([order.save(), ...productsToUpdate]);
+
+  await Promise.all([order.save(), ...productUpdates]);
 
   // If the order was created from the cart, clear it
   if (fromCart) {
@@ -80,7 +150,7 @@ const createOrder = asyncHandler(async (req, res) => {
  */
 const getUserOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({ user: req.user.id })
-    .populate('items.product', 'name image price')
+    .populate('items.product', 'name images price slug')
     .sort({ createdAt: -1 }); // Sort by newest first
     
   res.status(200).json(orders);
@@ -93,8 +163,8 @@ const getUserOrders = asyncHandler(async (req, res) => {
  */
 const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.orderId)
-    .populate('user', 'name email')
-    .populate('items.product', 'name image price');
+  .populate('user', 'name email')
+  .populate('items.product', 'name images price slug');
     
   if (!order) {
     res.status(404);
@@ -170,6 +240,24 @@ const cancelOrder = asyncHandler(async (req, res) => {
     const product = await Product.findById(item.product);
     if (product) {
       product.countInStock += item.quantity;
+
+      if (Array.isArray(product.variants) && product.variants.length > 0) {
+        const matchedVariantIndex = product.variants.findIndex(v =>
+          item.color && v.color && v.color.toLowerCase() === String(item.color).toLowerCase()
+        );
+
+        if (matchedVariantIndex > -1 && Array.isArray(product.variants[matchedVariantIndex].sizes) && item.size) {
+          const matchedSizeIndex = product.variants[matchedVariantIndex].sizes.findIndex(s =>
+            s.size && String(s.size).toLowerCase() === String(item.size).toLowerCase()
+          );
+          if (matchedSizeIndex > -1) {
+            product.variants[matchedVariantIndex].sizes[matchedSizeIndex].countInStock += item.quantity;
+          }
+        }
+
+        product.syncStockFromVariants();
+      }
+
       await product.save();
     }
   }

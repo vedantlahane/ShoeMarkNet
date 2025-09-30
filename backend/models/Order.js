@@ -17,17 +17,17 @@ const OrderSchema = new mongoose.Schema({
   items: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, min: 1 },
-    price: { type: Number, required: true }, // Price at the time of purchase
+    price: { type: Number, required: true, min: 0 }, // Price at the time of purchase
     color: { type: String },
-    size: { type: Number }
+    size: { type: String }
   }],
   
   // Financial Details
-  totalPrice: { type: Number, required: true }, // Subtotal of all items
-  discount: { type: Number, default: 0 },
-  tax: { type: Number, default: 0 },
-  shippingFee: { type: Number, default: 0 },
-  grandTotal: { type: Number }, // Final amount paid
+  totalPrice: { type: Number, required: true, min: 0 }, // Subtotal of all items
+  discount: { type: Number, default: 0, min: 0 },
+  tax: { type: Number, default: 0, min: 0 },
+  shippingFee: { type: Number, default: 0, min: 0 },
+  grandTotal: { type: Number, min: 0 }, // Final amount paid
   
   // Payment Information
   paymentMethod: { type: String, enum: ['credit_card', 'paypal', 'cod', 'upi'], required: true },
@@ -49,23 +49,51 @@ const OrderSchema = new mongoose.Schema({
   
   // Shipping Address
   shippingAddress: {
-    fullName: { type: String, required: true },
-    addressLine1: { type: String, required: true },
-    addressLine2: { type: String },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    postalCode: { type: String, required: true },
-    country: { type: String, required: true },
-    phone: { type: String, required: true }
+    fullName: { type: String, required: true, trim: true },
+    addressLine1: { type: String, required: true, trim: true },
+    addressLine2: { type: String, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    postalCode: { type: String, required: true, trim: true },
+    country: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true }
   },
   
   // Additional Notes
   notes: { type: String }
 }, { timestamps: true }); // Mongoose adds `createdAt` and `updatedAt`
 
+OrderSchema.virtual('itemCount').get(function() {
+  return this.items.reduce((total, item) => total + item.quantity, 0);
+});
+
+OrderSchema.methods.calculateTotals = function() {
+  if (!Array.isArray(this.items) || this.items.length === 0) {
+    throw new Error('Order must contain at least one item');
+  }
+
+  this.totalPrice = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const discount = Math.min(this.discount || 0, this.totalPrice);
+  const tax = this.tax || 0;
+  const shipping = this.shippingFee || 0;
+  this.grandTotal = Math.max(this.totalPrice + tax + shipping - discount, 0);
+};
+
+OrderSchema.index({ user: 1, status: 1 });
+OrderSchema.index({ orderId: 1 });
+
 // ====================================================================
 // ========================= SCHEMA HOOKS =============================
 // ====================================================================
+
+OrderSchema.pre('validate', function(next) {
+  try {
+    this.calculateTotals();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @description Pre-save hook to automatically generate a unique order ID
@@ -77,11 +105,11 @@ OrderSchema.pre('save', function(next) {
     this.orderId = `ORD-${new Date().toISOString().slice(0, 10)}-${uuidv4().slice(0, 8)}`;
   }
   
-  // Calculate the grand total if it's not already set
-  if (!this.grandTotal) {
-    this.grandTotal = this.totalPrice + this.tax + this.shippingFee - this.discount;
+  // Totals are recalculated during validation but ensure they exist
+  if (this.grandTotal === undefined || this.grandTotal === null) {
+    this.calculateTotals();
   }
-  
+
   next();
 });
 
