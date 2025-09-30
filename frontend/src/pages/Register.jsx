@@ -301,102 +301,156 @@ const Register = () => {
         canonical="https://shoemarknet.com/register"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 relative overflow-hidden">
-        {/* Enhanced Dynamic Background Elements */}
-        <div className="absolute inset-0">
-          {/* Animated Background Shapes */}
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-pink-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
-          
-          {/* Enhanced Floating Particles */}
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-white/30 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 8}s`,
-                animationDuration: `${6 + Math.random() * 6}s`
-              }}
-            />
-          ))}
-        </div>
-
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="w-full max-w-lg">
-              
-              {/* Enhanced Header Section */}
-              <div className="text-center mb-8">
-                {/* Logo */}
-                <Link 
-                  to="/" 
-                  className="inline-flex items-center space-x-3 mb-6 group transition-transform duration-200 hover:scale-105"
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_520px]">
+          <section className="relative hidden overflow-hidden lg:flex">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />
+            <div className="absolute -top-32 -left-24 h-72 w-72 rounded-full bg-white/25 blur-3xl" />
+            <div className="absolute bottom-[-180px] right-[-140px] h-[420px] w-[420px] rounded-full bg-violet-400/25 blur-3xl" />
+            <div className="relative z-10 flex h-full flex-col justify-between px-12 py-16 text-white">
+              <div>
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-3 text-base font-semibold text-white/90 transition-colors duration-200 hover:text-white"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center text-white font-bold text-2xl shadow-2xl group-hover:shadow-3xl transition-all duration-200">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
                     S
-                  </div>
-                  <span className="text-3xl font-bold text-white">ShoeMarkNet</span>
+                  </span>
+                  ShoeMarkNet
                 </Link>
+                <p className="mt-6 max-w-sm text-sm text-white/70">
+                  Create your ShoeMarkNet account to unlock curated drops, wishlists in sync, and faster checkout every time you shop.
+                </p>
+              </div>
 
-                {/* Enhanced Welcome Badge */}
-                <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl px-6 py-3 mb-6 inline-block">
-                  <div className="flex items-center space-x-2 text-white">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <i className="fas fa-user-plus text-green-400"></i>
-                    <span className="text-sm font-medium">Join Our Community</span>
-                    {retryCount > 0 && (
-                      <span className="text-xs bg-yellow-500/20 px-2 py-1 rounded-full">
-                        Attempt {retryCount + 1}
+              <div className="space-y-10">
+                <div>
+                  <h2 className="max-w-xl text-4xl font-semibold leading-tight">
+                    Build your collection with insider access.
+                  </h2>
+                  <p className="mt-4 max-w-md text-white/70">
+                    Members get exclusive launch alerts, restock reminders, and first dibs on limited releases tailored to their taste.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
+                    <div className="flex items-center gap-3 text-sm font-semibold">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                        <i className="fas fa-gem"></i>
                       </span>
-                    )}
+                      Member exclusives
+                    </div>
+                    <p className="mt-3 text-xs text-white/70">
+                      Unlock invite-only drops and pricing reserved for loyal collectors.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
+                    <div className="flex items-center gap-3 text-sm font-semibold">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                        <i className="fas fa-bell"></i>
+                      </span>
+                      Restock alerts
+                    </div>
+                    <p className="mt-3 text-xs text-white/70">
+                      Stay ahead with instant notifications when sizes return.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur sm:col-span-2">
+                    <div className="flex items-center gap-3 text-sm font-semibold">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                        <i className="fas fa-heart"></i>
+                      </span>
+                      Personalized picks
+                    </div>
+                    <p className="mt-3 text-xs text-white/70">
+                      Save your wishlist and receive recommendations tuned to your vibe.
+                    </p>
                   </div>
                 </div>
 
-                <h1 className="text-4xl font-bold text-white mb-2">Create Account</h1>
-                <p className="text-blue-100 text-lg">
-                  <i className="fas fa-gift mr-2"></i>
-                  Join thousands of happy customers and get exclusive deals
-                </p>
-
-                {/* Return path indicator */}
-                {redirectPath !== '/' && (
-                  <div className="mt-4 text-sm text-blue-200 bg-blue-500/20 rounded-lg px-3 py-2 inline-block">
-                    <i className="fas fa-arrow-left mr-1"></i>
-                    After registration, you'll return to: {redirectPath}
+                <div className="flex items-center gap-6 text-sm text-white/70">
+                  <div>
+                    <p className="text-3xl font-bold text-white">180k+</p>
+                    <p>Creators in the community</p>
                   </div>
-                )}
+                  <div className="h-10 w-px bg-white/20" />
+                  <div>
+                    <p className="text-3xl font-bold text-white">92%</p>
+                    <p>Faster checkout completion</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12">
+            <div className="w-full max-w-md space-y-10">
+              <div className="space-y-4">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-3 text-lg font-semibold text-slate-900 transition-colors duration-200 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 lg:hidden"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                    S
+                  </span>
+                  ShoeMarkNet
+                </Link>
+
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+                    Create your account
+                  </h1>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                    Join ShoeMarkNet to track orders, unlock exclusive drops, and sync your wishlist anywhere.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/30 dark:text-blue-200">
+                    <i className="fas fa-lock"></i>
+                    Secure registration
+                  </span>
+                  {retryCount > 0 && (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/30 dark:text-amber-200">
+                      <i className="fas fa-sync"></i>
+                      Attempt {retryCount + 1}
+                    </span>
+                  )}
+                  {redirectPath !== '/' && (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/30 dark:text-emerald-200">
+                      <i className="fas fa-location-arrow"></i>
+                      Redirect to {redirectPath}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Enhanced Main Registration Card */}
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 mb-6">
-                
-                {/* Enhanced Error Display */}
+              <div className="space-y-6 rounded-3xl border border-slate-200/80 bg-white p-8 shadow-xl dark:border-slate-800 dark:bg-slate-900">
                 {errorMessage && (
-                  <div className="bg-red-500/20 backdrop-blur-lg border border-red-300/50 text-red-100 px-6 py-4 rounded-2xl mb-6 animate-shake">
-                    <div className="flex items-start">
-                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-1">
-                        <i className="fas fa-exclamation-triangle text-white text-sm"></i>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm mb-1">Registration Failed</p>
-                        <p className="text-xs text-red-200">{errorMessage}</p>
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-200">
+                        <i className="fas fa-exclamation-triangle"></i>
+                      </span>
+                      <div className="space-y-2">
+                        <p className="font-semibold">We couldn't complete your registration</p>
+                        <p className="text-xs leading-5 text-red-600/80 dark:text-red-300">{errorMessage}</p>
                         {retryCount >= 2 && (
-                          <div className="mt-2 flex items-center space-x-2">
-                            <button 
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium">
+                            <button
+                              type="button"
                               onClick={handleDemoFill}
-                              className="text-xs text-red-200 hover:text-white underline"
+                              className="text-red-600 underline transition-colors hover:text-red-500 dark:text-red-200 dark:hover:text-red-100"
                             >
                               Try demo data
                             </button>
-                            <span className="text-red-300">|</span>
-                            <button 
+                            <button
+                              type="button"
                               onClick={() => dispatch(clearAllErrors())}
-                              className="text-xs text-red-200 hover:text-white underline"
+                              className="text-red-600 underline transition-colors hover:text-red-500 dark:text-red-200 dark:hover:text-red-100"
                             >
-                              Clear error
+                              Clear message
                             </button>
                           </div>
                         )}
@@ -404,463 +458,393 @@ const Register = () => {
                     </div>
                   </div>
                 )}
-                
-                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-                  
-                  {/* Enhanced Name Field */}
-                  <div className="space-y-2">
-                    <label htmlFor="name" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-user mr-2 text-blue-300"></i>
-                      Full Name *
+
+                <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                  <div className="space-y-1.5">
+                    <label htmlFor="name" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Full name
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-user"></i>
+                      </span>
                       <input
                         type="text"
                         id="name"
                         name="name"
                         ref={nameInputRef}
-                        className={`w-full px-4 py-4 pl-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        className={`w-full rounded-2xl border px-4 py-3 pl-12 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
                           formTouched.name && !validation.name.isValid
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'border-white/20 focus:ring-blue-400 focus:border-transparent'
-                        }`}
-                        placeholder="Enter your full name"
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
+                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900/70`}
+                        placeholder="Jane Doe"
                         value={formData.name}
                         onChange={handleInputChange('name')}
                         onBlur={handleInputBlur('name')}
                         autoComplete="name"
-                        aria-describedby={formTouched.name && !validation.name.isValid ? "name-error" : undefined}
+                        aria-describedby={formTouched.name && !validation.name.isValid ? 'name-error' : undefined}
                         required
                       />
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-user text-blue-300"></i>
-                      </div>
                       {formData.name && validation.name.isValid && (
-                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                          <i className="fas fa-check-circle text-green-400"></i>
-                        </div>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500">
+                          <i className="fas fa-check-circle"></i>
+                        </span>
                       )}
                     </div>
-                    
-                    {/* Name validation message */}
                     {formTouched.name && !validation.name.isValid && (
-                      <p id="name-error" className="text-red-300 text-xs flex items-center">
-                        <i className="fas fa-exclamation-circle mr-1"></i>
+                      <p id="name-error" className="text-xs text-red-500 dark:text-red-300">
                         {validation.name.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Enhanced Email Field */}
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-envelope mr-2 text-purple-300"></i>
-                      Email Address *
+                  <div className="space-y-1.5">
+                    <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Email address
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-envelope"></i>
+                      </span>
                       <input
                         type="email"
                         id="email"
                         name="email"
-                        className={`w-full px-4 py-4 pl-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        className={`w-full rounded-2xl border px-4 py-3 pl-12 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
                           formTouched.email && !validation.email.isValid
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'border-white/20 focus:ring-purple-400 focus:border-transparent'
-                        }`}
-                        placeholder="Enter your email address"
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
+                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900/70`}
+                        placeholder="name@example.com"
                         value={formData.email}
                         onChange={handleInputChange('email')}
                         onBlur={handleInputBlur('email')}
                         autoComplete="email"
-                        aria-describedby={formTouched.email && !validation.email.isValid ? "email-error" : undefined}
+                        aria-describedby={formTouched.email && !validation.email.isValid ? 'email-error' : undefined}
                         required
                       />
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-envelope text-purple-300"></i>
-                      </div>
                       {formData.email && validation.email.isValid && (
-                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                          <i className="fas fa-check-circle text-green-400"></i>
-                        </div>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500">
+                          <i className="fas fa-check-circle"></i>
+                        </span>
                       )}
                     </div>
-                    
-                    {/* Email validation message */}
                     {formTouched.email && !validation.email.isValid && (
-                      <p id="email-error" className="text-red-300 text-xs flex items-center">
-                        <i className="fas fa-exclamation-circle mr-1"></i>
+                      <p id="email-error" className="text-xs text-red-500 dark:text-red-300">
                         {validation.email.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Enhanced Phone Field */}
-                  <div className="space-y-2">
-                    <label htmlFor="phone" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-phone mr-2 text-green-300"></i>
-                      Phone Number *
+                  <div className="space-y-1.5">
+                    <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Phone number
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-phone"></i>
+                      </span>
                       <input
                         type="tel"
                         id="phone"
                         name="phone"
-                        className={`w-full px-4 py-4 pl-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        className={`w-full rounded-2xl border px-4 py-3 pl-12 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
                           formTouched.phone && !validation.phone.isValid
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'border-white/20 focus:ring-green-400 focus:border-transparent'
-                        }`}
-                        placeholder="Enter your phone number"
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
+                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900/70`}
+                        placeholder="+1 (555) 000-0000"
                         value={formData.phone}
                         onChange={handleInputChange('phone')}
                         onBlur={handleInputBlur('phone')}
                         autoComplete="tel"
-                        aria-describedby={formTouched.phone && !validation.phone.isValid ? "phone-error" : undefined}
+                        aria-describedby={formTouched.phone && !validation.phone.isValid ? 'phone-error' : undefined}
                         required
                       />
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-phone text-green-300"></i>
-                      </div>
                       {formData.phone && validation.phone.isValid && (
-                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                          <i className="fas fa-check-circle text-green-400"></i>
-                        </div>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500">
+                          <i className="fas fa-check-circle"></i>
+                        </span>
                       )}
                     </div>
-                    
-                    {/* Phone validation message */}
                     {formTouched.phone && !validation.phone.isValid && (
-                      <p id="phone-error" className="text-red-300 text-xs flex items-center">
-                        <i className="fas fa-exclamation-circle mr-1"></i>
+                      <p id="phone-error" className="text-xs text-red-500 dark:text-red-300">
                         {validation.phone.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Enhanced Password Field */}
-                  <div className="space-y-2">
-                    <label htmlFor="password" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-lock mr-2 text-yellow-300"></i>
-                      Password *
+                  <div className="space-y-1.5">
+                    <label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Password
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-lock"></i>
+                      </span>
                       <input
-                        type={showPassword ? "text" : "password"}
+                        type={showPassword ? 'text' : 'password'}
                         id="password"
                         name="password"
-                        className={`w-full px-4 py-4 pl-12 pr-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        className={`w-full rounded-2xl border px-4 py-3 pl-12 pr-12 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
                           formTouched.password && !validation.password.isValid
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'border-white/20 focus:ring-yellow-400 focus:border-transparent'
-                        }`}
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
+                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900/70`}
                         placeholder="Create a strong password"
                         value={formData.password}
                         onChange={handleInputChange('password')}
                         onBlur={handleInputBlur('password')}
                         autoComplete="new-password"
-                        aria-describedby={formTouched.password && !validation.password.isValid ? "password-error" : undefined}
+                        aria-describedby={formTouched.password && !validation.password.isValid ? 'password-error' : undefined}
                         required
                       />
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-lock text-yellow-300"></i>
-                      </div>
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors duration-200"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                       </button>
                     </div>
-                    
-                    {/* Password validation message */}
                     {formTouched.password && !validation.password.isValid && (
-                      <p id="password-error" className="text-red-300 text-xs flex items-center">
-                        <i className="fas fa-exclamation-circle mr-1"></i>
+                      <p id="password-error" className="text-xs text-red-500 dark:text-red-300">
                         {validation.password.message}
                       </p>
                     )}
-                    
-                    {/* Enhanced Password Strength Indicator */}
                     {formData.password && (
-                      <PasswordStrengthIndicator 
-                        password={formData.password} 
-                        className="mt-2"
-                        strength={passwordStrength}
-                      />
+                      <PasswordStrengthIndicator password={formData.password} strength={passwordStrength} className="mt-3" />
                     )}
                   </div>
 
-                  {/* Enhanced Confirm Password Field */}
-                  <div className="space-y-2">
-                    <label htmlFor="confirmPassword" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-shield-alt mr-2 text-pink-300"></i>
-                      Confirm Password *
+                  <div className="space-y-1.5">
+                    <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Confirm password
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-shield-alt"></i>
+                      </span>
                       <input
-                        type={showConfirmPassword ? "text" : "password"}
+                        type={showConfirmPassword ? 'text' : 'password'}
                         id="confirmPassword"
                         name="confirmPassword"
-                        className={`w-full px-4 py-4 pl-12 pr-12 bg-white/10 backdrop-blur-lg border rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                        className={`w-full rounded-2xl border px-4 py-3 pl-12 pr-12 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
                           formTouched.confirmPassword && !validation.confirmPassword.isValid
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'border-white/20 focus:ring-pink-400 focus:border-transparent'
-                        }`}
-                        placeholder="Confirm your password"
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
+                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900/70`}
+                        placeholder="Re-enter your password"
                         value={formData.confirmPassword}
                         onChange={handleInputChange('confirmPassword')}
                         onBlur={handleInputBlur('confirmPassword')}
                         autoComplete="new-password"
-                        aria-describedby={formTouched.confirmPassword && !validation.confirmPassword.isValid ? "confirm-password-error" : undefined}
+                        aria-describedby={formTouched.confirmPassword && !validation.confirmPassword.isValid ? 'confirm-password-error' : undefined}
                         required
                       />
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-shield-alt text-pink-300"></i>
-                      </div>
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors duration-200"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                         aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                       >
                         <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                       </button>
                     </div>
-                    
-                    {/* Confirm password validation message */}
                     {formTouched.confirmPassword && !validation.confirmPassword.isValid && (
-                      <p id="confirm-password-error" className="text-red-300 text-xs flex items-center">
-                        <i className="fas fa-exclamation-circle mr-1"></i>
+                      <p id="confirm-password-error" className="text-xs text-red-500 dark:text-red-300">
                         {validation.confirmPassword.message}
                       </p>
                     )}
-                    
-                    {/* Password Match Indicator */}
                     {formData.confirmPassword && (
-                      <div className={`flex items-center text-xs transition-colors duration-200 ${
-                        validation.confirmPassword.isValid ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        <i className={`fas ${validation.confirmPassword.isValid ? 'fa-check-circle' : 'fa-times-circle'} mr-2`}></i>
-                        {validation.confirmPassword.isValid ? 'Passwords match!' : 'Passwords do not match'}
+                      <div
+                        className={`text-xs font-medium ${
+                          validation.confirmPassword.isValid
+                            ? 'text-emerald-600 dark:text-emerald-300'
+                            : 'text-red-600 dark:text-red-300'
+                        }`}
+                      >
+                        {validation.confirmPassword.isValid ? 'Passwords match' : 'Passwords do not match'}
                       </div>
                     )}
                   </div>
 
-                  {/* Enhanced Source Selection */}
-                  <div className="space-y-2">
-                    <label htmlFor="source" className="block text-white font-semibold text-sm">
-                      <i className="fas fa-question-circle mr-2 text-cyan-300"></i>
+                  <div className="space-y-1.5">
+                    <label htmlFor="source" className="text-sm font-medium text-slate-700 dark:text-slate-200">
                       How did you hear about us?
                     </label>
                     <div className="relative">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                        <i className="fas fa-bullhorn"></i>
+                      </span>
                       <select
                         id="source"
                         name="source"
-                        className="w-full px-4 py-4 pl-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200 appearance-none cursor-pointer"
+                        className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pl-12 text-sm font-medium text-slate-900 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
                         value={formData.source}
                         onChange={handleInputChange('source')}
                       >
-                        <option value="direct" className="bg-gray-800 text-white">Direct Visit</option>
-                        <option value="google" className="bg-gray-800 text-white">Google Search</option>
-                        <option value="facebook" className="bg-gray-800 text-white">Facebook</option>
-                        <option value="instagram" className="bg-gray-800 text-white">Instagram</option>
-                        <option value="twitter" className="bg-gray-800 text-white">Twitter</option>
-                        <option value="referral" className="bg-gray-800 text-white">Friend Referral</option>
-                        <option value="advertisement" className="bg-gray-800 text-white">Advertisement</option>
-                        <option value="other" className="bg-gray-800 text-white">Other</option>
+                        <option value="direct">Direct visit</option>
+                        <option value="google">Google search</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="referral">Friend referral</option>
+                        <option value="advertisement">Advertisement</option>
+                        <option value="other">Other</option>
                       </select>
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <i className="fas fa-question-circle text-cyan-300"></i>
-                      </div>
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                        <i className="fas fa-chevron-down text-blue-300"></i>
-                      </div>
+                      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        <i className="fas fa-chevron-down"></i>
+                      </span>
                     </div>
                   </div>
 
-                  {/* Enhanced Terms and Conditions */}
-                  <div className="flex items-start space-x-3">
-                    <div className="relative mt-1">
-                      <input
-                        type="checkbox"
-                        id="acceptTerms"
-                        checked={acceptTerms}
-                        onChange={(e) => setAcceptTerms(e.target.checked)}
-                        className="sr-only"
-                        aria-describedby="terms-description"
-                      />
-                      <div 
-                        onClick={() => setAcceptTerms(!acceptTerms)}
-                        className={`w-6 h-6 rounded-lg border-2 border-white/30 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 ${
-                          acceptTerms ? 'bg-gradient-to-r from-blue-500 to-purple-500 border-blue-400' : 'bg-white/10 hover:bg-white/20'
-                        }`}
-                        role="checkbox"
-                        aria-checked={acceptTerms}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            setAcceptTerms(!acceptTerms);
-                          }
-                        }}
-                      >
-                        {acceptTerms && <i className="fas fa-check text-white text-sm"></i>}
-                      </div>
-                    </div>
-                    <label htmlFor="acceptTerms" id="terms-description" className="text-blue-100 text-sm leading-relaxed cursor-pointer">
+                  <label className={`flex items-start gap-3 rounded-2xl border px-4 py-4 text-sm font-medium transition ${
+                    acceptTerms
+                      ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-200'
+                      : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      id="acceptTerms"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+                      aria-describedby="terms-description"
+                    />
+                    <span className="space-y-1" id="terms-description">
                       I agree to the{' '}
-                      <Link 
-                        to="/terms" 
-                        className="text-blue-300 hover:text-white underline transition-colors duration-200"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <Link to="/terms" className="text-blue-600 underline transition-colors hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200" target="_blank" rel="noopener noreferrer">
                         Terms of Service
-                      </Link>
-                      {' '}and{' '}
-                      <Link 
-                        to="/privacy" 
-                        className="text-blue-300 hover:text-white underline transition-colors duration-200"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      </Link>{' '}
+                      and{' '}
+                      <Link to="/privacy" className="text-blue-600 underline transition-colors hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200" target="_blank" rel="noopener noreferrer">
                         Privacy Policy
                       </Link>
-                      {!acceptTerms && <span className="text-red-300 ml-1">*</span>}
-                    </label>
-                  </div>
-                  
-                  {/* Enhanced Submit Button */}
+                      {!acceptTerms && <span className="ml-1 text-red-500">*</span>}
+                    </span>
+                  </label>
+
                   <button
                     type="submit"
                     disabled={registerLoading || !validation.isValid}
-                    className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-200 transform relative overflow-hidden ${
-                      registerLoading || !validation.isValid
-                        ? 'bg-gray-500/50 cursor-not-allowed text-gray-300 scale-100'
-                        : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-2xl hover:scale-105 active:scale-95'
-                    }`}
+                    className="w-full rounded-2xl bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-50 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 dark:focus:ring-offset-slate-900 dark:hover:bg-blue-500 dark:disabled:bg-slate-600"
                   >
                     {registerLoading ? (
-                      <div className="flex items-center justify-center space-x-2">
+                      <span className="flex items-center justify-center gap-2">
                         <LoadingSpinner size="small" />
-                        <span>Creating Account...</span>
-                      </div>
+                        Creating account...
+                      </span>
                     ) : (
-                      <div className="flex items-center justify-center space-x-2">
+                      <span className="flex items-center justify-center gap-2">
                         <i className="fas fa-user-plus"></i>
-                        <span>Create Account</span>
-                        <i className="fas fa-arrow-right"></i>
-                      </div>
-                    )}
-                    
-                    {/* Button shine effect */}
-                    {!registerLoading && validation.isValid && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                        Create account
+                      </span>
                     )}
                   </button>
 
-                  {/* Demo Fill Button */}
                   <button
                     type="button"
                     onClick={handleDemoFill}
-                    className="w-full py-3 px-6 bg-white/10 backdrop-blur-lg border border-white/20 text-white rounded-2xl font-medium hover:bg-white/20 transition-all duration-200 transform hover:scale-105 group"
                     disabled={registerLoading}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
-                    <i className="fas fa-magic mr-2 group-hover:animate-pulse"></i>
-                    Fill Demo Data
-                    <span className="text-xs ml-2 text-blue-200">(Alt + D)</span>
+                    <span className="inline-flex items-center gap-2">
+                      <i className="fas fa-magic"></i>
+                      Fill demo data
+                      <span className="text-xs text-slate-500 dark:text-slate-400">(Alt + D)</span>
+                    </span>
                   </button>
                 </form>
               </div>
 
-              {/* Enhanced Social Registration Options */}
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6">
-                <div className="text-center mb-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/20"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-3 bg-white/10 text-blue-100 rounded-full">Or sign up with</span>
-                    </div>
-                  </div>
+              <div className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                <div className="relative flex items-center">
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  <span className="mx-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Or sign up with
+                  </span>
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
+
+                <div className="grid gap-3 sm:grid-cols-2">
                   <SocialLoginButton
                     provider="google"
                     onClick={() => handleSocialRegister('google')}
                     disabled={registerLoading}
-                    className="flex items-center justify-center space-x-2 py-3 px-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl text-white hover:bg-white/20 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-300"
                   >
-                    <i className="fab fa-google text-red-400"></i>
-                    <span className="text-sm font-medium">Google</span>
+                    <i className="fab fa-google text-lg text-red-500"></i>
+                    Google
                   </SocialLoginButton>
-                  
                   <SocialLoginButton
                     provider="facebook"
                     onClick={() => handleSocialRegister('facebook')}
                     disabled={registerLoading}
-                    className="flex items-center justify-center space-x-2 py-3 px-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl text-white hover:bg-white/20 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-300"
                   >
-                    <i className="fab fa-facebook-f text-blue-400"></i>
-                    <span className="text-sm font-medium">Facebook</span>
+                    <i className="fab fa-facebook-f text-lg text-blue-600"></i>
+                    Facebook
                   </SocialLoginButton>
                 </div>
-                
-                <p className="text-xs text-blue-200 text-center mt-3">
-                  By signing up with social media, you agree to our Terms & Privacy Policy
+
+                <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                  By signing up with a social account you agree to our Terms & Privacy Policy.
                 </p>
               </div>
 
-              {/* Enhanced Sign In Link */}
-              <div className="text-center">
-                <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl px-6 py-4 inline-block transition-all duration-200 hover:bg-white/20">
-                  <span className="text-blue-100 text-sm">Already have an account? </span>
-                  <Link 
-                    to="/login" 
-                    className="text-white font-semibold hover:text-blue-300 transition-colors duration-200 underline group"
-                  >
-                    <i className="fas fa-sign-in-alt mr-1 group-hover:animate-pulse"></i>
-                    Sign In
-                  </Link>
-                </div>
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-5 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                Already have an account?{' '}
+                <Link to="/login" className="font-semibold text-blue-600 underline-offset-4 transition hover:underline dark:text-blue-300">
+                  Sign in
+                </Link>
               </div>
 
-              {/* Enhanced Benefits Section */}
-              <div className="text-center mt-8">
-                <h3 className="text-white font-semibold mb-4">Join ShoeMarkNet and enjoy:</h3>
-                <div className="grid grid-cols-3 gap-4 text-blue-200 text-xs">
-                  <div className="flex flex-col items-center space-y-2 group">
-                    <div className="w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                      <i className="fas fa-gift text-yellow-400 group-hover:animate-bounce"></i>
+              <div className="space-y-6">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Why new members love ShoeMarkNet
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-200">
+                        <i className="fas fa-gift"></i>
+                      </span>
+                      Exclusive deals
                     </div>
-                    <span className="font-medium">Exclusive Deals</span>
-                    <span className="text-xs text-blue-300">Up to 70% Off</span>
+                    <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                      Seasonal promos and surprise drops designed for members first.
+                    </p>
                   </div>
-                  <div className="flex flex-col items-center space-y-2 group">
-                    <div className="w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                      <i className="fas fa-shipping-fast text-green-400 group-hover:animate-pulse"></i>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
+                        <i className="fas fa-shipping-fast"></i>
+                      </span>
+                      Free shipping perks
                     </div>
-                    <span className="font-medium">Free Shipping</span>
-                    <span className="text-xs text-blue-300">On orders $50+</span>
+                    <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                      Accelerated delivery, free returns, and live tracking updates.
+                    </p>
                   </div>
-                  <div className="flex flex-col items-center space-y-2 group">
-                    <div className="w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                      <i className="fas fa-crown text-purple-400 group-hover:animate-pulse"></i>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div className="flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-200">
+                        <i className="fas fa-crown"></i>
+                      </span>
+                      VIP access
                     </div>
-                    <span className="font-medium">VIP Access</span>
-                    <span className="text-xs text-blue-300">Early Bird Sales</span>
+                    <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                      Early entry to curated events, launch parties, and limited collabs.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-
-        {/* Enhanced Custom Styles */}
       </div>
     </>
   );
