@@ -1,6 +1,49 @@
+const mongoose = require('mongoose');
+const slugify = require('slugify');
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
+
+const findCategoryByIdentifier = async (identifier, { lean = false } = {}) => {
+  if (!identifier) return null;
+  const normalized = identifier.toString().trim();
+  if (!normalized) return null;
+
+  const execute = (query) => (lean ? query.lean() : query);
+
+  let category = null;
+
+  if (mongoose.Types.ObjectId.isValid(normalized)) {
+    category = await execute(Category.findById(normalized));
+  }
+
+  if (!category) {
+    category = await execute(Category.findOne({ slug: normalized }));
+  }
+
+  if (!category) {
+    category = await execute(Category.findOne({ path: normalized }));
+  }
+
+  if (!category) {
+    const slugCandidate = slugify(normalized, { lower: true, strict: true });
+    if (slugCandidate && slugCandidate !== normalized) {
+      category = await execute(Category.findOne({ slug: slugCandidate }));
+
+      if (!category) {
+        category = await execute(Category.findOne({ path: slugCandidate }));
+      }
+    }
+  }
+
+  if (!category) {
+    category = await execute(
+      Category.findOne({ name: { $regex: `^${normalized}$`, $options: 'i' } })
+    );
+  }
+
+  return category;
+};
 
 // ====================================================================
 // ========================= PUBLIC ROUTES ============================
@@ -39,7 +82,7 @@ const getCategoryTree = asyncHandler(async (req, res) => {
  * @access Public
  */
 const getCategoryById = asyncHandler(async (req, res) => {
-  const category = await Category.findById(req.params.id).lean();
+  const category = await findCategoryByIdentifier(req.params.id, { lean: true });
 
   if (!category) {
     res.status(404);
@@ -55,7 +98,7 @@ const getCategoryById = asyncHandler(async (req, res) => {
  * @access Public
  */
 const getCategoryBreadcrumb = asyncHandler(async (req, res) => {
-  const category = await Category.findById(req.params.id);
+  const category = await findCategoryByIdentifier(req.params.id);
   
   if (!category) {
     res.status(404);
@@ -75,7 +118,14 @@ const getCategoryBreadcrumb = asyncHandler(async (req, res) => {
 const getProductsByCategory = asyncHandler(async (req, res) => {
   const { minPrice, maxPrice, sort, page = 1, limit = 10 } = req.query;
 
-  const filters = { category: req.params.id, isActive: true };
+  const category = await findCategoryByIdentifier(req.params.id);
+
+  if (!category) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+
+  const filters = { category: category._id, isActive: true };
 
   // Price range filtering
   if (minPrice || maxPrice) {
@@ -120,7 +170,7 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
  * @access Public
  */
 const getProductsByCategoryTree = asyncHandler(async (req, res) => {
-  const category = await Category.findById(req.params.id);
+  const category = await findCategoryByIdentifier(req.params.id);
   
   if (!category) {
     res.status(404);

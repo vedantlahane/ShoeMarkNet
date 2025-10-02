@@ -68,7 +68,8 @@ const ITEMS_PER_PAGE_OPTIONS = [
 ];
 
 const Category = () => {
-  const { categoryName } = useParams();
+  const routeParams = useParams();
+  const categoryName = routeParams.categoryId || routeParams.categoryName || routeParams.slug || routeParams.id || null;
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
 

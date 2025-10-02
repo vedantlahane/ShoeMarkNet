@@ -231,7 +231,7 @@ const Footer = memo(() => {
         
         {/* Features Banner */}
         <div className="py-8 border-b border-gray-700/50">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <div
                 key={index}
@@ -252,11 +252,11 @@ const Footer = memo(() => {
 
         {/* Main Footer Content */}
         <div className="py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
             
             {/* Brand Section */}
-            <div className="lg:col-span-1">
-              <div className="flex items-center space-x-3 mb-6">
+            <div className="lg:col-span-1 flex flex-col items-center text-center gap-6 md:items-center md:text-center lg:items-start lg:text-left">
+              <div className="flex items-center justify-center space-x-3">
                 <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <span className="text-xl font-bold" aria-hidden="true">S</span>
                 </div>
@@ -264,12 +264,12 @@ const Footer = memo(() => {
                   ShoeMarkNet
                 </span>
               </div>
-              <p className="text-gray-300 mb-6 leading-relaxed">
+              <p className="text-gray-300 leading-relaxed max-w-md">
                 Premium footwear for every step of your journey. Quality, comfort, and style in every pair.
               </p>
               
               {/* Contact Cards */}
-              <div className="space-y-4">
+              <div className="space-y-4 w-full max-w-sm mx-auto lg:mx-0">
                 <div className="relative glass p-3 rounded-lg transition-all duration-300 group overflow-hidden">
                   <div className={`absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${shimmerClass}`} aria-hidden="true"></div>
                   <div className="flex items-center space-x-3">
@@ -307,7 +307,7 @@ const Footer = memo(() => {
             </div>
 
             {/* Links Sections */}
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 text-center sm:text-left">
               <nav aria-label="Company links">
                 <h3 className="text-lg font-semibold mb-6 text-white">Company</h3>
                 <ul className="space-y-3">
@@ -358,11 +358,11 @@ const Footer = memo(() => {
             </div>
 
             {/* Newsletter Section */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 flex flex-col items-center text-center sm:items-start sm:text-left">
               <h3 className="text-lg font-semibold mb-6 text-white">Stay Updated</h3>
               
               {!isSubscribed ? (
-                <form onSubmit={handleNewsletterSubmit} className="mb-8">
+                <form onSubmit={handleNewsletterSubmit} className="mb-8 w-full max-w-md">
                   <div className="glass rounded-lg p-2">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <label htmlFor="newsletter-email" className="sr-only">
@@ -391,7 +391,7 @@ const Footer = memo(() => {
                   </p>
                 </form>
               ) : (
-                <div className="glass rounded-lg p-6 mb-8 text-center">
+                <div className="glass rounded-lg p-6 mb-8 text-center w-full max-w-md">
                   <Heart className="h-8 w-8 text-red-400 mx-auto mb-3" aria-hidden="true" />
                   <p className="text-green-400 font-medium">Thanks for subscribing!</p>
                   <p className="text-gray-300 text-sm mt-1">Check your email for exclusive offers</p>
@@ -401,7 +401,7 @@ const Footer = memo(() => {
               {/* Social Media */}
               <div>
                 <h4 className="text-white font-medium mb-4">Follow Us</h4>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3" role="list" aria-label="Social media links">
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 place-items-center sm:place-items-stretch" role="list" aria-label="Social media links">
                   {socialLinks.map((social, index) => (
                     <a
                       key={index}

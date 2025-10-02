@@ -15,81 +15,42 @@ const SubcategoryNav = ({
   // Default category structure
   const defaultCategories = [
     {
-      id: '1',
+      id: 'running-shoes',
       name: 'Running Shoes',
       slug: 'running-shoes',
       icon: 'fas fa-running',
       color: 'from-blue-500 to-cyan-500',
       count: 156,
       subcategories: [
-        { id: '1a', name: 'Road Running', slug: 'road-running', count: 89 },
-        { id: '1b', name: 'Trail Running', slug: 'trail-running', count: 45 },
-        { id: '1c', name: 'Marathon', slug: 'marathon', count: 22 }
+        { id: 'road-running', name: 'Road Running', slug: 'road-running', count: 89 },
+        { id: 'trail-running', name: 'Trail Running', slug: 'trail-running', count: 45 },
+        { id: 'marathon', name: 'Marathon', slug: 'marathon', count: 22 }
       ]
     },
     {
-      id: '2',
-      name: 'Basketball',
-      slug: 'basketball',
+      id: 'basketball-shoes',
+      name: 'Basketball Shoes',
+      slug: 'basketball-shoes',
       icon: 'fas fa-basketball-ball',
       color: 'from-orange-500 to-red-500',
       count: 134,
       subcategories: [
-        { id: '2a', name: 'High Top', slug: 'high-top', count: 67 },
-        { id: '2b', name: 'Low Top', slug: 'low-top', count: 45 },
-        { id: '2c', name: 'Mid Top', slug: 'mid-top', count: 22 }
+        { id: 'high-top', name: 'High Top', slug: 'high-top', count: 67 },
+        { id: 'low-top', name: 'Low Top', slug: 'low-top', count: 45 },
+        { id: 'mid-top', name: 'Mid Top', slug: 'mid-top', count: 22 }
       ]
     },
     {
-      id: '3',
-      name: 'Casual',
-      slug: 'casual',
+      id: 'lifestyle-sneakers',
+      name: 'Lifestyle Sneakers',
+      slug: 'lifestyle-sneakers',
       icon: 'fas fa-walking',
-      color: 'from-green-500 to-emerald-500',
-      count: 198,
+      color: 'from-pink-500 to-rose-500',
+      count: 203,
       subcategories: [
-        { id: '3a', name: 'Sneakers', slug: 'sneakers', count: 89 },
-        { id: '3b', name: 'Loafers', slug: 'loafers', count: 56 },
-        { id: '3c', name: 'Canvas', slug: 'canvas', count: 53 }
-      ]
-    },
-    {
-      id: '4',
-      name: 'Formal',
-      slug: 'formal',
-      icon: 'fas fa-user-tie',
-      color: 'from-purple-500 to-pink-500',
-      count: 87,
-      subcategories: [
-        { id: '4a', name: 'Oxford', slug: 'oxford', count: 34 },
-        { id: '4b', name: 'Derby', slug: 'derby', count: 28 },
-        { id: '4c', name: 'Monk Strap', slug: 'monk-strap', count: 25 }
-      ]
-    },
-    {
-      id: '5',
-      name: 'Athletic',
-      slug: 'athletic',
-      icon: 'fas fa-dumbbell',
-      color: 'from-indigo-500 to-blue-500',
-      count: 112,
-      subcategories: [
-        { id: '5a', name: 'Cross Training', slug: 'cross-training', count: 45 },
-        { id: '5b', name: 'Gym', slug: 'gym', count: 38 },
-        { id: '5c', name: 'Tennis', slug: 'tennis', count: 29 }
-      ]
-    },
-    {
-      id: '6',
-      name: 'Boots',
-      slug: 'boots',
-      icon: 'fas fa-hiking',
-      color: 'from-yellow-500 to-orange-500',
-      count: 78,
-      subcategories: [
-        { id: '6a', name: 'Work Boots', slug: 'work-boots', count: 32 },
-        { id: '6b', name: 'Hiking Boots', slug: 'hiking-boots', count: 28 },
-        { id: '6c', name: 'Fashion Boots', slug: 'fashion-boots', count: 18 }
+        { id: 'street-style', name: 'Street Style', slug: 'street-style', count: 89 },
+        { id: 'limited-edition', name: 'Limited Edition', slug: 'limited-edition', count: 56 },
+        { id: 'collaborations', name: 'Collaborations', slug: 'collaborations', count: 53 }
       ]
     }
   ];
@@ -150,8 +111,8 @@ const SubcategoryNav = ({
     } else {
       // Default navigation behavior
       const path = subcategory 
-        ? `/category/${category.slug}/${subcategory.slug}`
-        : `/category/${category.slug}`;
+        ? `/categories/${category.slug}?sub=${subcategory.slug}`
+        : `/categories/${category.slug}`;
       navigate(path);
     }
 

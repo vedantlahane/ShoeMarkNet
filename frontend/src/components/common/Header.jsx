@@ -336,7 +336,7 @@ const Header = () => {
         role="banner"
       >
   <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
-          <div className="flex items-center justify-between h-16 lg:h-20">
+    <div className="flex flex-wrap items-center justify-between gap-3 md:gap-6 py-3 lg:py-4">
             
             {/* Logo */}
             <div className="flex items-center">
@@ -389,7 +389,7 @@ const Header = () => {
             </nav>
 
             {/* Search, Actions & User Menu */}
-            <div className="flex items-center space-x-3">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 md:w-auto">
               
               {/* Search Toggle */}
               <button
@@ -476,18 +476,18 @@ const Header = () => {
                     />
                   </button>
                 ) : (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2 max-[420px]:w-full max-[420px]:flex-col max-[420px]:items-stretch">
                     <Link
                       to="/login"
                       {...createPrefetchProps('/login')}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 max-[420px]:w-full text-center"
                     >
                       Sign In
                     </Link>
                     <Link
                       to="/register"
                       {...createPrefetchProps('/register')}
-                      className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 max-[420px]:w-full text-center"
                     >
                       Sign Up
                     </Link>

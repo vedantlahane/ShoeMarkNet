@@ -23,7 +23,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const DEFAULT_CATEGORIES = [
   {
-    id: 1,
+    id: 'running-shoes',
     name: 'Running Shoes',
     slug: 'running-shoes',
     count: 156,
@@ -37,9 +37,9 @@ const DEFAULT_CATEGORIES = [
     stats: { avgRating: 4.8, sales: 1234, trending: true }
   },
   {
-    id: 2,
-    name: 'Basketball',
-    slug: 'basketball',
+    id: 'basketball-shoes',
+    name: 'Basketball Shoes',
+    slug: 'basketball-shoes',
     count: 134,
     image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?q=80&w=400&auto=format&fit=crop',
     color: 'from-purple-400 to-pink-500',
@@ -51,51 +51,9 @@ const DEFAULT_CATEGORIES = [
     stats: { avgRating: 4.6, sales: 987, trending: false }
   },
   {
-    id: 3,
-    name: 'Casual',
-    slug: 'casual',
-    count: 198,
-    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop',
-    color: 'from-green-400 to-blue-500',
-    lucideIcon: Star,
-    description: 'Style & Comfort',
-    badge: 'Popular',
-    badgeColor: 'from-green-500 to-blue-500',
-    features: ['Versatile', 'All-Day Comfort', 'Stylish'],
-    stats: { avgRating: 4.7, sales: 1567, trending: true }
-  },
-  {
-    id: 4,
-    name: 'Formal',
-    slug: 'formal',
-    count: 87,
-    image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=400&auto=format&fit=crop',
-    color: 'from-gray-600 to-gray-800',
-    lucideIcon: Briefcase,
-    description: 'Elegance & Class',
-    badge: 'Premium',
-    badgeColor: 'from-gray-600 to-black',
-    features: ['Leather', 'Handcrafted', 'Timeless'],
-    stats: { avgRating: 4.9, sales: 456, trending: false }
-  },
-  {
-    id: 5,
-    name: 'Athletic',
-    slug: 'athletic',
-    count: 112,
-    image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=400&auto=format&fit=crop',
-    color: 'from-cyan-400 to-teal-500',
-    lucideIcon: Dumbbell,
-    description: 'Performance First',
-    badge: 'New',
-    badgeColor: 'from-cyan-500 to-teal-500',
-    features: ['Multi-Sport', 'Performance', 'Innovation'],
-    stats: { avgRating: 4.5, sales: 789, trending: true }
-  },
-  {
-    id: 6,
-    name: 'Lifestyle',
-    slug: 'lifestyle',
+    id: 'lifestyle-sneakers',
+    name: 'Lifestyle Sneakers',
+    slug: 'lifestyle-sneakers',
     count: 203,
     image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=400&auto=format&fit=crop',
     color: 'from-pink-400 to-rose-500',
