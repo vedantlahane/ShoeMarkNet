@@ -374,7 +374,7 @@ const Header = () => {
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <IconComponent size={18} aria-hidden="true" />
-                    <span className="font-medium">{link.label}</span>
+                    <span className="text-sm font-medium lg:text-base">{link.label}</span>
                     {link.badge && (
                       <span 
                         className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 text-xs font-bold text-white rounded-full"
@@ -603,7 +603,7 @@ const Header = () => {
                       to={link.to}
                       {...createPrefetchProps(link.to)}
                       onClick={() => setIsMenuOpen(false)}
-                      className={`relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base ${
                         isActive 
                           ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 hover:text-blue-600 dark:hover:text-blue-400'

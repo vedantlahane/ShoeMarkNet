@@ -1,11 +1,19 @@
+/**
+ * Authentication Controller
+ * Handles user registration, login, profile management, password reset, email verification, and token refresh.
+ */
+
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const { updateLeadScore } = require('./leadScoreController');
-const crypto = require('crypto');
+const crypto = require('crypto'); 
 const sendEmail = require('../utils/sendEmail');
 
-/** Generate JWT Token */
+/**
+ * Generates a JWT access token for the user.
+ * @param {Object} user - User object from database
+ * @returns {string} JWT token
+ */
 const generateToken = (user) =>
   jwt.sign(
     { id: user._id, role: user.role },
@@ -21,6 +29,12 @@ const generateRefreshToken = (user) =>
     { expiresIn: '30d' }
   );
 
+/**
+ * Builds a sanitized user response object for authentication endpoints.
+ * Excludes sensitive fields like password.
+ * @param {Object} user - User document from database
+ * @returns {Object} Sanitized user object
+ */
 const buildAuthUserResponse = (user) => ({
   id: user._id,
   _id: user._id,
@@ -36,7 +50,12 @@ const buildAuthUserResponse = (user) => ({
   updatedAt: user.updatedAt
 });
 
-/** Register */
+/**
+ * Registers a new user account.
+ * Validates input, checks for existing user, creates user, generates tokens, and updates lead score.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const register = async (req, res) => {
   try {
     const { name, email, phone, password, source } = req.body;
@@ -58,6 +77,7 @@ const register = async (req, res) => {
     const token = generateToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    // Update lead score for registration activity
     try { await updateLeadScore(user._id, 'register'); } catch (e) {}
 
     // Set refresh token in cookie (production)
@@ -85,7 +105,12 @@ const register = async (req, res) => {
   }
 };
 
-/** Login */
+/**
+ * Authenticates a user with email and password.
+ * Generates tokens and updates last login time.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -108,6 +133,7 @@ const login = async (req, res) => {
 
     const responseUser = buildAuthUserResponse(user);
 
+    // Update lead score for login activity
     try { await updateLeadScore(user._id, 'login'); } catch (e) {}
 
     if (process.env.NODE_ENV === 'production') {
@@ -129,22 +155,31 @@ const login = async (req, res) => {
   }
 };
 
-/** Get Profile */
+/**
+ * Retrieves the authenticated user's profile.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const getProfile = async (req, res) => {
   try {
     if (!req.user || !req.user.id)
       return res.status(401).json({ message: 'Not authenticated' });
 
-    const user = await User.findById(req.user.id).select('-password -resetPasswordToken -resetPasswordExpire');
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    res.status(200).json(user);
+    const responseUser = buildAuthUserResponse(user);
+    res.status(200).json(responseUser);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: process.env.NODE_ENV === 'production' ? 'Server error' : error.message });
   }
 };
 
-/** Update Profile */
+/**
+ * Updates the authenticated user's profile.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const updateProfile = async (req, res) => {
   try {
     if (!req.user || !req.user.id)
@@ -163,18 +198,23 @@ const updateProfile = async (req, res) => {
     await user.save();
 
     // Return updated user without sensitive data
-    const updatedUser = await User.findById(req.user.id).select('-password -resetPasswordToken -resetPasswordExpire');
+    const updatedUser = await User.findById(req.user.id);
+    const responseUser = buildAuthUserResponse(updatedUser);
     
     res.status(200).json({
       message: 'Profile updated successfully',
-      user: updatedUser
+      user: responseUser
     });
   } catch (error) {
     res.status(500).json({ message: 'Error updating profile', error: process.env.NODE_ENV === 'production' ? 'Server error' : error.message });
   }
 };
 
-/** Forgot Password */
+/**
+ * Initiates password reset by sending an email with reset link.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -218,7 +258,11 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-/** Reset Password */
+/**
+ * Resets the user's password using a reset token.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -263,7 +307,11 @@ const resetPassword = async (req, res) => {
   }
 };
 
-/** Verify Email */
+/**
+ * Verifies the user's email using a verification token.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
@@ -287,7 +335,11 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-/** Refresh Token */
+/**
+ * Refreshes the access token using a refresh token.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const refreshToken = async (req, res) => {
   try {
     const token = req.body.refreshToken || req.cookies.refreshToken;
@@ -326,7 +378,11 @@ const refreshToken = async (req, res) => {
   }
 };
 
-/** Logout */
+/**
+ * Logs out the user by clearing the refresh token cookie.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 const logout = async (req, res) => {
   try {
     res.clearCookie('refreshToken');
