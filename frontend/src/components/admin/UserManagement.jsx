@@ -137,7 +137,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
   // Keyboard shortcuts
   useKeyboardShortcuts({
     'ctrl+n': () => hasPermission('users.create') && openCreateModal(),
-    'ctrl+r': handleRefresh,
+    'ctrl+r': () => handleRefresh(),
     'ctrl+e': () => setShowExportModal(true),
     'ctrl+i': () => setShowImportModal(true),
     'ctrl+f': () => searchInputRef.current?.focus(),

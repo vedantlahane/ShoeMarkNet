@@ -123,7 +123,9 @@ const AdminDashboard = ({ section = "overview" }) => {
     dashboard: false,
     products: false,
     orders: false,
-    users: false
+    users: false,
+    analytics: false,
+    settings: false
   });
 
   // Refs
@@ -334,6 +336,7 @@ const AdminDashboard = ({ section = "overview" }) => {
           break;
         
         default:
+          setDataLoadingStatus(prev => ({ ...prev, [sectionId]: true }));
           break;
       }
     } catch (error) {
@@ -341,6 +344,15 @@ const AdminDashboard = ({ section = "overview" }) => {
       toast.error(`Failed to load ${sectionId} data`);
     }
   }, [dispatch, dataLoadingStatus]);
+
+  // Ensure active section data is loaded on mount and when section changes
+  useEffect(() => {
+    if (!activeSection) return;
+
+    if (!dataLoadingStatus[activeSection]) {
+      loadSectionData(activeSection);
+    }
+  }, [activeSection, dataLoadingStatus, loadSectionData]);
 
   // Handle notification click
   const handleNotificationClick = useCallback((notification) => {

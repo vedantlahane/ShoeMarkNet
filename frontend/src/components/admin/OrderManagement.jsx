@@ -107,7 +107,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
-    'ctrl+r': handleRefresh,
+    'ctrl+r': () => handleRefresh(),
     'ctrl+e': () => setShowExportModal(true),
     'ctrl+f': () => document.getElementById('order-search')?.focus(),
     'delete': () => selectedOrders.length > 0 && handleBulkAction('delete')

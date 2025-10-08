@@ -159,7 +159,7 @@ const Home = () => {
           <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(15,23,42,0.9)_0%,rgba(15,23,42,0.65)_40%,rgba(30,41,59,0.55)_100%)]" aria-hidden="true" />
         </div>
 
-        <div className="relative z-10 flex flex-col gap-24 pb-24">
+        <div className="relative z-10 flex flex-col">
           {/* Hero section - Main banner and call-to-action */}
           <HeroSection />
 
