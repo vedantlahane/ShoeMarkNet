@@ -18,12 +18,12 @@ import ErrorMessage from '../common/ErrorMessage';
 import Pagination from '../common/Pagination';
 import OrderCard from '../orders/OrderCard';
 import OrderTable from '../orders/OrderTable';
-// import OrderDetailsModal from './orders/OrderDetailsModal';
+import OrderDetailsModal from './orders/OrderDetailsModal';
 import OrderFilters from '../orders/OrderFilters';
 import OrderStats from '../orders/OrderStats';
-// import OrderBulkActions from './orders/OrderBulkActions';
-// import ExportModal from './orders/ExportModal';
-// import OrderTrackingModal from './orders/OrderTrackingModal';
+import OrderBulkActions from './orders/OrderBulkActions';
+import ExportModal from './orders/ExportModal';
+import OrderTrackingModal from './orders/OrderTrackingModal';
 
 // Hooks
 import useWebSocket from '../../hooks/useWebSocket';
@@ -326,11 +326,12 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
 
   const handleExport = useCallback(async (format, filters) => {
     try {
-      const exportData = await orderService.exportOrders(format, filters);
+      const exportSource = Array.isArray(adminOrders?.items) ? adminOrders.items : [];
+      const exportData = await orderService.exportOrders(exportSource, format);
       
       // Create download link
       const blob = new Blob([exportData], { 
-        type: format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        type: format === 'csv' ? 'text/csv' : 'application/json' 
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -344,13 +345,14 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
       trackEvent('orders_exported', {
         format,
         filters,
+        exported_count: exportSource.length,
         user_id: user?._id
       });
       
     } catch (error) {
       toast.error(`Export failed: ${error.message}`);
     }
-  }, [user]);
+  }, [adminOrders?.items, user]);
 
   const handleOrderSelect = useCallback((orderId) => {
     setSelectedOrders(prev => 
