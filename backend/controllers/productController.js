@@ -5,6 +5,131 @@ const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 const { updateLeadScore } = require('./leadScoreController');
 
+const sanitizeProductPayload = (payload = {}) => {
+  const sanitized = { ...payload };
+
+  // Normalize empty or placeholder category values
+  if (!sanitized.category || sanitized.category === 'null' || sanitized.category === 'undefined') {
+    delete sanitized.category;
+  }
+
+  // Convert numeric fields
+  const numericFields = [
+    'price',
+    'originalPrice',
+    'discountPercentage',
+    'countInStock',
+    'weight'
+  ];
+
+  numericFields.forEach((field) => {
+    if (sanitized[field] === '' || sanitized[field] === null || typeof sanitized[field] === 'undefined') {
+      delete sanitized[field];
+      return;
+    }
+
+    const value = Number(sanitized[field]);
+    if (Number.isNaN(value)) {
+      delete sanitized[field];
+      return;
+    }
+
+    sanitized[field] = value;
+  });
+
+  if (sanitized.dimensions && typeof sanitized.dimensions === 'object') {
+    const dimensionKeys = ['length', 'width', 'height'];
+    const cleanedDimensions = {};
+
+    dimensionKeys.forEach((key) => {
+      const raw = sanitized.dimensions[key];
+      if (raw === '' || raw === null || typeof raw === 'undefined') {
+        return;
+      }
+
+      const value = Number(raw);
+      if (!Number.isNaN(value)) {
+        cleanedDimensions[key] = value;
+      }
+    });
+
+    if (Object.keys(cleanedDimensions).length > 0) {
+      sanitized.dimensions = cleanedDimensions;
+    } else {
+      delete sanitized.dimensions;
+    }
+  }
+
+  if (Array.isArray(sanitized.images)) {
+    sanitized.images = sanitized.images.filter(Boolean);
+    if (sanitized.images.length === 0) {
+      delete sanitized.images;
+    }
+  }
+
+  if (Array.isArray(sanitized.metaKeywords)) {
+    sanitized.metaKeywords = sanitized.metaKeywords.filter(Boolean);
+  }
+
+  if (sanitized.specifications && typeof sanitized.specifications === 'object' && !Array.isArray(sanitized.specifications)) {
+    const cleanedSpecs = {};
+    Object.entries(sanitized.specifications).forEach(([key, value]) => {
+      if (value === null || typeof value === 'undefined') return;
+      const stringValue = String(value).trim();
+      if (stringValue) {
+        cleanedSpecs[key] = stringValue;
+      }
+    });
+
+    sanitized.specifications = cleanedSpecs;
+  }
+
+  if (Array.isArray(sanitized.variants)) {
+    sanitized.variants = sanitized.variants
+      .map((variant) => {
+        if (!variant || typeof variant !== 'object') return null;
+
+        const cleanedVariant = { ...variant };
+
+        if (Array.isArray(cleanedVariant.images)) {
+          cleanedVariant.images = cleanedVariant.images.filter(Boolean);
+        }
+
+        if (Array.isArray(cleanedVariant.sizes)) {
+          cleanedVariant.sizes = cleanedVariant.sizes
+            .map((size) => {
+              if (!size || typeof size !== 'object') return null;
+              const cleanedSize = { ...size };
+
+              if (cleanedSize.countInStock !== undefined) {
+                const count = Number(cleanedSize.countInStock);
+                cleanedSize.countInStock = Number.isNaN(count) ? 0 : count;
+              }
+
+              if (cleanedSize.price !== undefined) {
+                const price = Number(cleanedSize.price);
+                cleanedSize.price = Number.isNaN(price) ? 0 : price;
+              }
+
+              cleanedSize.size = typeof cleanedSize.size === 'string' ? cleanedSize.size.trim() : cleanedSize.size;
+
+              return cleanedSize;
+            })
+            .filter(Boolean);
+        }
+
+        return cleanedVariant;
+      })
+      .filter(Boolean);
+
+    if (sanitized.variants.length === 0) {
+      delete sanitized.variants;
+    }
+  }
+
+  return sanitized;
+};
+
 // @desc    Create a new product
 // @route   POST /api/products
 // @access  Private/Admin
@@ -215,19 +340,28 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
-  // Find and update the product, returning the new document
-  const product = await Product.findByIdAndUpdate(
-    req.params.id, 
-    req.body, 
-    { new: true, runValidators: true }
-  );
-  
-  if (!product) {
-    res.status(404);
-    throw new Error('Product not found');
+  // Prevent casting errors when the category dropdown sends an empty string
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      res.status(404);
+      throw new Error('Product not found');
+    }
+
+    const sanitizedPayload = sanitizeProductPayload(req.body);
+    product.set(sanitizedPayload);
+    await product.save();
+
+    res.status(200).json({ message: 'Product updated successfully', product });
+  } catch (error) {
+    if (error.name === 'ValidationError' || error.name === 'CastError') {
+      res.status(400);
+      throw new Error(error.message);
+    }
+
+    throw error;
   }
-  
-  res.status(200).json({ message: 'Product updated successfully', product });
 });
 
 // @desc    Delete a product by ID

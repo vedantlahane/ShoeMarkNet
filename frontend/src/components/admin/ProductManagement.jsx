@@ -306,6 +306,57 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
     }
   }, [onDataUpdate]);
 
+  // Stock calculations
+  const calculateTotalStock = useCallback((product) => {
+    if (product?.variants?.length) {
+      return product.variants.reduce((total, variant) => {
+        if (!variant?.sizes?.length) return total;
+        return (
+          total +
+          variant.sizes.reduce(
+            (sum, size) => sum + (Number(size?.countInStock) || 0),
+            0
+          )
+        );
+      }, 0);
+    }
+
+    return Number(product?.countInStock) || 0;
+  }, []);
+
+  const getStockStatus = useCallback((product) => {
+    const stock = calculateTotalStock(product);
+    if (!product?.isActive) {
+      return {
+        status: 'Inactive',
+        color: 'from-gray-500 to-gray-600',
+        icon: 'fa-pause'
+      };
+    }
+
+    if (stock === 0) {
+      return {
+        status: 'Out of Stock',
+        color: 'from-red-500 to-red-600',
+        icon: 'fa-times-circle'
+      };
+    }
+
+    if (stock < 10) {
+      return {
+        status: 'Low Stock',
+        color: 'from-yellow-500 to-orange-500',
+        icon: 'fa-exclamation-triangle'
+      };
+    }
+
+    return {
+      status: 'In Stock',
+      color: 'from-green-500 to-green-600',
+      icon: 'fa-check-circle'
+    };
+  }, [calculateTotalStock]);
+
   // Enhanced product statistics
   const productStats = useMemo(() => {
     if (!products) return {};
@@ -329,7 +380,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
       inactiveProducts: totalProducts - activeProducts,
       totalStock: products.reduce((sum, p) => sum + calculateTotalStock(p), 0)
     };
-  }, [products]);
+  }, [products, calculateTotalStock]);
 
   // Enhanced form handlers
   const handleFormChange = useCallback((field, value) => {
@@ -655,32 +706,6 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
       prev.length === currentProductIds.length ? [] : currentProductIds
     );
   }, [products]);
-
-  // Utility functions
-  const calculateTotalStock = useCallback((product) => {
-    if (product.variants && product.variants.length > 0) {
-      return product.variants.reduce(
-        (total, variant) =>
-          total +
-          (variant.sizes
-            ? variant.sizes.reduce(
-                (sum, size) => sum + (Number(size.countInStock) || 0),
-                0
-              )
-            : 0),
-        0
-      );
-    }
-    return product.countInStock || 0;
-  }, []);
-
-  const getStockStatus = useCallback((product) => {
-    const stock = calculateTotalStock(product);
-    if (!product.isActive) return { status: 'Inactive', color: 'from-gray-500 to-gray-600', icon: 'fa-pause' };
-    if (stock === 0) return { status: 'Out of Stock', color: 'from-red-500 to-red-600', icon: 'fa-times-circle' };
-    if (stock < 10) return { status: 'Low Stock', color: 'from-yellow-500 to-orange-500', icon: 'fa-exclamation-triangle' };
-    return { status: 'In Stock', color: 'from-green-500 to-green-600', icon: 'fa-check-circle' };
-  }, [calculateTotalStock]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {

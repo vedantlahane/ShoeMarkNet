@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 // Utils
 import { trackEvent } from '../../../utils/analytics';
-import { formatDate } from '../../../utils/helpers';
+import { formatDate, formatCurrency } from '../../../utils/helpers';
 
 // Hooks
 import useLocalStorage from '../../../hooks/useLocalStorage';
@@ -300,6 +300,13 @@ const UserTable = ({
   const renderTableRow = (user, index) => {
     const statusStyle = getStatusStyle(user.status);
     const isSelected = selectedUsers.has(user.id);
+    const ordersCount = Number.isFinite(Number(user.orders)) ? Number(user.orders) : 0;
+    const totalSpentValue = Number.isFinite(Number(user.totalSpent))
+      ? Number(user.totalSpent)
+      : null;
+    const formattedTotalSpent = totalSpentValue !== null
+      ? formatCurrency(totalSpentValue, user.currency || 'USD')
+      : '—';
 
     return (
       <tr
@@ -390,10 +397,10 @@ const UserTable = ({
         {/* Orders */}
         <td className="px-6 py-4">
           <div className="text-gray-900 dark:text-white font-semibold">
-            {user.orders}
+            {ordersCount}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            ${user.totalSpent.toLocaleString()}
+            {formattedTotalSpent}
           </div>
         </td>
 
