@@ -80,7 +80,7 @@ OrderSchema.methods.calculateTotals = function() {
 };
 
 OrderSchema.index({ user: 1, status: 1 });
-OrderSchema.index({ orderId: 1 });
+// OrderSchema.index({ orderId: 1 });
 
 // ====================================================================
 // ========================= SCHEMA HOOKS =============================

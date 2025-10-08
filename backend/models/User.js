@@ -37,8 +37,8 @@ const UserSchema = new mongoose.Schema({
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 // Indexes for faster lookups and to enforce unique constraints
-UserSchema.index({ email: 1 }, { unique: true });
-UserSchema.index({ phone: 1 }, { sparse: true });
+// UserSchema.index({ email: 1 }, { unique: true });
+// UserSchema.index({ phone: 1 }, { sparse: true });
 
 // Pre-save hook to normalize data and hash password
 UserSchema.pre('save', async function(next) {

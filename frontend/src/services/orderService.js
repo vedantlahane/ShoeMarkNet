@@ -135,6 +135,48 @@ const deleteOrder = async (orderId) => {
   }
 };
 
+const exportOrders = async (orders, format = 'csv') => {
+  try {
+    const safeOrders = Array.isArray(orders) ? orders : [];
+
+    if (format === 'json') {
+      return JSON.stringify(safeOrders, null, 2);
+    }
+
+    const headers = [
+      'ID',
+      'Order Number',
+      'Customer',
+      'Email',
+      'Status',
+      'Paid',
+      'Delivered',
+      'Total',
+      'Created At'
+    ];
+
+    const rows = safeOrders.map((order) => {
+      const values = [
+        order._id,
+        order.orderNumber || order.orderId || '',
+        `"${(order.user?.name || order.shippingAddress?.name || 'Guest').replace(/"/g, '""')}"`,
+        order.user?.email || order.shippingAddress?.email || '',
+        order.status || (order.isDelivered ? 'delivered' : 'pending'),
+        order.isPaid ? 'Yes' : 'No',
+        order.isDelivered ? 'Yes' : 'No',
+        Number(order.totalPrice || 0),
+        order.createdAt ? new Date(order.createdAt).toISOString() : ''
+      ];
+      return values.join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+  } catch (error) {
+    console.error('Error exporting orders:', error);
+    throw error;
+  }
+};
+
 const getOrderStats = async (filters = {}) => {
   try {
     const queryString = buildQueryString(filters);
@@ -170,6 +212,7 @@ const orderService = {
   deleteOrder,
   getOrderStats,
   trackOrder,
+  exportOrders,
 };
 
 export default orderService;

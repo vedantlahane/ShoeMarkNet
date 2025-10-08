@@ -29,7 +29,7 @@ const PaymentSchema = new mongoose.Schema({
   failureReason: { type: String, default: null }, // Reason for a failed payment, if applicable
 }, { timestamps: true }); // Mongoose adds `createdAt` and `updatedAt` fields
 
-PaymentSchema.index({ transactionId: 1 }, { unique: true });
+// PaymentSchema.index({ transactionId: 1 }, { unique: true });
 PaymentSchema.index({ user: 1, status: 1 });
 PaymentSchema.index({ order: 1 });
 

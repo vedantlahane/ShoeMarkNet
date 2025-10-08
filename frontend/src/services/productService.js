@@ -360,6 +360,48 @@ const bulkUpdateProducts = async ({ productIds, updates }) => {
   }
 };
 
+const exportProducts = async (products, format = 'csv') => {
+  try {
+    const safeProducts = Array.isArray(products) ? products : [];
+
+    if (format === 'json') {
+      return JSON.stringify(safeProducts, null, 2);
+    }
+
+    const headers = [
+      'ID',
+      'Name',
+      'Brand',
+      'Category',
+      'Price',
+      'Stock',
+      'Featured',
+      'Active',
+      'Created At'
+    ];
+
+    const rows = safeProducts.map((product) => {
+      const values = [
+        product._id,
+        `"${(product.name || '').replace(/"/g, '""')}"`,
+        `"${(product.brand || '').replace(/"/g, '""')}"`,
+        product.category?.name || product.category || '',
+        Number(product.price || 0),
+        Number(product.countInStock || 0),
+        product.isFeatured ? 'Yes' : 'No',
+        product.isActive === false ? 'No' : 'Yes',
+        product.createdAt ? new Date(product.createdAt).toISOString() : ''
+      ];
+      return values.join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+  } catch (error) {
+    console.error('Error exporting products:', error);
+    throw error;
+  }
+};
+
 const productService = {
   getFeaturedProducts,
   getNewArrivals,
@@ -379,7 +421,8 @@ const productService = {
   deleteProduct,
   batchUpdatePrices,
   batchUpdateStock,
-  bulkUpdateProducts
+  bulkUpdateProducts,
+  exportProducts
 };
 
 export default productService;

@@ -24,7 +24,7 @@ WishlistSchema.path('products').default(() => []);
 // ====================================================================
 
 // Indexes for better query performance.
-WishlistSchema.index({ user: 1 });
+// WishlistSchema.index({ user: 1 });
 WishlistSchema.index({ user: 1, 'products.product': 1 }, { unique: true });
 
 /**
