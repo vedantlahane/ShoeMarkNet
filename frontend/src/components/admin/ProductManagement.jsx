@@ -162,7 +162,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
   // Keyboard shortcuts
   useKeyboardShortcuts({
     'ctrl+n': () => openCreateModal(),
-    'ctrl+r': handleRefresh,
+    'ctrl+r': () => handleRefresh(),
     'ctrl+e': () => setShowExportModal(true),
     'ctrl+i': () => setShowImportModal(true),
     'ctrl+f': () => document.getElementById('product-search')?.focus(),
