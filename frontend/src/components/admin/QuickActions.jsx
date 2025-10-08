@@ -32,7 +32,11 @@ const QuickActions = ({ onActionClick }) => {
         {actions.map((action) => (
           <button
             key={action.id}
-            onClick={() => onActionClick(action)}
+            onClick={() => {
+              if (typeof onActionClick === 'function') {
+                onActionClick(action);
+              }
+            }}
             className={`w-full flex items-center p-3 rounded-xl bg-gradient-to-r ${action.color} text-white hover:scale-105 transition-all duration-200 shadow-lg`}
           >
             <i className={`fas ${action.icon} mr-3`}></i>

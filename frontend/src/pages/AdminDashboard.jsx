@@ -104,7 +104,7 @@ const AdminDashboard = ({ section = "overview" }) => {
   const { isConnected, connectionStatus } = useWebSocket('/admin');
   
   // Redux state
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { user, isAuthenticated, users } = useSelector((state) => state.auth);
   const { products } = useSelector((state) => state.product);
   const { adminOrders } = useSelector((state) => state.order);
   
@@ -118,6 +118,7 @@ const AdminDashboard = ({ section = "overview" }) => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [pendingAction, setPendingAction] = useState(null);
   const [dataLoadingStatus, setDataLoadingStatus] = useState({
     overview: false,
     dashboard: false,
@@ -345,6 +346,20 @@ const AdminDashboard = ({ section = "overview" }) => {
     }
   }, [dispatch, dataLoadingStatus]);
 
+  const handleSectionActionComplete = useCallback((action) => {
+    setPendingAction((current) => {
+      if (!current) {
+        return null;
+      }
+
+      if (!action || action.at !== current.at) {
+        return current;
+      }
+
+      return null;
+    });
+  }, []);
+
   // Ensure active section data is loaded on mount and when section changes
   useEffect(() => {
     if (!activeSection) return;
@@ -382,34 +397,409 @@ const AdminDashboard = ({ section = "overview" }) => {
     });
   }, [handleSectionChange]);
 
-  // Search functionality
-  const handleSearch = useCallback(async (query) => {
-    if (!query.trim()) return;
+  const performAdminSearch = useCallback(async (rawQuery) => {
+    const trimmedQuery = rawQuery.trim();
+    if (!trimmedQuery) {
+      return [];
+    }
 
-    setSearchQuery(query);
+    const normalizedQuery = trimmedQuery.toLowerCase();
+
+    const ensureProductsData = async () => {
+      if (Array.isArray(products) && products.length > 0) {
+        return products;
+      }
+
+      if (dataLoadingStatus.products) {
+        return products || [];
+      }
+
+      try {
+        const payload = await dispatch(fetchProducts()).unwrap();
+        setDataLoadingStatus(prev => ({ ...prev, products: true }));
+        return payload?.products || products || [];
+      } catch (error) {
+        console.error('Admin search: failed to fetch products', error);
+        return products || [];
+      }
+    };
+
+    const ensureOrdersData = async () => {
+      const existingOrders = adminOrders?.items;
+      if (Array.isArray(existingOrders) && existingOrders.length > 0) {
+        return existingOrders;
+      }
+
+      if (dataLoadingStatus.orders) {
+        return existingOrders || [];
+      }
+
+      try {
+        const payload = await dispatch(fetchAllOrders()).unwrap();
+        setDataLoadingStatus(prev => ({ ...prev, orders: true }));
+        return payload?.orders || existingOrders || [];
+      } catch (error) {
+        console.error('Admin search: failed to fetch orders', error);
+        return existingOrders || [];
+      }
+    };
+
+    const ensureUsersData = async () => {
+      if (Array.isArray(users) && users.length > 0) {
+        return users;
+      }
+
+      if (dataLoadingStatus.users) {
+        return users || [];
+      }
+
+      try {
+        const payload = await dispatch(fetchUsers()).unwrap();
+        setDataLoadingStatus(prev => ({ ...prev, users: true }));
+        return Array.isArray(payload) ? payload : users || [];
+      } catch (error) {
+        console.error('Admin search: failed to fetch users', error);
+        return users || [];
+      }
+    };
+
+    const [productList, orderList, userList] = await Promise.all([
+      ensureProductsData(),
+      ensureOrdersData(),
+      ensureUsersData()
+    ]);
+
+    const containsQuery = (value) =>
+      typeof value === 'string' && value.toLowerCase().includes(normalizedQuery);
+
+    const computeScore = (...values) => {
+      return values.reduce((best, value) => {
+        if (value === null || value === undefined) {
+          return best;
+        }
+
+        const text = value.toString().toLowerCase();
+        const index = text.indexOf(normalizedQuery);
+
+        if (index === -1) {
+          return best;
+        }
+
+        return Math.min(best, index);
+      }, Number.POSITIVE_INFINITY);
+    };
+
+    const toNumber = (value) => {
+      if (typeof value === 'number') return value;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const productResults = (productList || [])
+      .map((product) => {
+        const searchableFields = [
+          product?.name,
+          product?.brand,
+          product?.sku,
+          Array.isArray(product?.tags) ? product.tags.join(' ') : null
+        ];
+
+        if (!searchableFields.some(containsQuery)) {
+          return null;
+        }
+
+        const score = computeScore(...searchableFields);
+        if (!Number.isFinite(score)) {
+          return null;
+        }
+
+        const priceValue = toNumber(product?.price);
+        const stockValue = toNumber(product?.countInStock);
+
+        const subtitleParts = [
+          product?.brand,
+          product?.sku ? `SKU ${product.sku}` : null,
+          Number.isFinite(priceValue) ? formatCurrency(priceValue) : null
+        ].filter(Boolean);
+
+        return {
+          id: product?._id,
+          type: 'product',
+          icon: 'fa-box',
+          title: product?.name || 'Unnamed Product',
+          subtitle: subtitleParts.join(' • '),
+          badge: Number.isFinite(stockValue)
+            ? `${formatNumber(stockValue)} in stock`
+            : null,
+          section: 'products',
+          sectionLabel: ADMIN_SECTIONS.products.label,
+          payload: {
+            term: product?.name || product?.sku || trimmedQuery,
+            productId: product?._id
+          },
+          score
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 6);
+
+    const orderResults = (orderList || [])
+      .map((order) => {
+        const identifier = order?.orderNumber || order?.orderId || order?._id;
+        const customerName = order?.customerName || order?.user?.name || order?.shippingAddress?.fullName;
+        const searchableFields = [
+          identifier,
+          customerName,
+          order?.email,
+          order?.shippingAddress?.email,
+          order?.status
+        ];
+
+        if (!searchableFields.some(containsQuery)) {
+          return null;
+        }
+
+        const score = computeScore(...searchableFields);
+        if (!Number.isFinite(score)) {
+          return null;
+        }
+
+        const totalValue = toNumber(order?.totalPrice);
+
+        const subtitleParts = [
+          identifier ? `Order ${identifier}` : null,
+          customerName,
+          Number.isFinite(totalValue) ? formatCurrency(totalValue) : null
+        ].filter(Boolean);
+
+        return {
+          id: order?._id,
+          type: 'order',
+          icon: 'fa-receipt',
+          title: customerName || identifier || 'Order',
+          subtitle: subtitleParts.join(' • '),
+          badge: order?.status ? order.status.toUpperCase() : null,
+          section: 'orders',
+          sectionLabel: ADMIN_SECTIONS.orders.label,
+          payload: {
+            term: identifier || customerName || trimmedQuery,
+            orderId: order?._id
+          },
+          score
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 6);
+
+    const userResults = (userList || [])
+      .map((candidate) => {
+        const searchableFields = [
+          candidate?.name,
+          candidate?.email,
+          candidate?.phoneNumber,
+          candidate?.role
+        ];
+
+        if (!searchableFields.some(containsQuery)) {
+          return null;
+        }
+
+        const score = computeScore(...searchableFields);
+        if (!Number.isFinite(score)) {
+          return null;
+        }
+
+        const subtitleParts = [
+          candidate?.email,
+          candidate?.role ? candidate.role.toUpperCase() : null,
+          candidate?.phoneNumber
+        ].filter(Boolean);
+
+        return {
+          id: candidate?._id,
+          type: 'user',
+          icon: 'fa-user',
+          title: candidate?.name || candidate?.email || 'User',
+          subtitle: subtitleParts.join(' • '),
+          badge: candidate?.status ? candidate.status.toUpperCase() : null,
+          section: 'users',
+          sectionLabel: ADMIN_SECTIONS.users.label,
+          payload: {
+            term: candidate?.name || candidate?.email || trimmedQuery,
+            userId: candidate?._id
+          },
+          score
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 6);
+
+    const combinedResults = [...productResults, ...orderResults, ...userResults];
+
+    if (combinedResults.length === 0) {
+      return [
+        {
+          id: `no-results-${normalizedQuery}`,
+          type: 'info',
+          icon: 'fa-info-circle',
+          title: 'No matching results',
+          subtitle: 'Try adjusting your search terms or filters',
+          section: 'overview',
+          sectionLabel: ADMIN_SECTIONS.overview.label,
+          payload: { term: trimmedQuery },
+          score: Number.POSITIVE_INFINITY
+        }
+      ];
+    }
+
+    return combinedResults
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 20);
+  }, [
+    products,
+    adminOrders?.items,
+    users,
+    dataLoadingStatus.products,
+    dataLoadingStatus.orders,
+    dataLoadingStatus.users,
+    dispatch,
+    setDataLoadingStatus
+  ]);
+
+  const handleSearch = useCallback(async (query) => {
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery) {
+      setSearchQuery('');
+      return [];
+    }
+
+    setSearchQuery(trimmedQuery);
     
     try {
-      // Implement global admin search
-      // This would search across products, orders, users, etc.
-      const searchResults = await performAdminSearch(query);
-      
-      // Handle search results
+      const searchResults = await performAdminSearch(trimmedQuery);
+
       trackEvent('admin_search_performed', {
-        query,
+        query: trimmedQuery,
         results_count: searchResults.length
       });
-      
+
+      return searchResults;
     } catch (error) {
       console.error('Search error:', error);
       toast.error('Search failed. Please try again.');
+      return [];
     }
-  }, []);
+  }, [performAdminSearch]);
 
-  // Mock search function (replace with actual implementation)
-  const performAdminSearch = useCallback(async (query) => {
-    // This would integrate with your search service
-    return [];
-  }, []);
+  const handleSearchResultSelect = useCallback(async (result) => {
+    if (!result) {
+      return;
+    }
+
+    setShowSearchModal(false);
+
+    const resolvedTerm = result?.payload?.term || result?.title || searchQuery;
+    if (resolvedTerm) {
+      setSearchQuery(resolvedTerm);
+    }
+
+    try {
+      const targetSection = result.section
+        || (result.type === 'order' ? 'orders'
+          : result.type === 'user' ? 'users'
+          : 'products');
+
+      if (targetSection && targetSection !== activeSection) {
+        await handleSectionChange(targetSection);
+      }
+
+      const actionTypeMap = {
+        product: 'searchProducts',
+        order: 'searchOrders',
+        user: 'searchUsers'
+      };
+
+      const actionType = actionTypeMap[result.type];
+
+      if (actionType && targetSection) {
+        setPendingAction({
+          section: targetSection,
+          type: actionType,
+          at: Date.now(),
+          payload: {
+            term: resolvedTerm,
+            ...(result.payload || {}),
+            resultId: result.id
+          }
+        });
+      }
+
+      trackEvent('admin_search_result_selected', {
+        query: resolvedTerm,
+        result_type: result?.type,
+        result_id: result?.id
+      });
+
+      if (result.navigateTo) {
+        navigate(result.navigateTo);
+      }
+    } catch (error) {
+      console.error('Failed to process search result selection', error);
+      toast.error('Unable to open the selected result.');
+    }
+  }, [activeSection, handleSectionChange, navigate, searchQuery, setPendingAction]);
+
+  const handleQuickAction = useCallback(async (actionId) => {
+    if (!actionId) {
+      return;
+    }
+
+    trackEvent('admin_quick_action', { action: actionId });
+
+    const triggerProductAction = async (type) => {
+      if (activeSection !== 'products') {
+        await handleSectionChange('products');
+      } else if (!dataLoadingStatus.products) {
+        await loadSectionData('products');
+      }
+
+      setPendingAction({
+        section: 'products',
+        type,
+        at: Date.now()
+      });
+    };
+
+    try {
+      switch (actionId) {
+        case 'add_product':
+          await triggerProductAction('openCreateProduct');
+          break;
+        case 'bulk_import':
+          await triggerProductAction('openImportProducts');
+          break;
+        case 'export_data':
+          await triggerProductAction('openExportProducts');
+          break;
+        default:
+          toast.info('This quick action is coming soon!');
+          break;
+      }
+    } catch (error) {
+      console.error('Quick action handling error:', error);
+      toast.error('Failed to process quick action');
+    }
+  }, [
+    activeSection,
+    dataLoadingStatus.products,
+    handleSectionChange,
+    loadSectionData,
+    setPendingAction
+  ]);
 
   // Render section content
   const renderSectionContent = useCallback(() => {
@@ -430,6 +820,8 @@ const AdminDashboard = ({ section = "overview" }) => {
       );
     }
 
+    const sectionAction = pendingAction?.section === activeSection ? pendingAction : null;
+
     const sectionProps = {
       stats: dashboardStats,
       realtimeData,
@@ -439,19 +831,46 @@ const AdminDashboard = ({ section = "overview" }) => {
 
     switch (activeSection) {
       case 'products':
-        return <ProductManagement {...sectionProps} />;
+        return (
+          <ProductManagement
+            {...sectionProps}
+            externalAction={sectionAction}
+            onActionHandled={handleSectionActionComplete}
+          />
+        );
       case 'orders':
-        return <OrderManagement {...sectionProps} />;
+        return (
+          <OrderManagement
+            {...sectionProps}
+            externalAction={sectionAction}
+            onActionHandled={handleSectionActionComplete}
+          />
+        );
       case 'users':
-        return <UserManagement {...sectionProps} />;
+        return (
+          <UserManagement
+            {...sectionProps}
+            externalAction={sectionAction}
+            onActionHandled={handleSectionActionComplete}
+          />
+        );
       case 'analytics':
         return <AnalyticsPanel {...sectionProps} />;
       case 'settings':
         return <SettingsPanel {...sectionProps} />;
       default:
-        return <DashboardOverview {...sectionProps} />;
+        return <DashboardOverview {...sectionProps} onQuickAction={handleQuickAction} />;
     }
-  }, [isInitializing, activeSection, dashboardStats, realtimeData, dataLoadingStatus]);
+  }, [
+    isInitializing,
+    activeSection,
+    dashboardStats,
+    realtimeData,
+    dataLoadingStatus,
+    pendingAction,
+    handleQuickAction,
+    handleSectionActionComplete
+  ]);
 
   // Cleanup
   useEffect(() => {
@@ -599,10 +1018,8 @@ const AdminDashboard = ({ section = "overview" }) => {
             {/* Quick Actions */}
             {!sidebarCollapsed && (
               <div className="mt-8 pt-6 border-t border-white/20 dark:border-gray-700/20">
-                <QuickActions 
-                  onActionClick={(action) => {
-                    trackEvent('admin_quick_action', { action: action.id });
-                  }}
+                <QuickActions
+                  onActionClick={(action) => handleQuickAction(action.id)}
                 />
               </div>
             )}
@@ -751,6 +1168,7 @@ const AdminDashboard = ({ section = "overview" }) => {
             onClose={() => setShowSearchModal(false)}
             onSearch={handleSearch}
             searchQuery={searchQuery}
+            onResultSelect={handleSearchResultSelect}
           />
         )}
 

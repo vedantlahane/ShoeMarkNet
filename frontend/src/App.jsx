@@ -9,6 +9,7 @@ import MainLayout from "./components/layouts/MainLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import { ThemeProvider } from "./context/ThemeContext";
 
 // Routing helpers
 import routeConfig from "./routes/routeConfig";
@@ -88,7 +89,9 @@ const AppContent = () => {
 const App = () => {
   return (
     <Provider store={store}>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </Provider>
   );
 };

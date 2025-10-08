@@ -18,6 +18,7 @@ import {
   Percent,
   LogOut
 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const routePrefetchers = {
   '/': () => import('../../pages/Home'),
@@ -122,19 +123,6 @@ const useFocusTrap = (isOpen, containerRef) => {
   }, [isOpen, containerRef]);
 };
 
-const getInitialTheme = () => {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  const storedTheme = localStorage.getItem('theme');
-  if (storedTheme) {
-    return storedTheme === 'dark';
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-};
-
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -148,8 +136,8 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const prefersReducedMotion = useReducedMotion();
   
@@ -211,20 +199,6 @@ const Header = () => {
     };
   }, []);
 
-  // Handle theme toggle
-  useEffect(() => {
-    if (typeof document === 'undefined') {
-      return undefined;
-    }
-
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
 
   // Optimized GSAP Animations with proper cleanup
   useLayoutEffect(() => {
@@ -295,10 +269,6 @@ const Header = () => {
       setIsSearchOpen(false);
       setSearchQuery('');
     }
-  };
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
   };
 
   const toggleMobileMenu = () => {

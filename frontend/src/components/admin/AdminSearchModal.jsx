@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const AdminSearchModal = ({ onClose, onSearch, searchQuery }) => {
+const AdminSearchModal = ({ onClose, onSearch, searchQuery, onResultSelect }) => {
   const [query, setQuery] = useState(searchQuery || '');
   const [results, setResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -10,24 +10,24 @@ const AdminSearchModal = ({ onClose, onSearch, searchQuery }) => {
     inputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    setQuery(searchQuery || '');
+  }, [searchQuery]);
+
   const handleSearch = async (searchTerm) => {
     if (!searchTerm.trim()) {
       setResults([]);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
     try {
-      // Implement search logic
-      await onSearch(searchTerm);
-      // Mock results for demonstration
-      setResults([
-        { type: 'product', title: 'Nike Air Max', subtitle: 'Product' },
-        { type: 'order', title: 'Order #1234', subtitle: 'Recent Order' },
-        { type: 'user', title: 'John Doe', subtitle: 'Customer' }
-      ]);
+      const response = await onSearch(searchTerm);
+      setResults(Array.isArray(response) ? response : []);
     } catch (error) {
       console.error('Search error:', error);
+      setResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -69,27 +69,48 @@ const AdminSearchModal = ({ onClose, onSearch, searchQuery }) => {
         <div className="max-h-96 overflow-y-auto">
           {results.length > 0 ? (
             <div className="space-y-2">
-              {results.map((result, index) => (
-                <button
-                  key={index}
-                  className="w-full flex items-center p-4 rounded-xl hover:bg-white/10 transition-colors text-left"
-                >
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <i className={`fas ${
-                      result.type === 'product' ? 'fa-box' :
-                      result.type === 'order' ? 'fa-shopping-cart' : 'fa-user'
-                    } text-blue-500`}></i>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {result.title}
+              {results.map((result, index) => {
+                const fallbackIcon =
+                  result.type === 'order'
+                    ? 'fa-receipt'
+                    : result.type === 'user'
+                      ? 'fa-user'
+                      : 'fa-box';
+
+                return (
+                  <button
+                    key={`${result.type}-${result.id || index}`}
+                    onClick={() => onResultSelect?.(result)}
+                    className="w-full flex items-center p-4 rounded-xl hover:bg-white/15 transition-colors text-left group"
+                  >
+                    <div className="w-11 h-11 bg-blue-500/20 group-hover:bg-blue-500/30 rounded-xl flex items-center justify-center mr-4 text-blue-500">
+                      <i className={`fas ${result.icon || fallbackIcon}`}></i>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {result.subtitle}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between space-x-3">
+                        <span className="font-semibold text-gray-900 dark:text-white truncate">
+                          {result.title}
+                        </span>
+                        {result.sectionLabel && (
+                          <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 hidden sm:block">
+                            {result.sectionLabel}
+                          </span>
+                        )}
+                      </div>
+                      {result.subtitle && (
+                        <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {result.subtitle}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </button>
-              ))}
+                    {result.badge && (
+                      <span className="ml-4 text-xs font-semibold uppercase tracking-wide px-3 py-1 rounded-full bg-blue-500/15 text-blue-500">
+                        {result.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ) : query && !isSearching ? (
             <div className="text-center py-12">

@@ -109,7 +109,7 @@ const initialFormData = {
   handle: ""
 };
 
-const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
+const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externalAction, onActionHandled }) => {
   const dispatch = useDispatch();
 
   // Redux state
@@ -472,6 +472,60 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
       user_id: user?._id
     });
   }, [user]);
+
+  useEffect(() => {
+    if (!externalAction) {
+      return;
+    }
+
+    if (externalAction.section && externalAction.section !== 'products') {
+      onActionHandled?.(externalAction);
+      return;
+    }
+
+    let handled = false;
+
+    switch (externalAction.type) {
+      case 'openCreateProduct':
+        openCreateModal();
+        handled = true;
+        break;
+      case 'openImportProducts':
+        setShowImportModal(true);
+        handled = true;
+        break;
+      case 'openExportProducts':
+        setShowExportModal(true);
+        handled = true;
+        break;
+      case 'searchProducts': {
+        const nextTerm = externalAction?.payload?.term || '';
+        setSearchTerm(nextTerm);
+        setCurrentPage(1);
+
+        if (nextTerm) {
+          toast.info(`Filtering products for "${nextTerm}"`);
+          trackEvent('admin_products_search_applied', {
+            query: nextTerm,
+            source: 'global_search'
+          });
+        }
+        handled = true;
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (handled) {
+      trackEvent('product_quick_action_triggered', {
+        type: externalAction.type,
+        source: 'admin_dashboard'
+      });
+    }
+
+    onActionHandled?.(externalAction);
+  }, [externalAction, openCreateModal, onActionHandled, setShowImportModal, setShowExportModal]);
 
   // Enhanced form submission
   const handleSubmit = useCallback(async (e) => {

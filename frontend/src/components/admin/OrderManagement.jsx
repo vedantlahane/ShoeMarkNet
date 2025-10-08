@@ -62,7 +62,7 @@ const BULK_ACTIONS = [
   { id: 'delete', label: 'Delete Orders', icon: 'fa-trash', color: 'from-red-600 to-pink-600' }
 ];
 
-const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
+const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externalAction, onActionHandled }) => {
   const dispatch = useDispatch();
 
   // Redux state
@@ -147,6 +147,59 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
       setRefreshing(false);
     }
   }, [dispatch, currentPage, ordersPerPage, sortBy, sortOrder, statusFilter, debouncedSearchTerm, dateRange, priceRange]);
+
+  useEffect(() => {
+    if (!externalAction) {
+      return;
+    }
+
+    if (externalAction.section && externalAction.section !== 'orders') {
+      onActionHandled?.(externalAction);
+      return;
+    }
+
+    let handled = false;
+
+    switch (externalAction.type) {
+      case 'searchOrders': {
+        const nextTerm = externalAction?.payload?.term || '';
+        setSearchTerm(nextTerm);
+        setCurrentPage(1);
+
+        if (externalAction?.payload?.orderId) {
+          const targetOrder = adminOrders?.items?.find(
+            (order) => order?._id === externalAction.payload.orderId
+          );
+
+          if (targetOrder) {
+            setSelectedOrder(targetOrder);
+            setShowOrderDetails(true);
+          }
+        }
+
+        if (nextTerm && nextTerm !== searchTerm) {
+          toast.info(`Filtering orders for "${nextTerm}"`);
+        }
+
+        trackEvent('admin_orders_search_applied', {
+          query: nextTerm,
+          source: 'global_search'
+        });
+
+        handled = true;
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (!handled) {
+      onActionHandled?.(externalAction);
+      return;
+    }
+
+    onActionHandled?.(externalAction);
+  }, [externalAction, onActionHandled, adminOrders, searchTerm]);
 
   // Refetch when filters change
   useEffect(() => {

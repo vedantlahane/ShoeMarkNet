@@ -82,7 +82,7 @@ const BULK_ACTIONS = [
 
 const USERS_PER_PAGE_OPTIONS = [12, 24, 48, 96];
 
-const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
+const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externalAction, onActionHandled }) => {
   const dispatch = useDispatch();
 
   // Redux state
@@ -189,6 +189,56 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
   useEffect(() => {
     loadUsersData();
   }, [currentPage, usersPerPage]);
+
+  useEffect(() => {
+    if (!externalAction) {
+      return;
+    }
+
+    if (externalAction.section && externalAction.section !== 'users') {
+      onActionHandled?.(externalAction);
+      return;
+    }
+
+    let handled = false;
+
+    switch (externalAction.type) {
+      case 'searchUsers': {
+        const nextTerm = externalAction?.payload?.term || '';
+        setSearchTerm(nextTerm);
+        setCurrentPage(1);
+
+        if (nextTerm && nextTerm !== searchTerm) {
+          toast.info(`Filtering users for "${nextTerm}"`);
+        }
+
+        if (externalAction?.payload?.userId) {
+          const targetUser = users?.items?.find((candidate) => candidate?._id === externalAction.payload.userId);
+          if (targetUser) {
+            setSelectedUser(targetUser);
+            setShowUserModal(true);
+          }
+        }
+
+        trackEvent('admin_users_search_applied', {
+          query: nextTerm,
+          source: 'global_search'
+        });
+
+        handled = true;
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (!handled) {
+      onActionHandled?.(externalAction);
+      return;
+    }
+
+    onActionHandled?.(externalAction);
+  }, [externalAction, onActionHandled, users, searchTerm]);
 
   // Load users data with filters
   const loadUsersData = useCallback(async () => {

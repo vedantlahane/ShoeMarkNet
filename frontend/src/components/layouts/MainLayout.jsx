@@ -13,6 +13,7 @@ import ErrorBoundary from '../common/ErrorBoundary';
 // Hooks
 import useGsap from '../../hooks/useGsap';
 import useReducedMotion from '../../hooks/useReducedMotion';
+import { useTheme } from '../../context/ThemeContext';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -61,26 +62,13 @@ const ROUTE_CONFIG = {
   }
 };
 
-const getPreferredTheme = () => {
-  if (typeof window === 'undefined') {
-    return 'light';
-  }
-
-  const storedTheme = localStorage.getItem('theme');
-  if (storedTheme) {
-    return storedTheme;
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-};
-
 const MainLayout = () => {
   const location = useLocation();
   const scrollButtonRef = useRef(null);
   
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState(getPreferredTheme);
+  const { theme: currentTheme } = useTheme();
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -133,39 +121,6 @@ const MainLayout = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
-
-  // Theme change handler with improved performance
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-
-    const handleThemeChange = () => {
-      setCurrentTheme(getPreferredTheme());
-    };
-
-    window.addEventListener('storage', handleThemeChange);
-
-    let observer;
-    if (
-      typeof MutationObserver !== 'undefined' &&
-      typeof document !== 'undefined' &&
-      document.documentElement
-    ) {
-      observer = new MutationObserver(handleThemeChange);
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['class']
-      });
-    }
-
-    return () => {
-      window.removeEventListener('storage', handleThemeChange);
-      if (observer) {
-        observer.disconnect();
-      }
     };
   }, []);
 

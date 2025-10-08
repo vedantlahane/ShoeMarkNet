@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
 // Utils
@@ -7,6 +7,7 @@ import { trackEvent } from '../../utils/analytics';
 
 // Hooks
 import useLocalStorage from '../../hooks/useLocalStorage';
+import { useTheme } from '../../context/ThemeContext';
 
 const SettingsPanel = ({
   variant = 'default', // default, compact, tabbed
@@ -14,12 +15,11 @@ const SettingsPanel = ({
   className = ''
 }) => {
   // Redux state
-  const { user, theme, notifications } = useSelector(state => ({
+  const { user, notifications } = useSelector(state => ({
     user: state.auth?.user || {},
-    theme: state.theme?.current || 'light',
     notifications: state.notifications?.preferences || {}
   }));
-  const dispatch = useDispatch();
+  const { preference, setTheme: setGlobalTheme } = useTheme();
 
   // Local state
   const [activeCategory, setActiveCategory] = useState('general');
@@ -32,7 +32,7 @@ const SettingsPanel = ({
       itemsPerPage: 25
     },
     appearance: {
-      theme: 'light',
+      theme: 'auto',
       primaryColor: '#3B82F6',
       sidebarCollapsed: false,
       showAnimations: true,
@@ -69,6 +69,27 @@ const SettingsPanel = ({
   useEffect(() => {
     setTimeout(() => setAnimateElements(true), 100);
   }, []);
+
+  useEffect(() => {
+    if (hasChanges) {
+      return;
+    }
+
+    setSettings(prev => {
+      const normalizedTheme = preference === 'system' ? 'auto' : preference;
+      if (prev?.appearance?.theme === normalizedTheme) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        appearance: {
+          ...prev.appearance,
+          theme: normalizedTheme
+        }
+      };
+    });
+  }, [preference, hasChanges, setSettings]);
 
   // Settings categories
   const categories = [
@@ -135,9 +156,12 @@ const SettingsPanel = ({
       // Simulate API call to save settings
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Dispatch to Redux store if needed
-      if (settings.appearance.theme !== theme) {
-        dispatch({ type: 'SET_THEME', payload: settings.appearance.theme });
+      const requestedPreference = settings.appearance.theme === 'auto'
+        ? 'system'
+        : settings.appearance.theme;
+
+      if (requestedPreference && requestedPreference !== preference) {
+        setGlobalTheme(requestedPreference);
       }
 
       setHasChanges(false);
@@ -154,7 +178,7 @@ const SettingsPanel = ({
     } finally {
       setIsSaving(false);
     }
-  }, [settings, theme, dispatch, user.id]);
+  }, [settings, preference, setGlobalTheme, user.id]);
 
   // Handle reset settings
   const handleResetSettings = useCallback(() => {
@@ -168,7 +192,7 @@ const SettingsPanel = ({
           itemsPerPage: 25
         },
         appearance: {
-          theme: 'light',
+          theme: 'auto',
           primaryColor: '#3B82F6',
           sidebarCollapsed: false,
           showAnimations: true,
@@ -196,14 +220,16 @@ const SettingsPanel = ({
           backupFrequency: 'daily'
         }
       });
+
       setHasChanges(true);
+      setGlobalTheme('system');
       toast.info('Settings reset to default values');
 
       trackEvent('admin_settings_reset', {
         user_id: user.id
       });
     }
-  }, [setSettings, user.id]);
+  }, [setSettings, setGlobalTheme, user.id]);
 
   // Render form field
   const renderField = useCallback((category, key, config) => {

@@ -21,15 +21,15 @@ createRoot(document.getElementById('root')).render(
         className: 'premium-toast',
         duration: 4000,
         style: {
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
+          background: 'var(--toast-background)',
+          backdropFilter: 'var(--glass-blur)',
+          border: '1px solid var(--toast-border)',
           borderRadius: '16px',
-          color: '#ffffff',
+          color: 'var(--toast-color)',
           fontSize: '14px',
           fontWeight: '500',
           padding: '16px 20px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          boxShadow: 'var(--toast-shadow)',
         },
         success: {
           iconTheme: {

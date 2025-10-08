@@ -42,7 +42,7 @@ const CHART_COLORS = {
   info: '#06B6D4'
 };
 
-const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
+const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQuickAction }) => {
   const dispatch = useDispatch();
 
   // Redux state
@@ -551,7 +551,7 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
 
         {/* Enhanced Quick Actions */}
         <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.3s' }}>
-          <QuickActionGrid />
+          <QuickActionGrid onAction={(action) => onQuickAction?.(action.id)} />
         </div>
 
         {/* Custom Styles */}

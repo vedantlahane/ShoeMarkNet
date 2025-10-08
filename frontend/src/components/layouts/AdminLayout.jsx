@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import ErrorBoundary from '../common/ErrorBoundary';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * Provides the chrome for all admin-only experiences.
@@ -12,6 +13,7 @@ import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 const AdminLayout = () => {
   const location = useLocation();
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     const previousAttribute = document.body.getAttribute('data-app-channel');
@@ -35,7 +37,10 @@ const AdminLayout = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500/40">
+      <div
+        className={`min-h-screen selection:bg-blue-500/40 transition-colors duration-300
+          ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}
+      >
         <Outlet />
       </div>
     </ErrorBoundary>
