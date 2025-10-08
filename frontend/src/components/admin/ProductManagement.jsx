@@ -19,29 +19,27 @@ import productService from "../../services/productService";
 // Components
 import LoadingSpinner from "../common/LoadingSpinner";
 import ErrorBoundary from "../common/ErrorBoundary";
-import ErrorMessage from "../common/ErrorMessage";
 import Pagination from "../common/Pagination";
 import ProductCard from "../products/ProductCard";
-// import ProductTable from "./products/ProductTable";
-// import ProductModal from "./products/ProductModal";
-// import ProductFilters from "./products/ProductFilters";
-// import ProductStats from "./products/ProductStats";
-// import BulkActionsPanel from "./products/BulkActionsPanel";
-// import ExportModal from "./products/ExportModal";
-// import ImportModal from "./products/ImportModal";
-// import ImageGalleryModal from "./products/ImageGalleryModal";
+import ProductTable from "./products/ProductTable";
+import ProductModal from "./products/ProductModal";
+import ProductFilters from "./products/ProductFilters";
+import ProductStats from "./products/ProductStats";
+import BulkActionsPanel from "./products/BulkActionsPanel";
+import ExportModal from "./products/ExportModal";
+import ImportModal from "./products/ImportModal";
+import ImageGalleryModal from "./products/ImageGalleryModal";
 
 // Hooks
 import useWebSocket from "../../hooks/useWebSocket";
 import useLocalStorage from "../../hooks/useLocalStorage";
 import useDebounce from "../../hooks/useDebounce";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
-// import useDragAndDrop from "../../hooks/useDragAndDrop";
+import useDragAndDrop from "../../hooks/useDragAndDrop";
 
 // Utils
 import { trackEvent } from "../../utils/analytics";
-import { formatCurrency, formatNumber } from "../../utils/helpers";
-// import { validateProduct, generateSKU } from "../../utils/productUtils";
+import { validateProduct, generateSKU } from "../../utils/productUtils";
 
 // Constants
 const PRODUCTS_PER_PAGE_OPTIONS = [12, 24, 48, 96];
@@ -174,6 +172,34 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
       setSelectedProducts([]);
     }
   });
+
+  // File drop handler
+  const handleFilesDrop = useCallback(async (files) => {
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const dataFiles = files.filter(file => 
+      file.name.endsWith('.csv') || file.name.endsWith('.xlsx')
+    );
+
+    if (imageFiles.length > 0) {
+      const uploadPromises = imageFiles.map(async (file) => {
+        return URL.createObjectURL(file);
+      });
+      try {
+        const uploadedUrls = await Promise.all(uploadPromises);
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, ...uploadedUrls]
+        }));
+        toast.success(`${imageFiles.length} image(s) uploaded successfully!`);
+      } catch (error) {
+        toast.error('Failed to upload images');
+      }
+    }
+
+    if (dataFiles.length > 0) {
+      setShowImportModal(true);
+    }
+  }, [setFormData, setShowImportModal]);
 
   // Drag and drop for bulk file upload
   const { isDragging, dragProps } = useDragAndDrop({
@@ -603,37 +629,6 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => 
     link.click();
     URL.revokeObjectURL(url);
   }, [selectedProducts, products]);
-
-  // File drop handler
-  const handleFilesDrop = useCallback(async (files) => {
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    const dataFiles = files.filter(file => 
-      file.name.endsWith('.csv') || file.name.endsWith('.xlsx')
-    );
-
-    if (imageFiles.length > 0) {
-      // Handle image uploads
-      const uploadPromises = imageFiles.map(async (file) => {
-        // Upload logic here
-        return URL.createObjectURL(file); // Temporary for demo
-      });
-      
-      try {
-        const uploadedUrls = await Promise.all(uploadPromises);
-        setFormData(prev => ({
-          ...prev,
-          images: [...prev.images, ...uploadedUrls]
-        }));
-        toast.success(`${imageFiles.length} image(s) uploaded successfully!`);
-      } catch (error) {
-        toast.error('Failed to upload images');
-      }
-    }
-
-    if (dataFiles.length > 0) {
-      setShowImportModal(true);
-    }
-  }, []);
 
   // Refresh handler
   const handleRefresh = useCallback(() => {
