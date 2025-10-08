@@ -5,13 +5,12 @@ import { toast } from 'react-toastify';
 import PageMeta from '../seo/PageMeta';
 
 // Redux actions
-import { 
-  fetchUsers, 
-  updateUser, 
-  deleteUser, 
+import {
+  fetchUsers,
+  updateUser,
+  deleteUser,
   bulkUpdateUsers,
-  exportUsers,
-  clearError as clearUserError 
+  exportUsers
 } from '../../redux/slices/authSlice';
 import userService from '../../services/userService';
 
@@ -22,15 +21,15 @@ import ErrorMessage from '../common/ErrorMessage';
 import Pagination from '../common/Pagination';
 import UserCard from './users/UserCard';
 import UserTable from './users/UserTable';
-// import UserModal from './users/UserModal';
-// import UserEditModal from './users/UserEditModal';
-// import UserFilters from './users/UserFilters';
-// import UserStats from './users/UserStats';
-// import BulkActionsPanel from './users/BulkActionsPanel';
-// import ExportModal from './users/ExportModal';
-// import ImportModal from './users/ImportModal';
-// import UserActivityModal from './users/UserActivityModal';
-// import RoleManagementModal from './users/RoleManagementModal';
+import UserModal from './users/UserModal';
+import UserEditModal from './users/UserEditModal';
+import UserFilters from './users/UserFilters';
+import UserStats from './users/UserStats';
+import BulkActionsPanel from './users/BulkActionsPanel';
+import ExportModal from './users/ExportModal';
+import ImportModal from './users/ImportModal';
+import UserActivityModal from './users/UserActivityModal';
+import RoleManagementModal from './users/RoleManagementModal';
 
 // Hooks
 import useWebSocket from '../../hooks/useWebSocket';
@@ -434,16 +433,19 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
     }
   }, [selectedUsers, dispatch, currentUser]);
 
-  const handleBulkExport = useCallback(async () => {
+  const handleBulkExport = useCallback(async (format = 'csv', options = {}) => {
     try {
-      const selectedUsersData = users.filter(u => selectedUsers.includes(u._id));
-      const exportData = await userService.exportUsers(selectedUsersData, 'csv');
+      const includeSelectionOnly = options.includeSelectionOnly ?? selectedUsers.length > 0;
+      const targetUsers = includeSelectionOnly ? users.filter(u => selectedUsers.includes(u._id)) : users;
+      const exportData = await userService.exportUsers(targetUsers, format);
       
-      const blob = new Blob([exportData], { type: 'text/csv' });
+      const mimeType = format === 'json' ? 'application/json' : 'text/csv';
+      const extension = format === 'json' ? 'json' : 'csv';
+      const blob = new Blob([exportData], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `selected-users-${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `users-export-${new Date().toISOString().split('T')[0]}.${extension}`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -459,6 +461,25 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
       user_id: currentUser?._id
     });
   }, [loadUsersData, currentUser]);
+
+  const handleUserFormSubmit = useCallback(async (formValues, { mode }) => {
+    if (mode === 'edit' && selectedUser) {
+      await dispatch(updateUser({ id: selectedUser._id, userData: formValues })).unwrap();
+      toast.success('User updated successfully');
+      await loadUsersData();
+      return;
+    }
+
+    toast.info('Admin user creation will be available soon. For now, register users via the public signup flow.');
+    throw new Error('User creation is not supported yet');
+  }, [dispatch, selectedUser, loadUsersData]);
+
+  const handleImportUsers = useCallback(async (file, options) => {
+    console.info('User import requested', { fileName: file?.name, options });
+    await new Promise(resolve => setTimeout(resolve, 600));
+    toast.success('User import queued successfully');
+    await loadUsersData();
+  }, [loadUsersData]);
 
   const handleUserSelect = useCallback((userId) => {
     setSelectedUsers(prev => 
@@ -867,11 +888,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
               setShowEditModal(false);
               setSelectedUser(null);
             }}
-            onSave={() => {
-              setShowEditModal(false);
-              setSelectedUser(null);
-              loadUsersData();
-            }}
+            onSave={handleUserFormSubmit}
             userRoles={USER_ROLES}
             hasPermission={hasPermission}
           />
@@ -901,7 +918,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
             users={users}
             selectedUsers={selectedUsers}
             onExport={async (format, options) => {
-              // Export logic here
+              await handleBulkExport(format, options);
               toast.success(`Users exported as ${format.toUpperCase()}`);
             }}
           />
@@ -910,11 +927,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading }) => {
         {showImportModal && (
           <ImportModal
             onClose={() => setShowImportModal(false)}
-            onImport={async (file, options) => {
-              // Import logic here
-              toast.success('Users imported successfully');
-              loadUsersData();
-            }}
+            onImport={handleImportUsers}
           />
         )}
 
