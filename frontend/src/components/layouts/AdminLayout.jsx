@@ -13,7 +13,7 @@ import { useTheme } from '../../context/ThemeContext';
 const AdminLayout = () => {
   const location = useLocation();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const { isDarkMode } = useTheme();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const previousAttribute = document.body.getAttribute('data-app-channel');
@@ -38,8 +38,8 @@ const AdminLayout = () => {
   return (
     <ErrorBoundary>
       <div
-        className={`min-h-screen selection:bg-blue-500/40 transition-colors duration-300
-          ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}
+        className={`min-h-screen selection:bg-primary/40 transition-colors duration-300 bg-theme text-theme`}
+        data-theme={theme}
       >
         <Outlet />
       </div>

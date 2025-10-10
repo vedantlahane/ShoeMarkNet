@@ -240,9 +240,9 @@ const Rating = ({
           {/* Tooltip */}
           {showTooltip && showTooltipState && hoveredStar > 0 && (
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 animate-fade-in">
-              <div className="bg-black/80 backdrop-blur-lg text-white text-xs font-medium px-3 py-2 rounded-lg shadow-2xl">
+              <div className="bg-surface backdrop-blur-lg text-theme text-xs font-medium px-3 py-2 rounded-lg shadow-2xl border border-theme-strong">
                 {tooltipText}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/80"></div>
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-surface"></div>
               </div>
             </div>
           )}

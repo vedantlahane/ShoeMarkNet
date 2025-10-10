@@ -10,6 +10,10 @@ const User = require('../models/User');
 const Order = require('../models/Order');
 const Wishlist = require('../models/Wishlist');
 const Cart = require('../models/Cart');
+const Coupon = require('../models/Coupon');
+const Campaign = require('../models/Campaign');
+const Notification = require('../models/Notification');
+const Admin = require('../models/Admin');
 
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
@@ -348,6 +352,98 @@ async function seedOrder(user, products) {
   );
 }
 
+async function seedCoupons() {
+  console.log('🎟️ Seeding coupons');
+  const now = new Date();
+
+  await Coupon.findOneAndUpdate(
+    { code: 'WELCOME10' },
+    {
+      code: 'WELCOME10',
+      type: 'percentage',
+      value: 10,
+      minPurchase: 120,
+      maxDiscount: 40,
+      usageLimit: { total: 500, perUser: 2 },
+      startDate: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      endDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+      isActive: true
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+}
+
+async function seedPromotions() {
+  console.log('📣 Seeding public promotions');
+  const adminUser = await Admin.findOne();
+  if (!adminUser) {
+    console.warn('⚠️ No admin document found. Skipping campaign seeding. Run admin seeding first.');
+    return;
+  }
+
+  const now = new Date();
+
+  await Campaign.findOneAndUpdate(
+    { name: 'Spring Step Up Sale' },
+    {
+      name: 'Spring Step Up Sale',
+      description: 'Save on fresh arrivals and top sellers all month long.',
+      type: 'promotion',
+      discount: {
+        type: 'percentage',
+        value: 15,
+        minimumPurchase: 150,
+        maxDiscountAmount: 75
+      },
+      startDate: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      endDate: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000),
+      status: 'active',
+      isActive: true,
+      isPublic: true,
+      priority: 8,
+      bannerImage: 'https://res.cloudinary.com/demo/image/upload/v1700000000/promotions/spring-step.jpg',
+      ctaUrl: 'https://shoemarknet.com/collections/spring',
+      targetAudience: {
+        segments: ['all'],
+        userTags: [],
+        specificUsers: []
+      },
+      applicableItems: {
+        allProducts: true
+      },
+      createdBy: adminUser._id
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+}
+
+async function seedNotifications() {
+  console.log('🔔 Seeding admin notifications');
+
+  const payloads = [
+    {
+      title: 'Real-time dashboard is live',
+      message: 'Monitor live orders, revenue, and active shoppers from the new realtime dashboard tab.',
+      category: 'product',
+      priority: 'medium'
+    },
+    {
+      title: 'Inventory alert: Pegasus 40',
+      message: 'Stock levels dipped below 15 units. Consider reordering soon.',
+      category: 'inventory',
+      priority: 'high'
+    }
+  ];
+
+  for (const notification of payloads) {
+    await Notification.findOneAndUpdate(
+      { title: notification.title },
+      notification,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+}
+
 async function clearCollections() {
   console.log('🧹 Clearing collections');
   await Promise.all([
@@ -356,7 +452,10 @@ async function clearCollections() {
     Review.deleteMany({}),
     Order.deleteMany({}),
     Wishlist.deleteMany({}),
-    Cart.deleteMany({})
+    Cart.deleteMany({}),
+    Coupon.deleteMany({}),
+    Campaign.deleteMany({}),
+    Notification.deleteMany({})
   ]);
 }
 
@@ -371,6 +470,9 @@ async function seed() {
 
   const categoryMap = await seedCategories();
   const products = await seedProducts(categoryMap);
+  await seedCoupons();
+  await seedPromotions();
+  await seedNotifications();
 
   const demoUser = await User.findOne({ email: 'user@shoemarknet.test' });
   if (demoUser) {

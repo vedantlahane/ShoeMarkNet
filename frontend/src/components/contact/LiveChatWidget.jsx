@@ -653,8 +653,8 @@ const LiveChatWidget = () => {
                 <i className="fas fa-headset text-white"></i>
               </div>
               <div>
-                <h3 className="font-bold text-white">Live Support</h3>
-                <p className="text-blue-100 text-sm">
+                <h3 className="font-bold text-theme">Live Support</h3>
+                <p className="text-muted-theme text-sm">
                   {agentStatus === CHAT_STATUS.ONLINE ? 'We\'re here to help!' : 'Currently offline'}
                 </p>
               </div>

@@ -285,15 +285,15 @@ const SubcategoryNav = ({
                 <i className="fas fa-th-large mr-3"></i>
                 Browse Categories
               </h3>
-              <p className="text-blue-100">
+              <p className="text-muted-theme">
                 Discover our extensive collection organized by category
               </p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-white">
+              <div className="text-3xl font-bold text-theme">
                 {categoryData.reduce((total, cat) => total + cat.count, 0)}
               </div>
-              <div className="text-blue-100 text-sm">Total Products</div>
+              <div className="text-muted-theme text-sm">Total Products</div>
             </div>
           </div>
         </div>

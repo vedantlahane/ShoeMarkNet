@@ -5,6 +5,60 @@ const Category = require('../models/Category');
 const Campaign = require('../models/Campaign');
 const Setting = require('../models/Setting');
 const asyncHandler = require('express-async-handler');
+const mongoose = require('mongoose');
+
+const CATEGORY_ANALYTICS_CACHE = new Map();
+const CATEGORY_ANALYTICS_TTL_MS = 5 * 60 * 1000;
+
+const buildCategoryAnalyticsCacheKey = (categoryId, start, end) => {
+  const startKey = start ? start.toISOString() : 'null';
+  const endKey = end ? end.toISOString() : 'null';
+  return `${categoryId}:${startKey}:${endKey}`;
+};
+
+const resolveTimeframeRange = (timeframe, startDate, endDate) => {
+  const now = new Date();
+  let start = null;
+  let end = now;
+
+  const timeframeKey = (timeframe || '').toLowerCase();
+
+  switch (timeframeKey) {
+    case '7d':
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+    case '':
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case '90d':
+      start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    case 'ytd': {
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      start = yearStart;
+      break;
+    }
+    case 'custom':
+      if (startDate) {
+        const parsedStart = new Date(startDate);
+        if (!Number.isNaN(parsedStart.getTime())) {
+          start = parsedStart;
+        }
+      }
+      if (endDate) {
+        const parsedEnd = new Date(endDate);
+        if (!Number.isNaN(parsedEnd.getTime())) {
+          end = parsedEnd;
+        }
+      }
+      break;
+    default:
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  }
+
+  return { start, end };
+};
 
 /**
  * @description Fetches key statistics for the admin dashboard.
@@ -278,6 +332,190 @@ const getCustomerAnalytics = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @description Builds aggregated analytics for a specific category.
+ * @route GET /api/admin/analytics/categories/:categoryId
+ * @access Private/Admin
+ */
+const getCategoryAnalytics = asyncHandler(async (req, res) => {
+  const { categoryId } = req.params;
+  const { timeframe = '30d', startDate, endDate } = req.query;
+
+  if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+    res.status(400);
+    throw new Error('Invalid category ID');
+  }
+
+  const category = await Category.findById(categoryId).select('name');
+  if (!category) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+
+  const { start, end } = resolveTimeframeRange(timeframe, startDate, endDate);
+  const cacheKey = buildCategoryAnalyticsCacheKey(categoryId, start, end);
+  const cached = CATEGORY_ANALYTICS_CACHE.get(cacheKey);
+  const now = Date.now();
+
+  if (cached && cached.expiresAt > now) {
+    if (typeof res.success === 'function') {
+      return res.success('Category analytics retrieved successfully', cached.payload.data, {
+        ...cached.payload.meta,
+        cached: true
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Category analytics retrieved successfully',
+      ...cached.payload,
+      meta: { ...cached.payload.meta, cached: true }
+    });
+  }
+
+  const matchStage = { status: { $ne: 'cancelled' } };
+  if (start || end) {
+    matchStage.createdAt = {};
+    if (start) matchStage.createdAt.$gte = start;
+    if (end) matchStage.createdAt.$lte = end;
+  }
+
+  const categoryObjectId = new mongoose.Types.ObjectId(categoryId);
+
+  const pipeline = [
+    { $match: matchStage },
+    { $unwind: '$items' },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'items.product',
+        foreignField: '_id',
+        as: 'product'
+      }
+    },
+    { $unwind: '$product' },
+    { $match: { 'product.category': categoryObjectId } },
+    {
+      $addFields: {
+        itemRevenue: { $multiply: ['$items.price', '$items.quantity'] },
+        itemQuantity: '$items.quantity',
+        orderDate: {
+          $dateTrunc: {
+            date: '$createdAt',
+            unit: 'day'
+          }
+        }
+      }
+    },
+    {
+      $facet: {
+        totals: [
+          {
+            $group: {
+              _id: null,
+              totalRevenue: { $sum: '$itemRevenue' },
+              totalUnits: { $sum: '$itemQuantity' },
+              orders: { $addToSet: '$_id' }
+            }
+          },
+          {
+            $project: {
+              _id: 0,
+              totalRevenue: 1,
+              totalUnits: 1,
+              totalOrders: { $size: '$orders' },
+              averageOrderValue: {
+                $cond: [
+                  { $gt: [{ $size: '$orders' }, 0] },
+                  { $divide: ['$totalRevenue', { $size: '$orders' }] },
+                  0
+                ]
+              }
+            }
+          }
+        ],
+        trends: [
+          {
+            $group: {
+              _id: '$orderDate',
+              revenue: { $sum: '$itemRevenue' },
+              units: { $sum: '$itemQuantity' }
+            }
+          },
+          { $sort: { _id: 1 } }
+        ],
+        topProducts: [
+          {
+            $group: {
+              _id: '$product._id',
+              name: { $first: '$product.name' },
+              revenue: { $sum: '$itemRevenue' },
+              units: { $sum: '$itemQuantity' }
+            }
+          },
+          { $sort: { revenue: -1 } },
+          { $limit: 5 }
+        ]
+      }
+    }
+  ];
+
+  const [aggregation] = await Order.aggregate(pipeline);
+
+  const totalMetrics = aggregation?.totals?.[0] || {
+    totalRevenue: 0,
+    totalUnits: 0,
+    totalOrders: 0,
+    averageOrderValue: 0
+  };
+
+  const trends = (aggregation?.trends || []).map(entry => ({
+    date: entry._id,
+    revenue: entry.revenue,
+    units: entry.units
+  }));
+
+  const topProducts = (aggregation?.topProducts || []).map(product => ({
+    id: product._id,
+    name: product.name,
+    revenue: product.revenue,
+    units: product.units
+  }));
+
+  const responsePayload = {
+    data: {
+      totals: totalMetrics,
+      trends,
+      topProducts
+    },
+    meta: {
+      category: {
+        id: category._id,
+        name: category.name
+      },
+      timeframe: {
+        label: timeframe,
+        start: start ? start.toISOString() : null,
+        end: end ? end.toISOString() : null
+      },
+      cached: false
+    }
+  };
+
+  CATEGORY_ANALYTICS_CACHE.set(cacheKey, {
+    payload: responsePayload,
+    expiresAt: now + CATEGORY_ANALYTICS_TTL_MS
+  });
+
+  if (typeof res.success === 'function') {
+    return res.success('Category analytics retrieved successfully', responsePayload.data, responsePayload.meta);
+  }
+
+  return res.status(200).json({
+    message: 'Category analytics retrieved successfully',
+    ...responsePayload
+  });
+});
+
+/**
  * @description Fetches all users and their lead score data for reporting.
  * @route GET /api/admin/leads
  * @access Private/Admin
@@ -536,5 +774,6 @@ module.exports = {
   getCampaigns,
   updateCampaign,
   deleteCampaign,
-  getUsers
+  getUsers,
+  getCategoryAnalytics
 };

@@ -213,9 +213,9 @@ const HeroSection = () => {
       className={`relative isolate overflow-hidden pt-28 pb-32 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       aria-label="Hero section"
     >
-      <div className="hero-gradient absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-black" />
+      <div className="hero-gradient absolute inset-0 bg-theme" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.28),_transparent_55%)]" aria-hidden="true" />
-      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/70 to-transparent" aria-hidden="true" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-theme/70 to-transparent" aria-hidden="true" />
 
       {floatingShapes.map((shape, index) => (
         <span
@@ -234,11 +234,11 @@ const HeroSection = () => {
 
   <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
         <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-          <div className="space-y-10 text-white">
-            <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-white/80 shadow-lg shadow-slate-900/40 backdrop-blur-xl">
+          <div className="space-y-10 text-theme">
+            <div className="inline-flex items-center gap-3 rounded-full border border-theme-strong/15 bg-surface/5 px-5 py-2 text-theme/80 shadow-lg shadow-theme/40 backdrop-blur-xl">
               <Sparkles className="h-4 w-4 text-cyan-300" aria-hidden="true" />
               <span className="text-xs font-semibold uppercase tracking-[0.28em]">Premium drop</span>
-              <span className="flex items-center gap-1 text-xs text-white/60">
+              <span className="flex items-center gap-1 text-xs text-muted-theme">
                 <History className="h-3.5 w-3.5" aria-hidden="true" />
                 Ends in {formatTimeUnit(timeLeft.hours)}h {formatTimeUnit(timeLeft.minutes)}m
               </span>
@@ -255,7 +255,7 @@ const HeroSection = () => {
 
             <p
               ref={subtitleRef}
-              className="max-w-2xl text-base text-white/70 sm:text-lg md:text-xl md:leading-relaxed"
+              className="max-w-2xl text-base text-muted-theme sm:text-lg md:text-xl md:leading-relaxed"
             >
               Engineered with adaptive cushioning and breathable knit mesh, Nimbus Runner X keeps pace with every sprint, stride, and slowdown. Join a community of sneaker obsessives discovering their perfect fit.
             </p>
@@ -267,11 +267,11 @@ const HeroSection = () => {
                   <div
                     key={stat.label}
                     ref={(el) => { statsRef.current[index] = el; }}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-white/80 shadow-[0_14px_50px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+                    className="rounded-2xl border border-theme-strong/10 bg-surface/5 px-4 py-5 text-muted-theme shadow-[0_14px_50px_rgba(15,23,42,0.45)] backdrop-blur-xl"
                   >
                     <Icon className="mb-3 h-5 w-5 text-cyan-300" aria-hidden="true" />
-                    <div className="text-2xl font-semibold text-white">{stat.value}</div>
-                    <div className="text-xs uppercase tracking-[0.28em] text-white/50">{stat.label}</div>
+                    <div className="text-2xl font-semibold text-theme">{stat.value}</div>
+                    <div className="text-xs uppercase tracking-[0.28em] text-muted-strong">{stat.label}</div>
                   </div>
                 );
               })}
@@ -280,7 +280,7 @@ const HeroSection = () => {
             <div ref={ctaRef} className="flex flex-col gap-4 sm:flex-row">
               <button
                 onClick={() => handleAddToCart()}
-                className="add-to-cart-btn inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-3 text-sm font-semibold text-slate-900 shadow-[0_20px_40px_rgba(148,163,184,0.35)] transition-all duration-300 hover:shadow-[0_26px_56px_rgba(148,163,184,0.4)] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-950"
+                className="add-to-cart-btn inline-flex items-center justify-center gap-3 rounded-full bg-primary px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(148,163,184,0.35)] transition-all duration-300 hover:shadow-[0_26px_56px_rgba(148,163,184,0.4)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-theme"
                 aria-label="Add Nimbus Runner X to cart"
               >
                 <ShoppingBag className="h-5 w-5" aria-hidden="true" />
@@ -305,7 +305,7 @@ const HeroSection = () => {
                 return (
                   <div
                     key={pill.label}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/70 backdrop-blur-lg"
+                    className="inline-flex items-center gap-2 rounded-full border border-theme-strong/15 bg-surface/5 px-4 py-2 text-sm text-muted-theme backdrop-blur-lg"
                   >
                     <Icon className="h-4 w-4 text-cyan-300" aria-hidden="true" />
                     {pill.label}
@@ -314,19 +314,19 @@ const HeroSection = () => {
               })}
             </div>
 
-            <div className="max-w-lg rounded-3xl border border-white/15 bg-white/5 px-6 py-5 text-white/80 shadow-[0_22px_60px_rgba(12,17,28,0.55)] backdrop-blur-2xl">
-              <div className="flex items-center gap-3 text-white">
+            <div className="max-w-lg rounded-3xl border border-theme-strong bg-surface px-6 py-5 text-muted-theme shadow-[0_22px_60px_rgba(12,17,28,0.55)] backdrop-blur-2xl">
+              <div className="flex items-center gap-3 text-theme">
                 <Clock className="h-5 w-5 text-amber-300" aria-hidden="true" />
-                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Flash drop ends in</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-theme">Flash drop ends in</span>
               </div>
               <div className="mt-4 flex items-center gap-3">
                 {countdownSegments.map((segment) => (
                   <div
                     key={segment.label}
-                    className="flex-1 rounded-2xl border border-white/10 bg-black/35 py-3 text-center"
+                    className="flex-1 rounded-2xl border border-theme-strong bg-surface py-3 text-center"
                   >
-                    <div className="text-2xl font-semibold text-white">{segment.value}</div>
-                    <div className="text-[0.65rem] uppercase tracking-[0.32em] text-white/45">{segment.label}</div>
+                    <div className="text-2xl font-semibold text-theme">{segment.value}</div>
+                    <div className="text-[0.65rem] uppercase tracking-[0.32em] text-muted-theme">{segment.label}</div>
                   </div>
                 ))}
               </div>
@@ -367,15 +367,15 @@ const HeroSection = () => {
                 )}
               </div>
 
-              <div className="mt-10 space-y-6 text-white/80">
+              <div className="mt-10 space-y-6 text-muted-theme">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.32em] text-white/50">Nimbus Runner X</p>
-                    <h3 className="text-2xl font-semibold text-white">{heroProduct.name}</h3>
+                    <p className="text-xs uppercase tracking-[0.32em] text-muted-theme">Nimbus Runner X</p>
+                    <h3 className="text-2xl font-semibold text-theme">{heroProduct.name}</h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-white/50 line-through">${heroProduct.originalPrice.toFixed(2)}</p>
-                    <p className="text-3xl font-semibold text-white">${heroProduct.price.toFixed(2)}</p>
+                    <p className="text-sm text-muted-theme line-through">${heroProduct.originalPrice.toFixed(2)}</p>
+                    <p className="text-3xl font-semibold text-theme">${heroProduct.price.toFixed(2)}</p>
                   </div>
                 </div>
 
@@ -385,7 +385,7 @@ const HeroSection = () => {
                     return (
                       <div
                         key={highlight.label}
-                        className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white/70"
+                        className="rounded-2xl border border-theme-strong bg-surface px-3 py-3 text-sm text-muted-theme"
                       >
                         <Icon className="mb-2 h-4 w-4 text-cyan-300" aria-hidden="true" />
                         {highlight.label}
@@ -405,16 +405,16 @@ const HeroSection = () => {
               </div>
             </div>
 
-            <div className="relative mx-auto mt-8 w-full max-w-sm rounded-2xl border border-white/10 bg-black/65 px-6 py-5 text-white/70 shadow-[0_28px_90px_rgba(12,12,30,0.65)] backdrop-blur-2xl">
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.32em] text-white/50">
-                <span className="inline-flex items-center gap-2 text-white/60">
+            <div className="relative mx-auto mt-8 w-full max-w-sm rounded-2xl border border-theme-strong bg-surface px-6 py-5 text-muted-theme shadow-[0_28px_90px_rgba(12,12,30,0.65)] backdrop-blur-2xl">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.32em] text-muted-theme">
+                <span className="inline-flex items-center gap-2 text-muted-theme">
                   <Clock className="h-4 w-4 text-amber-300" aria-hidden="true" />
                   Next drop in
                 </span>
                 <button
                   type="button"
                   onClick={() => scrollToSection('new-arrivals')}
-                  className="inline-flex items-center gap-2 text-white/60 transition-colors duration-200 hover:text-white"
+                  className="inline-flex items-center gap-2 text-muted-theme transition-colors duration-200 hover:text-theme"
                 >
                   Set reminder
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -425,15 +425,15 @@ const HeroSection = () => {
                 {countdownSegments.map((segment) => (
                   <div
                     key={`mini-${segment.label}`}
-                    className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-center"
+                    className="flex-1 rounded-xl border border-theme-strong bg-surface py-3 text-center"
                   >
-                    <span className="block text-lg font-semibold text-white">{segment.value}</span>
-                    <span className="text-[0.6rem] uppercase tracking-[0.34em] text-white/45">{segment.label}</span>
+                    <span className="block text-lg font-semibold text-theme">{segment.value}</span>
+                    <span className="text-[0.6rem] uppercase tracking-[0.34em] text-muted-theme">{segment.label}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-4 flex items-center gap-2 text-xs text-white/40">
+              <div className="mt-4 flex items-center gap-2 text-xs text-muted-theme">
                 <Info className="h-3.5 w-3.5" aria-hidden="true" />
                 Members get early colorway access via ShoeMark+ notifications.
               </div>

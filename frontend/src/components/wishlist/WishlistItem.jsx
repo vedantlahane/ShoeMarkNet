@@ -21,7 +21,7 @@ const WishlistItem = ({
   
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 ${
+      className={`group relative overflow-hidden rounded-2xl border border-theme bg-surface backdrop-blur-xl theme-shadow-soft ${
         isList ? 'md:flex md:items-stretch md:gap-6' : 'flex flex-col'
       } ${className}`}
     >
@@ -34,8 +34,8 @@ const WishlistItem = ({
           onClick={() => onSelect(item._id)}
           className={`absolute left-4 top-4 z-10 flex h-6 w-6 items-center justify-center rounded border text-xs transition-colors ${
             isSelected
-              ? 'border-white bg-white text-slate-900'
-              : 'border-slate-600 bg-slate-900/80 text-slate-200 hover:border-slate-400'
+              ? 'border-theme-strong bg-card text-theme shadow-focus'
+              : 'border-theme bg-surface text-muted-theme hover:border-theme-strong'
           }`}
         >
           {isSelected && <i className="fas fa-check"></i>}
@@ -50,7 +50,7 @@ const WishlistItem = ({
           />
         </Link>
 
-        <div className="absolute right-4 top-4 flex flex-col gap-2 text-[10px] font-semibold uppercase tracking-wide text-slate-100">
+  <div className="absolute right-4 top-4 flex flex-col gap-2 text-[10px] font-semibold uppercase tracking-wide text-white">
           {item.discountPercentage > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-red-500/80 px-2 py-1">
               <i className="fas fa-percentage"></i>
@@ -71,24 +71,24 @@ const WishlistItem = ({
           )}
         </div>
 
-        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-slate-950/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
             onClick={() => onShare(item)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 text-slate-100 transition-colors hover:border-slate-500"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-theme bg-surface text-white transition-colors hover:border-theme-strong"
             title="Share"
           >
             <i className="fas fa-share"></i>
           </button>
           <Link
             to={`/products/${item._id}`}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 text-slate-100 transition-colors hover:border-slate-500"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-theme bg-surface text-white transition-colors hover:border-theme-strong"
             title="View"
           >
             <i className="fas fa-eye"></i>
           </Link>
           <button
             onClick={() => onAddToCompare(item)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 text-slate-100 transition-colors hover:border-slate-500"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-theme bg-surface text-white transition-colors hover:border-theme-strong"
             title="Compare"
           >
             <i className="fas fa-balance-scale"></i>
@@ -98,7 +98,7 @@ const WishlistItem = ({
         <button
           onClick={() => onRemove(item._id, item.name)}
           disabled={isProcessing}
-          className="absolute left-4 bottom-4 flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 text-red-400 transition-colors hover:border-red-400 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute left-4 bottom-4 flex h-9 w-9 items-center justify-center rounded-full border border-theme bg-surface text-red-500 transition-colors hover:border-red-500 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-60"
           title="Remove from wishlist"
         >
           {isProcessing ? (
@@ -111,26 +111,26 @@ const WishlistItem = ({
 
       <div className={`${isList ? 'flex-1 py-6 pr-6' : 'flex flex-1 flex-col p-6'}`}>
         <div className={`${isList ? 'flex h-full flex-col justify-between' : 'flex flex-col gap-4'}`}>
-          <div className="space-y-3">
+          <div className="space-y-3 text-theme">
             {item.brand && (
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-theme">
                 {item.brand}
               </span>
             )}
 
-            <Link to={`/products/${item._id}`} className="text-lg font-semibold text-white transition-colors hover:text-slate-300">
+            <Link to={`/products/${item._id}`} className="text-lg font-semibold text-theme transition-colors hover:text-primary-500">
               {item.name}
             </Link>
 
-            <div className="text-sm text-slate-300">
+            <div className="text-sm text-muted-theme">
               {discountedPrice ? (
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-semibold text-white">{formatPrice(discountedPrice)}</span>
-                  <span className="text-xs text-slate-500 line-through">{formatPrice(item.price)}</span>
+                  <span className="text-xl font-semibold text-theme">{formatPrice(discountedPrice)}</span>
+                  <span className="text-xs text-muted-theme line-through opacity-70">{formatPrice(item.price)}</span>
                   <span className="text-xs text-emerald-300">save {formatPrice(item.price - discountedPrice)}</span>
                 </div>
               ) : (
-                <span className="text-xl font-semibold text-white">{formatPrice(item.price)}</span>
+                <span className="text-xl font-semibold text-theme">{formatPrice(item.price)}</span>
               )}
             </div>
 
@@ -154,10 +154,10 @@ const WishlistItem = ({
               disabled={item.countInStock === 0 || isProcessing}
               className={`inline-flex h-11 w-full items-center justify-center rounded-xl border px-4 text-sm font-semibold transition-colors ${
                 item.countInStock === 0 || isProcessing
-                  ? 'cursor-not-allowed border-slate-700 bg-slate-900/60 text-slate-600'
+                  ? 'cursor-not-allowed border-theme bg-surface text-muted-theme'
                   : isInCart
-                  ? 'border-emerald-500 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30'
-                  : 'border-white/10 bg-white text-slate-950 hover:bg-slate-200'
+                  ? 'border-emerald-500 bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-200'
+                  : 'border-theme bg-primary-500/90 text-white hover:bg-primary-500'
               }`}
             >
               {isProcessing ? (
@@ -176,14 +176,14 @@ const WishlistItem = ({
             <div className={`flex gap-2 ${isList ? 'md:flex-1' : ''}`}>
               <Link
                 to={`/products/${item._id}`}
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-theme px-4 text-sm font-semibold text-muted-theme transition-colors hover:border-theme-strong hover:text-theme"
               >
                 <i className="fas fa-eye mr-2"></i>
                 View
               </Link>
               <button
                 onClick={() => onAddToCompare(item)}
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-theme px-4 text-sm font-semibold text-muted-theme transition-colors hover:border-theme-strong hover:text-theme"
               >
                 <i className="fas fa-balance-scale mr-2"></i>
                 Compare
@@ -192,17 +192,17 @@ const WishlistItem = ({
           </div>
 
           {!isCompact && (
-            <div className="mt-6 grid grid-cols-3 gap-4 text-[11px] uppercase tracking-wide text-slate-500">
+            <div className="mt-6 grid grid-cols-3 gap-4 text-[11px] uppercase tracking-wide text-muted-theme">
               <span className="flex items-center gap-1">
-                <i className="fas fa-shipping-fast text-slate-400"></i>
+                <i className="fas fa-shipping-fast text-muted-theme"></i>
                 Free ship
               </span>
               <span className="flex items-center gap-1">
-                <i className="fas fa-undo text-slate-400"></i>
+                <i className="fas fa-undo text-muted-theme"></i>
                 Easy returns
               </span>
               <span className="flex items-center gap-1">
-                <i className="fas fa-shield-alt text-slate-400"></i>
+                <i className="fas fa-shield-alt text-muted-theme"></i>
                 Warranty
               </span>
             </div>

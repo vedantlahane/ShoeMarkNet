@@ -106,7 +106,7 @@ const Cart = () => {
   // Enhanced loading state
   if (loading && items.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-theme text-theme flex items-center justify-center">
         <Loader />
       </div>
     );
@@ -115,31 +115,31 @@ const Cart = () => {
   const cartItems = Array.isArray(items) ? items : [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-theme text-theme">
   <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-12">
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
             <button
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 transition-colors hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-muted-theme transition-colors hover:text-theme"
             >
               <i className="fas fa-arrow-left text-xs"></i>
               Back
             </button>
             <div>
-              <h1 className="text-3xl font-semibold text-white md:text-4xl">Shopping cart</h1>
-              <p className="mt-1 max-w-xl text-sm text-slate-400 md:text-base">
+              <h1 className="text-3xl font-semibold text-theme md:text-4xl">Shopping cart</h1>
+              <p className="mt-1 max-w-xl text-sm text-muted-theme md:text-base">
                 Review your items, adjust quantities, and move forward when you’re ready to check out.
               </p>
             </div>
           </div>
 
           {cartItems.length > 0 && (
-            <div className="flex flex-wrap gap-3 text-sm text-slate-300">
-              <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-2">
+            <div className="flex flex-wrap gap-3 text-sm text-muted-theme">
+              <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
                 {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-2">
+              <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
                 ${total.toFixed(2)} total
               </div>
             </div>
@@ -147,12 +147,12 @@ const Cart = () => {
         </div>
 
         {cartItems.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-12 text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/80">
-              <i className="fas fa-shopping-bag text-2xl text-slate-300"></i>
+          <div className="rounded-2xl border border-theme-strong bg-card p-12 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-surface">
+              <i className="fas fa-shopping-bag text-2xl text-muted-theme"></i>
             </div>
-            <h2 className="mt-6 text-2xl font-semibold text-white">Your cart is empty</h2>
-            <p className="mt-3 text-sm text-slate-400 md:text-base">
+            <h2 className="mt-6 text-2xl font-semibold text-theme">Your cart is empty</h2>
+            <p className="mt-3 text-sm text-muted-theme md:text-base">
               You haven’t added anything yet. Explore the catalog and find something you’ll love.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -164,7 +164,7 @@ const Cart = () => {
               </Link>
               <Link
                 to="/categories"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-700 px-6 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                className="inline-flex h-12 items-center justify-center rounded-xl border border-theme-strong px-6 text-sm font-semibold text-muted-strong transition-colors hover:border-primary hover:text-theme"
               >
                 View categories
               </Link>
@@ -185,12 +185,12 @@ const Cart = () => {
                 return (
                   <div
                     key={item._id}
-                    className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5"
+                    className="rounded-2xl border border-theme-strong bg-card p-5"
                   >
                     <div className="flex flex-col gap-5 md:flex-row md:items-center">
                       <Link
                         to={`/products/${productId}`}
-                        className="h-24 w-24 overflow-hidden rounded-2xl border border-slate-800 bg-slate-800/80"
+                        className="h-24 w-24 overflow-hidden rounded-2xl border border-theme-strong bg-surface"
                       >
                         <img src={image} alt={name} className="h-full w-full object-cover" />
                       </Link>
@@ -199,11 +199,11 @@ const Cart = () => {
                         <div>
                           <Link
                             to={`/products/${productId}`}
-                            className="text-lg font-semibold text-white transition-colors hover:text-slate-300"
+                            className="text-lg font-semibold text-theme transition-colors hover:text-muted-theme"
                           >
                             {name}
                           </Link>
-                          <div className="mt-2 flex flex-wrap gap-3 text-xs uppercase tracking-wide text-slate-400">
+                          <div className="mt-2 flex flex-wrap gap-3 text-xs uppercase tracking-wide text-muted-theme">
                             {item.size && <span>Size: {item.size}</span>}
                             {item.color && <span>Color: {item.color}</span>}
                             <span>${typeof price === 'number' ? price.toFixed(2) : '0.00'} each</span>
@@ -211,10 +211,10 @@ const Cart = () => {
                         </div>
 
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                          <div className="inline-flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 px-2 py-2">
+                          <div className="inline-flex items-center gap-3 rounded-xl border border-theme-strong bg-surface px-2 py-2">
                             <button
                               onClick={() => handleQuantityChange(item._id, item.quantity - 1, product.countInStock || item.maxStock)}
-                              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-theme transition-colors hover:bg-card disabled:cursor-not-allowed disabled:opacity-60"
                               disabled={isUpdating === item._id || item.quantity <= 1}
                             >
                               {isUpdating === item._id ? (
@@ -223,12 +223,12 @@ const Cart = () => {
                                 <i className="fas fa-minus"></i>
                               )}
                             </button>
-                            <span className="w-12 text-center text-base font-semibold text-white">
+                            <span className="w-12 text-center text-base font-semibold text-theme">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => handleQuantityChange(item._id, item.quantity + 1, product.countInStock || item.maxStock)}
-                              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-theme transition-colors hover:bg-card disabled:cursor-not-allowed disabled:opacity-60"
                               disabled={isUpdating === item._id || item.quantity >= (product.countInStock || item.maxStock || 10)}
                             >
                               {isUpdating === item._id ? (
@@ -240,9 +240,9 @@ const Cart = () => {
                           </div>
 
                           <div className="flex items-center gap-4">
-                            <div className="text-right text-lg font-semibold text-white md:w-28">
+                            <div className="text-right text-lg font-semibold text-theme md:w-28">
                               ${typeof price === 'number' ? (price * item.quantity).toFixed(2) : '0.00'}
-                              <p className="mt-1 text-xs font-normal text-slate-400">Item total</p>
+                              <p className="mt-1 text-xs font-normal text-muted-theme">Item total</p>
                             </div>
                             <button
                               onClick={() => handleRemoveItem(item._id)}
@@ -266,7 +266,7 @@ const Cart = () => {
 
               <Link
                 to="/products"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition-colors hover:text-white"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-muted-theme transition-colors hover:text-theme"
               >
                 <i className="fas fa-arrow-left text-xs"></i>
                 Continue shopping
@@ -274,9 +274,9 @@ const Cart = () => {
             </section>
 
             <aside className="space-y-6">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-                <h2 className="text-lg font-semibold text-white">Promo code</h2>
-                <p className="mt-1 text-sm text-slate-400">Enter SAVE10 for an extra 10% off.</p>
+              <div className="rounded-2xl border border-theme-strong bg-card p-6">
+                <h2 className="text-lg font-semibold text-theme">Promo code</h2>
+                <p className="mt-1 text-sm text-muted-theme">Enter SAVE10 for an extra 10% off.</p>
                 <div className="mt-4 flex gap-2">
                   <input
                     type="text"
@@ -284,12 +284,12 @@ const Cart = () => {
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
                     disabled={promoApplied}
-                    className="h-11 flex-1 rounded-xl border border-slate-800 bg-slate-900/80 px-4 text-sm text-white placeholder:text-slate-500 focus:border-slate-500 focus:outline-none"
+                    className="h-11 flex-1 rounded-xl border border-theme-strong bg-surface px-4 text-sm text-theme placeholder:text-muted-theme focus:border-primary focus:outline-none"
                   />
                   <button
                     onClick={handlePromoCode}
                     disabled={promoApplied || !promoCode.trim()}
-                    className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-100 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+                    className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-strong disabled:cursor-not-allowed disabled:bg-muted-theme disabled:text-muted-strong"
                   >
                     {promoApplied ? 'Applied' : 'Apply'}
                   </button>
@@ -301,12 +301,12 @@ const Cart = () => {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-                <h2 className="text-lg font-semibold text-white">Order summary</h2>
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
+              <div className="rounded-2xl border border-theme-strong bg-card p-6">
+                <h2 className="text-lg font-semibold text-theme">Order summary</h2>
+                <div className="mt-4 space-y-3 text-sm text-muted-theme">
                   <div className="flex justify-between">
                     <span>Subtotal ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})</span>
-                    <span className="font-medium text-white">${subtotal.toFixed(2)}</span>
+                    <span className="font-medium text-theme">${subtotal.toFixed(2)}</span>
                   </div>
                   {promoApplied && (
                     <div className="flex justify-between text-emerald-300">
@@ -316,15 +316,15 @@ const Cart = () => {
                   )}
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span className={`font-medium ${shipping === 0 ? 'text-emerald-300' : 'text-white'}`}>
+                    <span className={`font-medium ${shipping === 0 ? 'text-accent' : 'text-theme'}`}>
                       {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span className="font-medium text-white">${tax.toFixed(2)}</span>
+                    <span className="font-medium text-theme">${tax.toFixed(2)}</span>
                   </div>
-                  <div className="border-t border-slate-800 pt-3 text-base font-semibold text-white">
+                  <div className="border-t border-theme-strong pt-3 text-base font-semibold text-theme">
                     <div className="flex justify-between">
                       <span>Total</span>
                       <span>${total.toFixed(2)}</span>
@@ -334,18 +334,18 @@ const Cart = () => {
 
                 <button
                   onClick={handleCheckout}
-                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-strong"
                 >
                   <i className="fas fa-lock text-xs"></i>
                   Secure checkout
                 </button>
 
                 {shipping === 0 ? (
-                  <p className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                  <p className="mt-4 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent">
                     Free shipping unlocked. Nice work!
                   </p>
                 ) : (
-                  <p className="mt-4 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-slate-300">
+                  <p className="mt-4 rounded-xl border border-theme-strong bg-surface px-4 py-3 text-sm text-muted-theme">
                     Spend ${(Math.max(100 - subtotal, 0)).toFixed(2)} more to unlock free shipping.
                   </p>
                 )}

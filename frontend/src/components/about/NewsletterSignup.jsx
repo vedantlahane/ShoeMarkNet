@@ -17,7 +17,7 @@ const NewsletterSignup = ({
   return (
     <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 lg:p-12 shadow-2xl text-center ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
       <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-        <i className="fas fa-envelope text-3xl text-white"></i>
+        <i className="fas fa-envelope text-3xl text-theme"></i>
       </div>
       
       <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">

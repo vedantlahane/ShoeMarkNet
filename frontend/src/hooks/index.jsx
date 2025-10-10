@@ -18,3 +18,4 @@ export { default as useInfiniteScroll } from './useInfiniteScroll';
 export { default as useInfiniteScrollList } from './useInfiniteScrollList';
 export { default as useVirtualizedInfiniteScroll } from './useVirtualizedInfiniteScroll';
 export { default as useDragAndDrop } from './useDragAndDrop';
+export { default as useFeaturedProducts } from './api/useFeaturedProducts';

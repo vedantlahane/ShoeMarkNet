@@ -169,8 +169,8 @@ const SearchFilters = ({
               <i className="fas fa-filter text-white text-lg"></i>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Filters</h3>
-              <p className="text-blue-100 text-sm">
+              <h3 className="text-xl font-bold text-theme">Filters</h3>
+              <p className="text-muted-theme text-sm">
                 {resultCount.toLocaleString()} products found
               </p>
             </div>

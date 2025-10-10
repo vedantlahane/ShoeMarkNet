@@ -77,6 +77,14 @@ POST /api/auth/register
 | DELETE | `/api/categories/:id` | Remove category after safety checks. | Admin |
 | POST | `/api/categories/:id/update-count` | Recalculate cached product count. | Admin |
 
+## Promotions
+
+| Method | Path | Description | Auth |
+| --- | --- | --- | --- |
+| GET | `/api/promotions` | List currently active public campaigns sorted by priority. Response includes `promotions[]` with banner imagery, CTA URL, discount metadata, and a `meta.count`. | Public |
+
+Active promotions only include campaigns marked public, active, and within the scheduled window. Clients can safely cache responses briefly; payloads include `startDate`/`endDate` to aid UI scheduling.
+
 ## Cart
 
 | Method | Path | Description | Auth |
@@ -108,6 +116,7 @@ Wishlist entries now capture `addedAt` timestamps; duplicate enforcement is hand
 | Method | Path | Description | Auth |
 | --- | --- | --- | --- |
 | POST | `/api/orders` | Create order from cart or ad-hoc items. Body must include `items[]`, `paymentMethod`, and `shippingAddress`. Optional `fromCart`, `tax`, `shippingFee`, `discount`. | Private |
+| POST | `/api/orders/validate-coupon` | Validate a coupon code against the authenticated user's cart context and returns discount details. | Private |
 | GET | `/api/orders` | List current user orders with product snapshots. | Private |
 | GET | `/api/orders/:orderId` | Retrieve order (owner or admin only). | Private |
 | PUT | `/api/orders/:orderId/pay` | Mark order as paid and attach gateway payload. | Private (owner) |
@@ -162,10 +171,40 @@ Variant-level inventory deductions and refunds are reconciled automatically via 
 
 | Method | Path | Description | Auth |
 | --- | --- | --- | --- |
-| GET | `/api/admin/summary` | High-level KPIs (users, products, revenue). | Admin |
-| GET | `/api/admin/users` | Paginated user list with filters. | Admin |
-| PUT | `/api/admin/users/:id/status` | Activate/suspend users. | Admin |
-| GET | `/api/admin/products/low-stock` | Identify low inventory items. | Admin |
+| GET | `/api/admin/dashboard` | High-level KPIs (revenue, order volume, low-stock items, top products, recent orders). | Admin |
+| GET | `/api/admin/users` | Paginated user list with filtering options. | Admin |
+| PUT | `/api/admin/users/:id/status` | Activate or suspend a user account. | Admin |
+| GET | `/api/admin/reports/sales` | Generate sales report. Query: `startDate`, `endDate`, `category`. | Admin |
+| GET | `/api/admin/reports/inventory` | Inventory valuation with category grouping and low/out-of-stock insights. | Admin |
+| GET | `/api/admin/analytics/customers` | Customer analytics including acquisition channels and high-value buyers. | Admin |
+| GET | `/api/admin/analytics/categories/:categoryId` | Category-level performance analytics with optional `timeframe`, `startDate`, `endDate`. Cached for 5 minutes per category/timeframe. | Admin |
+| GET | `/api/admin/leads` | Lead scoring data for marketing follow-up. | Admin |
+| GET | `/api/admin/settings` | Retrieve global configuration settings. | Admin |
+| PUT | `/api/admin/settings` | Update global configuration values. | Admin |
+| GET | `/api/admin/campaigns` | List campaigns for back-office management. | Admin |
+| POST | `/api/admin/campaigns` | Create a campaign. | Admin |
+| PUT | `/api/admin/campaigns/:id` | Update a campaign. | Admin |
+| DELETE | `/api/admin/campaigns/:id` | Remove a campaign. | Admin |
+
+### Notifications
+
+| Method | Path | Description | Auth |
+| --- | --- | --- | --- |
+| GET | `/api/admin/notifications` | Paginated notifications feed with filters `status` (`read\|unread`), `category`, `priority`, `page`, `limit`. | Admin |
+| POST | `/api/admin/notifications` | Create a notification payload. Body requires `title` and `message`; optional `category`, `priority`, `actions[]`, `metadata`. | Admin |
+| PATCH | `/api/admin/notifications/:id/read` | Mark a single notification as read. | Admin |
+| PATCH | `/api/admin/notifications/read-all` | Bulk mark notifications as read. Body may include `category` and/or `priority` to scope the update. | Admin |
+
+Unread notifications automatically broadcast over the realtime channel (see below) after creation.
+
+### Realtime Monitoring
+
+| Method | Path | Description | Auth |
+| --- | --- | --- | --- |
+| GET | `/api/admin/realtime` | Server-Sent Events stream emitting realtime stats updates. When connected, the client immediately receives a snapshot followed by periodic updates. | Admin |
+| GET | `/api/admin/realtime/snapshot` | Pollable JSON snapshot of the same realtime stats for UIs that cannot use SSE. | Admin |
+
+SSE responses disable compression and keep the connection alive; ensure clients handle heartbeat-less streams. Update frequency defaults to the `REALTIME_METRICS_INTERVAL` environment variable (ms).
 
 (See `backend/routes/adminRoutes.js` for the complete set.)
 

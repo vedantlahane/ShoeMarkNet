@@ -142,7 +142,7 @@ const FAQSection = ({ faqs, animateElements, className = '' }) => {
                 <i className="fas fa-question mr-2"></i>
                 Ask a Question
               </button>
-              <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-3 px-8 rounded-2xl hover:bg-white/30 transition-all duration-200">
+              <button className="bg-surface backdrop-blur-lg border border-theme-strong text-theme font-bold py-3 px-8 rounded-2xl hover:bg-surface/80 transition-all duration-200">
                 <i className="fas fa-comments mr-2"></i>
                 Start Live Chat
               </button>

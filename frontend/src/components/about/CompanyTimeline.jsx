@@ -293,7 +293,7 @@ const CompanyTimeline = ({
           <i className="fas fa-history mr-4"></i>
           Our Journey
         </h2>
-        <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-xl md:text-2xl text-muted-theme max-w-3xl mx-auto leading-relaxed">
           From humble beginnings to industry leadership - discover the milestones that shaped ShoeMarkNet
         </p>
         
@@ -302,7 +302,7 @@ const CompanyTimeline = ({
           <div className="mt-8">
             <button
               onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-              className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-900 dark:text-white px-6 py-3 rounded-2xl hover:bg-white/20 transition-all duration-200"
+              className="bg-surface border border-theme-strong text-theme px-6 py-3 rounded-2xl hover:bg-surface/80 transition-all duration-200"
             >
               <i className={`fas ${isAutoPlaying ? 'fa-pause' : 'fa-play'} mr-2`}></i>
               {isAutoPlaying ? 'Pause Tour' : 'Start Tour'}
@@ -395,8 +395,8 @@ const CompanyTimeline = ({
                           )}
                         </div>
                         
-                        <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
-                        <p className="text-white/90 font-semibold">{item.subtitle}</p>
+                        <h3 className="text-2xl font-bold text-theme mb-2">{item.title}</h3>
+                        <p className="text-muted-theme font-semibold">{item.subtitle}</p>
                       </div>
                     </div>
 
@@ -412,19 +412,19 @@ const CompanyTimeline = ({
 
                     {/* Card Content */}
                     <div className="p-6">
-                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                      <p className="text-theme leading-relaxed mb-6">
                         {item.description}
                       </p>
 
                       {/* Key Achievements */}
                       <div className="mb-6">
-                        <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <h4 className="font-semibold text-theme mb-3 flex items-center">
                           <i className="fas fa-check-circle mr-2 text-green-500"></i>
                           Key Achievements
                         </h4>
                         <ul className="space-y-2">
                           {item.achievements.map((achievement, idx) => (
-                            <li key={idx} className="flex items-start text-sm text-gray-600 dark:text-gray-400">
+                            <li key={idx} className="flex items-start text-sm text-muted-theme">
                               <i className="fas fa-arrow-right mr-2 text-blue-500 mt-1 flex-shrink-0"></i>
                               {achievement}
                             </li>
@@ -439,7 +439,7 @@ const CompanyTimeline = ({
                             <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                               {item.stats.customers}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            <div className="text-xs text-muted-theme font-medium">
                               Customers
                             </div>
                           </div>
@@ -447,7 +447,7 @@ const CompanyTimeline = ({
                             <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                               {item.stats.products}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            <div className="text-xs text-muted-theme font-medium">
                               Products
                             </div>
                           </div>
@@ -455,7 +455,7 @@ const CompanyTimeline = ({
                             <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                               {item.stats.revenue}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            <div className="text-xs text-muted-theme font-medium">
                               Revenue
                             </div>
                           </div>
@@ -488,25 +488,25 @@ const CompanyTimeline = ({
                 {/* Expanded Content */}
                 {isActive && interactive && (
                   <div className="mt-8 animate-fade-in">
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 dark:border-gray-700/10 rounded-3xl p-8">
-                      <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                        <div className="bg-surface/80 border border-theme-strong rounded-3xl p-8">
+                      <h4 className="text-xl font-bold text-theme mb-4">
                         <i className="fas fa-info-circle mr-2 text-blue-500"></i>
                         More Details
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                          <h5 className="font-semibold text-theme mb-2">
                             Innovation Highlights
                           </h5>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          <p className="text-muted-theme text-sm">
                             This period marked significant technological and business milestones that positioned us for future growth and success.
                           </p>
                         </div>
                         <div>
-                          <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                          <h5 className="font-semibold text-theme mb-2">
                             Impact & Growth
                           </h5>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          <p className="text-muted-theme text-sm">
                             Customer satisfaction increased significantly during this period, establishing strong foundations for our continued expansion.
                           </p>
                         </div>
@@ -525,7 +525,7 @@ const CompanyTimeline = ({
             <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-full px-6 py-3 shadow-2xl">
               <div className="flex items-center space-x-2">
                 <i className="fas fa-play text-blue-500 animate-pulse"></i>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <span className="text-sm font-medium text-theme">
                   Tour Progress: {currentAutoPlay + 1} / {TIMELINE_DATA.length}
                 </span>
               </div>
@@ -545,19 +545,19 @@ const CompanyTimeline = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
                 <div className="text-4xl font-black mb-2">7+</div>
-                <div className="text-white/80">Years of Innovation</div>
+                <div className="text-muted-theme">Years of Innovation</div>
               </div>
               <div>
                 <div className="text-4xl font-black mb-2">10M+</div>
-                <div className="text-white/80">Happy Customers</div>
+                <div className="text-muted-theme">Happy Customers</div>
               </div>
               <div>
                 <div className="text-4xl font-black mb-2">50K+</div>
-                <div className="text-white/80">Products Available</div>
+                <div className="text-muted-theme">Products Available</div>
               </div>
               <div>
                 <div className="text-4xl font-black mb-2">50+</div>
-                <div className="text-white/80">Countries Served</div>
+                <div className="text-muted-theme">Countries Served</div>
               </div>
             </div>
           </div>

@@ -105,6 +105,7 @@ EMAIL_HOST=smtp.example.com
 EMAIL_PORT=587
 EMAIL_USER=your_email@example.com
 EMAIL_PASS=your_email_password
+REALTIME_METRICS_INTERVAL=15000
 ```
 
 Frontend `.env`:
@@ -145,6 +146,17 @@ This command creates or updates two accounts:
 - **User** — `user@shoemarknet.test` / `User@123!`
 
 The script is idempotent: rerunning it refreshes the passwords without duplicating users.
+
+### Seed Sample Catalog, Coupons & Promotions
+
+Want products, coupons, and promotions ready to demo? Run the sample data seeder after default accounts:
+
+```bash
+cd backend
+npm run seed:sample
+```
+
+This populates featured categories, products, a `WELCOME10` coupon, a public promotion banner, and a few admin notifications.
 
 6. **Access the Application**
 - Frontend: http://localhost:5173
@@ -194,9 +206,12 @@ ShoeMarkNet/
 - **Order Management**: Process and track orders
 - **User Management**: View and manage customer accounts
 - **Campaign Management**: Create promotional campaigns
+- **Coupon Engine**: Validate and monitor discount codes with usage limits
 - **Lead Scoring**: Track customer engagement metrics
 - **Inventory Management**: Stock level monitoring
 - **Contact Operations**: Triage, assign, and close customer support tickets
+- **Notification Center**: Manage high-priority operational alerts
+- **Realtime Dashboard**: Stream live stats with auto-refresh fallbacks
 
 ### Technical Features
 - **Responsive Design**: Mobile-first approach

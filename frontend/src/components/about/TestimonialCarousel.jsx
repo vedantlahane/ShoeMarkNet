@@ -240,7 +240,7 @@ const TestimonialCarousel = ({
                 <i className="fas fa-quote-left mr-3"></i>
                 What Our Customers Say
               </h3>
-              <p className="text-blue-100">
+              <p className="text-muted-theme">
                 Real feedback from our amazing community
               </p>
             </div>

@@ -1,11 +1,10 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { lazy, Suspense, useCallback, useMemo } from 'react';
+import { useDispatch } from 'react-redux';
 import PageMeta from '../components/seo/PageMeta';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
-// Redux actions
-import { fetchFeaturedProducts, hydrateFeaturedProducts } from '../redux/slices/productSlice';
 import { addToCart } from '../redux/slices/cartSlice';
+import useFeaturedProducts from '../hooks/api/useFeaturedProducts';
 
 // Components
 import HeroSection from '../components/home/HeroSection';
@@ -45,55 +44,20 @@ const SectionSkeleton = ({ title, rows = 3 }) => {
  */
 const Home = () => {
   const dispatch = useDispatch();
-
-  // Redux state - Extract product-related state from the store
   const {
-    featuredProducts,
-    featuredLoading,
-    error
-  } = useSelector(state => state.product);
+    data: featuredList = [],
+    isPending,
+    isError,
+    error,
+    refetch,
+  } = useFeaturedProducts({
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const featuredList = useMemo(
-    () => (Array.isArray(featuredProducts) ? featuredProducts : []),
-    [featuredProducts]
+  const featuredProducts = useMemo(
+    () => (Array.isArray(featuredList) ? featuredList : []),
+    [featuredList]
   );
-  const featuredCount = featuredList.length;
-
-  // Initialize component by fetching featured products on mount
-  useEffect(() => {
-    if (featuredLoading || error) {
-      return;
-    }
-
-    if (featuredCount === 0) {
-      try {
-        const cached = sessionStorage.getItem('shoemarknet:featured-products');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            dispatch(hydrateFeaturedProducts(parsed));
-            return;
-          }
-        }
-      } catch (storageError) {
-        console.warn('Unable to read featured products cache:', storageError);
-      }
-
-      dispatch(fetchFeaturedProducts());
-    }
-  }, [dispatch, featuredLoading, featuredCount, error]);
-
-  useEffect(() => {
-    if (featuredList.length === 0) {
-      return;
-    }
-
-    try {
-      sessionStorage.setItem('shoemarknet:featured-products', JSON.stringify(featuredList.slice(0, 16)));
-    } catch (storageError) {
-      console.warn('Unable to cache featured products:', storageError);
-    }
-  }, [featuredList]);
 
   /**
    * Handles adding a product to the cart.
@@ -112,7 +76,7 @@ const Home = () => {
   }, [dispatch]);
 
   // Show error state if featured products failed to load
-  if (error) {
+  if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">
@@ -125,10 +89,10 @@ const Home = () => {
             Oops! Something went wrong
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            We couldn't load the page. Please try again.
+            {error?.response?.data?.message || error?.message || "We couldn't load featured products."}
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             aria-label="Reload page"
           >
@@ -150,7 +114,7 @@ const Home = () => {
       />
 
       {/* Main page content with gradient background */}
-      <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 transition-colors duration-500">
+      <main className="relative min-h-screen overflow-hidden bg-theme text-theme transition-colors duration-500">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-500/20 via-indigo-500/15 to-purple-500/20 blur-3xl" aria-hidden="true" />
           <div className="absolute bottom-[-12rem] right-[15%] h-[32rem] w-[32rem] rounded-full bg-gradient-to-br from-fuchsia-500/10 via-purple-500/15 to-sky-500/10 blur-[220px]" aria-hidden="true" />
@@ -165,11 +129,11 @@ const Home = () => {
 
           {/* Featured products section with add-to-cart functionality */}
           <Suspense fallback={<SectionSkeleton title="Featured products" />}>
-            {featuredLoading && featuredList.length === 0 ? (
+            {isPending && featuredProducts.length === 0 ? (
               <SectionSkeleton title="Featured products" />
             ) : (
               <FeaturedProducts
-                products={featuredList}
+                products={featuredProducts}
                 onAddToCart={handleAddToCart}
               />
             )}

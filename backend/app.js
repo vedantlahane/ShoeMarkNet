@@ -6,19 +6,28 @@ const morgan = require('morgan');
 const compression = require('compression');
 const path = require('path');
 
+const { connectDB } = require('./utils/database');
+
 // Load environment variables first
 dotenv.config();
 
 // Validate required environment variables
 const requiredEnvVars = ['NODE_ENV', 'MONGODB_URI'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-if (missingEnvVars.length > 0) {
-  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
-  process.exit(1);
-}
+const validateEnv = () => {
+  const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+  if (missingEnvVars.length > 0) {
+    throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  }
+};
 
-// Import database connection
-const connectDB = require('./utils/database');
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    validateEnv();
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+}
 
 // Import routes
 const productRoutes = require('./routes/productRoutes');
@@ -33,14 +42,13 @@ const adminRoutes = require('./routes/adminRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const contactAdminRoutes = require('./routes/contactAdminRoutes');
+const promotionRoutes = require('./routes/promotionRoutes');
 
 
 // Import middleware
 const { errorMiddleware, notFound } = require('./middleware/errorMiddleware');
 const { apiLimiter } = require('./middleware/rateLimitMiddleware');
-
-// Connect to MongoDB
-connectDB();
+const { responseFormatter } = require('./middleware/responseMiddleware');
 
 // Initialize express app
 const app = express();
@@ -49,11 +57,21 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
+// Attach response helpers / formatting
+app.use(responseFormatter);
+
 // Security and performance middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.use(compression());
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers.accept && req.headers.accept.includes('text/event-stream')) {
+      return false;
+    }
+    return compression.filter(req, res);
+  }
+}));
 
 // CORS configuration
 const allowedOrigins = [
@@ -80,14 +98,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
 }));
-const startServer = () => {
-  server = app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    console.log(`📅 Started at: ${new Date().toISOString()}`);
-  });
-};
-
-
 // Logging middleware
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
@@ -113,6 +123,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin/contacts', contactAdminRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Health check route with detailed information
 app.get('/api/health', (req, res) => {
@@ -139,9 +150,25 @@ app.get('/', (req, res) => {
 app.use(notFound);
 app.use(errorMiddleware);
 
-// Start server
 const PORT = process.env.PORT || 5000;
 let server;
+
+const startServer = () => {
+  server = app.listen(PORT, () => {
+    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`📅 Started at: ${new Date().toISOString()}`);
+  });
+};
+
+const initializeServer = async (options = {}) => {
+  const { skipEnvValidation = false } = options;
+  if (!skipEnvValidation) {
+    validateEnv();
+  }
+
+  await connectDB();
+  startServer();
+};
 
 
 // Graceful shutdown handling
@@ -197,7 +224,15 @@ process.on('uncaughtException', (err) => {
   }
 });
 
-// Start the server
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  initializeServer().catch(error => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
+}
 
 module.exports = app;
+module.exports.startServer = startServer;
+module.exports.initializeServer = initializeServer;
+module.exports.validateEnv = validateEnv;
+module.exports.connectDB = connectDB;

@@ -439,7 +439,7 @@ const Wishlist = () => {
   // Loading state
   if (loading && !wishlistItems?.length) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="min-h-screen bg-theme text-theme">
         <div className="mx-auto flex max-w-4xl items-center justify-center px-4 py-24">
           <LoadingSpinner size="large" message="Loading your wishlist..." />
         </div>
@@ -450,7 +450,7 @@ const Wishlist = () => {
   // Error state
   if (error && !wishlistItems?.length) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="min-h-screen bg-theme text-theme">
         <div className="mx-auto flex max-w-4xl items-center justify-center px-4 py-24">
           <ErrorMessage
             message={error || 'Failed to load wishlist'}
@@ -475,27 +475,27 @@ const Wishlist = () => {
         canonical="https://shoemarknet.com/wishlist"
       />
 
-      <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="min-h-screen bg-theme text-theme">
   <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-12">
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
               <button
                 onClick={() => navigate(-1)}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 transition-colors hover:text-white"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-muted-theme transition-colors hover:text-theme"
               >
                 <i className="fas fa-arrow-left text-xs"></i>
                 Back
               </button>
               <div>
-                <h1 className="text-3xl font-semibold text-white md:text-4xl">Wishlist</h1>
-                <p className="mt-1 max-w-xl text-sm text-slate-400 md:text-base">
+                <h1 className="text-3xl font-semibold text-theme md:text-4xl">Wishlist</h1>
+                <p className="mt-1 max-w-xl text-sm text-muted-theme md:text-base">
                   Keep the shoes you love within reach. Move them to your cart whenever you’re ready.
                 </p>
                 {items.length > 0 && (
-                  <p className="mt-3 text-xs uppercase tracking-wide text-slate-500 md:text-sm">
+                  <p className="mt-3 text-xs uppercase tracking-wide text-muted-strong md:text-sm">
                     {items.length} saved • value {formatPrice(totalValue)}
                     {totalSavings > 0 && (
-                      <span className="ml-2 text-emerald-300">(saving {formatPrice(totalSavings)})</span>
+                      <span className="ml-2 text-accent">(saving {formatPrice(totalSavings)})</span>
                     )}
                   </p>
                 )}
@@ -503,14 +503,14 @@ const Wishlist = () => {
             </div>
 
             {items.length > 0 && (
-              <div className="flex flex-wrap gap-3 text-sm text-slate-300">
-                <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-2">
+              <div className="flex flex-wrap gap-3 text-sm text-muted-theme">
+                <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
                   {availableItems.length} in stock
                 </div>
                 {compareItems.length > 0 && (
                   <button
                     onClick={() => setShowCompareModal(true)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-2 text-slate-200 transition-colors hover:border-slate-600 hover:text-white"
+                    className="inline-flex items-center gap-2 rounded-xl border border-theme-strong bg-card px-4 py-2 text-muted-strong transition-colors hover:border-primary hover:text-theme"
                   >
                     <i className="fas fa-balance-scale"></i>
                     Compare ({compareItems.length})
@@ -521,12 +521,12 @@ const Wishlist = () => {
           </div>
 
           {items.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-12 text-center">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/80">
-                <i className="fas fa-heart text-2xl text-slate-300"></i>
+            <div className="rounded-2xl border border-theme-strong bg-card p-12 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-surface">
+                <i className="fas fa-heart text-2xl text-muted-theme"></i>
               </div>
-              <h2 className="mt-6 text-2xl font-semibold text-white">Nothing saved yet</h2>
-              <p className="mt-3 text-sm text-slate-400 md:text-base">
+              <h2 className="mt-6 text-2xl font-semibold text-theme">Nothing saved yet</h2>
+              <p className="mt-3 text-sm text-muted-theme md:text-base">
                 Tap the heart on any product to store it here. It’s the easiest way to compare styles and come back later.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -538,7 +538,7 @@ const Wishlist = () => {
                 </Link>
                 <Link
                   to="/categories"
-                  className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-700 px-6 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-theme-strong px-6 text-sm font-semibold text-muted-strong transition-colors hover:border-primary hover:text-theme"
                 >
                   View categories
                 </Link>
@@ -613,26 +613,26 @@ const Wishlist = () => {
                     showInfo={true}
                     totalItems={totalItems}
                     itemsPerPage={itemsPerPage}
-                    className="rounded-2xl border border-slate-800 bg-slate-900/70"
+                    className="rounded-2xl border border-theme-strong bg-card"
                   />
                 </div>
               )}
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center">
-                <h3 className="text-xl font-semibold text-white">Still browsing?</h3>
-                <p className="mt-2 text-sm text-slate-400">
+              <div className="rounded-2xl border border-theme-strong bg-card p-8 text-center">
+                <h3 className="text-xl font-semibold text-theme">Still browsing?</h3>
+                <p className="mt-2 text-sm text-muted-theme">
                   Jump back into the catalog or head straight to best sellers.
                 </p>
                 <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                   <Link
                     to="/products"
-                    className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+                    className="inline-flex h-12 items-center justify-center rounded-xl bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-primary-strong"
                   >
                     Continue shopping
                   </Link>
                   <Link
                     to="/products?sort=rating:desc"
-                    className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-700 px-6 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                    className="inline-flex h-12 items-center justify-center rounded-xl border border-theme-strong px-6 text-sm font-semibold text-muted-strong transition-colors hover:border-primary hover:text-theme"
                   >
                     Top rated picks
                   </Link>

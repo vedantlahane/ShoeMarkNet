@@ -9,7 +9,8 @@ const {
   getAllOrders,
   getOrderStats,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder,
+  validateCoupon
 } = require('../controllers/orderController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -24,6 +25,13 @@ const { protect, admin } = require('../middleware/authMiddleware');
  * @access Private
  */
 router.post('/', protect, createOrder);
+
+/**
+ * @description Validate a coupon for the authenticated user's cart.
+ * @route POST /api/orders/validate-coupon
+ * @access Private
+ */
+router.post('/validate-coupon', protect, validateCoupon);
 
 /**
  * @description Get all orders for the authenticated user.

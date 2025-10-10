@@ -30,14 +30,14 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   const pulseClass = enableAnimations ? 'animate-pulse-slow' : '';
   const floatClass = enableAnimations ? 'animate-bounce' : '';
   const shimmerClass = enableAnimations ? 'animate-gradient' : '';
-  const navigationButtonClass = `flex h-11 w-11 items-center justify-center rounded-full border border-slate-800 bg-slate-900/70 text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:cursor-not-allowed disabled:opacity-40 ${
-    enableAnimations ? 'hover:-translate-y-0.5 hover:border-slate-600 hover:text-white hover:shadow-[0_8px_20px_-12px_rgba(15,23,42,0.9)]' : 'hover:border-slate-700 hover:text-white'
+  const navigationButtonClass = `flex h-11 w-11 items-center justify-center rounded-full border border-theme-strong bg-card text-muted-theme transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-40 ${
+    enableAnimations ? 'hover:-translate-y-0.5 hover:border-primary hover:text-theme hover:shadow-[0_8px_20px_-12px_rgba(15,23,42,0.9)]' : 'hover:border-primary hover:text-theme'
   }`;
-  const dotBaseClass = 'w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const dotBaseClass = 'w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary';
   const dotActiveClass = enableAnimations
-    ? 'w-8 bg-slate-100 shadow-[0_0_16px_rgba(226,232,240,0.4)]'
-    : 'w-8 bg-slate-100';
-  const dotInactiveClass = 'bg-slate-700 hover:bg-slate-500';
+    ? 'w-8 bg-primary shadow-[0_0_16px_rgba(37,99,235,0.4)]'
+    : 'w-8 bg-primary';
+  const dotInactiveClass = 'bg-muted-theme hover:bg-primary';
   
   // Use passed products or fallback to empty array
   const displayProducts = useMemo(() => products || [], [products]);
@@ -232,25 +232,25 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
 
   if (loading) {
     return (
-      <section className="py-16 bg-slate-950 text-slate-200">
+      <section className="py-16 bg-theme text-theme">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-14 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-800/80 bg-slate-900/80 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <div className="inline-flex items-center gap-2 rounded-full border border-theme-strong bg-card px-5 py-2 text-xs font-semibold uppercase tracking-wide text-muted-theme">
               <Star size={14} className="animate-pulse" aria-hidden="true" />
               Featured Collection
             </div>
-            <h2 className="mt-6 text-3xl font-semibold text-white md:text-4xl">Trending Picks</h2>
-            <p className="mt-3 text-sm text-slate-400 md:text-base">
+            <h2 className="mt-6 text-3xl font-semibold text-theme md:text-4xl">Trending Picks</h2>
+            <p className="mt-3 text-sm text-muted-theme md:text-base">
               <Truck size={18} className="mr-2 inline" aria-hidden="true" />
               Curating the latest drops while we load your recommendations
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[...Array(8)].map((_, index) => (
-              <div key={index} className="space-y-3 rounded-2xl border border-slate-900/80 bg-slate-900/60 p-5">
-                <div className="aspect-square w-full rounded-xl bg-slate-800/70"></div>
-                <div className="h-3 w-3/4 rounded bg-slate-800/70"></div>
-                <div className="h-3 w-2/5 rounded bg-slate-800/70"></div>
+              <div key={index} className="space-y-3 rounded-2xl border border-theme-strong bg-surface p-5">
+                <div className="aspect-square w-full rounded-xl bg-muted-theme/70"></div>
+                <div className="h-3 w-3/4 rounded bg-muted-theme/70"></div>
+                <div className="h-3 w-2/5 rounded bg-muted-theme/70"></div>
               </div>
             ))}
           </div>
@@ -262,45 +262,46 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   return (
     <section
       id="featured"
-      className="relative overflow-hidden bg-slate-950 py-16 text-slate-100 md:py-20"
+      className="relative overflow-hidden bg-theme py-16 text-theme md:py-20"
       aria-label="Featured products"
     >
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <div className={`absolute -top-24 left-1/4 h-64 w-64 rotate-12 rounded-full bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 blur-3xl ${pulseClass}`}></div>
         <div className={`absolute bottom-[-6rem] right-1/5 h-72 w-72 rounded-full bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-rose-500/10 blur-3xl ${pulseClass}`} style={{ animationDelay: '1.2s' }}></div>
-        <div className={`absolute top-1/3 right-10 h-16 w-16 rounded-3xl border border-slate-700/40 bg-slate-900/60 backdrop-blur ${floatClass}`} style={{ animationDelay: '0.6s' }}></div>
-        <div className={`absolute bottom-1/4 left-10 h-10 w-10 rounded-full border border-slate-800/60 bg-slate-900/50 ${floatClass}`} style={{ animationDelay: '1.8s' }}></div>
+        <div className={`absolute top-1/3 right-10 h-16 w-16 rounded-3xl border border-theme-strong/40 bg-card/60 backdrop-blur ${floatClass}`} style={{ animationDelay: '0.6s' }}></div>
+        <div className={`absolute bottom-1/4 left-10 h-10 w-10 rounded-full border border-theme-strong/60 bg-surface/50 ${floatClass}`} style={{ animationDelay: '1.8s' }}></div>
         <div className="absolute inset-0 mix-blend-soft-light">
-          <div className={`absolute left-1/2 top-12 h-[1px] w-40 -translate-x-1/2 bg-gradient-to-r from-transparent via-slate-500/40 to-transparent ${shimmerClass}`} aria-hidden="true" />
+          <div className={`absolute left-1/2 top-12 h-[1px] w-40 -translate-x-1/2 bg-gradient-to-r from-transparent via-muted-theme/40 to-transparent ${shimmerClass}`} aria-hidden="true" />
         </div>
       </div>
   <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
         {/* Section Header */}
         <div className="mb-14 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/80 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <div className="inline-flex items-center gap-2 rounded-full border border-theme-strong bg-card px-5 py-2 text-xs font-semibold uppercase tracking-wide text-muted-theme">
             <Star size={14} className={enableAnimations ? 'animate-pulse' : ''} aria-hidden="true" />
             Featured collection
           </div>
 
-          <h2 className="mt-6 text-3xl font-semibold text-white md:text-4xl">
+          <h2 className="mt-6 text-3xl font-semibold text-theme md:text-4xl">
             Curated{' '}
             <span
-              className={`bg-gradient-to-r from-slate-100 via-blue-200 to-violet-200 bg-clip-text text-transparent ${shimmerClass}`}
+              className={`bg-gradient-to-r from-theme via-primary to-secondary bg-clip-text text-transparent ${shimmerClass}`}
             >
+              Highlights
               Highlights
             </span>
           </h2>
-          <p className="mt-3 text-sm text-slate-400 md:text-base">
+          <p className="mt-3 text-sm text-muted-theme md:text-base">
             <Truck size={18} className="mr-2 inline" aria-hidden="true" />
             Discover the pieces people keep coming back for, refreshed every few minutes.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs uppercase tracking-widest text-slate-400">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-800/70 bg-slate-900/60 px-4 py-2">
-              <span className="text-slate-500">Slide</span>
-              <span className="font-semibold text-white">{String(Math.min(currentIndex + 1, totalSlides || 1)).padStart(2, '0')}</span>
-              <span className="text-slate-500">/ {String(totalSlides || 1).padStart(2, '0')}</span>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs uppercase tracking-widest text-muted-theme">
+            <div className="inline-flex items-center gap-2 rounded-full border border-theme-strong bg-surface px-4 py-2">
+              <span className="text-muted-strong">Slide</span>
+              <span className="font-semibold text-theme">{String(Math.min(currentIndex + 1, totalSlides || 1)).padStart(2, '0')}</span>
+              <span className="text-muted-strong">/ {String(totalSlides || 1).padStart(2, '0')}</span>
             </div>
-            <div className="hidden items-center gap-2 rounded-full border border-slate-800/70 bg-slate-900/60 px-4 py-2 sm:inline-flex">
+            <div className="hidden items-center gap-2 rounded-full border border-theme-strong bg-surface px-4 py-2 sm:inline-flex">
               <ShoppingCart size={14} aria-hidden="true" />
               <span>{displayProducts.length} curated picks</span>
             </div>
@@ -388,8 +389,8 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                   >
                     <div
                       className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border ${
-                        isActiveCard ? 'border-slate-600/60 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.95)]' : 'border-slate-800/80 shadow-[0_8px_30px_-24px_rgba(15,23,42,0.9)]'
-                      } bg-slate-900/70 transform-gpu transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_38px_-20px_rgba(15,23,42,0.9)] focus-within:-translate-y-1 focus-within:shadow-[0_18px_38px_-20px_rgba(15,23,42,0.9)]`}
+                        isActiveCard ? 'border-primary/60 theme-shadow-strong' : 'border-theme-strong theme-shadow-soft'
+                      } bg-card transform-gpu transition-all duration-300 hover:-translate-y-1 hover:theme-shadow-strong focus-within:-translate-y-1 focus-within:theme-shadow-strong`}
                       onPointerMove={(event) => handleCardPointerMove(event, productId)}
                       onPointerLeave={handleCardLeave}
                       onFocus={(event) => handleCardFocus(event, productId)}
@@ -420,14 +421,14 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                             {discountValue}
                           </div>
                         )}
-                        <div className="pointer-events-none absolute inset-0 bg-slate-950/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                        <div className="pointer-events-none absolute inset-0 bg-theme/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       </div>
                       <div className="flex flex-1 flex-col gap-4 p-6">
                         <div>
-                          <h3 className="text-lg font-semibold text-white line-clamp-2">
+                          <h3 className="text-lg font-semibold text-theme line-clamp-2">
                             {product.name}
                           </h3>
-                          <div className="mt-2 flex items-center text-xs text-slate-400" aria-label={`Rating: ${product.rating || 4.8} out of 5`}>
+                          <div className="mt-2 flex items-center text-xs text-muted-theme" aria-label={`Rating: ${product.rating || 4.8} out of 5`}>
                             <span className="flex items-center gap-1 text-amber-300">
                               <Star size={14} aria-hidden="true" />
                               {Number(product.rating || 4.8).toFixed(1)}
@@ -438,11 +439,11 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                           </div>
                         </div>
                         <div className="flex items-baseline gap-2 text-sm">
-                          <span className="text-xl font-semibold text-white">
+                          <span className="text-xl font-semibold text-theme">
                             {currentPrice ? `$${currentPrice}` : '—'}
                           </span>
                           {originalPrice && (
-                            <span className="text-xs text-slate-500 line-through">
+                            <span className="text-xs text-muted-strong line-through">
                               ${originalPrice}
                             </span>
                           )}
@@ -464,9 +465,9 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-8 h-1 w-full rounded-full bg-slate-800">
+          <div className="mt-8 h-1 w-full rounded-full bg-muted-theme">
             <div
-              className="h-1 rounded-full bg-slate-100 transition-all duration-300"
+              className="h-1 rounded-full bg-primary transition-all duration-300"
               style={{
                 width: `${totalSlides ? ((currentIndex + 1) / totalSlides) * 100 : 0}%`
               }}

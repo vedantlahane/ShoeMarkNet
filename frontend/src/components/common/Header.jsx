@@ -163,16 +163,16 @@ const Header = () => {
   ];
 
   const iconButtonClasses =
-    'relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-transparent bg-white/70 text-gray-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 focus-visible:outline focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-gray-800/70 dark:text-gray-300 dark:hover:text-blue-300 dark:border-gray-700/70';
+    'relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-theme bg-card text-muted-theme theme-shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:text-primary focus-visible:outline focus-visible:ring-2 focus-visible:ring-primary';
 
   const counterBadgeClasses =
     'absolute -top-1.5 -right-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 px-1 text-[0.65rem] font-semibold text-white shadow-sm';
 
   const getNavLinkClasses = (isActive) =>
-    `relative inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-blue-500 ${
+    `relative inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-primary ${
       isActive
-        ? 'bg-blue-50 text-blue-600 shadow-sm dark:bg-blue-500/15 dark:text-blue-200'
-        : 'text-gray-600 hover:bg-white hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-blue-200'
+        ? 'bg-primary-subtle text-primary theme-shadow-soft'
+        : 'text-muted-theme hover:bg-surface hover:text-primary'
     }`;
 
   // Handle scroll effect with throttling
@@ -291,17 +291,15 @@ const Header = () => {
       {/* Skip to main content link for accessibility */}
       <a 
         href="#main-content" 
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-md"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-primary text-theme px-4 py-2 rounded-md"
       >
         Skip to main content
       </a>
 
       <header 
         ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300 ${
-          isScrolled
-            ? 'border-b border-gray-200/70 bg-white/90 shadow-lg dark:border-gray-800 dark:bg-gray-950/85'
-            : 'border-b border-transparent bg-white/75 dark:bg-gray-950/60'
+        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300 border-b border-theme bg-card ${
+          isScrolled ? 'bg-opacity-95 theme-shadow-strong' : 'bg-opacity-85 theme-shadow-soft'
         }`}
         role="banner"
       >
@@ -336,10 +334,10 @@ const Header = () => {
                     key={link.to}
                     to={link.to}
                     {...createPrefetchProps(link.to)}
-                    className={`relative px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group ${
+                    className={`relative px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary group ${
                       isActive 
-                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/10 hover:text-blue-600 dark:hover:text-blue-400'
+                        ? 'bg-primary-subtle text-primary theme-shadow-soft' 
+                        : 'text-muted-theme hover:bg-surface hover:text-primary'
                     }`}
                     aria-current={isActive ? 'page' : undefined}
                   >
@@ -364,23 +362,23 @@ const Header = () => {
               {/* Search Toggle */}
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                className="p-2 rounded-xl bg-surface hover:bg-card transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
                 aria-label={isSearchOpen ? "Close search" : "Open search"}
                 aria-expanded={isSearchOpen}
               >
-                <Search size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200" aria-hidden="true" />
+                <Search size={20} className="text-muted-theme group-hover:text-primary transition-colors duration-200" aria-hidden="true" />
               </button>
 
               {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
-                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-              >
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-xl bg-surface hover:bg-card transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                  aria-label="Toggle theme"
+                >
                 {isDarkMode ? (
                   <Sun size={20} className="text-yellow-500 group-hover:text-yellow-400 transition-colors duration-200" aria-hidden="true" />
                 ) : (
-                  <Moon size={20} className="text-blue-600 group-hover:text-blue-500 transition-colors duration-200" aria-hidden="true" />
+                  <Moon size={20} className="text-primary group-hover:text-primary-strong transition-colors duration-200" aria-hidden="true" />
                 )}
               </button>
 
@@ -388,10 +386,10 @@ const Header = () => {
               <Link
                 to="/wishlist"
                 {...createPrefetchProps('/wishlist')}
-                className="relative p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                className="relative p-2 rounded-xl bg-surface-subtle hover:bg-surface-hover transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary group"
                 aria-label={`Wishlist with ${wishlistCount} items`}
               >
-                <Heart size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-red-500 transition-colors duration-200" aria-hidden="true" />
+                <Heart size={20} className="text-muted-theme group-hover:text-secondary transition-colors duration-200" aria-hidden="true" />
                 {wishlistCount > 0 && (
                   <span 
                     className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
@@ -406,10 +404,10 @@ const Header = () => {
               <Link
                 to="/cart"
                 {...createPrefetchProps('/cart')}
-                className="relative p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                className="relative p-2 rounded-xl bg-surface-subtle hover:bg-surface-hover transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary group"
                 aria-label={`Shopping cart with ${cartItemCount} items`}
               >
-                <ShoppingBag size={20} className="text-gray-700 dark:text-gray-300 group-hover:text-green-500 transition-colors duration-200" aria-hidden="true" />
+                <ShoppingBag size={20} className="text-muted-theme group-hover:text-accent transition-colors duration-200" aria-hidden="true" />
                 {cartItemCount > 0 && (
                   <span 
                     className="absolute -top-1 -right-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
@@ -425,7 +423,7 @@ const Header = () => {
                 {isAuthenticated ? (
                   <button
                     onClick={handleUserMenuToggle}
-                    className="flex items-center space-x-2 p-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 group"
+                    className="flex items-center space-x-2 p-2 rounded-xl bg-surface-subtle hover:bg-surface-hover transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary group"
                     aria-label="User menu"
                     aria-expanded={isUserMenuOpen}
                     aria-haspopup="true"

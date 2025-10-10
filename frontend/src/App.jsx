@@ -16,7 +16,7 @@ import routeConfig from "./routes/routeConfig";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 const SuspenseFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+  <div className="min-h-screen flex items-center justify-center bg-theme text-theme transition-colors duration-300">
     <LoadingSpinner size="xl" message="Crafting your ShoeMarkNet experience…" />
   </div>
 );
@@ -45,7 +45,7 @@ const AppContent = () => {
 
   if (!isInitialized && isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-theme text-theme transition-colors duration-300">
         <LoadingSpinner size="xl" message="Getting everything ready…" />
       </div>
     );

@@ -47,10 +47,10 @@ const NotificationCenter = ({
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'success': return 'fas fa-check-circle text-green-500';
-      case 'error': return 'fas fa-exclamation-circle text-red-500';
-      case 'warning': return 'fas fa-exclamation-triangle text-yellow-500';
-      default: return 'fas fa-info-circle text-blue-500';
+      case 'success': return 'fas fa-check-circle text-accent';
+      case 'error': return 'fas fa-exclamation-circle text-secondary';
+      case 'warning': return 'fas fa-exclamation-triangle text-warning';
+      default: return 'fas fa-info-circle text-primary';
     }
   };
 
@@ -72,7 +72,7 @@ const NotificationCenter = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-white">Notifications</h3>
-              <p className="text-blue-100 text-sm">{unreadCount} unread</p>
+              <p className="text-primary text-sm">{unreadCount} unread</p>
             </div>
             <button
               onClick={onClose}
@@ -90,8 +90,8 @@ const NotificationCenter = ({
               onClick={() => setFilter('all')}
               className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                 filter === 'all' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-white/20 text-gray-700 dark:text-gray-300'
+                  ? 'bg-primary text-theme' 
+                  : 'bg-surface text-muted-theme'
               }`}
             >
               All ({notifications.length})
@@ -100,8 +100,8 @@ const NotificationCenter = ({
               onClick={() => setFilter('unread')}
               className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                 filter === 'unread' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-white/20 text-gray-700 dark:text-gray-300'
+                  ? 'bg-primary text-theme' 
+                  : 'bg-surface text-muted-theme'
               }`}
             >
               Unread ({unreadCount})
@@ -114,7 +114,7 @@ const NotificationCenter = ({
           <button
             onClick={markAllAsRead}
             disabled={unreadCount === 0}
-            className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-sm text-primary hover:text-primary-strong disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Mark all as read
           </button>
@@ -124,33 +124,33 @@ const NotificationCenter = ({
         <div className="max-h-96 overflow-y-auto">
           {filteredNotifications.length === 0 ? (
             <div className="p-8 text-center">
-              <i className="fas fa-bell-slash text-gray-400 text-3xl mb-3"></i>
-              <p className="text-gray-500">No notifications</p>
+              <i className="fas fa-bell-slash text-muted-theme text-3xl mb-3"></i>
+              <p className="text-muted-theme">No notifications</p>
             </div>
           ) : (
             filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 border-b border-white/10 hover:bg-white/5 transition-colors cursor-pointer ${
-                  !notification.read ? 'bg-blue-50/10' : ''
+                className={`p-4 border-b border-theme hover:bg-surface/50 transition-colors cursor-pointer ${
+                  !notification.read ? 'bg-primary-subtle' : ''
                 }`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex items-start space-x-3">
                   <i className={`${getTypeIcon(notification.type)} mt-1`}></i>
                   <div className="flex-1 min-w-0">
-                    <h4 className={`font-medium text-gray-900 dark:text-white ${
+                    <h4 className={`font-medium text-theme ${
                       !notification.read ? 'font-bold' : ''
                     }`}>
                       {notification.title}
                       {!notification.read && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full inline-block ml-2"></span>
+                        <span className="w-2 h-2 bg-primary rounded-full inline-block ml-2"></span>
                       )}
                     </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-muted-theme mt-1">
                       {notification.message}
                     </p>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-muted-theme mt-2">
                       {new Date(notification.timestamp).toLocaleString()}
                     </p>
                   </div>
@@ -159,7 +159,7 @@ const NotificationCenter = ({
                       e.stopPropagation();
                       deleteNotification(notification.id);
                     }}
-                    className="w-6 h-6 rounded-full hover:bg-red-500/20 flex items-center justify-center text-red-500 hover:text-red-600 transition-colors"
+                    className="w-6 h-6 rounded-full hover:bg-secondary-subtle flex items-center justify-center text-secondary hover:text-secondary transition-colors"
                   >
                     <i className="fas fa-times text-xs"></i>
                   </button>

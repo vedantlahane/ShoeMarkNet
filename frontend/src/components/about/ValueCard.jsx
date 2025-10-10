@@ -103,7 +103,7 @@ const ValueCard = ({
       <div className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-2xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 ${className}`}>
         <div className="flex items-center space-x-4">
           <div className={`w-12 h-12 bg-gradient-to-r ${valueData.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
-            <i className={`${valueData.icon} text-white text-lg`}></i>
+            <i className={`${valueData.icon} text-theme text-lg`}></i>
           </div>
           
           <div className="flex-1 min-w-0">

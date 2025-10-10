@@ -28,6 +28,14 @@ const OrderSchema = new mongoose.Schema({
   tax: { type: Number, default: 0, min: 0 },
   shippingFee: { type: Number, default: 0, min: 0 },
   grandTotal: { type: Number, min: 0 }, // Final amount paid
+  coupon: {
+    couponId: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
+    code: { type: String },
+    discountType: { type: String, enum: ['percentage', 'fixed'] },
+    discountValue: { type: Number, min: 0 },
+    discountAmount: { type: Number, min: 0 },
+    appliedAt: { type: Date }
+  },
   
   // Payment Information
   paymentMethod: { type: String, enum: ['credit_card', 'paypal', 'cod', 'upi'], required: true },
@@ -74,6 +82,9 @@ OrderSchema.methods.calculateTotals = function() {
 
   this.totalPrice = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discount = Math.min(this.discount || 0, this.totalPrice);
+  if (this.coupon && this.coupon.discountAmount !== undefined) {
+    this.coupon.discountAmount = Math.min(this.coupon.discountAmount || 0, this.totalPrice);
+  }
   const tax = this.tax || 0;
   const shipping = this.shippingFee || 0;
   this.grandTotal = Math.max(this.totalPrice + tax + shipping - discount, 0);

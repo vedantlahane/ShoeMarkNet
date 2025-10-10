@@ -164,11 +164,7 @@ const MainLayout = () => {
       <div 
         ref={layoutRef}
         className={`
-          relative flex flex-col min-h-screen
-          ${currentTheme === 'dark' 
-            ? 'bg-gray-900 text-white' 
-            : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 text-gray-900'
-          }
+          relative flex flex-col min-h-screen bg-theme text-theme
           transition-colors duration-300
         `}
       >
@@ -176,7 +172,7 @@ const MainLayout = () => {
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div 
             className={`
-              absolute inset-0 opacity-40
+              absolute inset-0 opacity-30
               ${currentRoute.background === 'gradient-primary' 
                 ? 'bg-gradient-to-br from-blue-400/10 via-purple-500/10 to-pink-500/10'
                 : currentRoute.background === 'gradient-secondary'
@@ -193,9 +189,9 @@ const MainLayout = () => {
           
           {/* Subtle animated background - only if motion is allowed */}
           {!prefersReducedMotion && (
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 left-0 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" />
-              <div className="absolute bottom-0 right-0 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute inset-0 opacity-15">
+              <div className="absolute top-0 left-0 w-72 h-72 bg-secondary-light rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
+              <div className="absolute bottom-0 right-0 w-72 h-72 bg-primary-light rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }} />
             </div>
           )}
         </div>
@@ -210,7 +206,7 @@ const MainLayout = () => {
           {/* Simplified page transition overlay */}
           <div 
             className={`
-              fixed inset-0 bg-white/50 dark:bg-gray-900/50 pointer-events-none z-40
+              fixed inset-0 bg-surface/50 pointer-events-none z-40
               transition-opacity duration-300
               ${isPageTransitioning ? 'opacity-100' : 'opacity-0'}
             `}
@@ -236,7 +232,7 @@ const MainLayout = () => {
             hover:from-blue-600 hover:to-purple-700
             dark:from-blue-400 dark:to-purple-500
             text-white rounded-full shadow-lg
-            border border-white/20
+            border border-theme-strong/50
             transition-all duration-200
             hover:scale-105 focus:scale-105
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2

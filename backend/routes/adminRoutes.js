@@ -4,6 +4,7 @@ const {
   getSalesReport,
   getInventoryReport,
   getCustomerAnalytics,
+  getCategoryAnalytics,
   getLeadScoreData,
   getSettings,
   updateSettings,
@@ -13,6 +14,16 @@ const {
   deleteCampaign,
   getUsers,
 } = require('../controllers/adminController');
+const {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  createNotification
+} = require('../controllers/notificationController');
+const {
+  streamRealtimeStats,
+  getRealtimeSnapshot
+} = require('../controllers/realtimeController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -67,11 +78,68 @@ router.get('/reports/inventory', getInventoryReport);
 router.get('/analytics/customers', getCustomerAnalytics);
 
 /**
+ * @description Get analytics for a specific category.
+ * @route GET /api/admin/analytics/categories/:categoryId
+ * @access Private/Admin
+ */
+router.get('/analytics/categories/:categoryId', getCategoryAnalytics);
+
+/**
  * @description Get a list of users with their lead scores for sales/marketing.
  * @route GET /api/admin/leads
  * @access Private/Admin
  */
 router.get('/leads', getLeadScoreData);
+
+// ====================================================================
+// =========================== NOTIFICATIONS ==========================
+// ====================================================================
+
+/**
+ * @description Fetch admin notifications with optional filters.
+ * @route GET /api/admin/notifications
+ * @access Private/Admin
+ */
+router.get('/notifications', getNotifications);
+
+/**
+ * @description Create a new notification for admin users.
+ * @route POST /api/admin/notifications
+ * @access Private/Admin
+ */
+router.post('/notifications', createNotification);
+
+/**
+ * @description Mark a notification as read.
+ * @route PATCH /api/admin/notifications/:id/read
+ * @access Private/Admin
+ */
+router.patch('/notifications/:id/read', markNotificationRead);
+
+/**
+ * @description Mark all notifications as read, optionally filtered by category or priority.
+ * @route PATCH /api/admin/notifications/read-all
+ * @access Private/Admin
+ */
+router.patch('/notifications/read-all', markAllNotificationsRead);
+
+// ====================================================================
+// ============================ REALTIME ==============================
+// ====================================================================
+
+/**
+ * @description Streams realtime admin stats via Server-Sent Events.
+ * @route GET /api/admin/realtime
+ * @access Private/Admin
+ */
+router.get('/realtime', streamRealtimeStats);
+
+/**
+ * @description Provides a snapshot of realtime stats for polling clients.
+ * @route GET /api/admin/realtime/snapshot
+ * @access Private/Admin
+ */
+router.get('/realtime/snapshot', getRealtimeSnapshot);
 
 // ====================================================================
 // ========================= SETTINGS & CAMPAIGNS =====================

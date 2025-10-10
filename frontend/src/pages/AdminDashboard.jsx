@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
+import { useTheme } from '../context/ThemeContext';
 
 // Redux actions
 import { fetchProducts } from '../redux/slices/productSlice';
@@ -94,6 +95,27 @@ const NOTIFICATION_TYPES = {
   PERFORMANCE: 'performance'
 };
 
+const normalizeDashboardNotification = (notification) => {
+  if (!notification) return null;
+
+  const timeValue = notification.time || notification.timestamp || new Date();
+  const dateInstance = timeValue instanceof Date ? timeValue : new Date(timeValue);
+
+  const read = notification.read ?? !notification.unread;
+  const unread = notification.unread ?? !read;
+
+  return {
+    priority: 'medium',
+    category: 'general',
+    actions: [],
+    ...notification,
+    time: dateInstance,
+    timestamp: dateInstance.toISOString(),
+    read,
+    unread
+  };
+};
+
 const AdminDashboard = ({ section = "overview" }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -102,6 +124,7 @@ const AdminDashboard = ({ section = "overview" }) => {
   // Hooks
   const { hasPermission, userRole } = usePermissions();
   const { isConnected, connectionStatus } = useWebSocket('/admin');
+  const { isDarkMode, toggleTheme } = useTheme();
   
   // Redux state
   const { user, isAuthenticated, users } = useSelector((state) => state.auth);
@@ -128,6 +151,11 @@ const AdminDashboard = ({ section = "overview" }) => {
     analytics: false,
     settings: false
   });
+
+  const unreadNotifications = useMemo(
+    () => notifications.filter(notification => !notification.read),
+    [notifications]
+  );
 
   // Refs
   const initialLoadComplete = useRef(false);
@@ -196,7 +224,9 @@ const AdminDashboard = ({ section = "overview" }) => {
 
       // Load initial notifications
       const initialNotifications = await loadNotifications();
-      setNotifications(initialNotifications);
+      setNotifications(
+        (initialNotifications || []).map(normalizeDashboardNotification)
+      );
 
       // Initialize WebSocket connection for real-time updates
       initializeWebSocket();
@@ -217,33 +247,45 @@ const AdminDashboard = ({ section = "overview" }) => {
       // This would typically come from your notification service
       const mockNotifications = [
         {
-          id: 1,
+          id: 'notification-low-stock',
           type: NOTIFICATION_TYPES.LOW_STOCK,
           title: 'Low Stock Alert',
           message: '3 products are running low on inventory',
           time: new Date(Date.now() - 5 * 60 * 1000),
           priority: 'high',
           unread: true,
+          read: false,
+          category: 'inventory',
+          actions: [
+            { id: 'view-low-stock', label: 'Review Products', type: 'primary' }
+          ],
           data: { productCount: 3 }
         },
         {
-          id: 2,
+          id: 'notification-new-order',
           type: NOTIFICATION_TYPES.NEW_ORDER,
           title: 'New Order Received',
           message: 'Order #ORD-2024-001 needs processing',
           time: new Date(Date.now() - 12 * 60 * 1000),
           priority: 'medium',
           unread: true,
+          read: false,
+          category: 'orders',
+          actions: [
+            { id: 'open-order', label: 'Open Order', type: 'primary' }
+          ],
           data: { orderId: 'ORD-2024-001', amount: 149.99 }
         },
         {
-          id: 3,
+          id: 'notification-user-signup',
           type: NOTIFICATION_TYPES.USER_SIGNUP,
           title: 'New User Registration',
           message: '5 new users registered in the last hour',
           time: new Date(Date.now() - 30 * 60 * 1000),
           priority: 'low',
           unread: false,
+          read: true,
+          category: 'users',
           data: { userCount: 5 }
         }
       ];
@@ -373,7 +415,10 @@ const AdminDashboard = ({ section = "overview" }) => {
   const handleNotificationClick = useCallback((notification) => {
     // Mark as read
     setNotifications(prev => 
-      prev.map(n => n.id === notification.id ? { ...n, unread: false } : n)
+      prev.map(n => n.id === notification.id 
+        ? normalizeDashboardNotification({ ...n, unread: false, read: true })
+        : n
+      )
     );
 
     // Navigate to relevant section based on notification type
@@ -394,6 +439,30 @@ const AdminDashboard = ({ section = "overview" }) => {
     trackEvent('admin_notification_clicked', {
       notification_type: notification.type,
       notification_id: notification.id
+    });
+  }, [handleSectionChange]);
+
+  const handleNotificationAction = useCallback((notification, actionId) => {
+    if (!notification || !actionId) return;
+
+    switch (actionId) {
+      case 'view-low-stock':
+        toast.info('Opening low stock products...');
+        handleSectionChange('products');
+        break;
+      case 'open-order':
+        toast.info(`Opening order ${notification?.data?.orderId || ''}`.trim());
+        handleSectionChange('orders');
+        break;
+      default:
+        toast.info('Action triggered from notification');
+        break;
+    }
+
+    trackEvent('admin_notification_action_taken', {
+      notification_id: notification.id,
+      action_id: actionId,
+      notification_type: notification.type
     });
   }, [handleSectionChange]);
 
@@ -895,7 +964,7 @@ const AdminDashboard = ({ section = "overview" }) => {
         robots="noindex, nofollow"
       />
 
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+      <div className="flex h-screen overflow-hidden">
         
         {/* Enhanced Admin Sidebar */}
         <div className={`${sidebarCollapsed ? 'w-20' : 'w-80'} transition-all duration-300 bg-white/10 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/20 shadow-2xl relative flex flex-col`}>
@@ -970,7 +1039,7 @@ const AdminDashboard = ({ section = "overview" }) => {
           {/* Enhanced Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
             <ul className="space-y-2">
-              {availableSections.map((item, index) => {
+              {availableSections.map((item) => {
                 const isActive = activeSection === item.id;
                 
                 return (
@@ -1035,9 +1104,9 @@ const AdminDashboard = ({ section = "overview" }) => {
                     Recent Alerts
                   </h3>
                   <div className="flex items-center space-x-2">
-                    {notifications.filter(n => n.unread).length > 0 && (
+                    {unreadNotifications.length > 0 && (
                       <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse">
-                        {notifications.filter(n => n.unread).length}
+                        {unreadNotifications.length}
                       </span>
                     )}
                     <button
@@ -1057,7 +1126,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                       className="w-full flex items-start space-x-2 text-xs p-2 rounded-lg hover:bg-white/10 transition-colors text-left"
                     >
                       <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
-                        notification.unread ? 'bg-blue-500' : 'bg-gray-400'
+                        !notification.read ? 'bg-blue-500' : 'bg-gray-400'
                       }`}></div>
                       <div className="flex-1 min-w-0">
                         <p className="text-gray-900 dark:text-white font-medium truncate">
@@ -1067,7 +1136,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                           {notification.message}
                         </p>
                         <p className="text-gray-500 dark:text-gray-500 mt-1">
-                          {formatTimeAgo(notification.time)}
+                          {formatTimeAgo(notification.time || notification.timestamp)}
                         </p>
                       </div>
                     </button>
@@ -1085,6 +1154,15 @@ const AdminDashboard = ({ section = "overview" }) => {
           <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 p-6 shadow-lg flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setSidebarCollapsed(prev => !prev)}
+                  className="hidden md:flex w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
+                  title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                  aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  <i className={`fas ${sidebarCollapsed ? 'fa-bars-staggered' : 'fa-bars'}`}></i>
+                </button>
+
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
                     <i className={`fas ${currentSection?.icon} mr-3 text-blue-500`}></i>
@@ -1128,11 +1206,21 @@ const AdminDashboard = ({ section = "overview" }) => {
                   title="Notifications"
                 >
                   <i className="fas fa-bell"></i>
-                  {notifications.filter(n => n.unread).length > 0 && (
+                  {unreadNotifications.length > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
-                      {notifications.filter(n => n.unread).length}
+                      {unreadNotifications.length}
                     </span>
                   )}
+                </button>
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
+                  title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-label="Toggle theme"
+                >
+                  <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
                 </button>
                 
                 {/* Connection Status Indicator */}
@@ -1174,12 +1262,15 @@ const AdminDashboard = ({ section = "overview" }) => {
 
         {showNotificationCenter && (
           <NotificationCenter
+            isOpen={showNotificationCenter}
             notifications={notifications}
             onClose={() => setShowNotificationCenter(false)}
+            onNotificationsChange={(updated) =>
+              setNotifications((updated || []).map(normalizeDashboardNotification))
+            }
             onNotificationClick={handleNotificationClick}
-            onMarkAllRead={() => {
-              setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
-            }}
+            onNotificationAction={handleNotificationAction}
+            position="right"
           />
         )}
 
@@ -1190,9 +1281,14 @@ const AdminDashboard = ({ section = "overview" }) => {
 };
 
 // Helper function for time formatting
-const formatTimeAgo = (date) => {
+const formatTimeAgo = (value) => {
+  const targetDate = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(targetDate.getTime())) {
+    return '';
+  }
+
   const now = new Date();
-  const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+  const diffInMinutes = Math.floor((now - targetDate) / (1000 * 60));
   
   if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 const backgroundStyles = {
   gradient: 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-slate-900 dark:to-gray-950',
-  subtle: 'bg-slate-50 dark:bg-slate-950',
+  subtle: 'bg-theme',
   plain: ''
 };
 

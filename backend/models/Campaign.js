@@ -183,6 +183,19 @@ const CampaignSchema = new mongoose.Schema({
     default: true,
     index: true
   },
+  isPublic: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  bannerImage: {
+    type: String,
+    trim: true
+  },
+  ctaUrl: {
+    type: String,
+    trim: true
+  },
   priority: {
     type: Number,
     default: 0,
@@ -258,6 +271,7 @@ CampaignSchema.index({ startDate: 1, endDate: 1 });
 CampaignSchema.index({ type: 1 });
 CampaignSchema.index({ 'targetAudience.segments': 1 });
 CampaignSchema.index({ priority: -1 });
+CampaignSchema.index({ isPublic: 1, status: 1 });
 
 // Compound index for common queries to find active campaigns
 CampaignSchema.index({ 

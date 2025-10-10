@@ -498,7 +498,7 @@ const CartSidebar = ({
                 
                 <div>
                   <h2 className="text-xl font-bold">Shopping Cart</h2>
-                  <p className="text-sm text-blue-100">
+                  <p className="text-sm text-muted-theme">
                     {itemCount} {itemCount === 1 ? 'item' : 'items'}
                   </p>
                 </div>
@@ -514,7 +514,7 @@ const CartSidebar = ({
             
             {/* Progress Bar */}
             <div className="mt-4">
-              <div className="flex items-center justify-between text-sm text-blue-100 mb-2">
+              <div className="flex items-center justify-between text-sm text-muted-theme mb-2">
                 <span>Free shipping</span>
                 <span>{subtotal >= 100 ? 'Unlocked!' : `$${(100 - subtotal).toFixed(2)} to go`}</span>
               </div>

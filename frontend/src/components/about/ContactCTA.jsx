@@ -29,7 +29,7 @@ const ContactCTA = ({ onCTAClick, animateElements }) => {
           <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
             Ready to Find Your Perfect Pair?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-theme mb-8 max-w-3xl mx-auto leading-relaxed">
             Join thousands of satisfied customers who trust ShoeMarkNet for their footwear needs. 
             Discover your next favorite pair today.
           </p>

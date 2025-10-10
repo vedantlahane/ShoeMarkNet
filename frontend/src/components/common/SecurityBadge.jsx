@@ -217,13 +217,13 @@ const SecurityBadge = ({
               <i className={`${getStatusIcon(securityStatus)} ${getStatusColor(securityStatus)} text-lg`}></i>
             </div>
             <div>
-              <h3 className="text-white font-bold">Security Status</h3>
-              <p className="text-blue-100 text-sm capitalize">{securityStatus}</p>
+              <h3 className="text-theme font-bold">Security Status</h3>
+              <p className="text-muted-theme text-sm capitalize">{securityStatus}</p>
             </div>
           </div>
           <button
             onClick={() => setIsExpanded(false)}
-            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-theme hover:bg-white/30 transition-colors"
           >
             <i className="fas fa-times"></i>
           </button>

@@ -285,8 +285,8 @@ const CompareDrawer = ({
                 <i className="fas fa-balance-scale text-white text-xl"></i>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Compare Products</h2>
-                <p className="text-blue-100">
+                <h2 className="text-2xl font-bold text-theme">Compare Products</h2>
+                <p className="text-muted-theme">
                   {compareItems.length} of {maxCompareItems} products selected
                 </p>
               </div>

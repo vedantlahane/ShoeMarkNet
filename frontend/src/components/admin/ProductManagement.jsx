@@ -852,10 +852,10 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
         {/* Drag overlay */}
         {isDragging && (
           <div className="fixed inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-12 text-center">
+            <div className="bg-surface backdrop-blur-xl border border-theme-strong rounded-3xl p-12 text-center">
               <i className="fas fa-cloud-upload-alt text-6xl text-blue-500 mb-4"></i>
-              <h3 className="text-2xl font-bold text-white mb-2">Drop files to upload</h3>
-              <p className="text-blue-100">Support for images, CSV, and Excel files</p>
+              <h3 className="text-2xl font-bold text-theme mb-2">Drop files to upload</h3>
+              <p className="text-muted-theme">Support for images, CSV, and Excel files</p>
             </div>
           </div>
         )}
@@ -981,7 +981,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
         {filteredAndSortedProducts.length === 0 ? (
           /* Enhanced Empty State */
           <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
+            <div className="bg-surface backdrop-blur-xl border border-theme-strong rounded-3xl p-12 text-center shadow-2xl">
               <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
                 <i className="fas fa-boxes text-4xl text-white"></i>
               </div>

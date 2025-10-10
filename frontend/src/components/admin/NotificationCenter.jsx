@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
 // Utils
@@ -10,90 +9,137 @@ import useWebSocket from '../../hooks/useWebSocket';
 import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts';
 import useLocalStorage from '../../hooks/useLocalStorage';
 
+const formatCategoryLabel = (value = '') => {
+  return value
+    .toString()
+    .replace(/[-_]/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ') || 'General';
+};
+
+const normalizeNotification = (notification) => {
+  if (!notification) return null;
+
+  const rawTimestamp = notification.timestamp || notification.time || new Date();
+  const dateInstance = rawTimestamp instanceof Date ? rawTimestamp : new Date(rawTimestamp);
+  const timestamp = dateInstance.toISOString();
+
+  const read = notification.read ?? !notification.unread;
+  const unread = notification.unread ?? !read;
+
+  return {
+    priority: 'medium',
+    category: 'general',
+    ...notification,
+    timestamp,
+    time: dateInstance,
+    read,
+    unread
+  };
+};
+
+const createDefaultNotifications = () => ([
+  normalizeNotification({
+    id: '1',
+    type: 'success',
+    title: 'System Update Complete',
+    message: 'ShoeMarkNet admin dashboard has been successfully updated to version 2.1.4',
+    priority: 'high',
+    category: 'system',
+    actions: [
+      { id: 'view-changelog', label: 'View Changelog', type: 'primary' }
+    ]
+  }),
+  normalizeNotification({
+    id: '2',
+    type: 'warning',
+    title: 'High Server Load',
+    message: 'Server CPU usage is at 87%. Consider scaling resources if this continues.',
+    priority: 'high',
+    category: 'performance',
+    actions: [
+      { id: 'view-metrics', label: 'View Metrics', type: 'secondary' },
+      { id: 'scale-resources', label: 'Scale Resources', type: 'primary' }
+    ],
+    timestamp: new Date(Date.now() - 5 * 60 * 1000)
+  }),
+  normalizeNotification({
+    id: '3',
+    type: 'info',
+    title: 'New Order Received',
+    message: 'Order #ORD-2024-1234 has been placed by customer John Doe',
+    priority: 'medium',
+    category: 'orders',
+    read: true,
+    actions: [
+      { id: 'view-order', label: 'View Order', type: 'primary' }
+    ],
+    timestamp: new Date(Date.now() - 15 * 60 * 1000)
+  }),
+  normalizeNotification({
+    id: '4',
+    type: 'error',
+    title: 'Payment Processing Failed',
+    message: 'Payment gateway returned error 500. Customer payment for order #ORD-2024-1235 failed.',
+    priority: 'critical',
+    category: 'payments',
+    actions: [
+      { id: 'retry-payment', label: 'Retry Payment', type: 'primary' },
+      { id: 'contact-customer', label: 'Contact Customer', type: 'secondary' }
+    ],
+    timestamp: new Date(Date.now() - 30 * 60 * 1000)
+  }),
+  normalizeNotification({
+    id: '5',
+    type: 'info',
+    title: 'Backup Completed',
+    message: 'Scheduled database backup completed successfully at 3:00 AM',
+    priority: 'low',
+    category: 'maintenance',
+    read: true,
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)
+  })
+]);
+
 const NotificationCenter = ({
   isOpen = false,
   onClose = () => {},
-  variant = 'default', // default, compact, mobile
   position = 'right', // right, left, center
   maxNotifications = 50,
   showToasts = true,
-  className = ''
+  className = '',
+  notifications: controlledNotifications,
+  onNotificationsChange,
+  onNotificationClick,
+  onNotificationAction,
+  onNotificationDelete,
+  onMarkAllRead,
+  emptyState = null
 }) => {
-  // Redux state
-  const { user, notifications: reduxNotifications = [] } = useSelector(state => ({
-    user: state.auth?.user || {},
-    notifications: state.notifications?.items || []
-  }));
-  const dispatch = useDispatch();
+  const [notifications, setNotifications] = useState(() => {
+    const initial = controlledNotifications && controlledNotifications.length
+      ? controlledNotifications.map(normalizeNotification)
+      : createDefaultNotifications();
+    return initial;
+  });
 
-  // Local state
-  const [notifications, setNotifications] = useState([
-    // Default notifications for demo
-    {
-      id: '1',
-      type: 'success',
-      title: 'System Update Complete',
-      message: 'ShoeMarkNet admin dashboard has been successfully updated to version 2.1.4',
-      timestamp: new Date().toISOString(),
-      read: false,
-      priority: 'high',
-      category: 'system',
-      actions: [
-        { id: 'view-changelog', label: 'View Changelog', type: 'primary' }
-      ]
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'High Server Load',
-      message: 'Server CPU usage is at 87%. Consider scaling resources if this continues.',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      read: false,
-      priority: 'high',
-      category: 'performance',
-      actions: [
-        { id: 'view-metrics', label: 'View Metrics', type: 'secondary' },
-        { id: 'scale-resources', label: 'Scale Resources', type: 'primary' }
-      ]
-    },
-    {
-      id: '3',
-      type: 'info',
-      title: 'New Order Received',
-      message: 'Order #ORD-2024-1234 has been placed by customer John Doe',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      read: true,
-      priority: 'medium',
-      category: 'orders',
-      actions: [
-        { id: 'view-order', label: 'View Order', type: 'primary' }
-      ]
-    },
-    {
-      id: '4',
-      type: 'error',
-      title: 'Payment Processing Failed',
-      message: 'Payment gateway returned error 500. Customer payment for order #ORD-2024-1235 failed.',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      read: false,
-      priority: 'critical',
-      category: 'payments',
-      actions: [
-        { id: 'retry-payment', label: 'Retry Payment', type: 'primary' },
-        { id: 'contact-customer', label: 'Contact Customer', type: 'secondary' }
-      ]
-    },
-    {
-      id: '5',
-      type: 'info',
-      title: 'Backup Completed',
-      message: 'Scheduled database backup completed successfully at 3:00 AM',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      read: true,
-      priority: 'low',
-      category: 'maintenance'
-    }
-  ]);
+  useEffect(() => {
+    if (!controlledNotifications) return;
+    setNotifications(controlledNotifications.map(normalizeNotification));
+  }, [controlledNotifications]);
+
+  const updateNotifications = useCallback((updater) => {
+    setNotifications(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      const normalized = Array.isArray(next)
+        ? next.slice(0, maxNotifications).map(normalizeNotification)
+        : [];
+      onNotificationsChange?.(normalized);
+      return normalized;
+    });
+  }, [maxNotifications, onNotificationsChange]);
 
   const [filter, setFilter] = useState('all'); // all, unread, priority
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -104,30 +150,12 @@ const NotificationCenter = ({
   const notificationRef = useRef(null);
   const audioRef = useRef(null);
 
-  // WebSocket for real-time notifications
-  const { isConnected, sendMessage } = useWebSocket({
-    url: process.env.REACT_APP_WS_URL || 'ws://localhost:8080',
-    onMessage: handleWebSocketMessage
-  });
-
   // Initialize animations
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => setAnimateElements(true), 100);
     }
   }, [isOpen]);
-
-  // Handle WebSocket messages
-  function handleWebSocketMessage(message) {
-    try {
-      const data = JSON.parse(message.data);
-      if (data.type === 'notification') {
-        addNotification(data.notification);
-      }
-    } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
-    }
-  }
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -156,100 +184,120 @@ const NotificationCenter = ({
 
   // Add new notification
   const addNotification = useCallback((notification) => {
-    const newNotification = {
+    const baseNotification = {
       id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
       read: false,
+      unread: true,
       priority: 'medium',
       category: 'general',
       ...notification
     };
 
-    setNotifications(prev => {
-      const updated = [newNotification, ...prev];
-      return updated.slice(0, maxNotifications);
-    });
+    const newNotification = normalizeNotification(baseNotification);
 
-    // Play sound if enabled
+    updateNotifications(prev => [newNotification, ...prev]);
+
     if (soundEnabled && audioRef.current) {
-      const soundFile = notification.type === 'error' ? 'error.mp3' : 'notification.mp3';
+      const soundFile = newNotification.type === 'error' ? 'error.mp3' : 'notification.mp3';
       audioRef.current.src = `/sounds/${soundFile}`;
       audioRef.current.play().catch(() => {
         // Sound play failed, ignore
       });
     }
 
-    // Show toast if enabled
     if (showToasts) {
-      const toastType = notification.type === 'error' ? 'error' : 
-                      notification.type === 'warning' ? 'warning' : 
-                      notification.type === 'success' ? 'success' : 'info';
-      
-      toast[toastType](`${notification.title}: ${notification.message}`, {
+      const toastType = newNotification.type === 'error' ? 'error'
+        : newNotification.type === 'warning' ? 'warning'
+        : newNotification.type === 'success' ? 'success'
+        : 'info';
+
+      toast[toastType](`${newNotification.title}: ${newNotification.message}`, {
         position: 'top-right',
         autoClose: 5000
       });
     }
 
     trackEvent('admin_notification_received', {
-      type: notification.type,
-      category: notification.category,
-      priority: notification.priority
+      type: newNotification.type,
+      category: newNotification.category,
+      priority: newNotification.priority
     });
-  }, [maxNotifications, soundEnabled, showToasts]);
+  }, [showToasts, soundEnabled, updateNotifications]);
+
+  const handleWebSocketMessage = useCallback((message) => {
+    try {
+      const data = JSON.parse(message.data);
+      if (data.type === 'notification') {
+        addNotification(data.notification);
+      }
+    } catch (error) {
+      console.error('Failed to parse WebSocket message:', error);
+    }
+  }, [addNotification]);
+
+  const websocketUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_WS_URL) || 'ws://localhost:8080';
+
+  const { isConnected } = useWebSocket({
+    url: websocketUrl,
+    onMessage: handleWebSocketMessage
+  });
 
   // Mark notification as read
   const handleMarkAsRead = useCallback((notificationId) => {
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === notificationId 
-          ? { ...notif, read: true }
-          : notif
-      )
-    );
+    updateNotifications(prev => prev.map(notif =>
+      notif.id === notificationId
+        ? { ...notif, read: true, unread: false }
+        : notif
+    ));
 
     trackEvent('admin_notification_marked_read', {
       notification_id: notificationId
     });
-  }, []);
+  }, [updateNotifications]);
 
   // Mark all as read
   const handleMarkAllAsRead = useCallback(() => {
-    setNotifications(prev => 
-      prev.map(notif => ({ ...notif, read: true }))
-    );
+    const unreadBefore = notifications.filter(n => !n.read).length;
+    if (unreadBefore === 0) return;
+
+    updateNotifications(prev => prev.map(notif => ({
+      ...notif,
+      read: true,
+      unread: false
+    })));
 
     toast.success('All notifications marked as read');
+    onMarkAllRead?.();
     
     trackEvent('admin_notifications_mark_all_read', {
-      count: notifications.filter(n => !n.read).length
+      count: unreadBefore
     });
-  }, [notifications]);
+  }, [notifications, onMarkAllRead, updateNotifications]);
 
   // Delete notification
   const handleDeleteNotification = useCallback((notificationId) => {
-    setNotifications(prev => 
-      prev.filter(notif => notif.id !== notificationId)
-    );
+    updateNotifications(prev => prev.filter(notif => notif.id !== notificationId));
 
     toast.success('Notification deleted');
+    onNotificationDelete?.(notificationId);
     
     trackEvent('admin_notification_deleted', {
       notification_id: notificationId
     });
-  }, []);
+  }, [onNotificationDelete, updateNotifications]);
 
   // Clear all notifications
   const handleClearAll = useCallback(() => {
     if (window.confirm('Are you sure you want to clear all notifications?')) {
-      setNotifications([]);
+      updateNotifications([]);
       toast.success('All notifications cleared');
       
       trackEvent('admin_notifications_cleared_all', {
         count: notifications.length
       });
     }
-  }, [notifications.length]);
+  }, [notifications.length, updateNotifications]);
 
   // Handle notification action
   const handleNotificationAction = useCallback((notificationId, actionId) => {
@@ -260,6 +308,8 @@ const NotificationCenter = ({
       action_id: actionId,
       notification_type: notification?.type
     });
+
+    onNotificationAction?.(notification, actionId);
 
     // Handle specific actions
     switch (actionId) {
@@ -287,7 +337,15 @@ const NotificationCenter = ({
 
     // Mark as read when action is taken
     handleMarkAsRead(notificationId);
-  }, [notifications, handleMarkAsRead]);
+  }, [handleMarkAsRead, notifications, onNotificationAction]);
+
+  const handleNotificationClickInternal = useCallback((notification) => {
+    if (!notification) return;
+    if (!notification.read) {
+      handleMarkAsRead(notification.id);
+    }
+    onNotificationClick?.(notification);
+  }, [handleMarkAsRead, onNotificationClick]);
 
   // Filter notifications
   const filteredNotifications = notifications.filter(notification => {
@@ -302,14 +360,31 @@ const NotificationCenter = ({
   const priorityCount = notifications.filter(n => n.priority === 'high' || n.priority === 'critical').length;
 
   // Categories
-  const categories = [
+  const baseCategories = [
     { id: 'all', label: 'All', icon: 'fas fa-inbox' },
+    { id: 'general', label: 'General', icon: 'fas fa-bell' },
     { id: 'system', label: 'System', icon: 'fas fa-server' },
     { id: 'orders', label: 'Orders', icon: 'fas fa-shopping-cart' },
     { id: 'payments', label: 'Payments', icon: 'fas fa-credit-card' },
     { id: 'performance', label: 'Performance', icon: 'fas fa-chart-line' },
     { id: 'maintenance', label: 'Maintenance', icon: 'fas fa-tools' }
   ];
+
+  const categoryMap = new Map(baseCategories.map(category => [category.id, category]));
+
+  notifications.forEach(notification => {
+    if (!notification?.category) return;
+    const id = notification.category;
+    if (!categoryMap.has(id) && id !== 'all') {
+      categoryMap.set(id, {
+        id,
+        label: formatCategoryLabel(id),
+        icon: 'fas fa-tag'
+      });
+    }
+  });
+
+  const categories = Array.from(categoryMap.values());
 
   // Get type styling
   const getTypeStyle = (type) => {
@@ -380,8 +455,8 @@ const NotificationCenter = ({
                 <i className="fas fa-bell text-white text-lg"></i>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Notifications</h2>
-                <p className="text-blue-100 text-sm">
+                <h2 className="text-xl font-bold text-theme">Notifications</h2>
+                <p className="text-muted-theme text-sm">
                   {unreadCount} unread • {priorityCount} priority
                 </p>
               </div>
@@ -487,21 +562,22 @@ const NotificationCenter = ({
         {/* Notifications List */}
         <div className="flex-1 overflow-y-auto max-h-96">
           {filteredNotifications.length === 0 ? (
-            // Empty State
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-bell-slash text-gray-400 text-2xl"></i>
+            emptyState ?? (
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-bell-slash text-gray-400 text-2xl"></i>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No Notifications
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  {filter === 'unread' 
+                    ? "You're all caught up! No unread notifications."
+                    : "All notifications will appear here."
+                  }
+                </p>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No Notifications
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                {filter === 'unread' 
-                  ? "You're all caught up! No unread notifications." 
-                  : "All notifications will appear here."
-                }
-              </p>
-            </div>
+            )
           ) : (
             // Notifications
             <div className="divide-y divide-white/10 dark:divide-gray-700/10">
@@ -514,7 +590,7 @@ const NotificationCenter = ({
                       !notification.read ? 'bg-blue-50/10' : ''
                     } ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}
                     style={{ animationDelay: `${index * 0.05}s` }}
-                    onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+                    onClick={() => handleNotificationClickInternal(notification)}
                   >
                     <div className="flex items-start space-x-3">
                       

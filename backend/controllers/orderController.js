@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
+const Coupon = require('../models/Coupon');
 const { updateLeadScore } = require('./leadScoreController');
 const asyncHandler = require('express-async-handler');
 
@@ -141,6 +142,95 @@ const createOrder = asyncHandler(async (req, res) => {
   }
   
   res.status(201).json({ message: 'Order placed successfully', order });
+});
+
+/**
+ * @description Validate a coupon against the current user's cart or provided total.
+ * @route POST /api/orders/validate-coupon
+ * @access Private
+ */
+const validateCoupon = asyncHandler(async (req, res) => {
+  const { code, cartTotal } = req.body;
+
+  if (!code || !code.trim()) {
+    res.status(400);
+    throw new Error('Coupon code is required');
+  }
+
+  const normalizedCode = code.trim().toUpperCase();
+  const coupon = await Coupon.findOne({ code: normalizedCode });
+
+  if (!coupon) {
+    res.status(404);
+    throw new Error('Coupon not found');
+  }
+
+  const now = new Date();
+  if (!coupon.isCurrentlyValid(now)) {
+    res.status(400);
+    throw new Error('Coupon is not active or has expired');
+  }
+
+  const userId = req.user?.id;
+  if (coupon.hasUserExceededLimit(userId)) {
+    res.status(400);
+    throw new Error('You have already used this coupon the maximum number of times');
+  }
+
+  if (coupon.usageLimit.total && coupon.usageCount >= coupon.usageLimit.total) {
+    res.status(400);
+    throw new Error('Coupon usage limit has been reached');
+  }
+
+  let total = Number(cartTotal);
+  if (!total || Number.isNaN(total) || total <= 0) {
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart || cart.items.length === 0) {
+      res.status(400);
+      throw new Error('Unable to determine cart total for coupon validation');
+    }
+    total = cart.subtotal || cart.totalPrice || cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  }
+
+  if (total < coupon.minPurchase) {
+    res.status(400);
+    throw new Error(`Minimum purchase of ${coupon.minPurchase} is required for this coupon`);
+  }
+
+  const discountAmount = coupon.calculateDiscount(total);
+  const finalAmount = Math.max(total - discountAmount, 0);
+
+  const responsePayload = {
+    coupon: {
+      id: coupon._id,
+      code: coupon.code,
+      type: coupon.type,
+      value: coupon.value,
+      maxDiscount: coupon.maxDiscount,
+      minPurchase: coupon.minPurchase
+    },
+    cartTotal: total,
+    discountAmount,
+    finalAmount
+  };
+
+  if (typeof res.success === 'function') {
+    return res.success('Coupon validated successfully', responsePayload, {
+      usageLimit: coupon.usageLimit,
+      usageCount: coupon.usageCount,
+      userUsageCount: coupon.getUserUsageCount(userId)
+    });
+  }
+
+  return res.status(200).json({
+    message: 'Coupon validated successfully',
+    ...responsePayload,
+    meta: {
+      usageLimit: coupon.usageLimit,
+      usageCount: coupon.usageCount,
+      userUsageCount: coupon.getUserUsageCount(userId)
+    }
+  });
 });
 
 /**
@@ -494,5 +584,6 @@ module.exports = {
   getAllOrders,
   getOrderStats,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder,
+  validateCoupon
 };

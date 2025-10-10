@@ -22,10 +22,10 @@ const CategoryHeader = ({
           
           {/* Enhanced Breadcrumb Navigation */}
           <div className={`mb-6 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
-            <nav className="flex justify-center items-center space-x-2 text-blue-200">
+            <nav className="flex justify-center items-center space-x-2 text-muted-theme">
               <button 
                 onClick={() => onNavigate('/')}
-                className="hover:text-white transition-colors duration-200 flex items-center"
+                className="hover:text-theme transition-colors duration-200 flex items-center"
               >
                 <i className="fas fa-home mr-1"></i>Home
               </button>
@@ -36,7 +36,7 @@ const CategoryHeader = ({
                   <React.Fragment key={crumb._id}>
                     <Link 
                       to={`/category/${crumb.slug}`}
-                      className="hover:text-white transition-colors duration-200"
+                      className="hover:text-theme transition-colors duration-200"
                     >
                       {crumb.name}
                     </Link>
@@ -47,7 +47,7 @@ const CategoryHeader = ({
                 ))
               ) : (
                 <>
-                  <span className="text-white font-medium">Categories</span>
+                  <span className="text-theme font-medium">Categories</span>
                   <i className="fas fa-chevron-right text-xs"></i>
                 </>
               )}
@@ -61,10 +61,10 @@ const CategoryHeader = ({
             <div className={`inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r ${categoryColor} rounded-3xl shadow-2xl mb-6 transform hover:scale-110 transition-transform duration-300`}>
               <i className={`fas ${categoryIcon} text-4xl text-white`}></i>
             </div>
-            <h1 className="text-5xl lg:text-6xl font-bold text-white mb-4">
+            <h1 className="text-5xl lg:text-6xl font-bold text-theme mb-4">
               {categoryName} <span className="text-yellow-300">Collection</span>
             </h1>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-theme max-w-2xl mx-auto">
               <i className="fas fa-search mr-2"></i>
               Discover premium {categoryName?.toLowerCase()} products with exclusive deals and fast shipping
             </p>
@@ -72,26 +72,26 @@ const CategoryHeader = ({
 
           {/* Enhanced Stats */}
           <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:bg-white/20 transition-colors duration-200">
-              <div className="text-3xl font-bold text-white mb-1">{stats.total}</div>
-              <div className="text-sm text-blue-100">Products</div>
+            <div className="bg-surface backdrop-blur-lg border border-theme-strong rounded-2xl p-4 hover:bg-surface/80 transition-colors duration-200">
+              <div className="text-3xl font-bold text-theme mb-1">{stats.total}</div>
+              <div className="text-sm text-muted-theme">Products</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:bg-white/20 transition-colors duration-200">
-              <div className="text-3xl font-bold text-white mb-1">{stats.onSale}</div>
-              <div className="text-sm text-blue-100">On Sale</div>
+            <div className="bg-surface backdrop-blur-lg border border-theme-strong rounded-2xl p-4 hover:bg-surface/80 transition-colors duration-200">
+              <div className="text-3xl font-bold text-theme mb-1">{stats.onSale}</div>
+              <div className="text-sm text-muted-theme">On Sale</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:bg-white/20 transition-colors duration-200">
-              <div className="text-3xl font-bold text-white mb-1">
+            <div className="bg-surface backdrop-blur-lg border border-theme-strong rounded-2xl p-4 hover:bg-surface/80 transition-colors duration-200">
+              <div className="text-3xl font-bold text-theme mb-1">
                 <i className="fas fa-star text-yellow-300"></i>
                 <span className="ml-1">{stats.averageRating}</span>
               </div>
-              <div className="text-sm text-blue-100">Avg Rating</div>
+              <div className="text-sm text-muted-theme">Avg Rating</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-4 hover:bg-white/20 transition-colors duration-200">
-              <div className="text-3xl font-bold text-white mb-1">
+            <div className="bg-surface backdrop-blur-lg border border-theme-strong rounded-2xl p-4 hover:bg-surface/80 transition-colors duration-200">
+              <div className="text-3xl font-bold text-theme mb-1">
                 <i className="fas fa-shipping-fast text-green-300"></i>
               </div>
-              <div className="text-sm text-blue-100">Free Ship</div>
+              <div className="text-sm text-muted-theme">Free Ship</div>
             </div>
           </div>
         </div>

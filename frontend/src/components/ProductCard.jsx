@@ -624,7 +624,7 @@ const ProductCard = ({
               <Star size={12} className="text-amber-400" />
               {ratingLabel}
             </span>
-            <span className="truncate text-center text-slate-400">{reviewLabel}</span>
+            <span className="truncate text-center text-muted-theme">{reviewLabel}</span>
             <span className={`flex items-center justify-end gap-1 rounded-full px-2 py-1 ${stockStatus.badgeClass}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${stockStatus.dotClass}`}></span>
               {stockStatus.label}
@@ -666,7 +666,7 @@ const ProductCard = ({
                 {formatCurrency(productData.price)}
               </span>
               {productData.originalPrice > productData.price && (
-                <span className="text-xs text-slate-400 line-through">
+                <span className="text-xs text-muted-theme line-through">
                   {formatCurrency(productData.originalPrice)}
                 </span>
               )}
@@ -685,7 +685,7 @@ const ProductCard = ({
             disabled={!productData.inStock}
             className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 ${
               !productData.inStock
-                ? 'cursor-not-allowed bg-slate-700/60 text-slate-400'
+                ? 'cursor-not-allowed bg-slate-700/60 text-muted-theme'
                 : isInCart
                   ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                   : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-500 hover:to-purple-500'
