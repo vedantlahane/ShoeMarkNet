@@ -23,7 +23,9 @@ import {
 } from 'lucide-react';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 
-const HeroSection = () => {
+const DEFAULT_COUNTDOWN_DURATION = 72 * 60 * 60; // 72 hours in seconds
+
+const HeroSection = ({ data, isLoading = false }) => {
   const dispatch = useDispatch();
   const prefersReducedMotion = usePrefersReducedMotion();
 
@@ -35,27 +37,75 @@ const HeroSection = () => {
   const statsRef = useRef([]);
   const gsapContextRef = useRef(null);
 
-  const [timeLeft, setTimeLeft] = useState({
-    days: 7,
-    hours: 15,
-    minutes: 23,
-    seconds: 42
+  const [targetDate, setTargetDate] = useState(() => {
+    if (!data?.countdownTarget) {
+      return new Date(Date.now() + DEFAULT_COUNTDOWN_DURATION * 1000);
+    }
+    const parsed = new Date(data.countdownTarget);
+    return Number.isNaN(parsed.getTime())
+      ? new Date(Date.now() + DEFAULT_COUNTDOWN_DURATION * 1000)
+      : parsed;
   });
+  const [timeLeft, setTimeLeft] = useState(() => ({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  }));
   const [isLoaded, setIsLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const stats = useMemo(() => ([
-    { icon: Users, value: '50K+', label: 'Happy customers' },
-    { icon: Zap, value: '24h', label: 'Lightning delivery' },
-    { icon: Star, value: '4.9★', label: 'Average rating' },
-    { icon: TrendingUp, value: '99%', label: 'Fit satisfaction' }
-  ]), []);
+  const heroData = useMemo(() => (data && typeof data === 'object' ? data : {}), [data]);
+  const {
+    headline: rawHeadline,
+    subheading: rawSubheading,
+    description: rawDescription,
+    countdownLabel: rawCountdownLabel,
+    stats: rawStats,
+    features: rawFeatures,
+    product: rawProduct,
+  } = heroData || {};
 
-  const featurePills = useMemo(() => ([
-    { icon: ShieldCheck, label: '30-day easy returns' },
-    { icon: Truck, label: 'Free express shipping' },
-    { icon: Sparkles, label: 'AI size guidance' }
-  ]), []);
+  const heroHeadline = useMemo(() => {
+    const fallback = 'Discover premium footwear for every journey';
+    const value = typeof rawHeadline === 'string' ? rawHeadline.trim() : '';
+    return value.length ? value : fallback;
+  }, [rawHeadline]);
+
+  const heroSubheading = useMemo(() => {
+    const fallback = 'Featured release';
+    const value = typeof rawSubheading === 'string' ? rawSubheading.trim() : '';
+    return value.length ? value : fallback;
+  }, [rawSubheading]);
+
+  const heroDescription = useMemo(() => {
+    const fallback = 'Engineered with adaptive cushioning and breathable knit, our featured release keeps pace with every sprint, stride, and slowdown. Join a community of sneaker obsessives discovering their perfect fit.';
+    const value = typeof rawDescription === 'string' ? rawDescription.trim() : '';
+    return value.length ? value : fallback;
+  }, [rawDescription]);
+
+  const stats = useMemo(() => {
+    if (Array.isArray(rawStats) && rawStats.length > 0) {
+      const iconPool = [Users, Zap, Star, TrendingUp];
+      return rawStats.map((stat, index) => ({
+        icon: iconPool[index % iconPool.length],
+        value: stat?.value ?? '—',
+        label: stat?.label ?? '',
+      }));
+    }
+    return [];
+  }, [rawStats]);
+
+  const featurePills = useMemo(() => {
+    if (Array.isArray(rawFeatures) && rawFeatures.length > 0) {
+      const iconPool = [ShieldCheck, Truck, Sparkles];
+      return rawFeatures.map((label, index) => ({
+        icon: iconPool[index % iconPool.length],
+        label,
+      }));
+    }
+    return [];
+  }, [rawFeatures]);
 
   const floatingShapes = useMemo(() => ([
     { left: '8%', top: '18%', size: 220, blur: 180, color: 'bg-sky-500/20' },
@@ -64,57 +114,125 @@ const HeroSection = () => {
     { left: '82%', top: '66%', size: 260, blur: 210, color: 'bg-pink-500/20' }
   ]), []);
 
-  const heroProduct = useMemo(() => ({
-    id: 'hero-premium-1',
-    name: 'Nimbus Runner X',
-    price: 129.99,
-    originalPrice: 189.99,
-    discount: 32,
-    image: '/assets/hero.png'
-  }), []);
+  const heroProduct = useMemo(() => {
+    if (rawProduct && typeof rawProduct === 'object') {
+      return rawProduct;
+    }
+    return null;
+  }, [rawProduct]);
 
-  const productHighlights = useMemo(() => ([
-    { icon: Sparkle, label: 'FeatherLite cushioning' },
-    { icon: CheckCircle2, label: 'Adaptive heel lock' },
-    { icon: Layers3, label: 'Breathable knit weave' }
-  ]), []);
+  const shouldHighlightProduct = useMemo(() => {
+    if (!heroProduct?.name) return false;
+    return heroHeadline.toLowerCase().includes(heroProduct.name.toLowerCase());
+  }, [heroHeadline, heroProduct?.name]);
+
+  const headlineBase = useMemo(() => {
+    if (!shouldHighlightProduct || !heroProduct?.name) {
+      return heroHeadline;
+    }
+    const regex = new RegExp(heroProduct.name, 'i');
+    return heroHeadline.replace(regex, '').trim();
+  }, [heroHeadline, heroProduct?.name, shouldHighlightProduct]);
+
+  const productPricing = useMemo(() => {
+    if (!heroProduct) {
+      return { price: null, original: null, discount: null };
+    }
+    const price = typeof heroProduct.price === 'number' ? heroProduct.price : null;
+    const original = typeof heroProduct.originalPrice === 'number' ? heroProduct.originalPrice : null;
+    const discount = typeof heroProduct.discountPercentage === 'number' ? heroProduct.discountPercentage : null;
+    return { price, original, discount };
+  }, [heroProduct]);
+
+  const formatPrice = useCallback((value) => {
+    if (typeof value !== 'number') return null;
+    return value.toFixed(2);
+  }, []);
+
+  const { price: productPrice, original: productOriginal } = productPricing;
+
+  const priceLabels = useMemo(() => ({
+    price: productPrice !== null ? formatPrice(productPrice) : null,
+    original: productOriginal !== null ? formatPrice(productOriginal) : null,
+  }), [productPrice, productOriginal, formatPrice]);
+
+  const countdownHeadline = useMemo(() => {
+    const fallback = 'Flash drop ends in';
+    const label = typeof rawCountdownLabel === 'string' ? rawCountdownLabel.trim() : '';
+    return label.length ? label : fallback;
+  }, [rawCountdownLabel]);
+
+  const productDisplayName = useMemo(() => {
+    if (heroProduct?.name) return heroProduct.name;
+    if (heroSubheading) return heroSubheading;
+    return 'Featured drop';
+  }, [heroProduct?.name, heroSubheading]);
+
+  const productBadgeLabel = useMemo(() => {
+    if (heroProduct?.brand) return heroProduct.brand;
+    return heroSubheading;
+  }, [heroProduct?.brand, heroSubheading]);
+
+  const productHighlights = useMemo(() => {
+    if (Array.isArray(rawProduct?.highlights) && rawProduct.highlights.length > 0) {
+      const iconPool = [Sparkle, CheckCircle2, Layers3];
+      return rawProduct.highlights.map((label, index) => ({
+        icon: iconPool[index % iconPool.length],
+        label,
+      }));
+    }
+
+    if (Array.isArray(rawFeatures)) {
+      const iconPool = [Sparkle, CheckCircle2, Layers3];
+      return rawFeatures.slice(0, 3).map((label, index) => ({
+        icon: iconPool[index % iconPool.length],
+        label,
+      }));
+    }
+
+    return [];
+  }, [rawProduct?.highlights, rawFeatures]);
+
+  useEffect(() => {
+    if (!data?.countdownTarget) {
+      setTargetDate(new Date(Date.now() + DEFAULT_COUNTDOWN_DURATION * 1000));
+      return;
+    }
+
+    const parsed = new Date(data.countdownTarget);
+    setTargetDate(Number.isNaN(parsed.getTime()) ? new Date(Date.now() + DEFAULT_COUNTDOWN_DURATION * 1000) : parsed);
+  }, [data?.countdownTarget]);
+
+  const updateCountdown = useCallback(() => {
+    if (!targetDate) {
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
+
+    const difference = Math.max(0, targetDate.getTime() - Date.now());
+    const totalSeconds = Math.floor(difference / 1000);
+    const days = Math.floor(totalSeconds / (60 * 60 * 24));
+    const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+    const seconds = totalSeconds % 60;
+
+    setTimeLeft({ days, hours, minutes, seconds });
+  }, [targetDate]);
 
   const formatTimeUnit = useCallback((value) => value.toString().padStart(2, '0'), []);
 
   const countdownSegments = useMemo(() => ([
-    { label: 'Days', value: formatTimeUnit(timeLeft.days) },
-    { label: 'Hours', value: formatTimeUnit(timeLeft.hours) },
-    { label: 'Mins', value: formatTimeUnit(timeLeft.minutes) },
-    { label: 'Secs', value: formatTimeUnit(timeLeft.seconds) }
+    { label: 'Days', value: formatTimeUnit(timeLeft.days ?? 0) },
+    { label: 'Hours', value: formatTimeUnit(timeLeft.hours ?? 0) },
+    { label: 'Mins', value: formatTimeUnit(timeLeft.minutes ?? 0) },
+    { label: 'Secs', value: formatTimeUnit(timeLeft.seconds ?? 0) }
   ]), [timeLeft, formatTimeUnit]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        let { days, hours, minutes, seconds } = prev;
-
-        if (seconds > 0) {
-          seconds--;
-        } else if (minutes > 0) {
-          minutes--;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-          seconds = 59;
-        } else if (days > 0) {
-          days--;
-          hours = 23;
-          minutes = 59;
-          seconds = 59;
-        }
-
-        return { days, hours, minutes, seconds };
-      });
-    }, 1000);
-
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [updateCountdown]);
 
   useEffect(() => {
     if (prefersReducedMotion) {
@@ -175,6 +293,11 @@ const HeroSection = () => {
 
   const handleAddToCart = useCallback((productOverride) => {
     const product = productOverride || heroProduct;
+
+    if (!product) {
+      toast.error('Featured product is unavailable right now');
+      return;
+    }
 
     dispatch(addToCart({
       productId: product.id,
@@ -237,18 +360,20 @@ const HeroSection = () => {
           <div className="space-y-10 text-theme">
             <div className="inline-flex items-center gap-3 rounded-full border border-theme-strong/15 bg-surface/5 px-5 py-2 text-theme/80 shadow-lg shadow-theme/40 backdrop-blur-xl">
               <Sparkles className="h-4 w-4 text-cyan-300" aria-hidden="true" />
-              <span className="text-xs font-semibold uppercase tracking-[0.28em]">Premium drop</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.28em]">{heroSubheading}</span>
               <span className="flex items-center gap-1 text-xs text-muted-theme">
                 <History className="h-3.5 w-3.5" aria-hidden="true" />
-                Ends in {formatTimeUnit(timeLeft.hours)}h {formatTimeUnit(timeLeft.minutes)}m
+                Ends in {formatTimeUnit(timeLeft?.hours ?? 0)}h {formatTimeUnit(timeLeft?.minutes ?? 0)}m
               </span>
             </div>
 
             <div ref={titleRef} className="space-y-5">
               <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight">
-                Elevate your stride with
+                {shouldHighlightProduct && headlineBase && (
+                  <span className="block">{headlineBase}</span>
+                )}
                 <span className="block bg-gradient-to-r from-sky-400 via-indigo-300 to-rose-400 bg-clip-text text-transparent">
-                  Nimbus Runner X
+                  {shouldHighlightProduct && heroProduct?.name ? heroProduct.name : heroHeadline}
                 </span>
               </h1>
             </div>
@@ -257,7 +382,7 @@ const HeroSection = () => {
               ref={subtitleRef}
               className="max-w-2xl text-base text-muted-theme sm:text-lg md:text-xl md:leading-relaxed"
             >
-              Engineered with adaptive cushioning and breathable knit mesh, Nimbus Runner X keeps pace with every sprint, stride, and slowdown. Join a community of sneaker obsessives discovering their perfect fit.
+              {heroDescription}
             </p>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -280,11 +405,12 @@ const HeroSection = () => {
             <div ref={ctaRef} className="flex flex-col gap-4 sm:flex-row">
               <button
                 onClick={() => handleAddToCart()}
-                className="add-to-cart-btn inline-flex items-center justify-center gap-3 rounded-full bg-primary px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(148,163,184,0.35)] transition-all duration-300 hover:shadow-[0_26px_56px_rgba(148,163,184,0.4)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-theme"
-                aria-label="Add Nimbus Runner X to cart"
+                className="add-to-cart-btn inline-flex items-center justify-center gap-3 rounded-full bg-primary px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(148,163,184,0.35)] transition-all duration-300 hover:shadow-[0_26px_56px_rgba(148,163,184,0.4)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-theme disabled:cursor-not-allowed disabled:opacity-70"
+                aria-label={heroProduct?.name ? `Add ${heroProduct.name} to cart` : 'Add featured product to cart'}
+                disabled={!heroProduct}
               >
                 <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-                Shop Nimbus Runner X
+                {heroProduct?.name ? `Shop ${heroProduct.name}` : 'Shop featured drop'}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
 
@@ -317,7 +443,7 @@ const HeroSection = () => {
             <div className="max-w-lg rounded-3xl border border-theme-strong bg-surface px-6 py-5 text-muted-theme shadow-[0_22px_60px_rgba(12,17,28,0.55)] backdrop-blur-2xl">
               <div className="flex items-center gap-3 text-theme">
                 <Clock className="h-5 w-5 text-amber-300" aria-hidden="true" />
-                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-theme">Flash drop ends in</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-theme">{countdownHeadline}</span>
               </div>
               <div className="mt-4 flex items-center gap-3">
                 {countdownSegments.map((segment) => (
@@ -338,11 +464,11 @@ const HeroSection = () => {
               <div className="absolute inset-x-6 top-6 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/60">
                 <span className="inline-flex items-center gap-2">
                   <Sparkle className="h-4 w-4 text-cyan-300" aria-hidden="true" />
-                  Limited release
+                  {productBadgeLabel}
                 </span>
                 <span className="inline-flex items-center gap-1 text-emerald-300">
                   <TrendingUp className="h-4 w-4" aria-hidden="true" />
-                  {heroProduct.discount}% off
+                  {productPricing.discount !== null ? `${productPricing.discount}% off` : 'Just dropped'}
                 </span>
               </div>
 
@@ -351,14 +477,14 @@ const HeroSection = () => {
                   className="pointer-events-none absolute inset-0 -translate-y-6 scale-105 rounded-full bg-gradient-to-t from-cyan-500/30 via-indigo-500/20 to-transparent blur-3xl"
                   aria-hidden="true"
                 />
-                {imageError ? (
+                {imageError || !heroProduct?.image ? (
                   <div className="relative mx-auto flex h-64 w-full max-w-md items-center justify-center rounded-[2rem] bg-slate-900/60 text-sm text-white/60">
-                    Image coming soon
+                    Product visual coming soon
                   </div>
                 ) : (
                   <img
                     src={heroProduct.image}
-                    alt={heroProduct.name}
+                    alt={productDisplayName}
                     className="relative mx-auto h-64 w-full max-w-md object-contain drop-shadow-[0_26px_48px_rgba(14,14,30,0.55)]"
                     loading="eager"
                     decoding="async"
@@ -370,12 +496,16 @@ const HeroSection = () => {
               <div className="mt-10 space-y-6 text-muted-theme">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.32em] text-muted-theme">Nimbus Runner X</p>
-                    <h3 className="text-2xl font-semibold text-theme">{heroProduct.name}</h3>
+                    <p className="text-xs uppercase tracking-[0.32em] text-muted-theme">{productBadgeLabel}</p>
+                    <h3 className="text-2xl font-semibold text-theme">{productDisplayName}</h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-theme line-through">${heroProduct.originalPrice.toFixed(2)}</p>
-                    <p className="text-3xl font-semibold text-theme">${heroProduct.price.toFixed(2)}</p>
+                    {priceLabels.original && (
+                      <p className="text-sm text-muted-theme line-through">${priceLabels.original}</p>
+                    )}
+                    <p className="text-3xl font-semibold text-theme">
+                      {priceLabels.price ? `$${priceLabels.price}` : 'Coming soon'}
+                    </p>
                   </div>
                 </div>
 
@@ -396,11 +526,12 @@ const HeroSection = () => {
 
                 <button
                   onClick={() => handleAddToCart(heroProduct)}
-                  className="add-to-cart-btn inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_22px_60px_rgba(14,116,232,0.5)] transition-all duration-300 hover:shadow-[0_28px_72px_rgba(14,116,232,0.55)] focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2 focus:ring-offset-slate-950"
-                  aria-label="Add Nimbus Runner X to cart"
+                  className="add-to-cart-btn inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_22px_60px_rgba(14,116,232,0.5)] transition-all duration-300 hover:shadow-[0_28px_72px_rgba(14,116,232,0.55)] focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-70"
+                  aria-label={heroProduct?.name ? `Add ${heroProduct.name} to cart` : 'Add featured product to cart'}
+                  disabled={!heroProduct}
                 >
                   <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-                  Add to cart
+                  {heroProduct ? 'Add to cart' : 'Notify me'}
                 </button>
               </div>
             </div>

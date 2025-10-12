@@ -10,9 +10,6 @@ import { fetchProducts } from '../redux/slices/productSlice';
 import { fetchAllOrders } from '../redux/slices/orderSlice';
 import { fetchUsers } from '../redux/slices/authSlice';
 import adminService from '../services/adminService';
-
-// Components
-import ErrorBoundary from '../components/common/ErrorBoundary';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DashboardOverview from '../components/admin/DashboardOverview';
 import ProductManagement from '../components/admin/ProductManagement';
@@ -956,7 +953,7 @@ const AdminDashboard = ({ section = "overview" }) => {
   const metaTitle = `${currentSection?.label || 'Dashboard'} | Admin Panel - ShoeMarkNet`;
 
   return (
-    <ErrorBoundary>
+    <>
       {/* SEO Meta Tags */}
       <PageMeta
         title={metaTitle}
@@ -965,10 +962,10 @@ const AdminDashboard = ({ section = "overview" }) => {
       />
 
       <div className="flex h-screen overflow-hidden">
-        
+
         {/* Enhanced Admin Sidebar */}
         <div className={`${sidebarCollapsed ? 'w-20' : 'w-80'} transition-all duration-300 bg-white/10 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/20 shadow-2xl relative flex flex-col`}>
-          
+
           {/* Sidebar Header */}
           <div className="p-6 border-b border-white/20 dark:border-gray-700/20 flex-shrink-0">
             <div className="flex items-center justify-between">
@@ -985,7 +982,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                       <p className="text-xs text-gray-600 dark:text-gray-400">ShoeMarkNet Control Center</p>
                     </div>
                   </div>
-                  
+
                   {/* Enhanced Admin Info */}
                   <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl p-4">
                     <div className="flex items-center space-x-3 mb-3">
@@ -1009,7 +1006,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Connection Status */}
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center space-x-2">
@@ -1025,7 +1022,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                   </div>
                 </div>
               )}
-              
+
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                 className="w-10 h-10 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200 ml-auto"
@@ -1041,14 +1038,14 @@ const AdminDashboard = ({ section = "overview" }) => {
             <ul className="space-y-2">
               {availableSections.map((item) => {
                 const isActive = activeSection === item.id;
-                
+
                 return (
                   <li key={item.id}>
-                    <button 
+                    <button
                       onClick={() => handleSectionChange(item.id)}
                       className={`group w-full flex items-center ${sidebarCollapsed ? 'justify-center p-3' : 'justify-start p-4'} rounded-2xl transition-all duration-300 relative overflow-hidden ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-xl transform scale-105 ring-2 ring-white/20` 
+                          ? `bg-gradient-to-r ${item.color} text-white shadow-xl transform scale-105 ring-2 ring-white/20`
                           : 'text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white hover:scale-102'
                       }`}
                       title={sidebarCollapsed ? item.label : ''}
@@ -1057,22 +1054,22 @@ const AdminDashboard = ({ section = "overview" }) => {
                       {isActive && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 animate-shimmer"></div>
                       )}
-                      
+
                       <div className={`${sidebarCollapsed ? 'w-10 h-10' : 'w-12 h-12'} rounded-xl flex items-center justify-center ${
-                        isActive 
-                          ? 'bg-white/20 text-white shadow-lg' 
+                        isActive
+                          ? 'bg-white/20 text-white shadow-lg'
                           : 'bg-white/10 group-hover:bg-white/20 text-current'
                       } transition-all duration-200 relative z-10`}>
                         <i className={`fas ${item.icon} ${sidebarCollapsed ? 'text-lg' : 'text-xl'}`}></i>
                       </div>
-                      
+
                       {!sidebarCollapsed && (
                         <div className="ml-4 flex-1 relative z-10">
                           <span className="block font-semibold text-base leading-tight">{item.label}</span>
                           <span className="block text-xs opacity-75 mt-1">{item.description}</span>
                         </div>
                       )}
-                      
+
                       {!sidebarCollapsed && isActive && (
                         <div className="ml-auto relative z-10">
                           <i className="fas fa-chevron-right opacity-75"></i>
@@ -1117,7 +1114,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2 max-h-32 overflow-y-auto">
                   {notifications.slice(0, 3).map(notification => (
                     <button
@@ -1146,10 +1143,10 @@ const AdminDashboard = ({ section = "overview" }) => {
             </div>
           )}
         </div>
-        
+
         {/* Enhanced Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          
+
           {/* Enhanced Top Bar */}
           <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 p-6 shadow-lg flex-shrink-0">
             <div className="flex items-center justify-between">
@@ -1170,22 +1167,22 @@ const AdminDashboard = ({ section = "overview" }) => {
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400 flex items-center mt-1">
                     <i className="fas fa-calendar mr-2"></i>
-                    {new Date().toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+                    {new Date().toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
                     })}
                   </p>
                 </div>
 
                 {/* Real-time Stats Bar */}
-                <RealtimeStats 
+                <RealtimeStats
                   data={realtimeData}
                   isConnected={isConnected}
                 />
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 {/* Enhanced Search */}
                 <div className="relative">
@@ -1198,9 +1195,9 @@ const AdminDashboard = ({ section = "overview" }) => {
                     <span className="absolute right-3 text-xs bg-white/20 px-2 py-1 rounded">⌘K</span>
                   </button>
                 </div>
-                
+
                 {/* Enhanced Notifications */}
-                <button 
+                <button
                   onClick={() => setShowNotificationCenter(true)}
                   className="relative w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
                   title="Notifications"
@@ -1222,18 +1219,18 @@ const AdminDashboard = ({ section = "overview" }) => {
                 >
                   <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
                 </button>
-                
+
                 {/* Connection Status Indicator */}
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  isConnected 
-                    ? 'bg-green-500/20 text-green-600' 
+                  isConnected
+                    ? 'bg-green-500/20 text-green-600'
                     : 'bg-red-500/20 text-red-600'
                 }`} title={`Connection: ${connectionStatus}`}>
                   <i className={`fas ${isConnected ? 'fa-wifi' : 'fa-wifi-slash'}`}></i>
                 </div>
-                
+
                 {/* Settings */}
-                <button 
+                <button
                   onClick={() => handleSectionChange('settings')}
                   className="w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
                   title="Settings"
@@ -1276,7 +1273,7 @@ const AdminDashboard = ({ section = "overview" }) => {
 
         {/* Custom Styles */}
       </div>
-    </ErrorBoundary>
+    </>
   );
 };
 

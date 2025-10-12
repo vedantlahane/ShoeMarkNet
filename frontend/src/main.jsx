@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
 import './index.css';
 import App from './App.jsx';
 import getQueryClient from './lib/queryClient';
@@ -14,28 +15,23 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
-      <Toaster 
+      <Toaster
         position="top-right"
         reverseOrder={false}
         gutter={8}
-        containerClassName="toast-container"
+        containerClassName="pointer-events-none"
         containerStyle={{
           top: 20,
           right: 20,
         }}
         toastOptions={{
-          className: 'premium-toast',
+          className:
+            'pointer-events-auto rounded-2xl border border-slate-200 bg-white/90 text-slate-900 shadow-lg backdrop-blur-lg transition-colors duration-200 dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-100',
           duration: 4000,
           style: {
-            background: 'var(--toast-background)',
-            backdropFilter: 'var(--glass-blur)',
-            border: '1px solid var(--toast-border)',
-            borderRadius: '16px',
-            color: 'var(--toast-color)',
-            fontSize: '14px',
-            fontWeight: '500',
             padding: '16px 20px',
-            boxShadow: 'var(--toast-shadow)',
+            fontSize: '14px',
+            fontWeight: 500,
           },
           success: {
             iconTheme: {
@@ -51,7 +47,9 @@ createRoot(document.getElementById('root')).render(
           },
         }}
       />
-      {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} position="bottom-right" /> : null}
+      {import.meta.env.DEV ? (
+        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+      ) : null}
     </QueryClientProvider>
   </StrictMode>
 );

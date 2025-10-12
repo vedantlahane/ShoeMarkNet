@@ -66,6 +66,94 @@ const DEFAULT_CATEGORIES = [
   }
 ];
 
+const CATEGORY_ICON_POOL = [Activity, Zap, Heart, Users, Briefcase, Dumbbell];
+const CATEGORY_COLOR_GRADIENTS = [
+  'from-blue-500 via-indigo-500 to-purple-500',
+  'from-rose-500 via-pink-500 to-orange-500',
+  'from-emerald-500 via-teal-500 to-cyan-500',
+  'from-amber-500 via-yellow-500 to-lime-500',
+  'from-purple-500 via-fuchsia-500 to-pink-600',
+  'from-sky-500 via-blue-500 to-indigo-500'
+];
+const CATEGORY_BADGE_GRADIENTS = [
+  'from-orange-500 to-red-500',
+  'from-purple-500 to-pink-500',
+  'from-emerald-500 to-teal-500',
+  'from-blue-500 to-cyan-500',
+  'from-rose-500 to-pink-500',
+  'from-indigo-500 to-purple-500'
+];
+const CATEGORY_FEATURE_PRESETS = [
+  ['Responsive cushioning', 'Breathable mesh', 'Lightweight build'],
+  ['Court-ready grip', 'Ankle support', 'Shock absorption'],
+  ['Limited releases', 'Premium materials', 'Street-ready style'],
+  ['Eco-certified', 'Weather resistant', 'Trail traction'],
+  ['Everyday comfort', 'Adaptive fit', 'Moisture control'],
+  ['Performance foam', 'Stability tuned', 'Pro feedback'],
+];
+
+const categoryNumberFormatter = new Intl.NumberFormat('en-US');
+
+const toSlug = (value, fallback) => {
+  if (!value || typeof value !== 'string') return fallback;
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || fallback;
+};
+
+const buildCategoryCard = (category, index) => {
+  const icon = category.lucideIcon || CATEGORY_ICON_POOL[index % CATEGORY_ICON_POOL.length];
+  const colorGradient = category.color || CATEGORY_COLOR_GRADIENTS[index % CATEGORY_COLOR_GRADIENTS.length];
+  const badgeGradient = category.badgeColor || CATEGORY_BADGE_GRADIENTS[index % CATEGORY_BADGE_GRADIENTS.length];
+  const features = Array.isArray(category.features) && category.features.length > 0
+    ? category.features
+    : CATEGORY_FEATURE_PRESETS[index % CATEGORY_FEATURE_PRESETS.length];
+
+  const count = typeof category.count === 'number'
+    ? category.count
+    : typeof category.productCount === 'number'
+      ? category.productCount
+      : 0;
+
+  const avgRating = category?.stats?.avgRating
+    || (4.4 + (index % 4) * 0.1).toFixed(1);
+  const sales = category?.stats?.sales
+    || Math.max(320, Math.round(count * 6.5));
+  const trending = typeof category?.stats?.trending === 'boolean'
+    ? category.stats.trending
+    : index < 3;
+
+  const badgeLabel = category.badge
+    || (trending ? 'Trending' : 'Featured');
+
+  const description = category.description
+    || 'Discover curated selections and fan-favourite styles tailored to your passion.';
+
+  const id = category.id || category._id || category.slug || `category-${index}`;
+  const slug = category.slug || toSlug(category.name, `category-${index}`);
+
+  return {
+    ...category,
+    id,
+    slug,
+    color: colorGradient,
+    badgeColor: badgeGradient,
+    features,
+    lucideIcon: icon,
+    description,
+    count,
+    stats: {
+      avgRating: typeof avgRating === 'number' ? avgRating.toFixed(1) : avgRating,
+      sales: categoryNumberFormatter.format(sales),
+      trending,
+    },
+    image: category.image || '/api/placeholder/400/300',
+    badge: badgeLabel,
+  };
+};
+
 const CategoriesSection = ({ 
   categories: propCategories,
   showHeader = true,
@@ -92,10 +180,10 @@ const CategoriesSection = ({
   const ctaRef = useRef(null);
 
   const categories = useMemo(() => {
-    if (propCategories && Array.isArray(propCategories)) {
-      return propCategories;
+    if (Array.isArray(propCategories) && propCategories.length > 0) {
+      return propCategories.map((category, index) => buildCategoryCard(category, index));
     }
-    return DEFAULT_CATEGORIES;
+    return DEFAULT_CATEGORIES.map((category, index) => buildCategoryCard(category, index));
   }, [propCategories]);
 
   const statsSummary = useMemo(() => {
@@ -105,7 +193,7 @@ const CategoriesSection = ({
 
     const totalProducts = categories.reduce((total, cat) => total + (cat.count || 0), 0);
     const totalRating = categories.reduce(
-      (total, cat) => total + (cat?.stats?.avgRating || 0),
+      (total, cat) => total + (parseFloat(cat?.stats?.avgRating) || 0),
       0
     );
     const trendingCount = categories.reduce(

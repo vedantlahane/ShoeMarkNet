@@ -5,101 +5,112 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronUp } from 'lucide-react';
 
-// Components
 import Header from '../common/Header';
 import Footer from '../common/Footer';
-import ErrorBoundary from '../common/ErrorBoundary';
 
-// Hooks
 import useGsap from '../../hooks/useGsap';
 import useReducedMotion from '../../hooks/useReducedMotion';
 import { useTheme } from '../../context/ThemeContext';
 
-// Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
 
-// Enhanced route configurations with meta data
 const ROUTE_CONFIG = {
   '/': {
     title: 'ShoeMarkNet - Premium Footwear Collection',
-    description: 'Discover premium sneakers and footwear with exclusive designs and unbeatable comfort.',
-    background: 'gradient-primary'
+    description:
+      'Discover premium sneakers and footwear with exclusive designs and unbeatable comfort.',
+    background: 'gradient-primary',
   },
   '/products': {
     title: 'Premium Products - ShoeMarkNet',
-    description: 'Browse our curated collection of premium sneakers and athletic footwear.',
-    background: 'gradient-secondary'
+    description:
+      'Browse our curated collection of premium sneakers and athletic footwear.',
+    background: 'gradient-secondary',
   },
   '/sale': {
     title: 'Exclusive Deals - ShoeMarkNet',
-    description: 'Shop limited-time offers and discounted footwear from top brands.',
-    background: 'gradient-tertiary'
+    description:
+      'Shop limited-time offers and discounted footwear from top brands.',
+    background: 'gradient-tertiary',
   },
   '/cart': {
     title: 'Shopping Cart - ShoeMarkNet',
     description: 'Review your selected items and complete your purchase.',
-    background: 'gradient-tertiary'
+    background: 'gradient-tertiary',
   },
   '/wishlist': {
     title: 'My Wishlist - ShoeMarkNet',
     description: 'Your saved favorite products and future purchases.',
-    background: 'gradient-quaternary'
+    background: 'gradient-quaternary',
   },
   '/orders': {
     title: 'Order History - ShoeMarkNet',
     description: 'Track and manage your orders.',
-    background: 'gradient-primary'
+    background: 'gradient-primary',
   },
   '/logout': {
     title: 'Signing Out • ShoeMarkNet',
-    description: 'Securely ending your session and keeping your account protected.',
-    background: 'gradient-tertiary'
+    description:
+      'Securely ending your session and keeping your account protected.',
+    background: 'gradient-tertiary',
   },
   '/access-denied': {
     title: 'Access Restricted • ShoeMarkNet',
-    description: 'Your current role does not have permission to view this page.',
-    background: 'gradient-tertiary'
-  }
+    description:
+      'Your current role does not have permission to view this page.',
+    background: 'gradient-tertiary',
+  },
+};
+
+const gradientClasses = {
+  'gradient-primary':
+    'from-blue-400/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/5 dark:via-purple-500/5 dark:to-pink-500/5',
+  'gradient-secondary':
+    'from-emerald-400/10 via-blue-500/10 to-purple-500/10 dark:from-emerald-400/5 dark:via-blue-500/5 dark:to-purple-500/5',
+  'gradient-tertiary':
+    'from-rose-400/10 via-red-500/10 to-orange-500/10 dark:from-rose-400/5 dark:via-red-500/5 dark:to-orange-500/5',
+  'gradient-quaternary':
+    'from-purple-400/10 via-pink-500/10 to-red-500/10 dark:from-purple-400/5 dark:via-pink-500/5 dark:to-red-500/5',
 };
 
 const MainLayout = () => {
   const location = useLocation();
   const scrollButtonRef = useRef(null);
-  
+
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
   const { theme: currentTheme } = useTheme();
 
   const prefersReducedMotion = useReducedMotion();
 
-  // Get current route config
   const currentRoute = ROUTE_CONFIG[location.pathname] || {
     title: 'ShoeMarkNet',
     description: 'Premium footwear online',
-    background: 'gradient-primary'
+    background: 'gradient-primary',
   };
 
-  // Page transition animations
-  const layoutRef = useGsap((_, element) => {
-    if (prefersReducedMotion) {
-      setIsPageTransitioning(false);
-      return;
-    }
+  const layoutRef = useGsap(
+    (_, element) => {
+      if (prefersReducedMotion) {
+        setIsPageTransitioning(false);
+        return;
+      }
 
-    setIsPageTransitioning(true);
-    
-    const tl = gsap.timeline({
-      onComplete: () => setIsPageTransitioning(false)
-    });
+      setIsPageTransitioning(true);
 
-    tl.fromTo(
-      element?.querySelector('.page-content') || '.page-content', 
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
-    );
-  }, [location.pathname, prefersReducedMotion]);
+      const tl = gsap.timeline({
+        onComplete: () => setIsPageTransitioning(false),
+      });
 
-  // Optimized scroll handling with debouncing
+      tl.fromTo(
+        element?.querySelector('.page-content') || '.page-content',
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+      );
+    },
+    [location.pathname, prefersReducedMotion]
+  );
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
@@ -124,145 +135,104 @@ const MainLayout = () => {
     };
   }, []);
 
-  // Enhanced scroll to top with accessibility
   const scrollToTop = () => {
-    // Respect reduced motion preference
     if (prefersReducedMotion) {
       window.scrollTo({ top: 0, behavior: 'auto' });
       return;
     }
 
-    // Button feedback animation
     if (scrollButtonRef.current) {
       gsap.to(scrollButtonRef.current, {
         scale: 0.95,
         duration: 0.1,
         yoyo: true,
         repeat: 1,
-        ease: 'power2.out'
+        ease: 'power2.out',
       });
     }
 
-    // Smooth scroll
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
   return (
-    <ErrorBoundary>
+    <>
       <PageMeta
         title={currentRoute.title}
         description={currentRoute.description}
-        meta={[{
-          name: 'theme-color',
-          content: currentTheme === 'dark' ? '#0f172a' : '#ffffff',
-        }]}
+        meta={[{ name: 'theme-color', content: currentTheme === 'dark' ? '#0f172a' : '#ffffff' }]}
       />
 
-      <div 
+      <div
         ref={layoutRef}
-        className={`
-          relative flex flex-col min-h-screen bg-theme text-theme
-          transition-colors duration-300
-        `}
+        className="relative flex min-h-screen flex-col bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100"
       >
-        {/* Simplified Background - Respects reduced motion */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div 
-            className={`
-              absolute inset-0 opacity-30
-              ${currentRoute.background === 'gradient-primary' 
-                ? 'bg-gradient-to-br from-blue-400/10 via-purple-500/10 to-pink-500/10'
-                : currentRoute.background === 'gradient-secondary'
-                ? 'bg-gradient-to-br from-green-400/10 via-blue-500/10 to-purple-500/10'
-                : currentRoute.background === 'gradient-tertiary'
-                ? 'bg-gradient-to-br from-pink-400/10 via-red-500/10 to-orange-500/10'
-                : currentRoute.background === 'gradient-quaternary'
-                ? 'bg-gradient-to-br from-purple-400/10 via-pink-500/10 to-red-500/10'
-                : 'bg-gradient-to-br from-blue-400/10 via-purple-500/10 to-pink-500/10'
-              }
-              dark:opacity-20
-            `}
+        <div className="pointer-events-none fixed inset-0 overflow-hidden">
+          <div
+            className={`absolute inset-0 bg-gradient-to-br opacity-30 ${
+              gradientClasses[currentRoute.background] ||
+              gradientClasses['gradient-primary']
+            }`}
           />
-          
-          {/* Subtle animated background - only if motion is allowed */}
+
           {!prefersReducedMotion && (
             <div className="absolute inset-0 opacity-15">
-              <div className="absolute top-0 left-0 w-72 h-72 bg-secondary-light rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
-              <div className="absolute bottom-0 right-0 w-72 h-72 bg-primary-light rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }} />
+              <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-purple-300 mix-blend-multiply blur-3xl opacity-20 dark:bg-purple-400/60 animate-pulse" />
+              <div
+                className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-blue-300 mix-blend-multiply blur-3xl opacity-20 dark:bg-blue-400/60 animate-pulse"
+                style={{ animationDelay: '2s' }}
+              />
             </div>
           )}
         </div>
 
-        {/* Header with proper z-index */}
         <div className="relative z-30">
           <Header />
         </div>
 
-        {/* Main Content Container */}
-        <main className="relative z-20 flex-grow pt-20">
-          {/* Simplified page transition overlay */}
-          <div 
-            className={`
-              fixed inset-0 bg-surface/50 pointer-events-none z-40
-              transition-opacity duration-300
-              ${isPageTransitioning ? 'opacity-100' : 'opacity-0'}
-            `}
+        <main className="relative z-20 flex-grow">
+          <div
+            className={`pointer-events-none fixed inset-0 z-40 bg-white/70 transition-opacity duration-300 dark:bg-slate-950/70 ${
+              isPageTransitioning ? 'opacity-100' : 'opacity-0'
+            }`}
           />
-          
+
           <div className="page-content relative">
             <Outlet />
           </div>
         </main>
 
-        {/* Footer */}
         <div className="relative z-20">
           <Footer />
         </div>
 
-        {/* Accessible Scroll to Top Button */}
         <button
           ref={scrollButtonRef}
           onClick={scrollToTop}
-          className={`
-            fixed bottom-8 right-8 w-12 h-12 z-50
-            bg-gradient-to-r from-blue-500 to-purple-600 
-            hover:from-blue-600 hover:to-purple-700
-            dark:from-blue-400 dark:to-purple-500
-            text-white rounded-full shadow-lg
-            border border-theme-strong/50
-            transition-all duration-200
-            hover:scale-105 focus:scale-105
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            group
-            ${showScrollTop 
-              ? 'opacity-100 translate-y-0 pointer-events-auto' 
-              : 'opacity-0 translate-y-4 pointer-events-none'
-            }
-          `}
+          className={`fixed bottom-8 right-8 z-50 h-12 w-12 rounded-full border border-white/40 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-blue-600 hover:to-purple-700 focus:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:border-slate-700/60 dark:from-blue-400 dark:to-purple-500 dark:hover:from-blue-500 dark:hover:to-purple-600 dark:focus:ring-offset-slate-950 ${
+            showScrollTop
+              ? 'pointer-events-auto translate-y-0 opacity-100'
+              : 'pointer-events-none translate-y-4 opacity-0'
+          } group`}
           aria-label="Scroll to top"
           type="button"
         >
-          <ChevronUp 
-            className={`
-              w-5 h-5 mx-auto transition-transform duration-200
-              ${!prefersReducedMotion ? 'group-hover:animate-bounce' : ''}
-            `} 
+          <ChevronUp
+            className={`h-5 w-5 mx-auto transition-transform duration-200 ${
+              !prefersReducedMotion ? 'group-hover:translate-y-[-4px]' : ''
+            }`}
           />
         </button>
 
-        {/* Loading Progress Bar - Simplified */}
-        <div 
-          className={`
-            fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600 z-50
-            transition-transform duration-200 origin-left
-            ${isPageTransitioning ? 'transform scale-x-100' : 'transform scale-x-0'}
-          `} 
+        <div
+          className={`fixed left-0 right-0 top-0 z-50 h-1 transform bg-gradient-to-r from-blue-500 to-purple-600 transition-transform duration-200 ${
+            isPageTransitioning ? 'scale-x-100' : 'scale-x-0'
+          }`}
         />
       </div>
-    </ErrorBoundary>
+    </>
   );
 };
 

@@ -18,7 +18,7 @@ import productService from "../../services/productService";
 
 // Components
 import LoadingSpinner from "../common/LoadingSpinner";
-import ErrorBoundary from "../common/ErrorBoundary";
+
 import Pagination from "../common/Pagination";
 import ProductCard from "../products/ProductCard";
 import ProductTable from "./products/ProductTable";
@@ -837,7 +837,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
   }
 
   return (
-    <ErrorBoundary>
+    <>
       <PageMeta
         title="Product Management | Admin Dashboard - ShoeMarkNet"
         description="Manage your product catalog, inventory, and pricing with comprehensive admin tools."
@@ -1148,7 +1148,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
 
         {/* Custom Styles */}
       </div>
-    </ErrorBoundary>
+    </>
   );
 };
 

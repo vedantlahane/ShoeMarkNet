@@ -3,9 +3,60 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Tag, Sparkles } from "lucide-react";
 import usePrefersReducedMotion from "../../hooks/usePrefersReducedMotion";
 
-const OffersSection = memo(() => {
+const FALLBACK_PROMOTIONS = [
+  {
+    id: "summer-sale",
+    title: "Summer Sale",
+    description: "Up to 50% off on all summer footwear",
+    discount: "50%",
+    image:
+      "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=600&auto=format&fit=crop",
+    link: "/sale",
+    badge: "Limited Time",
+  },
+  {
+    id: "new-arrivals",
+    title: "New Arrivals",
+    description: "Latest collection of premium shoes",
+    discount: "25%",
+    image:
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop",
+    link: "/new-arrivals",
+    badge: "Fresh Stock",
+  },
+];
+
+const normaliseDiscount = (discount) => {
+  if (discount === null || discount === undefined) return null;
+  if (typeof discount === "number") {
+    return `${Math.round(discount)}%`;
+  }
+  if (typeof discount === "string") {
+    return discount.trim();
+  }
+  return null;
+};
+
+const normalisePromotion = (promotion, index) => {
+  const discountValue = normaliseDiscount(promotion?.discount);
+  return {
+    id: promotion?.id || `promotion-${index}`,
+    title: promotion?.title || "Exclusive offer",
+    description:
+      promotion?.description ||
+      "Handpicked deals on the most sought-after footwear labels.",
+    discount: discountValue || "New",
+    image: promotion?.image || "/api/placeholder/600/300",
+    link: promotion?.link || "/products",
+    badge: promotion?.badge || (discountValue ? "Limited Time" : "Featured"),
+    startsAt: promotion?.startDate || promotion?.startsAt || null,
+    endsAt: promotion?.endDate || promotion?.endsAt || null,
+  };
+};
+
+const OffersSection = memo(({ promotions = [], isLoading = false }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const enableAnimations = !prefersReducedMotion;
+  const enableAnimations = !prefersReducedMotion && !isLoading;
   const shimmerClass = enableAnimations ? "animate-gradient" : "";
   const pulseClass = enableAnimations ? "animate-pulse-slow" : "";
   const floatClass = enableAnimations ? "animate-bounce-slow" : "";
@@ -14,31 +65,12 @@ const OffersSection = memo(() => {
     : "after:w-full after:opacity-40";
   const [hoveredOffer, setHoveredOffer] = useState(null);
 
-  const offers = useMemo(
-    () => [
-      {
-        id: 1,
-        title: "Summer Sale",
-        description: "Up to 50% off on all summer footwear",
-        discount: "50%",
-        image:
-          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?q=80&w=600&auto=format&fit=crop",
-        link: "/sale",
-        badge: "Limited Time",
-      },
-      {
-        id: 2,
-        title: "New Arrivals",
-        description: "Latest collection of premium shoes",
-        discount: "25%",
-        image:
-          "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop",
-        link: "/new-arrivals",
-        badge: "Fresh Stock",
-      },
-    ],
-    []
-  );
+  const offers = useMemo(() => {
+    if (Array.isArray(promotions) && promotions.length > 0) {
+      return promotions.map((promotion, index) => normalisePromotion(promotion, index));
+    }
+    return FALLBACK_PROMOTIONS.map((promotion, index) => normalisePromotion(promotion, index));
+  }, [promotions]);
 
   const handlePointerMove = useCallback(
     (event, offerId) => {

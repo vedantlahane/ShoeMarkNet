@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import ErrorBoundary from '../common/ErrorBoundary';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -36,14 +35,12 @@ const AdminLayout = () => {
   }, [location.pathname, prefersReducedMotion]);
 
   return (
-    <ErrorBoundary>
       <div
         className={`min-h-screen selection:bg-primary/40 transition-colors duration-300 bg-theme text-theme`}
         data-theme={theme}
       >
         <Outlet />
       </div>
-    </ErrorBoundary>
   );
 };
 

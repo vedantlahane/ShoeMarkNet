@@ -1,5 +1,48 @@
 // src/services/authService.js
 import api from "../utils/api";
+
+const normalizeResponse = (response) => {
+  const envelope = response?.data;
+
+  if (!envelope || typeof envelope !== "object") {
+    return envelope ?? response;
+  }
+
+  const payload = Object.prototype.hasOwnProperty.call(envelope, "data")
+    ? envelope.data
+    : envelope;
+
+  const meta = {};
+  if (Object.prototype.hasOwnProperty.call(envelope, "success")) {
+    meta.success = envelope.success;
+  }
+  if (Object.prototype.hasOwnProperty.call(envelope, "message")) {
+    meta.message = envelope.message;
+  }
+  if (Object.prototype.hasOwnProperty.call(envelope, "meta")) {
+    meta.meta = envelope.meta;
+  }
+
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    return { ...payload, ...meta };
+  }
+
+  return { data: payload, ...meta };
+};
+
+const storeTokens = (token, refreshToken) => {
+  try {
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+  } catch (storageError) {
+    console.warn("Unable to persist auth tokens", storageError);
+  }
+};
+
 /**
  * Login user
  * @param {string} email - User email
@@ -8,16 +51,12 @@ import api from "../utils/api";
  */
 const login = async (email, password) => {
   try {
-    const response = await api.post('/auth/login', {email, password});
-    if(response.data.token){
-      localStorage.setItem("token", response.data.token);
-      if(response.data.refreshToken) {
-        localStorage.setItem("refreshToken", response.data.refreshToken);
-      }
-    }
-    return response.data;
+    const response = await api.post("/auth/login", { email, password });
+    const normalized = normalizeResponse(response);
+    storeTokens(normalized.token, normalized.refreshToken);
+    return normalized;
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     throw error;
   }
 };
@@ -29,16 +68,12 @@ const login = async (email, password) => {
  */
 const register = async (userData) => {
   try {
-    const response = await api.post('/auth/register', userData);
-    if(response.data.token){
-      localStorage.setItem("token", response.data.token);
-      if(response.data.refreshToken) {
-        localStorage.setItem("refreshToken", response.data.refreshToken);
-      }
-    }
-    return response.data;
+    const response = await api.post("/auth/register", userData);
+    const normalized = normalizeResponse(response);
+    storeTokens(normalized.token, normalized.refreshToken);
+    return normalized;
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error("Registration error:", error);
     throw error;
   }
 };
@@ -49,10 +84,10 @@ const register = async (userData) => {
  */
 const getProfile = async () => {
   try {
-    const response = await api.get('/auth/profile');
-    return response.data;
+    const response = await api.get("/auth/profile");
+    return normalizeResponse(response);
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error("Error fetching profile:", error);
     throw error;
   }
 };
@@ -64,10 +99,10 @@ const getProfile = async () => {
  */
 const updateProfile = async (profileData) => {
   try {
-    const response = await api.put('/auth/profile', profileData);
-    return response.data;
+    const response = await api.put("/auth/profile", profileData);
+    return normalizeResponse(response);
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error("Error updating profile:", error);
     throw error;
   }
 };
@@ -77,17 +112,16 @@ const updateProfile = async (profileData) => {
  */
 const logoutUser = () => {
   try {
-    // Call logout endpoint to invalidate token on server (if implemented)
-    api.post('/auth/logout').catch(err => console.warn('Server logout failed:', err));
-    
-    // Remove tokens from localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-  } catch (error) {
-    console.error('Logout error:', error);
-    // Still remove tokens even if API call fails
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
+    api.post("/auth/logout").catch((err) =>
+      console.warn("Server logout failed:", err)
+    );
+  } finally {
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+    } catch (storageError) {
+      console.error("Logout storage cleanup failed:", storageError);
+    }
   }
 };
 
@@ -98,19 +132,14 @@ const logoutUser = () => {
  */
 const refreshToken = async (refreshTokenValue) => {
   try {
-    const response = await api.post('/auth/refresh-token', { refreshToken: refreshTokenValue });
-    
-    // Update tokens in localStorage
-    if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-    }
-    if (response.data.refreshToken) {
-      localStorage.setItem("refreshToken", response.data.refreshToken);
-    }
-    
-    return response.data;
+    const response = await api.post("/auth/refresh-token", {
+      refreshToken: refreshTokenValue,
+    });
+    const normalized = normalizeResponse(response);
+    storeTokens(normalized.token, normalized.refreshToken);
+    return normalized;
   } catch (error) {
-    console.error('Token refresh error:', error);
+    console.error("Token refresh error:", error);
     throw error;
   }
 };
@@ -122,10 +151,10 @@ const refreshToken = async (refreshTokenValue) => {
  */
 const requestPasswordReset = async (email) => {
   try {
-    const response = await api.post('/auth/forgot-password', { email });
-    return response.data;
+    const response = await api.post("/auth/forgot-password", { email });
+    return normalizeResponse(response);
   } catch (error) {
-    console.error('Password reset request error:', error);
+    console.error("Password reset request error:", error);
     throw error;
   }
 };
@@ -138,10 +167,12 @@ const requestPasswordReset = async (email) => {
  */
 const resetPassword = async (token, password) => {
   try {
-    const response = await api.post(`/auth/reset-password/${token}`, { password });
-    return response.data;
+    const response = await api.post(`/auth/reset-password/${token}`, {
+      password,
+    });
+    return normalizeResponse(response);
   } catch (error) {
-    console.error('Password reset error:', error);
+    console.error("Password reset error:", error);
     throw error;
   }
 };
@@ -154,9 +185,9 @@ const resetPassword = async (token, password) => {
 const verifyEmail = async (verificationToken) => {
   try {
     const response = await api.get(`/auth/verify-email/${verificationToken}`);
-    return response.data;
+    return normalizeResponse(response);
   } catch (error) {
-    console.error('Email verification error:', error);
+    console.error("Email verification error:", error);
     throw error;
   }
 };
@@ -170,7 +201,7 @@ const authService = {
   refreshToken,
   requestPasswordReset,
   resetPassword,
-  verifyEmail
+  verifyEmail,
 };
 
 export default authService;

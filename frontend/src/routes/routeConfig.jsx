@@ -6,8 +6,6 @@ const ProductDetail = lazy(() => import('../pages/ProductDetail'));
 const Products = lazy(() => import('../pages/Products'));
 const Category = lazy(() => import('../pages/Category'));
 const Search = lazy(() => import('../pages/Search'));
-const About = lazy(() => import('../pages/About'));
-const Contact = lazy(() => import('../pages/Contact'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
 const Profile = lazy(() => import('../pages/Profile'));
@@ -66,18 +64,6 @@ export const routeConfig = {
       component: Search,
       title: 'Search Results',
       description: 'Search results'
-    },
-    {
-      path: 'about',
-      component: About,
-      title: 'About Us',
-      description: 'Learn more about our company'
-    },
-    {
-      path: 'contact',
-      component: Contact,
-      title: 'Contact Us',
-      description: 'Get in touch with us'
     },
     {
       path: 'access-denied',

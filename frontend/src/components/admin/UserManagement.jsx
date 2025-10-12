@@ -16,7 +16,7 @@ import userService from '../../services/userService';
 
 // Components
 import LoadingSpinner from '../common/LoadingSpinner';
-import ErrorBoundary from '../common/ErrorBoundary';
+
 import ErrorMessage from '../common/ErrorMessage';
 import Pagination from '../common/Pagination';
 import UserCard from './users/UserCard';
@@ -632,7 +632,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
   }
 
   return (
-    <ErrorBoundary>
+    <>
       <PageMeta
         title="User Management | Admin Dashboard - ShoeMarkNet"
         description="Manage user accounts, roles, permissions, and user analytics with comprehensive admin tools."
@@ -1026,7 +1026,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
 
       </div>
           
-    </ErrorBoundary>
+    </>
   );
 };
 

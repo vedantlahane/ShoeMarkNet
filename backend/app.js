@@ -43,6 +43,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const contactAdminRoutes = require('./routes/contactAdminRoutes');
 const promotionRoutes = require('./routes/promotionRoutes');
+const homeRoutes = require('./routes/homeRoutes');
 
 
 // Import middleware
@@ -124,6 +125,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/admin/contacts', contactAdminRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/home', homeRoutes);
 
 // Health check route with detailed information
 app.get('/api/health', (req, res) => {

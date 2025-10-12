@@ -17,7 +17,6 @@ import { toggleWishlistItem as toggleWishlist } from '../redux/slices/wishlistSl
 
 // Components
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorBoundary from '../components/common/ErrorBoundary';
 import SearchFilters from '../components/search/SearchFilters';
 import SearchSuggestions from '../components/search/SearchSuggestions';
 import RecentSearches from '../components/search/RecentSearches';
@@ -558,7 +557,7 @@ const Search = () => {
   ), [searchQuery, totalResults, hasActiveFilters, activeFiltersCount]);
 
   return (
-    <ErrorBoundary>
+    <>
       {/* SEO Meta Tags */}
       <PageMeta
         title={metaTitle}
@@ -780,7 +779,7 @@ const Search = () => {
           )}
         </div>
       </PageLayout>
-    </ErrorBoundary>
+    </>
   );
 };
 

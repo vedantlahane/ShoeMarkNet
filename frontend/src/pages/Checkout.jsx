@@ -19,7 +19,6 @@ import { updateLastActivity } from '../redux/slices/authSlice';
 
 // Components
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorBoundary from '../components/common/ErrorBoundary';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummary from '../components/checkout/OrderSummary';
 import ShippingForm from '../components/checkout/ShippingForm';
@@ -579,7 +578,7 @@ const Checkout = () => {
   }
 
   return (
-    <ErrorBoundary>
+    <>
       {/* SEO Meta Tags */}
       <PageMeta
         title="Secure Checkout - ShoeMarkNet"
@@ -729,7 +728,7 @@ const Checkout = () => {
         )}
 
       </div>
-    </ErrorBoundary>
+    </>
   );
 };
 

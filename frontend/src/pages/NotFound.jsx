@@ -9,7 +9,6 @@ import PageMeta from '../components/seo/PageMeta';
 import { fetchFeaturedProducts } from '../redux/slices/productSlice';
 
 // Components
-import ErrorBoundary from '../components/common/ErrorBoundary';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 // Hooks
@@ -21,18 +20,18 @@ import { trackEvent } from '../utils/analytics';
 // Constants
 const POPULAR_PAGES = [
   { 
-    name: 'Home', 
-    path: '/', 
-    icon: 'fa-home', 
-    color: 'from-blue-500 to-cyan-500',
-    description: 'Return to homepage'
+    name: 'Search', 
+    path: '/search', 
+    icon: 'fa-search', 
+    color: 'from-purple-500 to-indigo-500',
+    description: 'Find products fast'
   },
   { 
-    name: 'Shop', 
-    path: '/products', 
-    icon: 'fa-shopping-bag', 
-    color: 'from-green-500 to-emerald-500',
-    description: 'Browse all products'
+    name: 'Checkout', 
+    path: '/checkout', 
+    icon: 'fa-credit-card', 
+    color: 'from-orange-500 to-pink-500',
+    description: 'Secure payment'
   },
   { 
     name: 'Categories', 
@@ -101,14 +100,14 @@ const ROUTE_PREFETCHERS = {
   '/products': () => import('./Products'),
   '/sale': () => import('./Products'),
   '/categories': () => import('./Category'),
-  '/about': () => import('./About'),
-  '/contact': () => import('./Contact'),
   '/cart': () => import('./Cart'),
   '/wishlist': () => import('./Wishlist'),
   '/orders': () => import('./Orders'),
   '/profile': () => import('./Profile'),
   '/login': () => import('./Login'),
-  '/register': () => import('./Register')
+  '/register': () => import('./Register'),
+  '/checkout': () => import('./Checkout'),
+  '/search': () => import('./Search'),
 };
 
 const prefetchedRoutes = new Set();
@@ -331,7 +330,7 @@ const NotFound = () => {
   }, [showCountdown]);
 
   return (
-    <ErrorBoundary>
+    <>
       <PageMeta
         title="Page Not Found (404) | ShoeMarkNet"
         description="The page you're looking for couldn't be found. Explore our shoe collection and find what you need at ShoeMarkNet."
@@ -716,7 +715,7 @@ const NotFound = () => {
 
         {/* Enhanced Custom Styles */}
       </div>
-    </ErrorBoundary>
+    </>
   );
 };
 
