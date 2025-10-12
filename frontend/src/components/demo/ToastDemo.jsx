@@ -76,7 +76,7 @@ const ToastDemo = () => {
             Premium Toast Notifications
           </h1>
           <p className="text-gray-300 text-lg">
-            Glassmorphism design with GSAP animations and premium styling
+            Glassmorphism design with lively animations and premium styling
           </p>
         </div>
 
@@ -276,7 +276,7 @@ const ToastDemo = () => {
             <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Star className="w-6 h-6 text-purple-400" />
             </div>
-            <h4 className="text-white font-semibold mb-2">GSAP Animations</h4>
+            <h4 className="text-white font-semibold mb-2">Dynamic Animations</h4>
             <p className="text-gray-300 text-sm">Smooth entrance and exit animations</p>
           </div>
 

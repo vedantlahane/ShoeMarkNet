@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import PageMeta from '../seo/PageMeta';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronUp } from 'lucide-react';
 
 import Header from '../common/Header';
 import Footer from '../common/Footer';
 
-import useGsap from '../../hooks/useGsap';
 import useReducedMotion from '../../hooks/useReducedMotion';
 import { useTheme } from '../../context/ThemeContext';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const ROUTE_CONFIG = {
   '/': {
@@ -89,27 +84,19 @@ const MainLayout = () => {
     background: 'gradient-primary',
   };
 
-  const layoutRef = useGsap(
-    (_, element) => {
-      if (prefersReducedMotion) {
-        setIsPageTransitioning(false);
-        return;
-      }
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsPageTransitioning(false);
+      return;
+    }
 
-      setIsPageTransitioning(true);
+    setIsPageTransitioning(true);
+    const timeout = window.setTimeout(() => {
+      setIsPageTransitioning(false);
+    }, 350);
 
-      const tl = gsap.timeline({
-        onComplete: () => setIsPageTransitioning(false),
-      });
-
-      tl.fromTo(
-        element?.querySelector('.page-content') || '.page-content',
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
-      );
-    },
-    [location.pathname, prefersReducedMotion]
-  );
+    return () => window.clearTimeout(timeout);
+  }, [location.pathname, prefersReducedMotion]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -141,16 +128,6 @@ const MainLayout = () => {
       return;
     }
 
-    if (scrollButtonRef.current) {
-      gsap.to(scrollButtonRef.current, {
-        scale: 0.95,
-        duration: 0.1,
-        yoyo: true,
-        repeat: 1,
-        ease: 'power2.out',
-      });
-    }
-
     window.scrollTo({
       top: 0,
       behavior: 'smooth',
@@ -165,10 +142,7 @@ const MainLayout = () => {
         meta={[{ name: 'theme-color', content: currentTheme === 'dark' ? '#0f172a' : '#ffffff' }]}
       />
 
-      <div
-        ref={layoutRef}
-        className="relative flex min-h-screen flex-col bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100"
-      >
+      <div className="relative flex min-h-screen flex-col bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
           <div
             className={`absolute inset-0 bg-gradient-to-br opacity-30 ${

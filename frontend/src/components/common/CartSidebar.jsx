@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { gsap } from 'gsap';
 import { toast } from 'react-hot-toast';
 import {
   ShoppingBag,
@@ -31,6 +30,7 @@ import {
   selectCartLoading
 } from '../../redux/slices/cartSlice';
 import { formatCurrency } from '../../utils/helpers';
+import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 
 const CartSidebar = ({
   isOpen = false,
@@ -42,6 +42,7 @@ const CartSidebar = ({
   showShipping = true,
   className = ''
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
   
   // Redux state
   const dispatch = useDispatch();
@@ -52,7 +53,7 @@ const CartSidebar = ({
   const isLoading = useSelector(selectCartLoading);
   
   // Local state
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isRendered, setIsRendered] = useState(isOpen);
   const [quantities, setQuantities] = useState({});
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(null);
@@ -76,82 +77,14 @@ const CartSidebar = ({
   const tax = (subtotal - promoDiscount) * 0.08;
   const total = subtotal - promoDiscount + shippingCost + tax;
   
-  // GSAP Animations
   useEffect(() => {
-    if (!sidebarRef.current || !overlayRef.current) return;
-    
     if (isOpen) {
-      setIsAnimating(true);
-      
-      // Set initial states
-      gsap.set(sidebarRef.current, { x: '100%' });
-      gsap.set(overlayRef.current, { opacity: 0 });
-      
-      // Animate in
-      const tl = gsap.timeline({
-        onComplete: () => setIsAnimating(false)
-      });
-      
-      tl.to(overlayRef.current, {
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.out'
-      })
-      .to(sidebarRef.current, {
-        x: '0%',
-        duration: 0.5,
-        ease: 'power3.out'
-      }, '-=0.1');
-      
-      // Animate content
-      if (contentRef.current) {
-        gsap.fromTo(contentRef.current.children,
-          { opacity: 0, x: 50 },
-          {
-            opacity: 1,
-            x: 0,
-            duration: 0.4,
-            stagger: 0.1,
-            ease: 'power2.out',
-            delay: 0.2
-          }
-        );
-      }
-      
-      // Animate items
-      if (itemsRef.current) {
-        gsap.fromTo(itemsRef.current.children,
-          { opacity: 0, x: 30, scale: 0.9 },
-          {
-            opacity: 1,
-            x: 0,
-            scale: 1,
-            duration: 0.3,
-            stagger: 0.08,
-            ease: 'back.out(1.7)',
-            delay: 0.4
-          }
-        );
-      }
-      
-    } else {
-      setIsAnimating(true);
-      
-      const tl = gsap.timeline({
-        onComplete: () => setIsAnimating(false)
-      });
-      
-      tl.to(sidebarRef.current, {
-        x: '100%',
-        duration: 0.4,
-        ease: 'power2.in'
-      })
-      .to(overlayRef.current, {
-        opacity: 0,
-        duration: 0.3,
-        ease: 'power2.out'
-      }, '-=0.2');
+      setIsRendered(true);
+      return undefined;
     }
+
+    const timeout = window.setTimeout(() => setIsRendered(false), 300);
+    return () => window.clearTimeout(timeout);
   }, [isOpen]);
   
   // Handle quantity change with animation
@@ -162,15 +95,16 @@ const CartSidebar = ({
     
     // Add bounce animation
     const button = document.querySelector(`[data-quantity-btn="${itemId}"]`);
-    if (button) {
-      gsap.fromTo(button, 
-        { scale: 1 },
-        { 
-          scale: 1.2, 
-          duration: 0.15, 
-          yoyo: true, 
-          repeat: 1,
-          ease: 'power2.inOut'
+    if (button && !prefersReducedMotion && button.animate) {
+      button.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.12)' },
+          { transform: 'scale(1)' }
+        ],
+        {
+          duration: 180,
+          easing: 'ease-in-out'
         }
       );
     }
@@ -185,32 +119,42 @@ const CartSidebar = ({
       duration: 1500,
       position: 'top-right' 
     });
-  }, [dispatch]);
+  }, [dispatch, prefersReducedMotion]);
   
   // Handle remove item
   const handleRemoveItem = useCallback((itemId, itemName) => {
     // Animate out
     const itemElement = document.querySelector(`[data-cart-item="${itemId}"]`);
-    if (itemElement) {
-      gsap.to(itemElement, {
-        x: 100,
-        opacity: 0,
-        height: 0,
-        marginBottom: 0,
-        duration: 0.4,
-        ease: 'power2.in',
-        onComplete: () => {
+    if (itemElement && !prefersReducedMotion && itemElement.animate) {
+      const animation = itemElement.animate(
+        [
+          { transform: 'translateX(0)', opacity: 1, height: `${itemElement.offsetHeight}px`, marginBottom: getComputedStyle(itemElement).marginBottom },
+          { transform: 'translateX(12px)', opacity: 0.5 },
+          { transform: 'translateX(120px)', opacity: 0, height: '0px', marginBottom: '0px' }
+        ],
+        {
+          duration: 260,
+          easing: 'ease-in'
+        }
+      );
+
+      animation.finished
+        .catch(() => {})
+        .finally(() => {
           dispatch(removeFromCart(itemId));
           toast.success(`${itemName} removed from cart`, {
             icon: '🗑️',
             duration: 3000
           });
-        }
-      });
+        });
     } else {
       dispatch(removeFromCart(itemId));
+      toast.success(`${itemName} removed from cart`, {
+        icon: '🗑️',
+        duration: 3000
+      });
     }
-  }, [dispatch]);
+  }, [dispatch, prefersReducedMotion]);
   
   // Handle promo code
   const handleApplyPromo = useCallback(() => {
@@ -230,14 +174,15 @@ const CartSidebar = ({
       
       // Celebrate animation
       const button = document.querySelector('#apply-promo-btn');
-      if (button) {
-        gsap.to(button, {
-          scale: 1.1,
-          backgroundColor: '#10B981',
-          duration: 0.3,
-          yoyo: true,
-          repeat: 1
-        });
+      if (button && !prefersReducedMotion && button.animate) {
+        button.animate(
+          [
+            { transform: 'scale(1)', backgroundColor: '' },
+            { transform: 'scale(1.12)', backgroundColor: '#10B981' },
+            { transform: 'scale(1)', backgroundColor: '' }
+          ],
+          { duration: 280, easing: 'ease-in-out', fill: 'forwards' }
+        );
       }
       
       toast.success(code.message, { 
@@ -252,25 +197,25 @@ const CartSidebar = ({
       
       // Error shake animation
       const input = document.querySelector('#promo-input');
-      if (input) {
-        gsap.fromTo(input,
-          { x: 0 },
-          {
-            x: [-5, 5, -5, 5, 0],
-            duration: 0.5,
-            ease: 'power2.inOut'
-          }
+      if (input && !prefersReducedMotion && input.animate) {
+        input.animate(
+          [
+            { transform: 'translateX(0)' },
+            { transform: 'translateX(-6px)' },
+            { transform: 'translateX(6px)' },
+            { transform: 'translateX(-4px)' },
+            { transform: 'translateX(0)' }
+          ],
+          { duration: 360, easing: 'ease-in-out' }
         );
       }
     }
-  }, [promoCode]);
+  }, [promoCode, prefersReducedMotion]);
   
   // Handle close
   const handleClose = useCallback(() => {
-    if (!isAnimating) {
-      onClose?.();
-    }
-  }, [isAnimating, onClose]);
+    onClose?.();
+  }, [onClose]);
   
   // Handle checkout
   const handleCheckout = useCallback(() => {
@@ -300,15 +245,23 @@ const CartSidebar = ({
     setHoveredItem(isHovering ? itemId : null);
     
     const itemElement = document.querySelector(`[data-cart-item="${itemId}"]`);
-    if (itemElement) {
-      gsap.to(itemElement, {
-        scale: isHovering ? 1.02 : 1,
-        y: isHovering ? -2 : 0,
-        duration: 0.2,
-        ease: 'power2.out'
-      });
+    if (!itemElement) {
+      return;
     }
-  }, []);
+
+    const targetTransform = isHovering ? 'translateY(-2px) scale(1.02)' : 'translateY(0) scale(1)';
+    itemElement.style.transform = targetTransform;
+
+    if (!prefersReducedMotion && itemElement.animate) {
+      itemElement.animate(
+        [
+          { transform: 'translateY(0) scale(1)' },
+          { transform: targetTransform }
+        ],
+        { duration: 180, easing: 'ease-out' }
+      );
+    }
+  }, [prefersReducedMotion]);
   
   // Render empty state
   const renderEmptyState = () => (
@@ -459,7 +412,7 @@ const CartSidebar = ({
     );
   };
   
-  if (!isOpen && !isAnimating) return null;
+  if (!isRendered) return null;
   
   return (
     <div className={`fixed inset-0 z-50 ${className}`}>
@@ -467,16 +420,20 @@ const CartSidebar = ({
       {/* Backdrop Overlay */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
         onClick={handleClose}
       />
       
       {/* Sidebar */}
       <div
         ref={sidebarRef}
-        className={`absolute right-0 top-0 h-full ${
+        className={`absolute right-0 top-0 h-full transition-transform duration-300 ease-out ${
           variant === 'compact' ? 'w-full max-w-sm' : 'w-full max-w-md lg:max-w-lg'
-        } card-premium shadow-2xl flex flex-col`}
+        } card-premium shadow-2xl flex flex-col ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
       >
         
         {/* Header */}

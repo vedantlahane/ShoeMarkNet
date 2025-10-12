@@ -1,13 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useLayoutEffect,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { gsap } from "gsap";
 import {
   Search,
   ShoppingBag,
@@ -140,7 +133,6 @@ const Header = () => {
   const userMenuRef = useRef(null);
   const themeMenuRef = useRef(null);
   const searchInputRef = useRef(null);
-  const gsapContextRef = useRef(null);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -234,22 +226,23 @@ const Header = () => {
     };
   }, []);
 
-  // Optimized GSAP Animations with proper cleanup
-  useLayoutEffect(() => {
-    if (prefersReducedMotion || typeof window === "undefined") return;
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header || prefersReducedMotion || typeof window === "undefined") {
+      return undefined;
+    }
 
-    gsapContextRef.current = gsap.context(() => {
-      gsap.fromTo(
-        headerRef.current,
-        { y: -50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
-      );
-    }, headerRef);
+    header.style.opacity = "0";
+    header.style.transform = "translateY(-40px)";
+
+    const raf = window.requestAnimationFrame(() => {
+      header.style.transition = "opacity 0.5s ease-out, transform 0.5s ease-out";
+      header.style.opacity = "1";
+      header.style.transform = "translateY(0)";
+    });
 
     return () => {
-      if (gsapContextRef.current) {
-        gsapContextRef.current.revert();
-      }
+      window.cancelAnimationFrame(raf);
     };
   }, [prefersReducedMotion]);
 

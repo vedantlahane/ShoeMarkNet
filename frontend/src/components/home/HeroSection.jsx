@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { gsap } from 'gsap';
 import { addToCart } from '../../redux/slices/cartSlice';
 import { toast } from 'react-hot-toast';
 import {
@@ -29,13 +28,6 @@ const HeroSection = ({ data, isLoading = false }) => {
   const dispatch = useDispatch();
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  const heroRef = useRef(null);
-  const titleRef = useRef(null);
-  const subtitleRef = useRef(null);
-  const ctaRef = useRef(null);
-  const productRef = useRef(null);
-  const statsRef = useRef([]);
-  const gsapContextRef = useRef(null);
 
   const [targetDate, setTargetDate] = useState(() => {
     if (!data?.countdownTarget) {
@@ -240,55 +232,8 @@ const HeroSection = ({ data, isLoading = false }) => {
       return undefined;
     }
 
-    gsapContextRef.current = gsap.context(() => {
-      const heroEl = heroRef.current;
-      if (!heroEl) {
-        setIsLoaded(true);
-        return;
-      }
-
-      const statNodes = statsRef.current.filter(Boolean);
-      const floatingNodes = heroEl.querySelectorAll('.floating-shape');
-      const gradientNode = heroEl.querySelector('.hero-gradient');
-
-      const timeline = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.9 } });
-
-      timeline
-        .from(titleRef.current, { y: 60, opacity: 0 })
-        .from(subtitleRef.current, { y: 40, opacity: 0 }, '-=0.5')
-        .from(statNodes, { y: 30, opacity: 0, stagger: 0.12 }, '-=0.5')
-        .from(ctaRef.current, { y: 30, opacity: 0 }, '-=0.4')
-        .from(productRef.current, { x: 80, opacity: 0, rotateY: -10 }, '-=0.7');
-
-      if (gradientNode) {
-        gsap.to(gradientNode, {
-          backgroundPosition: '200% 50%',
-          duration: 18,
-          repeat: -1,
-          ease: 'none'
-        });
-      }
-
-      gsap.utils.toArray(floatingNodes).forEach((shape, index) => {
-        gsap.to(shape, {
-          y: 30,
-          duration: 6 + index,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-          delay: index * 0.4
-        });
-      });
-
-      setIsLoaded(true);
-    }, heroRef);
-
-    return () => {
-      if (gsapContextRef.current) {
-        gsapContextRef.current.revert();
-        gsapContextRef.current = null;
-      }
-    };
+    const frame = window.requestAnimationFrame(() => setIsLoaded(true));
+    return () => window.cancelAnimationFrame(frame);
   }, [prefersReducedMotion]);
 
   const handleAddToCart = useCallback((productOverride) => {
@@ -306,16 +251,6 @@ const HeroSection = ({ data, isLoading = false }) => {
     }));
 
     toast.success(`${product.name} added to cart`);
-
-    if (!prefersReducedMotion) {
-      gsap.to('.add-to-cart-btn', {
-        scale: 0.95,
-        duration: 0.12,
-        yoyo: true,
-        repeat: 1,
-        ease: 'power2.inOut'
-      });
-    }
   }, [dispatch, prefersReducedMotion, heroProduct]);
 
   const scrollToSection = useCallback((sectionId) => {
@@ -332,7 +267,6 @@ const HeroSection = ({ data, isLoading = false }) => {
 
   return (
     <section
-      ref={heroRef}
       className={`relative isolate overflow-hidden pt-28 pb-32 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       aria-label="Hero section"
     >
@@ -367,7 +301,7 @@ const HeroSection = ({ data, isLoading = false }) => {
               </span>
             </div>
 
-            <div ref={titleRef} className="space-y-5">
+            <div className="space-y-5">
               <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight">
                 {shouldHighlightProduct && headlineBase && (
                   <span className="block">{headlineBase}</span>
@@ -379,7 +313,6 @@ const HeroSection = ({ data, isLoading = false }) => {
             </div>
 
             <p
-              ref={subtitleRef}
               className="max-w-2xl text-base text-muted-theme sm:text-lg md:text-xl md:leading-relaxed"
             >
               {heroDescription}
@@ -391,7 +324,6 @@ const HeroSection = ({ data, isLoading = false }) => {
                 return (
                   <div
                     key={stat.label}
-                    ref={(el) => { statsRef.current[index] = el; }}
                     className="rounded-2xl border border-theme-strong/10 bg-surface/5 px-4 py-5 text-muted-theme shadow-[0_14px_50px_rgba(15,23,42,0.45)] backdrop-blur-xl"
                   >
                     <Icon className="mb-3 h-5 w-5 text-cyan-300" aria-hidden="true" />
@@ -402,7 +334,7 @@ const HeroSection = ({ data, isLoading = false }) => {
               })}
             </div>
 
-            <div ref={ctaRef} className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <button
                 onClick={() => handleAddToCart()}
                 className="add-to-cart-btn inline-flex items-center justify-center gap-3 rounded-full bg-primary px-8 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(148,163,184,0.35)] transition-all duration-300 hover:shadow-[0_26px_56px_rgba(148,163,184,0.4)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-theme disabled:cursor-not-allowed disabled:opacity-70"
@@ -459,7 +391,7 @@ const HeroSection = ({ data, isLoading = false }) => {
             </div>
           </div>
 
-          <div ref={productRef} className="relative">
+          <div className="relative">
             <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 text-white backdrop-blur-2xl shadow-[0_46px_120px_rgba(15,15,35,0.6)]">
               <div className="absolute inset-x-6 top-6 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/60">
                 <span className="inline-flex items-center gap-2">

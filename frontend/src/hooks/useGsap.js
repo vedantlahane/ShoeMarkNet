@@ -1,36 +1,27 @@
-import { useLayoutEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { useEffect, useRef } from 'react';
 
 /**
- * Custom hook for creating and managing GSAP animations with automatic cleanup.
+ * Legacy helper hook kept for backward compatibility after removing GSAP.
+ * It simply executes the provided callback once the referenced element is mounted.
  *
- * @param {Function} animationFactory - A function that receives a GSAP context and creates animations.
- * @param {Array} [deps=[]] - Dependencies for the useLayoutEffect hook.
- * @returns {React.RefObject} A ref to be attached to the scope of the animations.
+ * @param {(element: HTMLElement | null) => (void | (() => void))} animationFactory
+ * @param {Array<unknown>} deps
+ * @returns {React.MutableRefObject<HTMLElement | null>}
  */
 const useGsap = (animationFactory, deps = []) => {
-  const scopeRef = useRef(null);
+  const elementRef = useRef(null);
 
-  useLayoutEffect(() => {
-    if (!scopeRef.current || typeof animationFactory !== 'function') {
+  useEffect(() => {
+    const element = elementRef.current;
+    if (typeof animationFactory !== 'function') {
       return undefined;
     }
 
-    let cleanup;
-
-    const ctx = gsap.context((context) => {
-      cleanup = animationFactory(context, scopeRef.current);
-    }, scopeRef);
-
-    return () => {
-      if (typeof cleanup === 'function') {
-        cleanup();
-      }
-      ctx.revert();
-    };
+    return animationFactory(element);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  return scopeRef;
+  return elementRef;
 };
 
 export default useGsap;

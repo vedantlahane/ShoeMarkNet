@@ -1,6 +1,4 @@
 import React, { useRef, useEffect, useState, useCallback, memo } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   Mail,
   Phone,
@@ -19,8 +17,6 @@ import {
 import { showSuccessToast, showErrorToast } from "../../utils/toast.jsx";
 import usePrefersReducedMotion from "../../hooks/usePrefersReducedMotion";
 
-gsap.registerPlugin(ScrollTrigger);
-
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 const Footer = memo(() => {
@@ -30,7 +26,6 @@ const Footer = memo(() => {
   const shimmerClass = enableAnimations ? "animate-gradient-shift" : "";
   const floatClass = enableAnimations ? "animate-float" : "";
   const footerRef = useRef(null);
-  const gsapContextRef = useRef(null);
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [hoveredSocial, setHoveredSocial] = useState(null);
@@ -41,30 +36,37 @@ const Footer = memo(() => {
       return undefined;
     }
 
-    gsapContextRef.current = gsap.context(() => {
-      const elementsToAnimate = gsap.utils.toArray(".footer-animate-child");
-      gsap.set(elementsToAnimate, { y: 30, opacity: 0 });
+    const elements = Array.from(
+      footer.querySelectorAll(".footer-animate-child")
+    );
 
-      ScrollTrigger.create({
-        trigger: footer,
-        start: "top bottom-=100",
-        onEnter: () => {
-          gsap.to(elementsToAnimate, {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power2.out",
-          });
-        },
-      });
-    }, footerRef);
+    elements.forEach((element) => {
+      element.style.opacity = "0";
+      element.style.transform = "translateY(32px)";
+    });
 
-    return () => {
-      if (gsapContextRef.current) {
-        gsapContextRef.current.revert();
-      }
-    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        elements.forEach((element, index) => {
+          const delay = index * 100;
+          element.style.transition = `opacity 600ms ease-out ${delay}ms, transform 600ms ease-out ${delay}ms`;
+          element.style.opacity = "1";
+          element.style.transform = "translateY(0)";
+        });
+
+        observer.disconnect();
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(footer);
+
+    return () => observer.disconnect();
   }, [enableAnimations]);
 
   const handleNewsletterSubmit = useCallback(

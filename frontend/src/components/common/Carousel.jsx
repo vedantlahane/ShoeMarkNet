@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -13,8 +11,7 @@ import {
   List,
   Shuffle
 } from 'lucide-react';
-
-gsap.registerPlugin(ScrollTrigger);
+import useReducedMotion from '../../hooks/useReducedMotion';
 
 const Carousel = ({
   items = [],
@@ -73,9 +70,15 @@ const Carousel = ({
   virtualScrolling = false,
   
 }) => {
-  
+  const prefersReducedMotion = useReducedMotion();
+  const [isRevealed, setIsRevealed] = useState(prefersReducedMotion);
+
   // Responsive calculations
   const getResponsiveConfig = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return { slidesToShow, slidesToScroll };
+    }
+
     const width = window.innerWidth;
     let config = { slidesToShow, slidesToScroll };
     
@@ -94,7 +97,7 @@ const Carousel = ({
   
   // State
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isPlaying, setIsPlaying] = useState(autoPlay && !prefersReducedMotion);
   const [isAnimating, setIsAnimating] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -109,6 +112,7 @@ const Carousel = ({
   const progressRef = useRef(null);
   const autoPlayRef = useRef(null);
   const observerRef = useRef(null);
+  const animationTimeoutRef = useRef(null);
   
   // Memoized values
   const totalItems = useMemo(() => 
@@ -121,6 +125,32 @@ const Carousel = ({
   
   const canGoPrev = useMemo(() => currentIndex > 0, [currentIndex]);
   const canGoNext = useMemo(() => currentIndex < maxIndex, [currentIndex, maxIndex]);
+
+  const transitionSettings = useMemo(() => {
+    switch (animation) {
+      case 'fade':
+        return { duration: 450, easing: 'ease-out' };
+      case 'zoom':
+        return { duration: 500, easing: 'cubic-bezier(0.32, 0.72, 0.23, 0.99)' };
+      case 'flip':
+        return { duration: 520, easing: 'cubic-bezier(0.19, 1, 0.22, 1)' };
+      default:
+        return { duration: 600, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+    }
+  }, [animation]);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) {
+      return;
+    }
+
+    const translateX = -(currentIndex * (100 / config.slidesToShow));
+    const duration = prefersReducedMotion ? 0 : transitionSettings.duration;
+    const easing = transitionSettings.easing;
+    carousel.style.transition = duration ? `transform ${duration}ms ${easing}` : 'none';
+    carousel.style.transform = `translateX(${translateX}%)`;
+  }, [currentIndex, config.slidesToShow, prefersReducedMotion, transitionSettings]);
   
   // Responsive handler
   useEffect(() => {
@@ -145,7 +175,19 @@ const Carousel = ({
         clearInterval(autoPlayRef.current);
       }
     };
-  }, [isPlaying, totalItems, config.slidesToShow, autoPlayInterval]);
+  }, [isPlaying, totalItems, config.slidesToShow, autoPlayInterval, goToNext]);
+
+  useEffect(() => {
+    if (prefersReducedMotion && isPlaying) {
+      setIsPlaying(false);
+    }
+  }, [prefersReducedMotion, isPlaying]);
+
+  useEffect(() => () => {
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+  }, []);
   
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -171,110 +213,57 @@ const Carousel = ({
     return () => observerRef.current?.disconnect();
   }, [lazy, preloadRange]);
   
-  // GSAP animations
   useEffect(() => {
     const container = containerRef.current;
-    const carousel = carouselRef.current;
-    if (!container || !carousel) return;
-    
-    // Initialize GSAP context
-    const ctx = gsap.context(() => {
-      // Entry animation
-      gsap.fromTo(container, 
-        { opacity: 0, y: 50 },
-        { 
-          opacity: 1, 
-          y: 0, 
-          duration: 0.8, 
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: container,
-            start: 'top 80%',
-            once: true
-          }
-        }
-      );
-      
-      // Floating animation
-      if (variant === 'premium') {
-        gsap.to(container, {
-          y: -10,
-          duration: 3,
-          yoyo: true,
-          repeat: -1,
-          ease: 'sine.inOut'
-        });
+    if (!container) {
+      return undefined;
+    }
+
+    if (variant === 'premium') {
+      container.classList.add('animate-pulse-slow');
+    } else {
+      container.classList.remove('animate-pulse-slow');
+    }
+
+    if (prefersReducedMotion) {
+      setIsRevealed(true);
+      return undefined;
+    }
+
+    setIsRevealed(false);
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry?.isIntersecting) {
+        setIsRevealed(true);
+        observer.disconnect();
       }
-    }, container);
-    
-    return () => ctx.revert();
-  }, [variant]);
+    }, { threshold: 0.15 });
+
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [variant, prefersReducedMotion]);
   
   // Navigation functions
   const goToSlide = useCallback((index, force = false) => {
     if (isAnimating && !force) return;
-    if (index === currentIndex) return;
-    
-    const newIndex = Math.max(0, Math.min(index, maxIndex));
-    setIsAnimating(true);
-    
-    const carousel = carouselRef.current;
-    if (carousel) {
-      const translateX = -newIndex * (100 / config.slidesToShow);
-      
-      if (animation === 'slide') {
-        gsap.to(carousel, {
-          x: `${translateX}%`,
-          duration: 0.6,
-          ease: 'power2.out',
-          onComplete: () => setIsAnimating(false)
-        });
-      } else if (animation === 'fade') {
-        gsap.to(carousel.children, {
-          opacity: 0,
-          duration: 0.3,
-          stagger: 0.1,
-          onComplete: () => {
-            setCurrentIndex(newIndex);
-            gsap.fromTo(carousel.children,
-              { opacity: 0, y: 20 },
-              { 
-                opacity: 1, 
-                y: 0, 
-                duration: 0.5, 
-                stagger: 0.1,
-                onComplete: () => setIsAnimating(false)
-              }
-            );
-          }
-        });
-        return;
-      } else if (animation === 'zoom') {
-        gsap.to(carousel.children, {
-          scale: 0.8,
-          opacity: 0.5,
-          duration: 0.4,
-          onComplete: () => {
-            setCurrentIndex(newIndex);
-            gsap.fromTo(carousel.children,
-              { scale: 0.8, opacity: 0.5 },
-              { 
-                scale: 1, 
-                opacity: 1, 
-                duration: 0.5,
-                stagger: 0.1,
-                onComplete: () => setIsAnimating(false)
-              }
-            );
-          }
-        });
-        return;
+
+    const nextIndex = Math.max(0, Math.min(index, maxIndex));
+    if (nextIndex === currentIndex) return;
+
+    if (!prefersReducedMotion) {
+      setIsAnimating(true);
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
       }
+      animationTimeoutRef.current = window.setTimeout(() => {
+        setIsAnimating(false);
+      }, transitionSettings.duration + 50);
     }
-    
-    setCurrentIndex(newIndex);
-    onSlideChange?.(newIndex);
-  }, [currentIndex, isAnimating, maxIndex, config.slidesToShow, animation, onSlideChange]);
+
+    setCurrentIndex(nextIndex);
+    onSlideChange?.(nextIndex);
+  }, [currentIndex, maxIndex, isAnimating, prefersReducedMotion, onSlideChange, transitionSettings]);
   
   const goToPrev = useCallback(() => {
     if (infinite && currentIndex === 0) {
@@ -357,13 +346,10 @@ const Carousel = ({
     const progress = progressRef.current;
     if (progress) {
       const percentage = ((currentIndex + 1) / (maxIndex + 1)) * 100;
-      gsap.to(progress, {
-        width: `${percentage}%`,
-        duration: 0.5,
-        ease: 'power2.out'
-      });
+      progress.style.transition = prefersReducedMotion ? 'none' : 'width 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+      progress.style.width = `${percentage}%`;
     }
-  }, [currentIndex, maxIndex]);
+  }, [currentIndex, maxIndex, prefersReducedMotion]);
   
   // Auto-pause on hover
   const handleMouseEnter = useCallback(() => {
@@ -388,7 +374,7 @@ const Carousel = ({
           key={index}
           className={`carousel-item flex-shrink-0 ${itemClassName}`}
           style={{ 
-            width: `${100 / config.slidesToShow}%`,
+            width: `${viewMode === 'list' ? 100 : 100 / config.slidesToShow}%`,
             paddingRight: `${gap / 2}px`,
             paddingLeft: `${gap / 2}px`
           }}
@@ -404,7 +390,7 @@ const Carousel = ({
         key={item.id || index}
         className={`carousel-item flex-shrink-0 ${itemClassName}`}
         style={{ 
-          width: `${100 / config.slidesToShow}%`,
+            width: `${viewMode === 'list' ? 100 : 100 / config.slidesToShow}%`,
           paddingRight: `${gap / 2}px`,
           paddingLeft: `${gap / 2}px`
         }}
@@ -451,7 +437,9 @@ const Carousel = ({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full ${className}`}
+      className={`relative w-full transition-all duration-700 ${
+        isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+      } ${className}`}
       tabIndex={0}
       role="region"
       aria-label={ariaLabel}
@@ -510,10 +498,7 @@ const Carousel = ({
         <div className="relative overflow-hidden">
           <div
             ref={carouselRef}
-            className="flex transition-transform duration-500 ease-in-out"
-            style={{
-              transform: animation === 'slide' ? `translateX(-${currentIndex * (100 / config.slidesToShow)}%)` : 'translateX(0%)'
-            }}
+            className="flex"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -550,8 +535,7 @@ const Carousel = ({
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 dark:bg-gray-700/20">
             <div
               ref={progressRef}
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
-              style={{ width: `${((currentIndex + 1) / (maxIndex + 1)) * 100}%` }}
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
             />
           </div>
         )}

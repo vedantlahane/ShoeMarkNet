@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Grid3X3,
   TrendingUp,
@@ -18,8 +16,6 @@ import {
   Dumbbell
 } from 'lucide-react';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const DEFAULT_CATEGORIES = [
   {
@@ -162,22 +158,11 @@ const CategoriesSection = ({
   animateOnScroll = true,
   className = ''
 }) => {
-  const [hoveredCategory, setHoveredCategory] = useState(null);
   const [visibleCategories, setVisibleCategories] = useState([]);
-  const [isGridVisible, setIsGridVisible] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const enableAnimations = animateOnScroll && !prefersReducedMotion;
-  const pulseClass = enableAnimations ? 'animate-pulse-slow' : '';
-  const bounceClass = enableAnimations ? 'animate-bounce' : '';
-  const pingClass = enableAnimations ? 'animate-ping' : '';
-  const spinSlowClass = enableAnimations ? 'animate-spin-slow' : '';
-  
-  // Refs
-  const sectionRef = useRef(null);
-  const headerRef = useRef(null);
+  const enableReveal = animateOnScroll && !prefersReducedMotion;
   const gridRef = useRef(null);
-  const ctaRef = useRef(null);
 
   const categories = useMemo(() => {
     if (Array.isArray(propCategories) && propCategories.length > 0) {
@@ -188,7 +173,7 @@ const CategoriesSection = ({
 
   const statsSummary = useMemo(() => {
     if (!categories?.length) {
-      return { totalProducts: 0, avgRating: 0 };
+      return { totalProducts: 0, avgRating: 0, trendingCount: 0 };
     }
 
     const totalProducts = categories.reduce((total, cat) => total + (cat.count || 0), 0);
@@ -208,226 +193,40 @@ const CategoriesSection = ({
     };
   }, [categories]);
 
-  // GSAP Animations with proper cleanup
   useEffect(() => {
-    if (!enableAnimations || !sectionRef.current) {
-      return undefined;
-    }
-
-    const ctx = gsap.context(() => {
-      // Section entrance animation
-      gsap.fromTo(
-        sectionRef.current,
-        { opacity: 0 },
-        {
-          opacity: 1,
-          duration: 1,
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 90%',
-            once: true
-          }
-        }
-      );
-
-      // Header animation
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current.children,
-          { opacity: 0, y: 50 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: 'top 85%',
-              once: true
-            }
-          }
-        );
-      }
-
-      // Grid animation
-      if (gridRef.current) {
-        gsap.fromTo(
-          gridRef.current.children,
-          { opacity: 0, y: 100, scale: 0.8 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: 'back.out(1.7)',
-            scrollTrigger: {
-              trigger: gridRef.current,
-              start: 'top 80%',
-              once: true
-            }
-          }
-        );
-      }
-
-      // CTA animation
-      if (ctaRef.current) {
-        gsap.fromTo(
-          ctaRef.current,
-          { opacity: 0, y: 30 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: ctaRef.current,
-              start: 'top 85%',
-              once: true
-            }
-          }
-        );
-      }
-    }, sectionRef);
-
-    return () => {
-      ctx.revert();
-    };
-  }, [enableAnimations]);
-
-  // Stagger visibility animation
-  useEffect(() => {
-    setVisibleCategories([]);
-    setIsGridVisible(false);
-
-    if (!gridRef.current) {
-      return undefined;
-    }
-
-    if (!enableAnimations) {
+    if (!enableReveal) {
       setVisibleCategories(categories.map((_, index) => index));
-      setIsGridVisible(true);
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries;
-      if (entry?.isIntersecting) {
-        setIsGridVisible(true);
-        observer.disconnect();
-      }
-    }, {
-      threshold: 0.25
-    });
-
-    observer.observe(gridRef.current);
-
-    return () => observer.disconnect();
-  }, [categories, enableAnimations]);
-
-  useEffect(() => {
-    if (!isGridVisible) {
-      return undefined;
-    }
-
-    if (!enableAnimations) {
-      setVisibleCategories(categories.map((_, index) => index));
-      return undefined;
-    }
-
-    const timers = [];
-    categories.forEach((_, index) => {
-      const timeoutId = setTimeout(() => {
-        setVisibleCategories(prev => {
-          if (prev.includes(index)) {
-            return prev;
-          }
-          return [...prev, index];
-        });
-      }, index * 120);
-      timers.push(timeoutId);
-    });
-
-    return () => {
-      timers.forEach(clearTimeout);
-    };
-  }, [categories, enableAnimations, isGridVisible]);
-
-  useEffect(() => {
-    if (!enableAnimations || !activeCategory || !gridRef.current) {
-      return undefined;
-    }
-
-    const activeCard = gridRef.current.querySelector(
-      `[data-category-id="${activeCategory}"]`
-    );
-
-    if (!activeCard) {
-      return undefined;
-    }
-
-    const animation = gsap.to(activeCard, {
-      y: -10,
-      duration: 2,
-      yoyo: true,
-      repeat: -1,
-      ease: 'sine.inOut'
-    });
-
-    return () => {
-      animation?.kill();
-      gsap.set(activeCard, { clearProps: 'transform' });
-    };
-  }, [activeCategory, enableAnimations]);
-
-  // Handle category interactions
-  const handleCategoryHover = useCallback((categoryId) => {
-    setHoveredCategory(categoryId);
-    setActiveCategory(categoryId);
-    
-    // Add hover animation
-    if (prefersReducedMotion) {
       return;
     }
 
-    const card = gridRef.current?.querySelector(`[data-category-id="${categoryId}"]`);
-    if (card) {
-      gsap.to(card, {
-        scale: 1.05,
-        rotationY: 5,
-        z: 50,
-        duration: 0.3,
-        ease: 'power2.out'
-      });
-    }
-  }, [prefersReducedMotion]);
+    setVisibleCategories([]);
 
-  const handleCategoryLeave = useCallback((event) => {
-    const previousCategory = hoveredCategory;
-    setHoveredCategory(null);
-    setActiveCategory(null);
-
-    const cardElement = event?.currentTarget;
-    if (cardElement) {
-      cardElement.style.removeProperty('--hover-x');
-      cardElement.style.removeProperty('--hover-y');
+    const element = gridRef.current;
+    if (!element) {
+      return;
     }
 
-    // Reset hover animation
-    if (previousCategory && !prefersReducedMotion) {
-      const card = gridRef.current?.querySelector(`[data-category-id="${previousCategory}"]`);
-      if (card) {
-        gsap.to(card, {
-          scale: 1,
-          rotationY: 0,
-          z: 0,
-          duration: 0.3,
-          ease: 'power2.out'
+    const timeouts = [];
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry?.isIntersecting) {
+        categories.forEach((_, index) => {
+          const timeout = window.setTimeout(() => {
+            setVisibleCategories((prev) => (prev.includes(index) ? prev : [...prev, index]));
+          }, index * 120);
+          timeouts.push(timeout);
         });
+        observer.disconnect();
       }
-    }
-  }, [hoveredCategory, prefersReducedMotion]);
+    }, { threshold: 0.25 });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+      timeouts.forEach(window.clearTimeout);
+    };
+  }, [categories, enableReveal]);
 
   const handleCardPointerMove = useCallback((event) => {
     if (prefersReducedMotion) {
@@ -439,6 +238,7 @@ const CategoriesSection = ({
     if (!rect.width || !rect.height) {
       return;
     }
+
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
 
@@ -446,57 +246,55 @@ const CategoriesSection = ({
     card.style.setProperty('--hover-y', `${y}%`);
   }, [prefersReducedMotion]);
 
+  const handleCategoryHover = useCallback((categoryId) => {
+    setHoveredCategory(categoryId);
+  }, []);
+
+  const handleCategoryLeave = useCallback((event) => {
+    setHoveredCategory(null);
+    const cardElement = event?.currentTarget;
+    if (cardElement) {
+      cardElement.style.removeProperty('--hover-x');
+      cardElement.style.removeProperty('--hover-y');
+    }
+  }, []);
+
+  const gridColumns = useMemo(() => {
+    if (variant === 'compact') {
+      return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+    }
+    if (variant === 'minimal') {
+      return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
+    }
+    return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3';
+  }, [variant]);
+
   return (
     <section 
-      ref={sectionRef}
       id="categories" 
       className={`py-16 md:py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 relative overflow-hidden ${className}`}
       aria-label="Product categories"
     >
       {/* Enhanced Background Elements */}
       <div className="absolute inset-0" aria-hidden="true">
-        <div className={`absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl ${pulseClass}`}></div>
-        <div
-          className={`absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl ${pulseClass}`}
-          style={{ animationDelay: '1s' }}
-        ></div>
-        <div
-          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-400/10 to-teal-400/10 rounded-full blur-3xl ${pulseClass}`}
-          style={{ animationDelay: '2s' }}
-        ></div>
-        
-        {/* Floating particles */}
-        <div
-          className={`absolute top-20 right-1/4 w-2 h-2 bg-blue-400 rounded-full ${bounceClass}`}
-          style={{ animationDelay: '0.5s' }}
-        ></div>
-        <div
-          className={`absolute bottom-32 left-1/3 w-3 h-3 bg-purple-400 rounded-full ${bounceClass}`}
-          style={{ animationDelay: '1.2s' }}
-        ></div>
-        <div
-          className={`absolute top-1/3 right-10 w-1 h-1 bg-pink-400 rounded-full ${pingClass}`}
-          style={{ animationDelay: '2.1s' }}
-        ></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-400/10 to-teal-400/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
       </div>
 
-  <div className="relative mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
+      <div className="relative mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
         {/* Enhanced Section Header */}
         {showHeader && (
-          <div ref={headerRef} className="text-center mb-16">
+          <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-3 glass bg-gradient-to-r from-purple-100/50 to-blue-100/50 dark:from-purple-900/30 dark:to-blue-900/30 text-purple-600 dark:text-purple-400 rounded-full px-8 py-4 mb-8 shadow-lg">
-              <Grid3X3 size={20} className={enableAnimations ? 'animate-pulse' : ''} aria-hidden="true" />
+              <Grid3X3 size={20} className="animate-pulse" aria-hidden="true" />
               <span className="text-sm font-semibold tracking-wide">Shop by Style</span>
-              <Sparkles size={16} className={spinSlowClass} aria-hidden="true" />
+              <Sparkles size={16} className="animate-spin-slow" aria-hidden="true" />
             </div>
 
             <h2 className="text-4xl lg:text-7xl font-heading font-bold mb-6 text-gray-900 dark:text-white">
               Explore{' '}
-              <span
-                className={`bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent ${
-                  enableAnimations ? 'animate-gradient' : ''
-                }`}
-              >
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
                 Categories
               </span>
             </h2>
@@ -535,32 +333,22 @@ const CategoriesSection = ({
         {/* Enhanced Categories Grid */}
         <div 
           ref={gridRef}
-          className={`grid gap-8 ${
-            variant === 'compact' 
-              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-              : variant === 'minimal'
-              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
-              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
-          }`}
+          className={`grid gap-8 ${gridColumns}`}
           role="grid"
           aria-label="Product categories grid"
         >
           {categories.map((category, index) => {
             const IconComponent = category.lucideIcon;
-            const hoverClass = enableAnimations
-              ? 'transition-all duration-700 transform-gpu hover:scale-105 hover:-translate-y-4 hover:rotate-1 perspective-1000'
-              : 'transition-opacity duration-500';
+            const isVisible = visibleCategories.includes(index);
             return (
               <Link
                 key={category.id}
                 to={`/categories/${category.slug}`}
                 data-category-id={category.id}
-                className={`group relative block overflow-hidden rounded-3xl ${hoverClass} focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 ${
-                  visibleCategories.includes(index)
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ transitionDelay: `${index * 100}ms` }}
+                className={`group relative block overflow-hidden rounded-3xl transition-all duration-500 ease-out focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                } ${hoveredCategory === category.id ? 'shadow-2xl -translate-y-2' : 'shadow-lg'}`}
+                style={{ transitionDelay: enableReveal ? `${index * 80}ms` : '0ms' }}
                 onPointerMove={handleCardPointerMove}
                 onMouseEnter={() => handleCategoryHover(category.id)}
                 onMouseLeave={handleCategoryLeave}
@@ -581,21 +369,21 @@ const CategoriesSection = ({
                 />
 
                 {/* Premium Glassmorphism Card */}
-                <div className="card-premium rounded-3xl overflow-hidden h-full shadow-2xl hover:shadow-3xl relative z-10">
+                <div className="card-premium rounded-3xl overflow-hidden h-full relative z-10">
                   
                   {/* Enhanced Image Section */}
                   <div className="relative h-64 lg:h-72 overflow-hidden">
                     <img
                       src={category.image}
                       alt={`${category.name} category`}
-                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-125 group-hover:rotate-3"
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
                         e.target.src = '/api/placeholder/400/300';
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
                     {/* Premium Badge */}
                     <div className="absolute top-4 left-4">
@@ -613,11 +401,7 @@ const CategoriesSection = ({
 
                     {/* Trending Indicator */}
                     {category.stats.trending && (
-                      <div
-                        className={`absolute bottom-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center space-x-1 ${
-                          enableAnimations ? 'animate-pulse' : ''
-                        }`}
-                      >
+                      <div className="absolute bottom-4 right-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center space-x-1 animate-pulse">
                         <TrendingUp size={12} aria-hidden="true" />
                         <span>Trending</span>
                       </div>
@@ -628,40 +412,30 @@ const CategoriesSection = ({
                       
                       {/* Quick Actions */}
                       <div className="flex items-center space-x-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-300">
-                        <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:scale-110 transition-transform duration-200">
+                        <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2">
                           <Eye size={16} aria-hidden="true" />
                           <span className="text-sm font-semibold">Explore</span>
                         </div>
-                        <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2 hover:scale-110 transition-transform duration-200">
+                        <div className="glass text-white px-4 py-2 rounded-xl flex items-center space-x-2">
                           <ShoppingBag size={16} aria-hidden="true" />
                           <span className="text-sm font-semibold">Shop</span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Floating Animation Elements */}
-                    {hoveredCategory === category.id && !prefersReducedMotion && (
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-                        <div className="absolute top-8 right-8 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
-                        <div className="absolute bottom-8 left-8 w-1 h-1 bg-purple-400 rounded-full animate-ping delay-300"></div>
-                        <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white/80 rounded-full animate-ping delay-700"></div>
-                        <div className="absolute top-16 left-16 w-0.5 h-0.5 bg-pink-400 rounded-full animate-bounce delay-1000"></div>
-                      </div>
-                    )}
                   </div>
 
                   {/* Enhanced Content Section */}
-                  <div className="relative p-6 lg:p-8 space-y-4">
+                  <div className="relative p-6 lg:p-8 space-y-4 bg-white/80 dark:bg-slate-900/70 backdrop-blur">
                     
                     {/* Icon & Title Row */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-16 h-16 bg-gradient-to-r ${category.color} rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-xl`}>
+                        <div className={`w-16 h-16 bg-gradient-to-r ${category.color} rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
                           <IconComponent size={24} className="text-white" aria-hidden="true" />
                         </div>
                         
                         <div>
-                          <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                          <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                             {category.name}
                           </h3>
                           <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
@@ -685,16 +459,12 @@ const CategoriesSection = ({
 
                     {/* Stats Row */}
                     <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center space-x-4">
-                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                          {category.count} products
-                        </span>
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">
-                          {category.stats.sales} sold
-                        </span>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span>{category.count} products</span>
+                        <span>{category.stats.sales} sold</span>
                       </div>
                       
-                      <div className="flex items-center text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-2 transition-transform duration-300">
+                      <div className="flex items-center text-blue-600 dark:text-blue-400 font-bold transition-transform duration-300 group-hover:translate-x-2">
                         <span className="text-sm mr-2">Explore</span>
                         <ArrowRight size={16} aria-hidden="true" />
                       </div>
@@ -702,14 +472,9 @@ const CategoriesSection = ({
                   </div>
 
                   {/* Premium Border Effect */}
-                  <div className={`absolute inset-0 rounded-3xl border-2 transition-all duration-300 pointer-events-none ${
-                    hoveredCategory === category.id 
-                      ? `border-gradient bg-gradient-to-r ${category.color} p-0.5 opacity-80` 
-                      : 'border-transparent'
-                  }`}></div>
-
-                  {/* Shine Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100"></div>
+                  <div className={`absolute inset-0 rounded-3xl border-2 transition-opacity duration-300 pointer-events-none ${
+                    hoveredCategory === category.id ? 'opacity-80 border-white/40' : 'opacity-0 border-transparent'
+                  }`} />
                 </div>
               </Link>
             );
@@ -717,22 +482,18 @@ const CategoriesSection = ({
         </div>
 
         {/* Enhanced Bottom CTA */}
-        <div ref={ctaRef} className="text-center mt-20">
+        <div className="text-center mt-20">
           <div className="card-premium p-8 lg:p-12 max-w-4xl mx-auto relative overflow-hidden">
             
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-5" aria-hidden="true">
-              <div className="absolute top-8 left-8 w-4 h-4 border-2 border-blue-500 rounded-full"></div>
-              <div className="absolute bottom-12 right-12 w-6 h-6 border-2 border-purple-500 rotate-45"></div>
-              <div className="absolute top-16 right-16 w-2 h-2 bg-pink-500 rounded-full"></div>
+              <div className="absolute top-8 left-8 w-4 h-4 border-2 border-blue-500 rounded-full" />
+              <div className="absolute bottom-12 right-12 w-6 h-6 border-2 border-purple-500 rotate-45" />
+              <div className="absolute top-16 right-16 w-2 h-2 bg-pink-500 rounded-full" />
             </div>
             
             <div className="relative z-10">
-              <div
-                className={`w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl ${
-                  enableAnimations ? 'animate-bounce-slow' : ''
-                }`}
-              >
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl animate-bounce-slow">
                 <Grid3X3 size={32} className="text-white" aria-hidden="true" />
               </div>
               
@@ -746,31 +507,31 @@ const CategoriesSection = ({
               
               <Link
                 to="/products"
-                className="inline-flex items-center gap-4 btn-premium text-white px-10 py-5 rounded-2xl text-lg font-bold hover:shadow-2xl hover:shadow-blue-500/25 micro-bounce group focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50"
+                className="inline-flex items-center gap-4 btn-premium text-white px-10 py-5 rounded-2xl text-lg font-bold hover:shadow-2xl hover:shadow-blue-500/25 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50"
               >
                 <Grid3X3 size={24} aria-hidden="true" />
                 Browse All Products
-                <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform duration-300" aria-hidden="true" />
+                <ArrowRight size={24} className="transition-transform duration-300 group-hover:translate-x-2" aria-hidden="true" />
               </Link>
               
               {/* Additional CTA Options */}
               <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
                 <Link
                   to="/deals"
-                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl hover:glass transition-all duration-200 flex items-center space-x-2 group focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl transition-all duration-200 flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <Zap size={16} aria-hidden="true" />
                   <span>Hot Deals</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" aria-hidden="true" />
+                  <ArrowRight size={14} aria-hidden="true" />
                 </Link>
                 
                 <Link
                   to="/new-arrivals"
-                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl hover:glass transition-all duration-200 flex items-center space-x-2 group focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="glass text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl transition-all duration-200 flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <Star size={16} aria-hidden="true" />
                   <span>New Arrivals</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" aria-hidden="true" />
+                  <ArrowRight size={14} aria-hidden="true" />
                 </Link>
               </div>
             </div>

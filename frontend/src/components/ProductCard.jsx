@@ -1,7 +1,6 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { gsap } from 'gsap';
 import {
   Heart,
   ShoppingBag,
@@ -22,7 +21,6 @@ import { formatCurrency } from '../utils/helpers';
 import { showCartToast, showWishlistToast, showErrorToast } from '../utils/toast';
 
 // Hooks
-import useGsap from '../hooks/useGsap';
 import useReducedMotion from '../hooks/useReducedMotion';
 
 const ProductCard = ({
@@ -36,6 +34,7 @@ const ProductCard = ({
   onAddToCart = null,
   onToggleWishlist = null
 }) => {
+  const cardRef = useRef(null);
   const imageRef = useRef(null);
   const actionsRef = useRef(null);
   const badgeRef = useRef(null);
@@ -169,101 +168,62 @@ const ProductCard = ({
     setSelectedSize(prev => (prev && availableSizes.includes(prev) ? prev : availableSizes[0]));
   }, [availableSizes]);
 
-  // GSAP Animations
-  const cardRef = useGsap((_, card) => {
-    if (prefersReducedMotion || !card) {
+  const [isCardVisible, setIsCardVisible] = useState(() => prefersReducedMotion);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsCardVisible(true);
       return undefined;
     }
 
-    const imageEl = imageRef.current;
-    const badgeEl = card.querySelector('.badge');
-
-    gsap.fromTo(
-      card,
-      { y: 50, opacity: 0, scale: 0.9 },
-      {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        duration: 0.6,
-        delay: index * 0.1,
-        ease: 'power3.out'
+    let mounted = true;
+    const timeout = window.setTimeout(() => {
+      if (mounted) {
+        setIsCardVisible(true);
       }
-    );
-
-    if (badgeEl && (productData.isNew || productData.isTrending || productData.isBestseller)) {
-      gsap.fromTo(
-        badgeEl,
-        { scale: 0, rotation: -180 },
-        { scale: 1, rotation: 0, duration: 0.6, ease: 'bounce.out', delay: 0.3 }
-      );
-    }
-
-    let rafId = null;
-
-    const handleMouseEnter = () => {
-      setIsHovered(true);
-      setShowActions(true);
-
-      gsap.to(card, { y: -8, duration: 0.3, ease: 'power2.out' });
-
-      if (imageEl) {
-        gsap.to(imageEl, { scale: 1.1, duration: 0.4, ease: 'power2.out' });
-      }
-
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-      rafId = requestAnimationFrame(() => {
-        const actionsEl = actionsRef.current;
-        if (actionsEl) {
-          gsap.fromTo(
-            actionsEl,
-            { opacity: 0, y: 20 },
-            { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
-          );
-        }
-      });
-    };
-
-    const handleMouseLeave = () => {
-      setIsHovered(false);
-
-      gsap.to(card, { y: 0, duration: 0.3, ease: 'power2.out' });
-
-      if (imageEl) {
-        gsap.to(imageEl, { scale: 1, duration: 0.4, ease: 'power2.out' });
-      }
-
-      const actionsEl = actionsRef.current;
-      if (actionsEl) {
-        gsap.to(actionsEl, {
-          opacity: 0,
-          y: 20,
-          duration: 0.2,
-          ease: 'power2.in',
-          onComplete: () => setShowActions(false)
-        });
-      } else {
-        setShowActions(false);
-      }
-    };
-
-    card.addEventListener('mouseenter', handleMouseEnter);
-    card.addEventListener('mouseleave', handleMouseLeave);
+    }, Math.min(500, index * 80));
 
     return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-
-      card.removeEventListener('mouseenter', handleMouseEnter);
-      card.removeEventListener('mouseleave', handleMouseLeave);
-
-      gsap.killTweensOf([card, imageRef.current, actionsRef.current]);
-      rafId = null;
+      mounted = false;
+      window.clearTimeout(timeout);
     };
-  }, [index, productData.isNew, productData.isTrending, productData.isBestseller, prefersReducedMotion]);
+  }, [index, prefersReducedMotion]);
+
+  useEffect(() => {
+    if (isHovered) {
+      setShowActions(true);
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => setShowActions(false), 150);
+    return () => window.clearTimeout(timeout);
+  }, [isHovered]);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  const triggerButtonFeedback = useCallback((element) => {
+    if (prefersReducedMotion || !element?.animate) {
+      return;
+    }
+
+    element.animate(
+      [
+        { transform: 'scale(1)' },
+        { transform: 'scale(0.95)' },
+        { transform: 'scale(1)' }
+      ],
+      {
+        duration: 180,
+        easing: 'ease-in-out'
+      }
+    );
+  }, [prefersReducedMotion]);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -297,16 +257,7 @@ const ProductCard = ({
       addResult = 'added';
     }
 
-    // Animation feedback
-    if (!prefersReducedMotion) {
-      gsap.to(e.target, {
-        scale: 0.95,
-        duration: 0.1,
-        yoyo: true,
-        repeat: 1,
-        ease: 'power2.inOut'
-      });
-    }
+    triggerButtonFeedback(e.currentTarget);
 
     if (addResult !== false) {
       showCartToast.added(productData.name);
@@ -335,16 +286,7 @@ const ProductCard = ({
       }
     }
 
-    // Heart animation
-    if (!prefersReducedMotion) {
-      gsap.to(e.target, {
-        scale: 1.3,
-        duration: 0.2,
-        yoyo: true,
-        repeat: 1,
-        ease: 'power2.inOut'
-      });
-    }
+    triggerButtonFeedback(e.currentTarget);
 
     if (wishlistResult === 'added') {
       showWishlistToast.added(productData.name);
@@ -388,15 +330,24 @@ const ProductCard = ({
   // Compact variant
   if (variant === 'compact') {
     return (
-      <div 
+      <div
         ref={cardRef}
-        className={`card-premium p-4 flex items-center space-x-4 hover-lift ${className}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
+        className={`card-premium p-4 flex items-center space-x-4 transition-all duration-300 ${
+          isCardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+        } ${className}`}
+        style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 60}ms` }}
       >
         <div className="flex-shrink-0">
           <img
             src={productData.images[0]}
             alt={productData.name}
-            className="w-16 h-16 rounded-xl object-cover"
+            className={`w-16 h-16 rounded-xl object-cover transition-transform duration-300 ${
+              isHovered ? 'scale-105' : 'scale-100'
+            }`}
             onLoad={() => setIsImageLoaded(true)}
           />
         </div>
@@ -429,9 +380,16 @@ const ProductCard = ({
   // Featured variant
   if (variant === 'featured') {
     return (
-      <div 
+      <div
         ref={cardRef}
-        className={`card-premium overflow-hidden relative group ${className}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
+        className={`card-premium overflow-hidden relative group transition-all duration-300 ${
+          isCardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        } ${className}`}
+        style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 60}ms` }}
       >
         {/* Background Image */}
         <div className="absolute inset-0">
@@ -439,7 +397,9 @@ const ProductCard = ({
             ref={imageRef}
             src={productData.images[0]}
             alt={productData.name}
-            className="w-full h-full object-cover transition-transform duration-500"
+            className={`w-full h-full object-cover transition-transform duration-500 ${
+              isHovered ? 'scale-110' : 'scale-100'
+            }`}
             onLoad={() => setIsImageLoaded(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
@@ -540,14 +500,23 @@ const ProductCard = ({
     >
       <article
         ref={cardRef}
-        className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 transition-all duration-200 hover:-translate-y-1 hover:border-white/20 ${className}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
+        className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 transition-all duration-300 ${
+          isCardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'
+        } ${
+          isHovered ? 'shadow-2xl border-white/20' : 'shadow-lg'
+        } ${className}`}
+        style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 60}ms` }}
       >
         <div className="relative aspect-[4/5] overflow-hidden bg-slate-900/30">
           <img
             ref={imageRef}
             src={productImages[currentImage] || primaryImage}
             alt={productData.name}
-            className="h-full w-full scale-105 object-cover transition-transform duration-500 group-hover:scale-110"
+            className={`h-full w-full object-cover transition-transform duration-500 ${isHovered ? 'scale-110' : 'scale-105'}`}
             onLoad={() => setIsImageLoaded(true)}
             loading="lazy"
           />

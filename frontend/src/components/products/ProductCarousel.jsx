@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { gsap } from 'gsap';
 import { toast } from 'react-hot-toast';
 import {
   Heart,
@@ -18,6 +17,7 @@ import Carousel from './Carousel';
 import { addToCart } from '../../redux/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../../redux/slices/wishlistSlice';
 import { formatCurrency } from '../../utils/helpers';
+import useReducedMotion from '../../hooks/useReducedMotion';
 
 const ProductCarousel = ({
   products = [],
@@ -119,25 +119,33 @@ const ProductCarousel = ({
     onFilterChange?.(filterBy, sortBy, result);
   }, [products, filterBy, sortBy, onFilterChange]);
   
-  // GSAP header animation
+  const prefersReducedMotion = useReducedMotion();
+  const [headerVisible, setHeaderVisible] = useState(!animateOnScroll);
+
   useEffect(() => {
-    if (animateOnScroll && headerRef.current) {
-      gsap.fromTo(headerRef.current,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: headerRef.current,
-            start: 'top 90%',
-            once: true
-          }
-        }
-      );
+    const element = headerRef.current;
+    if (!element) {
+      return undefined;
     }
-  }, [animateOnScroll]);
+
+    if (!animateOnScroll || prefersReducedMotion) {
+      setHeaderVisible(true);
+      return undefined;
+    }
+
+    setHeaderVisible(false);
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry?.isIntersecting) {
+        setHeaderVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.2 });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [animateOnScroll, prefersReducedMotion]);
   
   // Helper functions
   const isInWishlist = (productId) => 
@@ -205,6 +213,28 @@ const ProductCarousel = ({
     }
   };
   
+  const triggerButtonFeedback = useCallback((element) => {
+    if (prefersReducedMotion || !element?.animate) {
+      return;
+    }
+
+    element.animate(
+      [
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.15)' },
+        { transform: 'scale(1)' }
+      ],
+      {
+        duration: 200,
+        easing: 'ease-in-out'
+      }
+    );
+  }, [prefersReducedMotion]);
+
+  const headerAnimationClass = (!animateOnScroll || headerVisible || prefersReducedMotion)
+    ? 'opacity-100 translate-y-0'
+    : 'opacity-0 translate-y-4';
+
   // Event handlers
   const handleAddToCart = (product, e) => {
     e?.preventDefault();
@@ -225,14 +255,8 @@ const ProductCarousel = ({
     });
     
     // Add cart animation
-    if (e?.target) {
-      gsap.to(e.target, {
-        scale: 1.2,
-        duration: 0.2,
-        yoyo: true,
-        repeat: 1,
-        ease: 'power2.inOut'
-      });
+    if (e?.currentTarget) {
+      triggerButtonFeedback(e.currentTarget);
     }
   };
   
@@ -249,14 +273,8 @@ const ProductCarousel = ({
     }
     
     // Add heart animation
-    if (e?.target) {
-      gsap.to(e.target, {
-        scale: 1.3,
-        duration: 0.2,
-        yoyo: true,
-        repeat: 1,
-        ease: 'power2.inOut'
-      });
+    if (e?.currentTarget) {
+      triggerButtonFeedback(e.currentTarget);
     }
   };
   
@@ -468,7 +486,10 @@ const ProductCarousel = ({
       
       {/* Header */}
       {showHeader && (
-        <div ref={headerRef} className={`text-center space-y-4 ${headerClassName}`}>
+        <div
+          ref={headerRef}
+          className={`text-center space-y-4 transition-all duration-400 ${headerAnimationClass} ${headerClassName}`}
+        >
           <div className="inline-flex items-center space-x-2 glass bg-blue-100/50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3">
             {React.createElement(getVariantIcon(), { size: 16, className: 'animate-pulse' })}
             <span className="text-sm font-medium">{variant.charAt(0).toUpperCase() + variant.slice(1)}</span>
