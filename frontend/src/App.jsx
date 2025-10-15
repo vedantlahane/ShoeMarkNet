@@ -14,7 +14,7 @@ import routeConfig from "./routes/routeConfig";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 const basePageClasses =
-  "min-h-screen flex items-center justify-center bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100";
+  "min-h-screen w-full flex items-center justify-center bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100";
 
 // Fallback component shown while lazy-loaded components are being fetched
 const SuspenseFallback = () => (
@@ -78,44 +78,44 @@ const AppContent = () => {
   }
 
   return (
-      <BrowserRouter>
-        <Suspense fallback={<SuspenseFallback />}>
-          <Routes>
-            {/* Admin routes: protected by role and wrapped in AdminLayout */}
-            {routeConfig.admin.length > 0 && (
-              <Route
-                path="/admin/*"
-                element={<ProtectedRoute requiredRole="admin" />}
-              >
-                <Route element={<AdminLayout />}>
-                  {routeConfig.admin.map(renderRoute)}
-                </Route>
+    <BrowserRouter>
+      <Suspense fallback={<SuspenseFallback />}>
+        <Routes>
+          {/* Admin routes: protected by role and wrapped in AdminLayout */}
+          {routeConfig.admin.length > 0 && (
+            <Route
+              path="/admin/*"
+              element={<ProtectedRoute requiredRole="admin" />}
+            >
+              <Route element={<AdminLayout />}>
+                {routeConfig.admin.map(renderRoute)}
+              </Route>
+            </Route>
+          )}
+
+          {/* Public and protected routes: wrapped in MainLayout */}
+          <Route path="/*" element={<MainLayout />}>
+            {/* Public routes accessible to all users */}
+            {routeConfig.public.map(renderRoute)}
+
+            {/* Protected routes requiring authentication */}
+            {routeConfig.protected.length > 0 && (
+              <Route element={<ProtectedRoute />}>
+                {routeConfig.protected.map(renderRoute)}
               </Route>
             )}
 
-            {/* Public and protected routes: wrapped in MainLayout */}
-            <Route path="/*" element={<MainLayout />}>
-              // Public routes accessible to all users
-              {routeConfig.public.map(renderRoute)}
+            {/* Fallback route for unmatched paths (e.g., 404) */}
+            {routeConfig.fallback && renderRoute(routeConfig.fallback)}
+          </Route>
 
-              // Protected routes requiring authentication
-              {routeConfig.protected.length > 0 && (
-                <Route element={<ProtectedRoute />}>
-                  {routeConfig.protected.map(renderRoute)}
-                </Route>
-              )}
-
-              // Fallback route for unmatched paths (e.g., 404)
-              {routeConfig.fallback && renderRoute(routeConfig.fallback)}
-            </Route>
-
-            {/* Auth routes (e.g., login/signup): standalone, no layout */}
-            {routeConfig.auth.map(({ path, component: Component }) => (
-              <Route key={path} path={path} element={<Component />} />
-            ))}
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+          {/* Auth routes (e.g., login/signup): standalone, no layout */}
+          {routeConfig.auth.map(({ path, component: Component }) => (
+            <Route key={path} path={path} element={<Component />} />
+          ))}
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
 };
 

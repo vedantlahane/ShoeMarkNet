@@ -264,7 +264,7 @@ const Footer = memo(() => {
         aria-hidden="true"
       ></div>
 
-      <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full  px-4 sm:px-6 lg:px-8">
         <div className="py-8 border-b border-slate-200/60 dark:border-slate-800/70 footer-animate-child">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {features.map((feature, index) => (

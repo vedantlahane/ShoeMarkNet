@@ -149,7 +149,7 @@ const OffersSection = memo(({ promotions = [], isLoading = false }) => {
           ></div>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
+      <div className="mx-auto w-full  px-4 sm:px-5 lg:px-6">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
             <Tag

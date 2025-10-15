@@ -282,7 +282,7 @@ const CategoriesSection = ({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-400/10 to-teal-400/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
       </div>
 
-      <div className="relative mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
+      <div className="relative mx-auto w-full  px-4 sm:px-5 lg:px-6">
         {/* Enhanced Section Header */}
         {showHeader && (
           <div className="text-center mb-16">

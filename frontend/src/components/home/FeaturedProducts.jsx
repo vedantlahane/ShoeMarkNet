@@ -274,7 +274,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
           <div className={`absolute left-1/2 top-12 h-[1px] w-40 -translate-x-1/2 bg-gradient-to-r from-transparent via-muted-theme/40 to-transparent ${shimmerClass}`} aria-hidden="true" />
         </div>
       </div>
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
+  <div className="mx-auto w-full  px-4 sm:px-5 lg:px-6">
         {/* Section Header */}
         <div className="mb-14 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-theme-strong bg-card px-5 py-2 text-xs font-semibold uppercase tracking-wide text-muted-theme">

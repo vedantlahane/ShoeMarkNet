@@ -289,7 +289,7 @@ const HeroSection = ({ data, isLoading = false }) => {
         />
       ))}
 
-  <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
+  <div className="relative z-10 mx-auto w-full  px-4 sm:px-5 lg:px-6">
         <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
           <div className="space-y-10 text-theme">
             <div className="inline-flex items-center gap-3 rounded-full border border-theme-strong/15 bg-surface/5 px-5 py-2 text-theme/80 shadow-lg shadow-theme/40 backdrop-blur-xl">

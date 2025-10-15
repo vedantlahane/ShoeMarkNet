@@ -142,7 +142,7 @@ const MainLayout = () => {
         meta={[{ name: 'theme-color', content: currentTheme === 'dark' ? '#0f172a' : '#ffffff' }]}
       />
 
-      <div className="relative flex min-h-screen flex-col bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+      <div className="relative flex min-h-screen max-w-screen flex-col overflow-x-hidden bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 ">
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
           <div
             className={`absolute inset-0 bg-gradient-to-br opacity-30 ${
@@ -166,14 +166,14 @@ const MainLayout = () => {
           <Header />
         </div>
 
-        <main className="relative z-20 flex-grow">
+        <main className="relative z-20  flex-grow">
           <div
             className={`pointer-events-none fixed inset-0 z-40 bg-white/70 transition-opacity duration-300 dark:bg-slate-950/70 ${
               isPageTransitioning ? 'opacity-100' : 'opacity-0'
             }`}
           />
 
-          <div className="page-content relative">
+          <div className="page-content relative w-full">
             <Outlet />
           </div>
         </main>

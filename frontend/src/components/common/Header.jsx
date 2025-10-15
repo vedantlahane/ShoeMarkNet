@@ -353,7 +353,7 @@ const Header = () => {
         )}
         role="banner"
       >
-        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
+        <div className="mx-auto w-full  px-4 sm:px-5 lg:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3 md:gap-6 py-3 lg:py-4">
             {/* Logo */}
             <div className="flex items-center">

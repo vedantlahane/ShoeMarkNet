@@ -206,7 +206,7 @@ const BrandsSection = memo(({ partners = [], metrics = [], isLoading = false }) 
         ></div>
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 dark:border-white/10 bg-blue-100 dark:bg-white/5 px-5 py-2 text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-teal-200">
             <Sparkles size={14} aria-hidden="true" />

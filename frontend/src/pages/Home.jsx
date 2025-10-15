@@ -1,6 +1,5 @@
 import { lazy, Suspense, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
 import PageMeta from '../components/seo/PageMeta';
 import HeroSection from '../components/home/HeroSection';
 import { addToCart } from '../redux/slices/cartSlice';
@@ -18,7 +17,7 @@ const SectionSkeleton = ({ title, rows = 3 }) => {
   return (
     <section
       aria-label={`${title} loading state`}
-      className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8 animate-pulse"
+      className="mx-auto w-full  px-4 py-16 sm:px-6 lg:px-8 animate-pulse"
     >
       <div className="mb-6 h-8 w-48 rounded-full bg-slate-900/10 backdrop-blur dark:bg-slate-100/10" />
       <div className={`grid gap-6 sm:grid-cols-2 ${gridColsClass}`}>
@@ -48,8 +47,6 @@ const Home = () => {
   const {
     data: homeOverview,
     isPending: isHomePending,
-    isError: isHomeError,
-    error: homeError,
     refetch: refetchHome,
   } = useHomeContent({
     staleTime: 5 * 60 * 1000,
@@ -65,9 +62,6 @@ const Home = () => {
   const brandMetrics = homeOverview?.brands?.metrics ?? [];
   const categoryCollection = homeOverview?.categories ?? [];
   const promotions = homeOverview?.promotions ?? [];
-
-  const combinedError = isError || isHomeError;
-  const combinedErrorDetails = isError ? error : homeError;
   const handleRefetch = useCallback(() => {
     if (isError) {
       refetch();
@@ -75,7 +69,7 @@ const Home = () => {
     if (isHomeError) {
       refetchHome();
     }
-  }, [isError, isHomeError, refetch, refetchHome]);
+  }, [refetch, refetchHome]);
 
   /**
    * Handles adding a product to the cart.
@@ -92,35 +86,6 @@ const Home = () => {
       product
     }));
   }, [dispatch]);
-
-  // Show error state if featured products failed to load
-  if (combinedError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-center">
-          <AlertTriangle 
-            size={64} 
-            className="mx-auto mb-4 text-red-500 dark:text-red-400" 
-            aria-hidden="true"
-          />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Oops! Something went wrong
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {combinedErrorDetails?.response?.data?.message || combinedErrorDetails?.message || "We couldn't load the latest content."}
-          </p>
-          <button
-            onClick={handleRefetch}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:from-blue-700 hover:to-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
-            aria-label="Reload page"
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
