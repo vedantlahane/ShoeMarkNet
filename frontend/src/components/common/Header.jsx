@@ -17,6 +17,7 @@ import {
   Percent,
   LogOut,
   Monitor,
+  Sparkles,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -346,7 +347,7 @@ const Header = () => {
       <header
         ref={headerRef}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 border border-slate-200/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl transition-all duration-300",
+          "fixed top-0 left-0 right-0 z-50 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl transition-all duration-300",
           isScrolled
             ? "shadow-lg dark:shadow-black/40"
             : "shadow-sm dark:shadow-black/20"
@@ -355,7 +356,7 @@ const Header = () => {
       >
         <div className="mx-auto w-full  px-4 sm:px-5 lg:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3 md:gap-6 py-3 lg:py-4">
-            {/* Logo */}
+            {/* Improved Logo */}
             <div className="flex items-center">
               <Link
                 to="/"
@@ -366,14 +367,35 @@ const Header = () => {
                 )}
                 aria-label="ShoeMarkNet Home"
               >
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-transform duration-200">
-                  <span className="text-white font-bold text-xl lg:text-2xl">
-                    S
-                  </span>
+                <div className="relative w-10 h-10 lg:w-12 lg:h-12 group-hover:scale-105 transition-transform duration-200">
+                  {/* Logo Background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-2xl shadow-lg group-hover:shadow-xl" />
+                  
+                  {/* Shoe Icon */}
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-6 h-6 lg:w-7 lg:h-7 text-white"
+                      fill="currentColor"
+                    >
+                      <path d="M2 18v2h20v-2H2zm19.32-6.8l-1.04-.87-1.04.87c-.39.33-.88.5-1.38.5H16l-2.5-5L11 12h-1c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h1.36l2.14-4.28L16 11.5h1.86c.15 0 .29-.05.4-.15l1.64-1.37 1.64 1.37c.11.1.25.15.4.15h.06c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-.18c-.5 0-.99-.17-1.38-.5zM7 13c-.83 0-1.5-.67-1.5-1.5S6.17 10 7 10s1.5.67 1.5 1.5S7.83 13 7 13z"/>
+                    </svg>
+                  </div>
+                  
+                  {/* Animated Sparkle */}
+                  <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Sparkles className="w-3 h-3 text-yellow-400 animate-pulse" />
+                  </div>
                 </div>
-                <span className="hidden sm:block text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  ShoeMarkNet
-                </span>
+                
+                <div className="hidden sm:block">
+                  <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
+                    ShoeMarkNet
+                  </h1>
+                  <p className="text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium -mt-1">
+                    Premium Footwear
+                  </p>
+                </div>
               </Link>
             </div>
 
@@ -432,15 +454,24 @@ const Header = () => {
                 aria-label={isSearchOpen ? "Close search" : "Open search"}
                 aria-expanded={isSearchOpen}
               >
-                <Search
-                  size={20}
-                  className={cn(
-                    "transition-colors duration-200",
-                    mutedText,
-                    "group-hover:text-blue-600 dark:group-hover:text-blue-400"
-                  )}
-                  aria-hidden="true"
-                />
+                {isSearchOpen ? (
+                  <X
+                    size={20}
+                    className={cn(
+                      "transition-colors duration-200",
+                      "text-rose-500"
+                    )}
+                  />
+                ) : (
+                  <Search
+                    size={20}
+                    className={cn(
+                      "transition-colors duration-200",
+                      mutedText,
+                      "group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                    )}
+                  />
+                )}
               </button>
 
               {/* Theme Toggle */}
@@ -774,39 +805,81 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Search Bar */}
+          {/* Improved Search Bar */}
           {isSearchOpen && (
-            <div className="py-4">
+            <div className="py-4 px-2">
               <form onSubmit={handleSearch} className="relative" role="search">
-                <label htmlFor="search-input" className="sr-only">
-                  Search for shoes, brands, styles
-                </label>
-                <input
-                  ref={searchInputRef}
-                  id="search-input"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for shoes, brands, styles..."
-                  className={cn(
-                    "w-full pl-12 pr-20 py-3 rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 border border-slate-200/70 dark:border-slate-800/70 bg-white/70 dark:bg-slate-900/70 backdrop-blur",
-                    focusRing
-                  )}
-                />
-                <Search
-                  size={20}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
-                  aria-hidden="true"
-                />
-                <button
-                  type="submit"
-                  className={cn(
-                    "absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm px-4 py-1.5 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200",
-                    focusRing
-                  )}
-                >
-                  Search
-                </button>
+                <div className="relative group">
+                  {/* Search Background with Gradient Border */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 rounded-2xl opacity-0 group-focus-within:opacity-100 blur transition-all duration-300" />
+                  
+                  <div className="relative flex items-center">
+                    <input
+                      ref={searchInputRef}
+                      id="search-input"
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search sneakers, brands, styles..."
+                      className={cn(
+                        "w-full pl-12 pr-32 py-4 rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400",
+                        "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800",
+                        "focus:border-transparent focus:ring-2 focus:ring-sky-500/50 dark:focus:ring-sky-400/50",
+                        "transition-all duration-300"
+                      )}
+                    />
+                    
+                    {/* Search Icon with Animation */}
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                      <Search
+                        size={20}
+                        className={cn(
+                          "text-slate-400 dark:text-slate-500 transition-all duration-300",
+                          searchQuery && "text-sky-500 dark:text-sky-400"
+                        )}
+                      />
+                    </div>
+                    
+                    {/* Search Button */}
+                    <button
+                      type="submit"
+                      disabled={!searchQuery.trim()}
+                      className={cn(
+                        "absolute right-2 top-1/2 -translate-y-1/2",
+                        "bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500",
+                        "text-white text-sm font-medium px-6 py-2 rounded-xl",
+                        "hover:shadow-lg hover:scale-105 transition-all duration-200",
+                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
+                        focusRing
+                      )}
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Search Suggestions */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Popular:</span>
+                  {["Nike Air Max", "Jordan 1", "Yeezy", "New Arrivals"].map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery(term);
+                        searchInputRef.current?.focus();
+                      }}
+                      className={cn(
+                        "text-xs px-3 py-1.5 rounded-full",
+                        "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
+                        "hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white",
+                        "transition-all duration-200"
+                      )}
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
               </form>
             </div>
           )}
