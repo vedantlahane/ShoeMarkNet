@@ -1,18 +1,22 @@
-import { lazy, Suspense, useCallback, useMemo } from 'react';
-import { useDispatch } from 'react-redux';
-import PageMeta from '../components/seo/PageMeta';
-import HeroSection from '../components/home/HeroSection';
-import { addToCart } from '../redux/slices/cartSlice';
-import useFeaturedProducts from '../hooks/api/useFeaturedProducts';
-import useHomeContent from '../hooks/api/useHomeContent';
+import { lazy, Suspense, useCallback, useMemo } from "react";
+import { useDispatch } from "react-redux";
+import PageMeta from "../components/seo/PageMeta";
+import HeroSection from "../components/home/HeroSection";
+import { addToCart } from "../redux/slices/cartSlice";
+import useFeaturedProducts from "../hooks/api/useFeaturedProducts";
+import useHomeContent from "../hooks/api/useHomeContent";
 
-const FeaturedProducts = lazy(() => import('../components/home/FeaturedProducts'));
-const BrandsSection = lazy(() => import('../components/home/BrandsSection'));
-const CategoriesSection = lazy(() => import('../components/home/CategoriesSection'));
-const OffersSection = lazy(() => import('../components/home/OffersSection'));
+const FeaturedProducts = lazy(() =>
+  import("../components/home/FeaturedProducts")
+);
+const BrandsSection = lazy(() => import("../components/home/BrandsSection"));
+const CategoriesSection = lazy(() =>
+  import("../components/home/CategoriesSection")
+);
+const OffersSection = lazy(() => import("../components/home/OffersSection"));
 
 const SectionSkeleton = ({ title, rows = 3 }) => {
-  const gridColsClass = rows > 2 ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
+  const gridColsClass = rows > 2 ? "lg:grid-cols-3" : "lg:grid-cols-2";
 
   return (
     <section
@@ -37,8 +41,6 @@ const Home = () => {
   const {
     data: featuredList = [],
     isPending,
-    isError,
-    error,
     refetch,
   } = useFeaturedProducts({
     staleTime: 5 * 60 * 1000,
@@ -52,6 +54,7 @@ const Home = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Memoized featured products list, that means it only recalculates when featuredList changes
   const featuredProducts = useMemo(
     () => (Array.isArray(featuredList) ? featuredList : []),
     [featuredList]
@@ -62,14 +65,6 @@ const Home = () => {
   const brandMetrics = homeOverview?.brands?.metrics ?? [];
   const categoryCollection = homeOverview?.categories ?? [];
   const promotions = homeOverview?.promotions ?? [];
-  const handleRefetch = useCallback(() => {
-    if (isError) {
-      refetch();
-    }
-    if (isHomeError) {
-      refetchHome();
-    }
-  }, [refetch, refetchHome]);
 
   /**
    * Handles adding a product to the cart.
@@ -79,13 +74,18 @@ const Home = () => {
    * @param {string} product._id - Product ID
    * @param {Object} product - Full product object for cart display
    */
-  const handleAddToCart = useCallback((product) => {
-    dispatch(addToCart({
-      productId: product._id,
-      quantity: 1,
-      product
-    }));
-  }, [dispatch]);
+  const handleAddToCart = useCallback(
+    (product) => {
+      dispatch(
+        addToCart({
+          productId: product._id,
+          quantity: 1,
+          product,
+        })
+      );
+    },
+    [dispatch]
+  );
 
   return (
     <>
@@ -99,11 +99,26 @@ const Home = () => {
       {/* Main page content with gradient background */}
       <main className="relative min-h-screen overflow-hidden text-slate-900 transition-colors duration-500 dark:text-slate-100">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.12),_transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(71,85,105,0.15),_transparent_55%)]" aria-hidden="true" />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.65)_0%,rgba(255,255,255,0.2)_45%,rgba(248,250,252,0.1)_100%)] dark:bg-[linear-gradient(120deg,rgba(15,23,42,0.92)_0%,rgba(15,23,42,0.65)_45%,rgba(15,23,42,0.5)_100%)]" aria-hidden="true" />
-          <div className="absolute -top-48 left-1/2 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 blur-3xl dark:from-blue-500/20 dark:via-indigo-500/15 dark:to-purple-500/20" aria-hidden="true" />
-          <div className="absolute bottom-[-12rem] right-[12%] h-[26rem] w-[26rem] rounded-full bg-gradient-to-br from-fuchsia-500/10 via-purple-500/10 to-sky-500/10 blur-[220px] dark:from-fuchsia-500/20 dark:via-purple-500/20 dark:to-sky-500/20" aria-hidden="true" />
-          <div className="absolute bottom-[-10rem] left-[15%] h-[22rem] w-[22rem] rounded-full bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-blue-500/10 blur-[200px] dark:from-emerald-500/20 dark:via-cyan-500/15 dark:to-blue-500/20" aria-hidden="true" />
+          <div
+            className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.12),_transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(71,85,105,0.15),_transparent_55%)]"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.65)_0%,rgba(255,255,255,0.2)_45%,rgba(248,250,252,0.1)_100%)] dark:bg-[linear-gradient(120deg,rgba(15,23,42,0.92)_0%,rgba(15,23,42,0.65)_45%,rgba(15,23,42,0.5)_100%)]"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute -top-48 left-1/2 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 blur-3xl dark:from-blue-500/20 dark:via-indigo-500/15 dark:to-purple-500/20"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute bottom-[-12rem] right-[12%] h-[26rem] w-[26rem] rounded-full bg-gradient-to-br from-fuchsia-500/10 via-purple-500/10 to-sky-500/10 blur-[220px] dark:from-fuchsia-500/20 dark:via-purple-500/20 dark:to-sky-500/20"
+            aria-hidden="true"
+          />
+          <div
+            className="absolute bottom-[-10rem] left-[15%] h-[22rem] w-[22rem] rounded-full bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-blue-500/10 blur-[200px] dark:from-emerald-500/20 dark:via-cyan-500/15 dark:to-blue-500/20"
+            aria-hidden="true"
+          />
         </div>
 
         <div className="relative z-10 flex flex-col gap-20 pb-24 pt-12 sm:pt-16">
@@ -123,7 +138,9 @@ const Home = () => {
           </Suspense>
 
           {/* Partner brand showcase */}
-          <Suspense fallback={<SectionSkeleton title="Partner brands" rows={3} />}>
+          <Suspense
+            fallback={<SectionSkeleton title="Partner brands" rows={3} />}
+          >
             {isHomePending && brandPartners.length === 0 ? (
               <SectionSkeleton title="Partner brands" rows={3} />
             ) : (
@@ -132,7 +149,9 @@ const Home = () => {
           </Suspense>
 
           {/* Product categories navigation */}
-          <Suspense fallback={<SectionSkeleton title="Shop by category" rows={4} />}>
+          <Suspense
+            fallback={<SectionSkeleton title="Shop by category" rows={4} />}
+          >
             {isHomePending && categoryCollection.length === 0 ? (
               <SectionSkeleton title="Shop by category" rows={4} />
             ) : (
@@ -141,7 +160,9 @@ const Home = () => {
           </Suspense>
 
           {/* Special offers and promotions */}
-          <Suspense fallback={<SectionSkeleton title="Exclusive offers" rows={2} />}>
+          <Suspense
+            fallback={<SectionSkeleton title="Exclusive offers" rows={2} />}
+          >
             {isHomePending && promotions.length === 0 ? (
               <SectionSkeleton title="Exclusive offers" rows={2} />
             ) : (
