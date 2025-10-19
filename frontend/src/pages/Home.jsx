@@ -9,10 +9,7 @@ import useHomeContent from "../hooks/api/useHomeContent";
 const FeaturedProducts = lazy(() =>
   import("../components/home/FeaturedProducts")
 );
-const BrandsSection = lazy(() => import("../components/home/BrandsSection"));
-const CategoriesSection = lazy(() =>
-  import("../components/home/CategoriesSection")
-);
+const CardSection = lazy(() => import("../components/home/CardsSection"));
 const OffersSection = lazy(() => import("../components/home/OffersSection"));
 
 const SectionSkeleton = ({ title, rows = 3 }) => {
@@ -72,9 +69,6 @@ const Home = () => {
     (isPending || isHomePending) && featuredProducts.length === 0;
 
   const heroData = homeOverview?.hero;
-  const brandPartners = homeOverview?.brands?.partners ?? [];
-  const brandMetrics = homeOverview?.brands?.metrics ?? [];
-  const categoryCollection = homeOverview?.categories ?? [];
   const promotions = homeOverview?.promotions ?? [];
 
   /**
@@ -127,19 +121,15 @@ const Home = () => {
             )}
           </Suspense>
 
-          {/* Partner brand showcase */}
+          {/* Cards showcase */}
           <Suspense
-            fallback={<SectionSkeleton title="Partner brands" rows={3} />}
+            fallback={<SectionSkeleton title="Spotlight collections" rows={3} />}
           >
-            {isHomePending && brandPartners.length === 0 ? (
-              <SectionSkeleton title="Partner brands" rows={3} />
-            ) : (
-              <BrandsSection partners={brandPartners} metrics={brandMetrics} />
-            )}
+            <CardSection />
           </Suspense>
 
           {/* Product categories navigation */}
-          <Suspense
+          {/* <Suspense
             fallback={<SectionSkeleton title="Shop by category" rows={4} />}
           >
             {isHomePending && categoryCollection.length === 0 ? (
@@ -147,7 +137,7 @@ const Home = () => {
             ) : (
               <CategoriesSection categories={categoryCollection} />
             )}
-          </Suspense>
+          </Suspense> */}
 
           {/* Special offers and promotions */}
           <Suspense
