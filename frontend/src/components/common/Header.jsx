@@ -516,7 +516,7 @@ const Header = () => {
 
                 {isSearchOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/90 z-50"
+                    className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/90 z-50"
                     role="search"
                   >
                     <form onSubmit={handleSearch}>

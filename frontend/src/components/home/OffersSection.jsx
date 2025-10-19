@@ -177,15 +177,7 @@ const OffersSection = memo(({ promotions = [], isLoading = false }) => {
             Don't miss out on curated bundles and seasonal steals tailored to
             elevate your rotation.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs uppercase tracking-widest text-blue-600/80 dark:text-blue-300/80">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/60 dark:border-blue-800/60 bg-white/50 dark:bg-white/10 px-4 py-2">
-              <Sparkles size={12} aria-hidden="true" />
-              Updated hourly
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/60 dark:border-blue-800/60 bg-white/50 dark:bg-white/10 px-4 py-2">
-              {offers.length} hand-picked deals
-            </span>
-          </div>
+          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

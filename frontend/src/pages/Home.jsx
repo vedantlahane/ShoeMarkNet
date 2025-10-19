@@ -55,10 +55,21 @@ const Home = () => {
   });
 
   // Memoized featured products list, that means it only recalculates when featuredList changes
-  const featuredProducts = useMemo(
-    () => (Array.isArray(featuredList) ? featuredList : []),
-    [featuredList]
-  );
+  const featuredProducts = useMemo(() => {
+    if (Array.isArray(featuredList) && featuredList.length > 0) {
+      return featuredList;
+    }
+
+    const overviewFallback = homeOverview?.featuredProducts;
+    if (Array.isArray(overviewFallback)) {
+      return overviewFallback;
+    }
+
+    return [];
+  }, [featuredList, homeOverview]);
+
+  const isFeaturedLoading =
+    (isPending || isHomePending) && featuredProducts.length === 0;
 
   const heroData = homeOverview?.hero;
   const brandPartners = homeOverview?.brands?.partners ?? [];
@@ -98,36 +109,15 @@ const Home = () => {
 
       {/* Main page content with gradient background */}
       <main className="relative min-h-screen overflow-hidden text-slate-900 transition-colors duration-500 dark:text-slate-100">
-        <div className="pointer-events-none absolute inset-0">
-          <div
-            className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.12),_transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(71,85,105,0.15),_transparent_55%)]"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.65)_0%,rgba(255,255,255,0.2)_45%,rgba(248,250,252,0.1)_100%)] dark:bg-[linear-gradient(120deg,rgba(15,23,42,0.92)_0%,rgba(15,23,42,0.65)_45%,rgba(15,23,42,0.5)_100%)]"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute -top-48 left-1/2 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 blur-3xl dark:from-blue-500/20 dark:via-indigo-500/15 dark:to-purple-500/20"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute bottom-[-12rem] right-[12%] h-[26rem] w-[26rem] rounded-full bg-gradient-to-br from-fuchsia-500/10 via-purple-500/10 to-sky-500/10 blur-[220px] dark:from-fuchsia-500/20 dark:via-purple-500/20 dark:to-sky-500/20"
-            aria-hidden="true"
-          />
-          <div
-            className="absolute bottom-[-10rem] left-[15%] h-[22rem] w-[22rem] rounded-full bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-blue-500/10 blur-[200px] dark:from-emerald-500/20 dark:via-cyan-500/15 dark:to-blue-500/20"
-            aria-hidden="true"
-          />
-        </div>
+      
 
-        <div className="relative z-10 flex flex-col gap-20 pb-24 pt-12 sm:pt-16">
+        <div className="relative z-10 flex flex-col  pb-24 pt-12 sm:pt-16">
           {/* Hero section - Main banner and call-to-action */}
           <HeroSection data={heroData} isLoading={isHomePending && !heroData} />
 
           {/* Featured products section with add-to-cart functionality */}
           <Suspense fallback={<SectionSkeleton title="Featured products" />}>
-            {isPending && featuredProducts.length === 0 ? (
+            {isFeaturedLoading ? (
               <SectionSkeleton title="Featured products" />
             ) : (
               <FeaturedProducts
