@@ -140,6 +140,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   if (loading) {
     return (
       <section className="py-16 bg-gray-50 dark:bg-gray-900">
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-14 text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
@@ -169,9 +170,10 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   return (
     <section
       id="featured"
-      className="relative overflow-hidden bg-gray-50 dark:bg-gray-900 py-16 md:py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-white/50 to-transparent dark:from-slate-950/70 dark:to-transparent py-16 md:py-20"
       aria-label="Featured products"
     >
+      
       <style jsx>{`
         .carousel-card {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -179,46 +181,42 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
         }
         
         .carousel-mask-left {
-          background: linear-gradient(to right, 
-            rgb(249, 250, 251) 0%,
-            rgba(249, 250, 251, 0.95) 5%,
-            rgba(249, 250, 251, 0.8) 10%,
-            rgba(249, 250, 251, 0.5) 15%,
-            rgba(249, 250, 251, 0.2) 20%,
-            transparent 30%
+          background: linear-gradient(to right,
+            rgba(255, 255, 255, 0.85) 0%,
+            rgba(255, 255, 255, 0.7) 20%,
+            rgba(255, 255, 255, 0.45) 40%,
+            rgba(255, 255, 255, 0.2) 60%,
+            transparent 85%
           );
         }
-        
+
         .carousel-mask-right {
-          background: linear-gradient(to left, 
-            rgb(249, 250, 251) 0%,
-            rgba(249, 250, 251, 0.95) 5%,
-            rgba(249, 250, 251, 0.8) 10%,
-            rgba(249, 250, 251, 0.5) 15%,
-            rgba(249, 250, 251, 0.2) 20%,
-            transparent 30%
+          background: linear-gradient(to left,
+            rgba(255, 255, 255, 0.85) 0%,
+            rgba(255, 255, 255, 0.7) 20%,
+            rgba(255, 255, 255, 0.45) 40%,
+            rgba(255, 255, 255, 0.2) 60%,
+            transparent 85%
           );
         }
-        
+
         .dark .carousel-mask-left {
-          background: linear-gradient(to right, 
-            rgb(17, 24, 39) 0%,
-            rgba(17, 24, 39, 0.95) 5%,
-            rgba(17, 24, 39, 0.8) 10%,
-            rgba(17, 24, 39, 0.5) 15%,
-            rgba(17, 24, 39, 0.2) 20%,
-            transparent 30%
+          background: linear-gradient(to right,
+            rgba(2, 6, 23, 0.85) 0%,
+            rgba(2, 6, 23, 0.7) 20%,
+            rgba(2, 6, 23, 0.45) 40%,
+            rgba(2, 6, 23, 0.2) 60%,
+            transparent 85%
           );
         }
-        
+
         .dark .carousel-mask-right {
-          background: linear-gradient(to left, 
-            rgb(17, 24, 39) 0%,
-            rgba(17, 24, 39, 0.95) 5%,
-            rgba(17, 24, 39, 0.8) 10%,
-            rgba(17, 24, 39, 0.5) 15%,
-            rgba(17, 24, 39, 0.2) 20%,
-            transparent 30%
+          background: linear-gradient(to left,
+            rgba(2, 6, 23, 0.85) 0%,
+            rgba(2, 6, 23, 0.7) 20%,
+            rgba(2, 6, 23, 0.45) 40%,
+            rgba(2, 6, 23, 0.2) 60%,
+            transparent 85%
           );
         }
       `}</style>
@@ -264,9 +262,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
           <div
             ref={scrollRef}
             className="flex gap-6 py-4"
-            style={{              width: 'max-content',
-              willChange: 'transform',
-            }}
+            style={{ width: 'max-content', willChange: 'transform' }}
           >
             {scrollProducts.map((product, index) => {
               const discountValue = typeof product.discountPercentage === 'number'
