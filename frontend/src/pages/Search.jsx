@@ -26,13 +26,11 @@ import Pagination from '../components/common/Pagination';
 import PageLayout from '../components/common/PageLayout';
 
 // Hooks
-import useDebounce from '../hooks/useDebounce';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 
 // Utils
 import { trackEvent } from '../utils/analytics';
-import { formatCurrency } from '../utils/helpers';
 import { validateSearchQuery } from '../utils/validation';
 
 // Constants

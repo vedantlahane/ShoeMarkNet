@@ -17,7 +17,6 @@ import {
   Percent,
   LogOut,
   Monitor,
-  Sparkles,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -133,6 +132,7 @@ const Header = () => {
   const mobileMenuRef = useRef(null);
   const userMenuRef = useRef(null);
   const themeMenuRef = useRef(null);
+  const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -167,13 +167,21 @@ const Header = () => {
   ];
 
   const mutedText = "text-slate-600 dark:text-slate-300";
-  const mutedStrong = "text-slate-700 dark:text-slate-100";
   const surfaceButton =
     "rounded-xl border border-slate-200/70 dark:border-slate-800/70 bg-white/70 dark:bg-slate-900/60 transition-all duration-200 hover:scale-105";
   const hoverSurface =
     "hover:bg-slate-200/80 dark:hover:bg-slate-700/70 hover:text-blue-600 dark:hover:text-blue-400";
   const focusRing =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900";
+  const quickSearchSuggestions = useMemo(
+    () => [
+      "Running shoes",
+      "Casual sneakers",
+      "Leather boots",
+      "Kids trainers",
+    ],
+    []
+  );
 
   const themeOptions = useMemo(
     () => [
@@ -237,7 +245,8 @@ const Header = () => {
     header.style.transform = "translateY(-40px)";
 
     const raf = window.requestAnimationFrame(() => {
-      header.style.transition = "opacity 0.5s ease-out, transform 0.5s ease-out";
+      header.style.transition =
+        "opacity 0.5s ease-out, transform 0.5s ease-out";
       header.style.opacity = "1";
       header.style.transform = "translateY(0)";
     });
@@ -288,6 +297,12 @@ const Header = () => {
       ) {
         setIsThemeMenuOpen(false);
       }
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
+        setIsSearchOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -327,6 +342,18 @@ const Header = () => {
     setIsThemeMenuOpen(false);
   };
 
+  const handleQuickSearch = (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    prefetchRoute("/search");
+    navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  };
+
   // Focus search input when opened
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
@@ -334,16 +361,14 @@ const Header = () => {
     }
   }, [isSearchOpen]);
 
+  useEffect(() => {
+    if (isSearchOpen) {
+      prefetchRoute("/search");
+    }
+  }, [isSearchOpen]);
+
   return (
     <>
-      {/* Skip to main content link for accessibility */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-md"
-      >
-        Skip to main content
-      </a>
-
       <header
         ref={headerRef}
         className={cn(
@@ -370,24 +395,37 @@ const Header = () => {
                 <div className="relative w-10 h-10 lg:w-12 lg:h-12 group-hover:scale-105 transition-transform duration-200">
                   {/* Logo Background */}
                   <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-2xl shadow-lg group-hover:shadow-xl" />
-                  
-                  {/* Shoe Icon */}
+
+                  {/* Brand Icon */}
                   <div className="relative w-full h-full flex items-center justify-center">
                     <svg
-                      viewBox="0 0 24 24"
-                      className="w-6 h-6 lg:w-7 lg:h-7 text-white"
-                      fill="currentColor"
+                      viewBox="0 0 64 64"
+                      className="h-8 w-8 text-white drop-shadow-sm md:h-9 md:w-9"
+                      aria-hidden="true"
                     >
-                      <path d="M2 18v2h20v-2H2zm19.32-6.8l-1.04-.87-1.04.87c-.39.33-.88.5-1.38.5H16l-2.5-5L11 12h-1c-.28 0-.5-.22-.5-.5s.22-.5.5-.5h1.36l2.14-4.28L16 11.5h1.86c.15 0 .29-.05.4-.15l1.64-1.37 1.64 1.37c.11.1.25.15.4.15h.06c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-.18c-.5 0-.99-.17-1.38-.5zM7 13c-.83 0-1.5-.67-1.5-1.5S6.17 10 7 10s1.5.67 1.5 1.5S7.83 13 7 13z"/>
+                      <path
+                        d="M48.5 18.5c-4.3-5.1-11.2-8.5-18.9-8.5-10.5 0-18.6 6.4-18.6 15 0 6.7 4.8 10.5 11.5 12.6l5.8 1.8c3.7 1.2 5.4 2.5 5.4 4.7 0 2.9-3.1 4.8-7.7 4.8-4.7 0-9-1.6-12.6-4.4l-3.6 6c4.8 3.7 11 5.9 17.8 5.9 10.8 0 18-5.8 18-14 0-6.3-4.4-9.9-11.2-12l-5.2-1.6c-3.6-1.1-5.3-2.4-5.3-4.6 0-2.7 2.9-4.4 7-4.4 4.1 0 8.1 1.6 11.4 4.1l3.4-5.4z"
+                        fill="currentColor"
+                        opacity="0.9"
+                      />
+                      <path
+                        d="M18.5 45l2.9-11.2 6.4 9 6.8-15.2 6.9 15.2 6.4-9L50.7 45"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.85)"
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="49"
+                        cy="16"
+                        r="4"
+                        fill="rgba(255,255,255,0.85)"
+                      />
                     </svg>
                   </div>
-                  
-                  {/* Animated Sparkle */}
-                  <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Sparkles className="w-3 h-3 text-yellow-400 animate-pulse" />
-                  </div>
                 </div>
-                
+
                 <div className="hidden sm:block">
                   <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
                     ShoeMarkNet
@@ -443,36 +481,89 @@ const Header = () => {
             {/* Search, Actions & User Menu */}
             <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 md:w-auto">
               {/* Search Toggle */}
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className={cn(
-                  surfaceButton,
-                  hoverSurface,
-                  focusRing,
-                  "p-2 group flex items-center justify-center"
+              <div className="relative" ref={searchContainerRef}>
+                <button
+                  onClick={() => setIsSearchOpen((prev) => !prev)}
+                  className={cn(
+                    surfaceButton,
+                    hoverSurface,
+                    focusRing,
+                    "p-2 group flex items-center justify-center"
+                  )}
+                  aria-label={isSearchOpen ? "Close search" : "Open search"}
+                  aria-expanded={isSearchOpen}
+                  aria-haspopup="true"
+                >
+                  {isSearchOpen ? (
+                    <X
+                      size={20}
+                      className={cn(
+                        "transition-colors duration-200",
+                        "text-rose-500"
+                      )}
+                    />
+                  ) : (
+                    <Search
+                      size={20}
+                      className={cn(
+                        "transition-colors duration-200",
+                        mutedText,
+                        "group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                      )}
+                    />
+                  )}
+                </button>
+
+                {isSearchOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/90 z-50"
+                    role="search"
+                  >
+                    <form onSubmit={handleSearch}>
+                      <label htmlFor="global-search" className="sr-only">
+                        Search ShoeMarkNet
+                      </label>
+                      <div className="flex flex-col gap-3">
+                        <div className="relative">
+                          <Search
+                            size={16}
+                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                            aria-hidden="true"
+                          />
+                          <input
+                            ref={searchInputRef}
+                            id="global-search"
+                            type="search"
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            placeholder="Search shoes, brands..."
+                            className="w-full rounded-xl border border-slate-200/70 bg-white px-9 py-2 text-sm text-slate-900 shadow-inner transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-800/70 dark:bg-slate-900 dark:text-white dark:focus-visible:ring-offset-slate-900"
+                            autoComplete="off"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-2 text-sm font-semibold text-white shadow transition-all duration-200 hover:from-blue-600 hover:to-purple-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                        >
+                          Search
+                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          {quickSearchSuggestions.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onClick={() => handleQuickSearch(suggestion)}
+                              className="rounded-full border border-slate-200/70 bg-white/70 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:border-blue-500 hover:text-blue-600 dark:border-slate-800/70 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </form>
+                  </div>
                 )}
-                aria-label={isSearchOpen ? "Close search" : "Open search"}
-                aria-expanded={isSearchOpen}
-              >
-                {isSearchOpen ? (
-                  <X
-                    size={20}
-                    className={cn(
-                      "transition-colors duration-200",
-                      "text-rose-500"
-                    )}
-                  />
-                ) : (
-                  <Search
-                    size={20}
-                    className={cn(
-                      "transition-colors duration-200",
-                      mutedText,
-                      "group-hover:text-blue-600 dark:group-hover:text-blue-400"
-                    )}
-                  />
-                )}
-              </button>
+              </div>
 
               {/* Theme Toggle */}
               <div className="relative" ref={themeMenuRef}>
@@ -804,85 +895,6 @@ const Header = () => {
               </button>
             </div>
           </div>
-
-          {/* Improved Search Bar */}
-          {isSearchOpen && (
-            <div className="py-4 px-2">
-              <form onSubmit={handleSearch} className="relative" role="search">
-                <div className="relative group">
-                  {/* Search Background with Gradient Border */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 rounded-2xl opacity-0 group-focus-within:opacity-100 blur transition-all duration-300" />
-                  
-                  <div className="relative flex items-center">
-                    <input
-                      ref={searchInputRef}
-                      id="search-input"
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search sneakers, brands, styles..."
-                      className={cn(
-                        "w-full pl-12 pr-32 py-4 rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400",
-                        "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800",
-                        "focus:border-transparent focus:ring-2 focus:ring-sky-500/50 dark:focus:ring-sky-400/50",
-                        "transition-all duration-300"
-                      )}
-                    />
-                    
-                    {/* Search Icon with Animation */}
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                      <Search
-                        size={20}
-                        className={cn(
-                          "text-slate-400 dark:text-slate-500 transition-all duration-300",
-                          searchQuery && "text-sky-500 dark:text-sky-400"
-                        )}
-                      />
-                    </div>
-                    
-                    {/* Search Button */}
-                    <button
-                      type="submit"
-                      disabled={!searchQuery.trim()}
-                      className={cn(
-                        "absolute right-2 top-1/2 -translate-y-1/2",
-                        "bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500",
-                        "text-white text-sm font-medium px-6 py-2 rounded-xl",
-                        "hover:shadow-lg hover:scale-105 transition-all duration-200",
-                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
-                        focusRing
-                      )}
-                    >
-                      Search
-                    </button>
-                  </div>
-                </div>
-
-                {/* Quick Search Suggestions */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">Popular:</span>
-                  {["Nike Air Max", "Jordan 1", "Yeezy", "New Arrivals"].map((term) => (
-                    <button
-                      key={term}
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery(term);
-                        searchInputRef.current?.focus();
-                      }}
-                      className={cn(
-                        "text-xs px-3 py-1.5 rounded-full",
-                        "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
-                        "hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white",
-                        "transition-all duration-200"
-                      )}
-                    >
-                      {term}
-                    </button>
-                  ))}
-                </div>
-              </form>
-            </div>
-          )}
 
           {/* Mobile Navigation Menu */}
           {isMenuOpen && (
