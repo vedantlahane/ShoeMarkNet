@@ -353,7 +353,7 @@ const CardSection = () => {
         />
       </div>
 
-  <div className="relative z-10 mx-auto max-w-11/12 px-4 sm:px-6 lg:px-8">
+  <div className="relative z-10 mx-auto sm:w-11/12 w-4/5 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 dark:border-white/10 bg-blue-100 dark:bg-white/5 px-5 py-2 text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-teal-200 mb-6">
@@ -377,7 +377,7 @@ const CardSection = () => {
         <div className="space-y-10">
           <motion.ul
             layout
-            className="grid grid-flow-dense grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 auto-rows-[220px] sm:auto-rows-[240px] md:auto-rows-[220px] xl:auto-rows-[200px]"
+            className="grid grid-flow-dense grid-cols-2 gap-5 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 auto-rows-[220px] sm:auto-rows-[240px] md:auto-rows-[220px] xl:auto-rows-[200px]"
           >
             {orderedCards.map((item) => {
               const sizeClass = SIZE_VARIANTS[item?.size] || SIZE_VARIANTS.base;

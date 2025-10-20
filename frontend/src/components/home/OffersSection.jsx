@@ -1,13 +1,7 @@
-import React, { memo, useMemo, useState, useCallback, useRef } from "react";
+import React, { memo, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Tag, Sparkles } from "lucide-react";
-import {
-  animate,
-  motion,
-  useMotionValue,
-  useMotionValueEvent,
-  useScroll,
-} from "motion/react";
+import { animate, motion, useMotionValue, useMotionValueEvent, useScroll, useTransform } from "motion/react";
 import usePrefersReducedMotion from "../../hooks/usePrefersReducedMotion";
 
 const FALLBACK_PROMOTIONS = [
@@ -110,7 +104,9 @@ const useScrollOverflowMask = (scrollXProgress, isActive) => {
       return;
     }
 
-    const previous = typeof scrollXProgress.getPrevious === "function" ? scrollXProgress.getPrevious() : null;
+    const previous =
+      typeof scrollXProgress.getPrevious === "function" ? scrollXProgress.getPrevious() : null;
+
     if (previous === 0 || previous === 1) {
       animate(maskImage, CENTER_MASK);
     }
@@ -119,32 +115,37 @@ const useScrollOverflowMask = (scrollXProgress, isActive) => {
   return maskImage;
 };
 
+const CARD_WIDTH_CLAMP = "clamp(22rem, 75vw, 28rem)";
+
 const OffersSection = memo(({ promotions = [], isLoading = false }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const enableAnimations = !prefersReducedMotion && !isLoading;
   const shimmerClass = enableAnimations ? "animate-gradient" : "";
-  const pulseClass = enableAnimations ? "animate-pulse-slow" : "";
-  const floatClass = enableAnimations ? "animate-bounce-slow" : "";
-  const underlineClass = enableAnimations
-    ? "after:w-full after:opacity-100"
-    : "after:w-full after:opacity-40";
+  const pulseClass = enableAnimations ? "animate-pulse" : "";
+  const spinClass = enableAnimations ? "animate-spin-slow" : "";
   const scrollContainerRef = useRef(null);
   const { scrollXProgress } = useScroll({ container: scrollContainerRef, axis: "x" });
   const maskImage = useScrollOverflowMask(scrollXProgress, enableAnimations);
   const scrollMaskStyle = enableAnimations
     ? { maskImage, WebkitMaskImage: maskImage }
     : { maskImage: CENTER_MASK, WebkitMaskImage: CENTER_MASK };
-  const [hoveredOffer, setHoveredOffer] = useState(null);
+  const leftFadeOpacityMotion = useTransform(scrollXProgress, [0, 0.05], [0, 1]);
+  const rightFadeOpacityMotion = useTransform(scrollXProgress, [0.95, 1], [1, 0]);
+  const zeroOpacity = useMotionValue(0);
+  const fullOpacity = useMotionValue(1);
+  const leftFadeOpacity = enableAnimations ? leftFadeOpacityMotion : zeroOpacity;
+  const rightFadeOpacity = enableAnimations ? rightFadeOpacityMotion : fullOpacity;
   const usingFallback = !Array.isArray(promotions) || promotions.length === 0;
-  const cardWidthClass = usingFallback
-    ? "w-[82vw] sm:w-[60vw] lg:w-auto xl:w-[50rem]"
-    : "w-[68vw] sm:w-[18rem] lg:w-[22rem] xl:w-[24rem]";
-  const cardFlexBasis = usingFallback
-    ? "min(36rem, calc(50vw - 2.75rem))"
-    : "min(22rem, calc(45vw - 2.5rem))";
-  const baseImageHeightClass = usingFallback
-    ? "h-60 sm:h-72 lg:h-[22rem]"
-    : "h-48 sm:h-52 lg:h-56";
+  const cardWidth = usingFallback ? "clamp(24rem, 88vw, 30rem)" : CARD_WIDTH_CLAMP;
+  const cardInitial = enableAnimations ? { opacity: 0, y: 28 } : { opacity: 1, y: 0 };
+  const cardWhileInView = enableAnimations ? { opacity: 1, y: 0 } : undefined;
+  const cardViewport = enableAnimations ? { once: true, amount: 0.45 } : undefined;
+  const cardTransition = enableAnimations
+    ? { type: "spring", stiffness: 220, damping: 28, mass: 0.85 }
+    : undefined;
+  const hoverMotionProps = enableAnimations
+    ? { whileHover: { y: -12, scale: 1.01 }, whileTap: { scale: 0.995 } }
+    : {};
 
   const offers = useMemo(() => {
     if (!usingFallback) {
@@ -153,210 +154,149 @@ const OffersSection = memo(({ promotions = [], isLoading = false }) => {
     return FALLBACK_PROMOTIONS.map((promotion, index) => normalisePromotion(promotion, index));
   }, [promotions, usingFallback]);
 
-  const handlePointerMove = useCallback(
-    (event, offerId) => {
-      if (!enableAnimations) {
-        return;
-      }
-
-      setHoveredOffer((prev) => (prev === offerId ? prev : offerId));
-      const card = event.currentTarget;
-      const rect = card.getBoundingClientRect();
-      if (!rect.width || !rect.height) {
-        return;
-      }
-
-      const x = ((event.clientX - rect.left) / rect.width) * 100;
-      const y = ((event.clientY - rect.top) / rect.height) * 100;
-      card.style.setProperty("--hover-x", `${x}%`);
-      card.style.setProperty("--hover-y", `${y}%`);
-    },
-    [enableAnimations]
-  );
-
-  const handlePointerLeave = useCallback(
-    (event) => {
-      setHoveredOffer(null);
-      if (!enableAnimations) {
-        return;
-      }
-
-      const card = event.currentTarget;
-      card.style.removeProperty("--hover-x");
-      card.style.removeProperty("--hover-y");
-    },
-    [enableAnimations]
-  );
-
-  const handleFocus = useCallback(
-    (event, offerId) => {
-      setHoveredOffer(offerId);
-      if (!enableAnimations) {
-        return;
-      }
-
-      const card = event.currentTarget;
-      card.style.setProperty("--hover-x", "50%");
-      card.style.setProperty("--hover-y", "50%");
-    },
-    [enableAnimations]
-  );
-
   return (
     <section
       id="offers"
-      className="relative overflow-hidden py-16 md:py-20 bg-gradient-to-b from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950"
+      className="relative overflow-hidden bg-slate-50 py-14 dark:bg-slate-950"
       aria-label="Special offers and deals"
     >
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div
-          className={`absolute -top-24 left-10 h-60 w-60 rounded-full bg-gradient-to-br from-blue-400/20 via-indigo-400/20 to-purple-400/20 blur-3xl ${pulseClass}`}
-        ></div>
-        <div
-          className={`absolute bottom-[-5rem] right-16 h-64 w-64 rounded-full bg-gradient-to-br from-violet-500/15 via-purple-500/10 to-pink-500/10 blur-3xl ${pulseClass}`}
-          style={{ animationDelay: "1.4s" }}
-        ></div>
-        
-        <div className="absolute inset-0 mix-blend-soft-light">
-          <div
-            className={`absolute left-1/2 top-12 h-px w-48 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent ${shimmerClass}`}
-          ></div>
-        </div>
-      </div>
-      <div className="mx-auto w-full  px-4 sm:px-5 lg:px-6">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center space-x-2 bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full px-6 py-3 mb-6">
-            <Tag
-              size={16}
-              className={enableAnimations ? "animate-pulse" : ""}
-              aria-hidden="true"
-            />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.22),_transparent_55%)]" />
+      <div className="relative mx-auto w-full max-w-4/5 px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <div className="mb-6 inline-flex items-center space-x-2 rounded-full bg-blue-100/80 px-6 py-3 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+            <Tag size={16} className={pulseClass} aria-hidden="true" />
             <span className="text-sm font-semibold">Exclusive Deals</span>
-            <Sparkles
-              size={14}
-              className={enableAnimations ? "animate-spin-slow" : ""}
-              aria-hidden="true"
-            />
+            <Sparkles size={14} className={spinClass} aria-hidden="true" />
           </div>
-
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Special{" "}
+          <h2 className="mb-4 text-3xl font-bold text-slate-900 dark:text-white sm:text-4xl">
+            Special {" "}
             <span
               className={`bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent ${shimmerClass}`}
             >
               Offers
             </span>
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto">
-            Don't miss out on curated bundles and seasonal steals tailored to
-            elevate your rotation.
+          <p className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-slate-300">
+            Don't miss out on curated bundles and seasonal steals tailored to elevate your rotation.
           </p>
-          
         </div>
 
-        <div className="relative pt-4">
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-
+        <div className="relative">
           <motion.ul
             ref={scrollContainerRef}
             style={scrollMaskStyle}
-            className="offers-scroll mx-auto flex  snap-x snap-mandatory gap-6 overflow-x-auto pb-10 pl-1 pr-10 pt-4 sm:gap-10"
+            className="offers-track flex snap-x snap-mandatory gap-6 overflow-x-auto px-3 py-6 "
           >
-            {offers.map((offer, index) => {
-              const isActive = enableAnimations && hoveredOffer === offer.id;
-              const tallVariant = usingFallback ? index % 2 === 0 : index % 3 === 0;
-              const imageHeightClass = tallVariant
-                ? `${baseImageHeightClass} lg:h-[24rem]`
-                : baseImageHeightClass;
+            {offers.map((offer) => {
+              const discountText = offer.discount ?? "";
+              const hasPercentValue = typeof discountText === "string" && discountText.includes("%");
+              const discountBadgeLabel = hasPercentValue ? `${discountText} OFF` : discountText;
+              const discountPillLabel = hasPercentValue ? `Save ${discountText}` : discountText;
+
               return (
                 <motion.li
                   key={offer.id}
-                  className={`flex-none ${cardWidthClass} snap-start ${
-                    tallVariant ? "lg:mt-0" : "lg:mt-10"
-                  } transition-[margin] duration-500`}
-                  style={{ flexBasis: cardFlexBasis }}
+                  className="offers-card flex-none snap-start"
+                  style={{ flexBasis: cardWidth, minWidth: cardWidth, maxWidth: usingFallback ? "30rem" : "26rem" }}
                   layout
+                  initial={cardInitial}
+                  whileInView={cardWhileInView}
+                  viewport={cardViewport}
+                  transition={cardTransition}
+                  {...hoverMotionProps}
                 >
                   <Link
                     to={offer.link}
-                    className={`group relative block overflow-hidden rounded-3xl border ${
-                      isActive
-                        ? "border-blue-400/50 shadow-[0_25px_55px_-25px_rgba(37,99,235,0.6)]"
-                        : "border-blue-100/50 shadow-[0_18px_45px_-30px_rgba(30,64,175,0.4)] dark:border-slate-800/60"
-                    } bg-gradient-to-br from-white/95 via-blue-50/55 to-purple-100/45 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_-28px_rgba(30,64,175,0.65)] focus:outline-none focus:ring-4 focus:ring-blue-500/40 focus:ring-offset-2 focus:ring-offset-white dark:from-slate-900/85 dark:via-slate-900/70 dark:to-slate-900/60 dark:hover:from-slate-900/95 dark:hover:to-slate-800/70 dark:focus:ring-offset-slate-900`}
+                    className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white/85 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.65)] backdrop-blur-lg transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/40 focus:ring-offset-2 focus:ring-offset-white dark:border-slate-800/60 dark:bg-slate-900/75 dark:shadow-black/40 dark:focus:ring-offset-slate-950"
                     aria-label={`${offer.title} - ${offer.description} - ${offer.discount} off`}
-                    onPointerMove={(event) => handlePointerMove(event, offer.id)}
-                    onPointerLeave={handlePointerLeave}
-                    onFocus={(event) => handleFocus(event, offer.id)}
-                    onBlur={handlePointerLeave}
                   >
-                    <div className="relative">
+                    <div className="relative aspect-[4/3] overflow-hidden">
                       <img
                         src={offer.image}
                         alt={`${offer.title} promotion`}
-                        className={`${imageHeightClass} w-full object-cover transition-transform duration-700 group-hover:scale-110`}
+                        className={`h-full w-full object-cover transition-transform duration-700 ${enableAnimations ? "group-hover:scale-[1.08]" : ""}`}
                         onError={(e) => {
                           e.target.src = "/api/placeholder/600/300";
                         }}
                       />
-
-                      {/* Discount Badge */}
-                      <div className="absolute top-4 right-4 rounded-full bg-gradient-to-r from-rose-500 to-orange-400 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-rose-500/30">
-                        {offer.discount} OFF
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/15 to-transparent" aria-hidden="true" />
+                      <motion.div
+                        aria-hidden="true"
+                        className="absolute inset-x-6 bottom-6 flex items-center justify-between text-xs font-semibold text-white"
+                        initial={enableAnimations ? { opacity: 0, y: 12 } : { opacity: 1, y: 0 }}
+                        animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                        transition={{ duration: 0.45, delay: 0.1, ease: "easeOut" }}
+                      >
+                        <span className="rounded-full bg-slate-900/70 px-3 py-1 backdrop-blur">
+                          {offer.badge}
+                        </span>
+                        <span className="rounded-full bg-blue-500 px-3 py-1 shadow-lg shadow-blue-500/30">
+                          {discountBadgeLabel}
+                        </span>
+                      </motion.div>
+                      <div
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute inset-0 opacity-0 transition duration-700 ${enableAnimations ? "group-hover:opacity-100" : ""}`}
+                      >
+                        <div
+                          className={`absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-[900ms] ease-out ${
+                            enableAnimations ? "group-hover:translate-x-full" : ""
+                          }`}
+                        />
                       </div>
-
-                      {/* Limited Time Badge */}
-                      <div className="absolute top-4 left-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-500/30">
-                        {offer.badge}
-                      </div>
-
-                      {/* Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                     </div>
 
-                    <div className="p-6 sm:p-7">
-                      <h3 className="relative mb-4 text-xl font-bold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
-                        <span
-                          className={`relative inline-block after:absolute after:left-0 after:bottom-[-6px] after:h-[2px] after:w-0 after:bg-gradient-to-r from-blue-500 to-purple-500 after:opacity-0 after:transition-all after:duration-300 ${underlineClass}`}
-                        >
+                    <div className="flex flex-1 flex-col justify-between px-6 pb-7 pt-6">
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
+                          <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-600 shadow-sm shadow-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300">
+                            {discountPillLabel}
+                          </span>
+                          <span className="text-slate-500 dark:text-slate-300">{offer.badge}</span>
+                        </div>
+                        <h3 className="text-2xl font-semibold text-slate-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                           {offer.title}
-                        </span>
-                      </h3>
-                      <p className="mb-8 text-base text-gray-600 dark:text-gray-300">
-                        {offer.description}
-                      </p>
-
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-lg font-semibold text-blue-600 transition-all duration-300 group-hover:gap-4 dark:text-blue-400">
-                          Shop Now
+                        </h3>
+                        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                          {offer.description}
+                        </p>
+                      </div>
+                      <div className="mt-8 flex items-center justify-between text-sm font-medium">
+                        <span
+                          className={`flex items-center gap-2 rounded-full px-4 py-2 transition-all duration-300 ${
+                            enableAnimations
+                              ? "bg-blue-600/10 text-blue-600 group-hover:bg-blue-600 group-hover:text-white dark:bg-blue-500/10 dark:text-blue-300 dark:group-hover:bg-blue-500/60"
+                              : "bg-blue-600/10 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                          }`}
+                        >
+                          Shop now
                           <ArrowRight
-                            size={20}
-                            className="transition-transform duration-300 group-hover:translate-x-2"
+                            size={18}
                             aria-hidden="true"
+                            className={`transition-transform duration-300 ${enableAnimations ? "group-hover:translate-x-1.5" : ""}`}
                           />
                         </span>
-
-                        <div className="text-sm font-medium text-gray-500 transition-colors duration-300 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300">
-                          Limited time offer
-                        </div>
+                        <span className="text-slate-500 dark:text-slate-400">Limited window</span>
                       </div>
                     </div>
 
-                    {/* Shine Effect */}
-                    <div
-                      className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                      style={{
-                        background:
-                          "radial-gradient(240px circle at var(--hover-x, 50%) var(--hover-y, 50%), rgba(59,130,246,0.25), transparent 65%)",
-                        mixBlendMode: "screen",
-                      }}
-                    ></div>
-                    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 opacity-0 transition-transform duration-1000 ease-out group-hover:translate-x-full group-hover:opacity-100"></div>
+                    <div className="pointer-events-none absolute inset-x-6 top-6 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent opacity-60" aria-hidden="true" />
                   </Link>
                 </motion.li>
               );
             })}
           </motion.ul>
+
+          <motion.div
+            className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-50 via-slate-50/95 to-transparent dark:from-slate-950/95 dark:via-slate-950/85 sm:w-32 lg:w-40"
+            aria-hidden="true"
+            style={{ opacity: leftFadeOpacity }}
+          />
+          <motion.div
+            className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-50 via-slate-50/95 to-transparent dark:from-slate-950/95 dark:via-slate-950/85 sm:w-32 lg:w-40"
+            aria-hidden="true"
+            style={{ opacity: rightFadeOpacity }}
+          />
         </div>
       </div>
       <StyleSheet />
@@ -368,28 +308,26 @@ OffersSection.displayName = "OffersSection";
 
 const StyleSheet = () => (
   <style>{`
-    #offers .progress-circle circle {
-      stroke-dashoffset: 0;
-    }
-
-    #offers .offers-scroll {
+    #offers .offers-track {
       scrollbar-width: thin;
-      scrollbar-color: rgba(59,130,246,0.5) rgba(255,255,255,0.15);
+      scrollbar-color: rgba(59,130,246,0.45) transparent;
+      mask-repeat: no-repeat;
+      -webkit-mask-repeat: no-repeat;
     }
 
-    #offers .offers-scroll::-webkit-scrollbar {
+    #offers .offers-track::-webkit-scrollbar {
       height: 6px;
     }
 
-    #offers .offers-scroll::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.15);
+    #offers .offers-track::-webkit-scrollbar-track {
+      background: transparent;
     }
 
-    #offers .offers-scroll::-webkit-scrollbar-thumb {
-      background: rgba(59,130,246,0.6);
+    #offers .offers-track::-webkit-scrollbar-thumb {
+      
       border-radius: 9999px;
     }
   `}</style>
 );
-
+background: rgba(59,130,246,0.55);
 export default OffersSection;
