@@ -57,16 +57,6 @@ const ROUTE_CONFIG = {
   },
 };
 
-const gradientClasses = {
-  'gradient-primary':
-    'from-blue-400/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/5 dark:via-purple-500/5 dark:to-pink-500/5',
-  'gradient-secondary':
-    'from-emerald-400/10 via-blue-500/10 to-purple-500/10 dark:from-emerald-400/5 dark:via-blue-500/5 dark:to-purple-500/5',
-  'gradient-tertiary':
-    'from-rose-400/10 via-red-500/10 to-orange-500/10 dark:from-rose-400/5 dark:via-red-500/5 dark:to-orange-500/5',
-  'gradient-quaternary':
-    'from-purple-400/10 via-pink-500/10 to-red-500/10 dark:from-purple-400/5 dark:via-pink-500/5 dark:to-red-500/5',
-};
 
 const MainLayout = () => {
   const location = useLocation();
@@ -145,10 +135,7 @@ const MainLayout = () => {
       <div className="relative flex min-h-screen max-w-screen flex-col overflow-x-hidden bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 ">
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
           <div
-            className={`absolute inset-0 bg-gradient-to-br opacity-30 ${
-              gradientClasses[currentRoute.background] ||
-              gradientClasses['gradient-primary']
-            }`}
+            className={`absolute inset-0 bg-gradient-to-br opacity-30`}
           />
 
           {!prefersReducedMotion && (

@@ -31,7 +31,6 @@ import CheckoutSecurity from '../components/checkout/CheckoutSecurity';
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
-import useDebounce from '../hooks/useDebounce';
 import useWebSocket from '../hooks/useWebSocket';
 
 // Utils
@@ -132,9 +131,6 @@ const Checkout = () => {
   const formRef = useRef(null);
   const paymentRef = useRef(null);
 
-  // Debounced coupon code
-  const debouncedCouponCode = useDebounce(couponCode, 500);
-
   // Enhanced keyboard shortcuts
   useKeyboardShortcuts({
     'ctrl+enter': handlePlaceOrder,
@@ -168,10 +164,10 @@ const Checkout = () => {
 
   // Handle coupon validation
   useEffect(() => {
-    if (debouncedCouponCode && debouncedCouponCode.length >= 3) {
-      validateCouponCode(debouncedCouponCode);
+    if (couponCode && couponCode.length >= 3) {
+      validateCouponCode(couponCode);
     }
-  }, [debouncedCouponCode]);
+  }, [couponCode]);
 
   // Calculate totals
   const calculations = useMemo(() => {

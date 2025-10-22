@@ -7,7 +7,6 @@ import { formatCurrency } from '../../utils/helpers';
 
 // Hooks
 import useLocalStorage from '../../hooks/useLocalStorage';
-import useDebounce from '../../hooks/useDebounce';
 
 const OrderFilters = ({
   onFiltersChange = () => {},
@@ -44,11 +43,6 @@ const OrderFilters = ({
 
   // Local storage for filter preferences
   const [savedFilters, setSavedFilters] = useLocalStorage('orderFilters', {});
-
-  // Debounced search terms
-  const debouncedCustomer = useDebounce(filters.customer, 300);
-  const debouncedOrderId = useDebounce(filters.orderId, 300);
-  const debouncedProductName = useDebounce(filters.productName, 300);
 
   // Initialize animations
   useEffect(() => {
@@ -149,19 +143,8 @@ const OrderFilters = ({
 
   // Handle debounced filter changes
   useEffect(() => {
-    if (debouncedCustomer !== filters.customer) return;
     onFiltersChange(filters);
-  }, [debouncedCustomer, filters, onFiltersChange]);
-
-  useEffect(() => {
-    if (debouncedOrderId !== filters.orderId) return;
-    onFiltersChange(filters);
-  }, [debouncedOrderId, filters, onFiltersChange]);
-
-  useEffect(() => {
-    if (debouncedProductName !== filters.productName) return;
-    onFiltersChange(filters);
-  }, [debouncedProductName, filters, onFiltersChange]);
+  }, [filters, onFiltersChange]);
 
   // Clear all filters
   const handleClearAll = useCallback(() => {

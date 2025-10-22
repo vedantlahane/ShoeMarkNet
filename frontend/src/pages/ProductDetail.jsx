@@ -21,7 +21,6 @@ import {
 import ErrorMessage from '../components/common/ErrorMessage';
 import Rating from '../components/common/Rating';
 import ProductCard from '../components/ProductCard';
-import ImageZoom from '../components/products/ImageZoom';
 import ProductBreadcrumb from '../components/products/ProductBreadcrumb';
 import StockIndicator from '../components/products/StockIndicator';
 import SocialShare from '../components/common/SocialShare';

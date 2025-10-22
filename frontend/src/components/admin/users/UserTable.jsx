@@ -8,7 +8,6 @@ import { formatDate, formatCurrency } from '../../../utils/helpers';
 
 // Hooks
 import useLocalStorage from '../../../hooks/useLocalStorage';
-import useDebounce from '../../../hooks/useDebounce';
 
 const UserTable = ({
   users = [],
@@ -93,9 +92,6 @@ const UserTable = ({
     visibleColumns: ['avatar', 'name', 'email', 'role', 'status', 'lastLogin', 'actions']
   });
 
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   // Initialize animations
   useEffect(() => {
     setTimeout(() => setAnimateElements(true), 100);
@@ -120,11 +116,11 @@ const UserTable = ({
     let filtered = [...userData];
 
     // Apply search filter
-    if (debouncedSearchTerm) {
+    if (searchTerm) {
       filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        user.department.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.department.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -156,7 +152,7 @@ const UserTable = ({
 
     setFilteredUsers(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [userData, debouncedSearchTerm, statusFilter, roleFilter, sortConfig]);
+  }, [userData, searchTerm, statusFilter, roleFilter, sortConfig]);
 
   // Handle sorting
   const handleSort = useCallback((key) => {

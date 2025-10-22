@@ -33,7 +33,6 @@ import ImageGalleryModal from "./products/ImageGalleryModal";
 // Hooks
 import useWebSocket from "../../hooks/useWebSocket";
 import useLocalStorage from "../../hooks/useLocalStorage";
-import useDebounce from "../../hooks/useDebounce";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import useDragAndDrop from "../../hooks/useDragAndDrop";
 
@@ -156,9 +155,6 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
   const fileInputRef = useRef(null);
   const formRef = useRef(null);
 
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   // Keyboard shortcuts
   useKeyboardShortcuts({
     'ctrl+n': () => openCreateModal(),
@@ -234,7 +230,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
     setCurrentPage(1);
     loadProductsData();
   }, [
-    debouncedSearchTerm,
+    searchTerm,
     statusFilter,
     categoryFilter,
     sortBy,
@@ -277,7 +273,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
         page: currentPage,
         limit: productsPerPage,
         sort: `${sortBy}:${sortOrder}`,
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+        ...(searchTerm && { search: searchTerm }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(categoryFilter !== 'all' && { category: categoryFilter })
       };
@@ -293,7 +289,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
     productsPerPage,
     sortBy,
     sortOrder,
-    debouncedSearchTerm,
+    searchTerm,
     statusFilter,
     categoryFilter
   ]);
@@ -766,10 +762,10 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
     if (!products) return [];
 
     let filtered = products.filter(product => {
-      const searchMatch = !debouncedSearchTerm || 
-        product.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        product.brand?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        product.sku?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      const searchMatch = !searchTerm || 
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.sku?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const statusMatch = statusFilter === 'all' || 
         (statusFilter === 'active' && product.isActive) ||
@@ -814,7 +810,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
     });
 
     return filtered;
-  }, [products, debouncedSearchTerm, statusFilter, categoryFilter, sortBy, sortOrder, calculateTotalStock]);
+  }, [products, searchTerm, statusFilter, categoryFilter, sortBy, sortOrder, calculateTotalStock]);
 
   // Loading state
   if (isLoading || (loading && !products)) {
@@ -986,19 +982,19 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
                 <i className="fas fa-boxes text-4xl text-white"></i>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                {debouncedSearchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
+                {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
                   ? 'No Products Match Your Filters'
                   : 'No Products Found'
                 }
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-8">
-                {debouncedSearchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
+                {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
                   ? 'Try adjusting your search criteria or filters to find what you\'re looking for.'
                   : 'Start building your product catalog by adding your first product.'
                 }
               </p>
               <div className="flex justify-center space-x-4">
-                {(debouncedSearchTerm || statusFilter !== 'all' || categoryFilter !== 'all') ? (
+                {(searchTerm || statusFilter !== 'all' || categoryFilter !== 'all') ? (
                   <button
                     onClick={() => {
                       setSearchTerm('');

@@ -324,10 +324,10 @@ const StyleSheet = () => (
     }
 
     #offers .offers-track::-webkit-scrollbar-thumb {
-      
+      background: rgba(59,130,246,0.55);
       border-radius: 9999px;
     }
   `}</style>
 );
-background: rgba(59,130,246,0.55);
+
 export default OffersSection;

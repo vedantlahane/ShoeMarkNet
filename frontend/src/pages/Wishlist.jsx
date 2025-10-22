@@ -24,7 +24,6 @@ import Pagination from '../components/common/Pagination';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
-import useDebounce from '../hooks/useDebounce';
 
 // Utils
 import { trackEvent } from '../utils/analytics';
@@ -96,9 +95,6 @@ const Wishlist = () => {
   // Animation and interaction states
   const [bulkLoading, setBulkLoading] = useState(false);
   const [processingItems, setProcessingItems] = useState(new Set());
-  
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Initialize animations
   // Authentication and initialization check
@@ -115,7 +111,7 @@ const Wishlist = () => {
         limit: itemsPerPage,
         sort: sortBy,
         ...(filterBy.category && { category: filterBy.category }),
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+        ...(searchTerm && { search: searchTerm }),
         ...(filterBy.inStock && { inStock: true }),
         ...(filterBy.onSale && { onSale: true }),
         ...(filterBy.priceRange.min > 0 && { minPrice: filterBy.priceRange.min }),
@@ -141,7 +137,7 @@ const Wishlist = () => {
     itemsPerPage,
     sortBy,
     filterBy,
-    debouncedSearchTerm,
+    searchTerm,
     totalItems
   ]);
 
@@ -172,7 +168,7 @@ const Wishlist = () => {
     let filtered = [...wishlistItems];
     
     // Apply client-side filtering if needed
-    if (searchTerm && !debouncedSearchTerm) {
+    if (searchTerm) {
       filtered = filtered.filter(item => 
         item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.brand?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -180,7 +176,7 @@ const Wishlist = () => {
     }
     
     return filtered;
-  }, [wishlistItems, searchTerm, debouncedSearchTerm]);
+  }, [wishlistItems, searchTerm]);
 
   const totalValue = useMemo(() => {
     return filteredAndSortedItems.reduce((sum, item) => {

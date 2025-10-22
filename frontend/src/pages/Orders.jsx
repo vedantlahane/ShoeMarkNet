@@ -24,7 +24,6 @@ import OrderStats from '../components/orders/OrderStats';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
-import useDebounce from '../hooks/useDebounce';
 
 // Utils
 import { trackEvent } from '../utils/analytics';
@@ -90,9 +89,6 @@ const Orders = () => {
   const [animateElements, setAnimateElements] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   // Trigger animations
   useEffect(() => {
     setTimeout(() => setAnimateElements(true), 100);
@@ -114,7 +110,7 @@ const Orders = () => {
         limit: itemsPerPage,
         sort: sortBy,
         ...(filterStatus !== 'all' && { status: filterStatus }),
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+        ...(searchTerm && { search: searchTerm }),
         ...(dateRange.startDate && { startDate: dateRange.startDate }),
         ...(dateRange.endDate && { endDate: dateRange.endDate })
       };
@@ -135,7 +131,7 @@ const Orders = () => {
     itemsPerPage, 
     sortBy, 
     filterStatus, 
-    debouncedSearchTerm,
+    searchTerm,
     dateRange
   ]);
 
@@ -212,11 +208,11 @@ const Orders = () => {
     if (!orders || !Array.isArray(orders)) return [];
 
     return orders.filter(order => {
-      const matchesSearch = !debouncedSearchTerm || 
-        order._id?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        order.shippingAddress?.fullName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      const matchesSearch = !searchTerm || 
+        order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.shippingAddress?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.orderItems?.some(item => 
-          item.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+          item.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
       const matchesStatus = filterStatus === 'all' || 
@@ -227,7 +223,7 @@ const Orders = () => {
 
       return matchesSearch && matchesStatus && matchesDateRange;
     });
-  }, [orders, debouncedSearchTerm, filterStatus, dateRange]);
+  }, [orders, searchTerm, filterStatus, dateRange]);
 
   const paginatedOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -395,9 +391,9 @@ const Orders = () => {
       limit: itemsPerPage,
       sort: sortBy,
       ...(filterStatus !== 'all' && { status: filterStatus }),
-      ...(debouncedSearchTerm && { search: debouncedSearchTerm })
+      ...(searchTerm && { search: searchTerm })
     }));
-  }, [dispatch, currentPage, itemsPerPage, sortBy, filterStatus, debouncedSearchTerm]);
+  }, [dispatch, currentPage, itemsPerPage, sortBy, filterStatus, searchTerm]);
 
   // Loading state
   if (loading && (!orders || orders.length === 0)) {

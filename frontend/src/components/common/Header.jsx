@@ -1,26 +1,25 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   Search,
-  ShoppingBag,
-  Heart,
-  User,
-  Menu,
+  Menu as MenuIcon,
   X,
-  Sun,
-  Moon,
-  ChevronDown,
+  ChevronRight,
   Home,
   Grid3X3,
   Tag,
   Percent,
-  LogOut,
+  ShoppingBag,
+  Heart,
+  Sun,
+  Moon,
   Monitor,
+  User,
+  ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-
-const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 const routePrefetchers = {
   "/": () => import("../../pages/Home"),
@@ -35,326 +34,190 @@ const routePrefetchers = {
   "/login": () => import("../../pages/Login"),
   "/register": () => import("../../pages/Register"),
   "/logout": () => import("../../pages/Logout"),
+  // "/admin": () => import("../../pages/Admin"),
 };
 
-const prefetchedRoutes = new Set();
-
-const normalizePath = (path = "/") => path.split("?")[0];
-
+const prefetched = new Set();
+const normalizePath = (p = "/") => p.split("?")[0];
 const prefetchRoute = (path) => {
   if (typeof window === "undefined") return;
-
-  const normalized = normalizePath(path);
-  if (!normalized || prefetchedRoutes.has(normalized)) return;
-
-  const loader = routePrefetchers[normalized];
+  const n = normalizePath(path);
+  if (!n || prefetched.has(n)) return;
+  const loader = routePrefetchers[n];
   if (!loader) return;
-
-  prefetchedRoutes.add(normalized);
-  loader().catch(() => {
-    prefetchedRoutes.delete(normalized);
-  });
+  prefetched.add(n);
+  loader().catch(() => prefetched.delete(n));
 };
 
-// Custom hooks for accessibility
-const useReducedMotion = () => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
+const useFocusTrap = (isOpen, ref) => {
   useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      return undefined;
-    }
-
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (event) => {
-      setPrefersReducedMotion(event.matches);
-    };
-
-    try {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
-    } catch (error) {
-      mediaQuery.addListener(handleChange);
-      return () => mediaQuery.removeListener(handleChange);
-    }
-  }, []);
-
-  return prefersReducedMotion;
-};
-
-const useFocusTrap = (isOpen, containerRef) => {
-  useEffect(() => {
-    if (!isOpen || !containerRef.current) return;
-
-    const container = containerRef.current;
-    const focusableElements = container.querySelectorAll(
+    if (!isOpen || !ref.current) return;
+    const el = ref.current;
+    const nodes = el.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        // Close menu on escape
-        return;
-      }
-
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    const onKey = (e) => {
+      if (e.key === "Escape") return;
       if (e.key === "Tab") {
-        if (e.shiftKey) {
-          if (document.activeElement === firstFocusable) {
-            e.preventDefault();
-            lastFocusable?.focus();
-          }
-        } else {
-          if (document.activeElement === lastFocusable) {
-            e.preventDefault();
-            firstFocusable?.focus();
-          }
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
         }
       }
     };
-
-    container.addEventListener("keydown", handleKeyDown);
-    firstFocusable?.focus();
-
-    return () => {
-      container.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, containerRef]);
+    el.addEventListener("keydown", onKey);
+    first?.focus();
+    return () => el.removeEventListener("keydown", onKey);
+  }, [isOpen, ref]);
 };
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Refs
   const headerRef = useRef(null);
+  const searchContainerRef = useRef(null);
+  const searchInputRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const userMenuRef = useRef(null);
   const themeMenuRef = useRef(null);
-  const searchContainerRef = useRef(null);
-  const searchInputRef = useRef(null);
+  const dropdownRef = useRef(null); // mobile dropdown
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // State
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // mobile menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // desktop mobile nav
+
+  // Store
+  const { user, isAuthenticated } = useSelector((s) => s.auth || { user: null, isAuthenticated: false });
+  const { items: cartItems = [] } = useSelector((s) => s.cart || { items: [] });
+  const { items: wishlistItems = [] } = useSelector((s) => s.wishlist || { items: [] });
+  const cartCount = cartItems.length || 0;
+  const wishlistCount = wishlistItems.length || 0;
+
   const { isDarkMode, preference, setPreference } = useTheme();
 
-  const prefersReducedMotion = useReducedMotion();
-
-  // Redux state
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const { items: cartItems } = useSelector((state) => state.cart);
-  const { items: wishlistItems } = useSelector((state) => state.wishlist);
-
-  // Focus trap hooks
-  useFocusTrap(isMenuOpen, mobileMenuRef);
   useFocusTrap(isUserMenuOpen, userMenuRef);
+  useFocusTrap(isDropdownOpen, dropdownRef);
 
-  // Calculations
-  const cartItemCount = cartItems?.length || 0;
-  const wishlistCount = wishlistItems?.length || 0;
-
-  // Navigation links with icons
-  const navigationLinks = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/products", label: "Products", icon: Grid3X3 },
-    { to: "/categories", label: "Categories", icon: Tag },
-    { to: "/sale", label: "Sale", icon: Percent, badge: "Hot" },
-  ];
-
+  // Constants
   const mutedText = "text-slate-600 dark:text-slate-300";
-  const surfaceButton =
-    "rounded-xl border border-slate-200/70 dark:border-slate-800/70 bg-white/70 dark:bg-slate-900/60 transition-all duration-200 hover:scale-105";
-  const hoverSurface =
-    "hover:bg-slate-200/80 dark:hover:bg-slate-700/70 hover:text-blue-600 dark:hover:text-blue-400";
+  const surfaceBtn =
+    "inline-flex items-center justify-center rounded-xl border border-slate-200/70 dark:border-slate-800/70 bg-white/70 dark:bg-slate-900/60 transition-all duration-200";
+  const hoverSurface = "hover:bg-slate-200/80 dark:hover:bg-slate-700/70";
   const focusRing =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900";
-  const quickSearchSuggestions = useMemo(
+
+  const navLinks = useMemo(
     () => [
-      "Running shoes",
-      "Casual sneakers",
-      "Leather boots",
-      "Kids trainers",
+      { to: "/", label: "Home", icon: Home },
+      { to: "/products", label: "Products", icon: Grid3X3 },
+      { to: "/categories", label: "Categories", icon: Tag },
+      { to: "/sale", label: "Sale", icon: Percent, badge: "Hot" },
     ],
     []
   );
 
   const themeOptions = useMemo(
     () => [
-      {
-        value: "light",
-        label: "Light",
-        description: "Bright and crisp",
-        icon: Sun,
-      },
-      {
-        value: "dark",
-        label: "Dark",
-        description: "Dimmed and focused",
-        icon: Moon,
-      },
-      {
-        value: "system",
-        label: "System",
-        description: "Match your device",
-        icon: Monitor,
-      },
+      { value: "light", label: "Light", icon: Sun, desc: "Bright and crisp" },
+      { value: "dark", label: "Dark", icon: Moon, desc: "Dimmed and focused" },
+      { value: "system", label: "System", icon: Monitor, desc: "Match device" },
     ],
     []
   );
 
-  const currentThemeOption =
-    themeOptions.find((option) => option.value === preference) ||
-    themeOptions[0];
-
-  // Handle scroll effect with throttling
+  // Effects
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    let timeoutId;
-
-    const handleScroll = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-
-      timeoutId = setTimeout(() => {
-        const scrollTop = window.scrollY;
-        setIsScrolled(scrollTop > 20);
-      }, 16); // ~60fps
+    if (typeof window === "undefined") return;
+    let t;
+    const onScroll = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => setIsScrolled(window.scrollY > 20), 16);
     };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (timeoutId) clearTimeout(timeoutId);
+      window.removeEventListener("scroll", onScroll);
+      if (t) clearTimeout(t);
     };
   }, []);
 
   useEffect(() => {
-    const header = headerRef.current;
-    if (!header || prefersReducedMotion || typeof window === "undefined") {
-      return undefined;
-    }
-
-    header.style.opacity = "0";
-    header.style.transform = "translateY(-40px)";
-
+    const h = headerRef.current;
+    if (!h || typeof window === "undefined") return;
+    h.style.opacity = "0";
+    h.style.transform = "translateY(-40px)";
     const raf = window.requestAnimationFrame(() => {
-      header.style.transition =
-        "opacity 0.5s ease-out, transform 0.5s ease-out";
-      header.style.opacity = "1";
-      header.style.transform = "translateY(0)";
+      h.style.transition = "opacity 0.5s ease-out, transform 0.5s ease-out";
+      h.style.opacity = "1";
+      h.style.transform = "translateY(0)";
     });
+    return () => window.cancelAnimationFrame(raf);
+  }, []);
 
-    return () => {
-      window.cancelAnimationFrame(raf);
-    };
-  }, [prefersReducedMotion]);
-
-  // Close menus on escape key
   useEffect(() => {
-    if (typeof document === "undefined") {
-      return undefined;
-    }
-
-    const handleEscape = (e) => {
+    if (typeof document === "undefined") return;
+    const onKey = (e) => {
       if (e.key === "Escape") {
-        setIsMenuOpen(false);
+        setIsDropdownOpen(false);
         setIsUserMenuOpen(false);
         setIsSearchOpen(false);
         setIsThemeMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, []);
-
-  // Close menus when clicking outside
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return undefined;
-    }
-
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-      if (
-        mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(event.target)
-      ) {
         setIsMenuOpen(false);
       }
-      if (
-        themeMenuRef.current &&
-        !themeMenuRef.current.contains(event.target)
-      ) {
-        setIsThemeMenuOpen(false);
-      }
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(event.target)
-      ) {
+    };
+    const onDown = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
         setIsSearchOpen(false);
       }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setIsUserMenuOpen(false);
+      }
+      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target)) {
+        setIsThemeMenuOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onDown);
+    };
   }, []);
 
+  // Helpers
   const createPrefetchProps = (path) => ({
     onMouseEnter: () => prefetchRoute(path),
     onFocus: () => prefetchRoute(path),
     onTouchStart: () => prefetchRoute(path),
   });
 
-  const handleSearch = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      prefetchRoute("/search");
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setIsSearchOpen(false);
-      setSearchQuery("");
-    }
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleUserMenuToggle = () => {
-    setIsUserMenuOpen(!isUserMenuOpen);
-  };
-
-  const handleThemeMenuToggle = () => {
-    setIsThemeMenuOpen((prev) => !prev);
-  };
-
-  const handleThemeSelect = (value) => {
-    setPreference(value);
-    setIsThemeMenuOpen(false);
-  };
-
-  const handleQuickSearch = (value) => {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      return;
-    }
-
+    const q = searchQuery.trim();
+    if (!q) return;
     prefetchRoute("/search");
-    navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    navigate(`/search?q=${encodeURIComponent(q)}`);
     setIsSearchOpen(false);
     setSearchQuery("");
   };
 
-  // Focus search input when opened
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -362,114 +225,272 @@ const Header = () => {
   }, [isSearchOpen]);
 
   useEffect(() => {
-    if (isSearchOpen) {
-      prefetchRoute("/search");
-    }
+    if (isSearchOpen) prefetchRoute("/search");
   }, [isSearchOpen]);
 
+  // Render
   return (
-    <>
-      <header
-        ref={headerRef}
-        className={cn(
-          "fixed top-0 left-0 right-0 z-50 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl transition-all duration-300",
-          isScrolled
-            ? "shadow-lg dark:shadow-black/40"
-            : "shadow-sm dark:shadow-black/20"
-        )}
-        role="banner"
-      >
-        <div className="mx-auto w-full  px-4 sm:px-5 lg:px-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 md:gap-6 py-3 lg:py-4">
-            {/* Improved Logo */}
+    <header
+      ref={headerRef}
+      className={`fixed top-0 left-0 right-0 z-50 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl transition-all duration-300 pt-[env(safe-area-inset-top)] ${isScrolled ? "shadow-lg dark:shadow-black/40" : "shadow-sm dark:shadow-black/20"}`}
+      role="banner"
+    >
+      <div className="mx-auto w-full xl:max-w-11/12 px-3 sm:px-4 lg:px-6">
+        {/* MOBILE BAR: logo + search + dropdown (only < lg) */}
+        <div className="flex items-center justify-between gap-2 py-2 lg:hidden">
+          {/* Logo */}
+          <Link
+            to="/"
+            {...createPrefetchProps("/")}
+            className={"flex items-center gap-2 p-1 rounded-lg " + focusRing}
+            aria-label="ShoeMarkNet Home"
+          >
+            <div className="relative w-9 h-9">
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-2xl shadow-lg" />
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Shoe SVG */}
+                <svg viewBox="0 0 64 64" className="h-6 w-6 text-white" aria-hidden="true">
+                  <path d="M10 34c6 0 12-5 15-10l10 7c4 3 9 5 15 5v6H10z" fill="currentColor" opacity="0.95" />
+                  <path d="M24 31h4M29 33h4M19 29h4" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" />
+                  <rect x="10" y="40" width="44" height="6" rx="3" fill="rgba(255,255,255,0.9)" />
+                </svg>
+              </div>
+            </div>
+            <div className="hidden sm:block leading-none">
+              <h1 className="text-base font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
+                ShoeMarkNet
+              </h1>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Premium Footwear</p>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-1.5">
+            {/* Search toggle */}
+            <div className="relative" ref={searchContainerRef}>
+              <button
+                onClick={() => setIsSearchOpen((v) => !v)}
+                className={surfaceBtn + " " + hoverSurface + " " + focusRing + " px-2 py-2 min-h-[44px] min-w-[44px]"}
+                aria-label={isSearchOpen ? "Close search" : "Open search"}
+                aria-expanded={isSearchOpen}
+                aria-haspopup="true"
+              >
+                {isSearchOpen ? <X className="h-5 w-5 text-rose-500" aria-hidden="true" /> : <Search className={"h-5 w-5 " + mutedText} aria-hidden="true" />}
+              </button>
+
+              {isSearchOpen && (
+                <div
+                  className={`fixed inset-x-0 top-0 pt-[env(safe-area-inset-top)] w-screen rounded-none bg-white/95 dark:bg-slate-900/90 p-3 shadow-xl backdrop-blur z-50`}
+                  role="search"
+                >
+                  <form onSubmit={handleSearchSubmit}>
+                    <label htmlFor="global-search" className="sr-only">Search ShoeMarkNet</label>
+                    <div className="flex flex-col gap-3">
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
+                        <input
+                          ref={searchInputRef}
+                          id="global-search"
+                          type="search"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search shoes, brands..."
+                          className="w-full rounded-xl border border-slate-200/70 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 shadow-inner transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-800/70 dark:bg-slate-900 dark:text-white dark:focus-visible:ring-offset-slate-900"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-2 text-sm font-semibold text-white shadow transition-all duration-200 hover:from-blue-600 hover:to-purple-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                      >
+                        Search
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+
+            {/* Single dropdown button (mobile only) */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen((v) => !v)}
+                className={surfaceBtn + " " + hoverSurface + " " + focusRing + " px-2 py-2 min-h-[44px] min-w-[44px]"}
+                aria-label="Open menu"
+                aria-haspopup="menu"
+                aria-expanded={isDropdownOpen}
+              >
+                <MenuIcon className={"h-5 w-5 " + mutedText} aria-hidden="true" />
+              </button>
+
+              {isDropdownOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl overflow-hidden z-50"
+                  role="menu"
+                  aria-label="Main menu"
+                >
+                  {/* Nav */}
+                  <nav className="py-1">
+                    {navLinks.map((l) => {
+                      const Icon = l.icon;
+                      const active = location.pathname === l.to;
+                      return (
+                        <Link
+                          key={l.to}
+                          to={l.to}
+                          {...createPrefetchProps(l.to)}
+                          onClick={() => setIsDropdownOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-200 ${active ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300" : `${mutedText} hover:bg-slate-100 dark:hover:bg-slate-800`}`}
+                          role="menuitem"
+                          aria-current={active ? "page" : undefined}
+                        >
+                          <Icon className="h-5 w-5" aria-hidden="true" />
+                          <span className="flex-1">{l.label}</span>
+                          {l.badge && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-pink-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                              {l.badge}
+                            </span>
+                          )}
+                          <ChevronRight className="h-4 w-4 opacity-60" aria-hidden="true" />
+                        </Link>
+                      );
+                    })}
+                  </nav>
+
+                  <hr className="my-1 border-slate-200/70 dark:border-slate-800/70" />
+
+                  {/* Theme */}
+                  <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Theme
+                  </div>
+                  <div className="pb-1">
+                    {themeOptions.map((opt) => {
+                      const Icon = opt.icon;
+                      const selected = preference === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            setPreference(opt.value);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm transition-colors duration-200 ${selected ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300" : `${mutedText} hover:bg-slate-100 dark:hover:bg-slate-800`}`}
+                          role="menuitemradio"
+                          aria-checked={selected}
+                        >
+                          <Icon className={"h-5 w-5 " + (selected ? "text-blue-600 dark:text-blue-300" : mutedText)} aria-hidden="true" />
+                          <span className="flex-1">{opt.label}</span>
+                          <span className="text-[11px] opacity-70">{opt.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <hr className="my-1 border-slate-200/70 dark:border-slate-800/70" />
+
+                  {/* Wishlist */}
+                  <Link
+                    to="/wishlist"
+                    {...createPrefetchProps("/wishlist")}
+                    onClick={() => setIsDropdownOpen(false)}
+                    className={"flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-200 " + mutedText + " hover:bg-slate-100 dark:hover:bg-slate-800"}
+                    role="menuitem"
+                  >
+                    <Heart className="h-5 w-5" aria-hidden="true" />
+                    <span className="flex-1">Wishlist</span>
+                    {wishlistCount > 0 && (
+                      <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1.5 text-[10px] font-bold text-white">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Cart */}
+                  <Link
+                    to="/cart"
+                    {...createPrefetchProps("/cart")}
+                    onClick={() => setIsDropdownOpen(false)}
+                    className={"flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-200 " + mutedText + " hover:bg-slate-100 dark:hover:bg-slate-800"}
+                    role="menuitem"
+                  >
+                    <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+                    <span className="flex-1">Cart</span>
+                    {cartCount > 0 && (
+                      <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-bold text-white">
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Admin (optional) */}
+                  {isAuthenticated && (user?.role?.toLowerCase?.() === "admin") && (
+                    <>
+                      <hr className="my-1 border-slate-200/70 dark:border-slate-800/70" />
+                      <Link
+                        to="/admin"
+                        {...createPrefetchProps("/admin")}
+                        onClick={() => setIsDropdownOpen(false)}
+                        className={"flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-200 " + mutedText + " hover:bg-slate-100 dark:hover:bg-slate-800"}
+                        role="menuitem"
+                      >
+                        <span className="h-5 w-5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-300 inline-flex items-center justify-center text-[11px] font-bold">A</span>
+                        <span className="flex-1">Admin</span>
+                        <ChevronRight className="h-4 w-4 opacity-60" aria-hidden="true" />
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* DESKTOP BAR: old layout (lg and up) */}
+        <div className="hidden lg:block">
+          <div className="flex items-center justify-between gap-3 py-3 lg:py-4">
+            {/* Logo with text */}
             <div className="flex items-center">
               <Link
                 to="/"
                 {...createPrefetchProps("/")}
-                className={cn(
-                  "flex items-center space-x-3 group rounded-lg p-1 transition-all duration-200",
-                  focusRing
-                )}
+                className={"flex items-center space-x-3 group rounded-lg p-1 transition-all duration-200 " + focusRing}
                 aria-label="ShoeMarkNet Home"
               >
-                <div className="relative w-10 h-10 lg:w-12 lg:h-12 group-hover:scale-105 transition-transform duration-200">
-                  {/* Logo Background */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-2xl shadow-lg group-hover:shadow-xl" />
-
-                  {/* Brand Icon */}
+                <div className="relative w-12 h-12">
+                  <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-2xl shadow-lg" />
                   <div className="relative w-full h-full flex items-center justify-center">
-                    <svg
-                      viewBox="0 0 64 64"
-                      className="h-8 w-8 text-white drop-shadow-sm md:h-9 md:w-9"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M48.5 18.5c-4.3-5.1-11.2-8.5-18.9-8.5-10.5 0-18.6 6.4-18.6 15 0 6.7 4.8 10.5 11.5 12.6l5.8 1.8c3.7 1.2 5.4 2.5 5.4 4.7 0 2.9-3.1 4.8-7.7 4.8-4.7 0-9-1.6-12.6-4.4l-3.6 6c4.8 3.7 11 5.9 17.8 5.9 10.8 0 18-5.8 18-14 0-6.3-4.4-9.9-11.2-12l-5.2-1.6c-3.6-1.1-5.3-2.4-5.3-4.6 0-2.7 2.9-4.4 7-4.4 4.1 0 8.1 1.6 11.4 4.1l3.4-5.4z"
-                        fill="currentColor"
-                        opacity="0.9"
-                      />
-                      <path
-                        d="M18.5 45l2.9-11.2 6.4 9 6.8-15.2 6.9 15.2 6.4-9L50.7 45"
-                        fill="none"
-                        stroke="rgba(255,255,255,0.85)"
-                        strokeWidth="3.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle
-                        cx="49"
-                        cy="16"
-                        r="4"
-                        fill="rgba(255,255,255,0.85)"
-                      />
+                    <svg viewBox="0 0 64 64" className="h-9 w-9 text-white" aria-hidden="true">
+                      <path d="M10 34c6 0 12-5 15-10l10 7c4 3 9 5 15 5v6H10z" fill="currentColor" opacity="0.95" />
+                      <path d="M24 31h4M29 33h4M19 29h4" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" />
+                      <rect x="10" y="40" width="44" height="6" rx="3" fill="rgba(255,255,255,0.9)" />
                     </svg>
                   </div>
                 </div>
-
-                <div className="hidden sm:block">
-                  <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
                     ShoeMarkNet
                   </h1>
-                  <p className="text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium -mt-1">
-                    Premium Footwear
-                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium -mt-1">Premium Footwear</p>
                 </div>
               </Link>
             </div>
 
             {/* Desktop Navigation */}
-            <nav
-              className="hidden lg:flex items-center space-x-1"
-              role="navigation"
-              aria-label="Main navigation"
-            >
-              {navigationLinks.map((link) => {
-                const IconComponent = link.icon;
+            <nav className="flex items-center space-x-1" role="navigation" aria-label="Main navigation">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
                 const isActive = location.pathname === link.to;
-
                 return (
                   <Link
                     key={link.to}
                     to={link.to}
                     {...createPrefetchProps(link.to)}
-                    className={cn(
-                      "relative px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 hover:scale-105",
-                      focusRing,
-                      isActive
-                        ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300 shadow-sm"
-                        : `${mutedText} ${hoverSurface}`
-                    )}
+                    className={`relative px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 hover:scale-105 ${focusRing} ${isActive ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300 shadow-sm" : `${mutedText} hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400`}`}
                     aria-current={isActive ? "page" : undefined}
                   >
-                    <IconComponent size={18} aria-hidden="true" />
-                    <span className="text-sm font-medium lg:text-base">
-                      {link.label}
-                    </span>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <span className="text-base font-medium">{link.label}</span>
                     {link.badge && (
-                      <span
-                        className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 text-xs font-bold text-white rounded-full"
-                        aria-label={`${link.label} has ${link.badge} items`}
-                      >
+                      <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 text-xs font-bold text-white rounded-full">
                         {link.badge}
                       </span>
                     )}
@@ -478,66 +499,42 @@ const Header = () => {
               })}
             </nav>
 
-            {/* Search, Actions & User Menu */}
-            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 md:w-auto">
-              {/* Search Toggle */}
+            {/* Actions: Search, Theme, Wishlist, Cart, User */}
+            <div className="flex items-center gap-2">
+              {/* Search */}
               <div className="relative" ref={searchContainerRef}>
                 <button
-                  onClick={() => setIsSearchOpen((prev) => !prev)}
-                  className={cn(
-                    surfaceButton,
-                    hoverSurface,
-                    focusRing,
-                    "p-2 group flex items-center justify-center"
-                  )}
+                  onClick={() => setIsSearchOpen((v) => !v)}
+                  className={surfaceBtn + " " + hoverSurface + " " + focusRing + " p-2"}
                   aria-label={isSearchOpen ? "Close search" : "Open search"}
                   aria-expanded={isSearchOpen}
                   aria-haspopup="true"
                 >
                   {isSearchOpen ? (
-                    <X
-                      size={20}
-                      className={cn(
-                        "transition-colors duration-200",
-                        "text-rose-500"
-                      )}
-                    />
+                    <X className="h-5 w-5 text-rose-500" aria-hidden="true" />
                   ) : (
-                    <Search
-                      size={20}
-                      className={cn(
-                        "transition-colors duration-200",
-                        mutedText,
-                        "group-hover:text-blue-600 dark:group-hover:text-blue-400"
-                      )}
-                    />
+                    <Search className={"h-5 w-5 " + mutedText} aria-hidden="true" />
                   )}
                 </button>
-
                 {isSearchOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-800/70 dark:bg-slate-900/90 z-50"
+                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900 p-3 shadow-xl z-50"
                     role="search"
                   >
-                    <form onSubmit={handleSearch}>
-                      <label htmlFor="global-search" className="sr-only">
+                    <form onSubmit={handleSearchSubmit}>
+                      <label htmlFor="global-search-desktop" className="sr-only">
                         Search ShoeMarkNet
                       </label>
                       <div className="flex flex-col gap-3">
                         <div className="relative">
-                          <Search
-                            size={16}
-                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-                            aria-hidden="true"
-                          />
+                          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden="true" />
                           <input
-                            ref={searchInputRef}
-                            id="global-search"
+                            id="global-search-desktop"
                             type="search"
                             value={searchQuery}
-                            onChange={(event) => setSearchQuery(event.target.value)}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search shoes, brands..."
-                            className="w-full rounded-xl border border-slate-200/70 bg-white px-9 py-2 text-sm text-slate-900 shadow-inner transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-800/70 dark:bg-slate-900 dark:text-white dark:focus-visible:ring-offset-slate-900"
+                            className="w-full rounded-xl border border-slate-200/70 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 shadow-inner transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-800/70 dark:bg-slate-900 dark:text-white dark:focus-visible:ring-offset-slate-900"
                             autoComplete="off"
                           />
                         </div>
@@ -547,121 +544,50 @@ const Header = () => {
                         >
                           Search
                         </button>
-                        <div className="flex flex-wrap gap-2">
-                          {quickSearchSuggestions.map((suggestion) => (
-                            <button
-                              key={suggestion}
-                              type="button"
-                              onClick={() => handleQuickSearch(suggestion)}
-                              className="rounded-full border border-slate-200/70 bg-white/70 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors duration-200 hover:border-blue-500 hover:text-blue-600 dark:border-slate-800/70 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
-                            >
-                              {suggestion}
-                            </button>
-                          ))}
-                        </div>
                       </div>
                     </form>
                   </div>
                 )}
               </div>
 
-              {/* Theme Toggle */}
+              {/* Theme */}
               <div className="relative" ref={themeMenuRef}>
                 <button
-                  onClick={handleThemeMenuToggle}
-                  className={cn(
-                    surfaceButton,
-                    hoverSurface,
-                    focusRing,
-                    "flex items-center gap-2 px-3 py-2"
-                  )}
+                  onClick={() => setIsThemeMenuOpen((v) => !v)}
+                  className={surfaceBtn + " " + hoverSurface + " " + focusRing + " flex items-center gap-2 px-3 py-2"}
                   aria-label="Select theme preference"
-                  aria-haspopup="true"
+                  aria-haspopup="menu"
                   aria-expanded={isThemeMenuOpen}
                 >
                   {preference === "system" ? (
-                    <Monitor
-                      size={18}
-                      className={cn(
-                        "transition-colors duration-200",
-                        mutedText,
-                        "group-hover:text-blue-600 dark:group-hover:text-blue-400"
-                      )}
-                      aria-hidden="true"
-                    />
+                    <Monitor className={"h-5 w-5 " + mutedText} aria-hidden="true" />
                   ) : isDarkMode ? (
-                    <Moon
-                      size={18}
-                      className="text-blue-400"
-                      aria-hidden="true"
-                    />
+                    <Moon className="h-5 w-5 text-blue-400" aria-hidden="true" />
                   ) : (
-                    <Sun
-                      size={18}
-                      className="text-yellow-500"
-                      aria-hidden="true"
-                    />
+                    <Sun className="h-5 w-5 text-yellow-500" aria-hidden="true" />
                   )}
-                  <span
-                    className={cn(
-                      "hidden xl:inline-block text-sm font-medium transition-colors duration-200",
-                      mutedText
-                    )}
-                  >
-                    {currentThemeOption.label}
-                  </span>
-                  <ChevronDown
-                    size={14}
-                    className={cn(
-                      "transition-transform duration-200",
-                      mutedText,
-                      isThemeMenuOpen ? "rotate-180" : ""
-                    )}
-                    aria-hidden="true"
-                  />
+                  <ChevronDown className={"h-3.5 w-3.5 " + mutedText + (isThemeMenuOpen ? " rotate-180" : "")} aria-hidden="true" />
                 </button>
-
                 {isThemeMenuOpen && (
-                  <div
-                    className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl overflow-hidden z-50"
-                    role="menu"
-                    aria-label="Theme options"
-                  >
+                  <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl overflow-hidden z-50" role="menu" aria-label="Theme options">
                     <div className="py-1">
-                      {themeOptions.map((option) => {
-                        const OptionIcon = option.icon;
-                        const isSelected = preference === option.value;
+                      {themeOptions.map((opt) => {
+                        const Icon = opt.icon;
+                        const selected = preference === opt.value;
                         return (
                           <button
-                            key={option.value}
-                            onClick={() => handleThemeSelect(option.value)}
-                            className={cn(
-                              "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors duration-200",
-                              focusRing,
-                              isSelected
-                                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300"
-                                : `${mutedText} hover:bg-slate-100 dark:hover:bg-slate-800`
-                            )}
+                            key={opt.value}
+                            onClick={() => {
+                              setPreference(opt.value);
+                              setIsThemeMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors duration-200 ${selected ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300" : `${mutedText} hover:bg-slate-100 dark:hover:bg-slate-800`}`}
                             role="menuitemradio"
-                            aria-checked={isSelected}
+                            aria-checked={selected}
                           >
-                            <OptionIcon
-                              size={18}
-                              className={
-                                isSelected
-                                  ? "text-blue-600 dark:text-blue-300"
-                                  : mutedText
-                              }
-                              aria-hidden="true"
-                            />
-                            <span className="flex flex-col">
-                              <span className="text-sm font-semibold leading-none">
-                                {option.label}
-                              </span>
-                              <span className="text-xs opacity-75 mt-1">
-                                {option.description}
-                              </span>
-                            </span>
+                            <Icon className={"h-5 w-5 " + (selected ? "text-blue-600 dark:text-blue-300" : mutedText)} aria-hidden="true" />
+                            <span className="text-sm font-semibold leading-none">{opt.label}</span>
+                            <span className="ml-2 text-xs opacity-75">{opt.desc}</span>
                           </button>
                         );
                       })}
@@ -674,173 +600,88 @@ const Header = () => {
               <Link
                 to="/wishlist"
                 {...createPrefetchProps("/wishlist")}
-                className={cn(
-                  surfaceButton,
-                  hoverSurface,
-                  focusRing,
-                  "relative p-2 group flex items-center justify-center"
-                )}
+                className={surfaceBtn + " " + hoverSurface + " " + focusRing + " relative p-2"}
                 aria-label={`Wishlist with ${wishlistCount} items`}
               >
-                <Heart
-                  size={20}
-                  className={cn(
-                    "transition-colors duration-200",
-                    mutedText,
-                    "group-hover:text-pink-500"
-                  )}
-                  aria-hidden="true"
-                />
+                <Heart className={"h-5 w-5 " + mutedText} aria-hidden="true" />
                 {wishlistCount > 0 && (
-                  <span
-                    className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
-                    aria-hidden="true"
-                  >
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center" aria-hidden="true">
                     {wishlistCount}
                   </span>
                 )}
               </Link>
 
-              {/* Shopping Cart */}
+              {/* Cart */}
               <Link
                 to="/cart"
                 {...createPrefetchProps("/cart")}
-                className={cn(
-                  surfaceButton,
-                  hoverSurface,
-                  focusRing,
-                  "relative p-2 group flex items-center justify-center"
-                )}
-                aria-label={`Shopping cart with ${cartItemCount} items`}
+                className={surfaceBtn + " " + hoverSurface + " " + focusRing + " relative p-2"}
+                aria-label={`Shopping cart with ${cartCount} items`}
               >
-                <ShoppingBag
-                  size={20}
-                  className={cn(
-                    "transition-colors duration-200",
-                    mutedText,
-                    "group-hover:text-emerald-500"
-                  )}
-                  aria-hidden="true"
-                />
-                {cartItemCount > 0 && (
-                  <span
-                    className="absolute -top-1 -right-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
-                    aria-hidden="true"
-                  >
-                    {cartItemCount}
+                <ShoppingBag className={"h-5 w-5 " + mutedText} aria-hidden="true" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center" aria-hidden="true">
+                    {cartCount}
                   </span>
                 )}
               </Link>
 
-              {/* User Menu */}
+              {/* User */}
               <div className="relative" ref={userMenuRef}>
                 {isAuthenticated ? (
                   <button
-                    onClick={handleUserMenuToggle}
-                    className={cn(
-                      surfaceButton,
-                      hoverSurface,
-                      focusRing,
-                      "flex items-center space-x-2 p-2 group"
-                    )}
+                    onClick={() => setIsUserMenuOpen((v) => !v)}
+                    className={surfaceBtn + " " + hoverSurface + " " + focusRing + " p-2"}
                     aria-label="User menu"
                     aria-expanded={isUserMenuOpen}
                     aria-haspopup="true"
                   >
                     {user?.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
+                      <img src={user.avatar} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
                     ) : (
-                      <User
-                        size={20}
-                        className={cn(
-                          "transition-colors duration-200",
-                          mutedText,
-                          "group-hover:text-blue-600 dark:group-hover:text-blue-400"
-                        )}
-                        aria-hidden="true"
-                      />
+                      <User className={"h-5 w-5 " + mutedText} aria-hidden="true" />
                     )}
-                    <ChevronDown
-                      size={14}
-                      className={cn(
-                        "transition-transform duration-200",
-                        mutedText,
-                        isUserMenuOpen ? "rotate-180" : ""
-                      )}
-                      aria-hidden="true"
-                    />
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2 max-[420px]:w-full max-[420px]:flex-col max-[420px]:items-stretch">
+                  <div className="flex items-center gap-2">
                     <Link
                       to="/login"
                       {...createPrefetchProps("/login")}
-                      className={cn(
-                        "px-4 py-2 text-sm font-medium rounded-lg text-center transition-all duration-200",
-                        focusRing,
-                        mutedText,
-                        "hover:bg-slate-100 dark:hover:bg-slate-800"
-                      )}
+                      className={"px-4 py-2 text-sm font-medium rounded-lg " + focusRing + " " + mutedText + " hover:bg-slate-100 dark:hover:bg-slate-800"}
                     >
                       Sign In
                     </Link>
                     <Link
                       to="/register"
                       {...createPrefetchProps("/register")}
-                      className={cn(
-                        "px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105 text-center",
-                        focusRing
-                      )}
+                      className={"px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 " + focusRing}
                     >
                       Sign Up
                     </Link>
                   </div>
                 )}
 
-                {/* User Dropdown */}
                 {isAuthenticated && isUserMenuOpen && (
-                  <div
-                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl overflow-hidden"
-                    role="menu"
-                    aria-labelledby="user-menu-button"
-                  >
+                  <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl overflow-hidden" role="menu" aria-labelledby="user-menu-button">
                     <div className="py-2">
                       <Link
                         to="/profile"
                         {...createPrefetchProps("/profile")}
-                        className={cn(
-                          "flex items-center px-4 py-2 text-sm transition-colors duration-200",
-                          focusRing,
-                          mutedText,
-                          "hover:bg-slate-100 dark:hover:bg-slate-800"
-                        )}
+                        className={"flex items-center px-4 py-2 text-sm transition-colors duration-200 " + focusRing + " " + mutedText + " hover:bg-slate-100 dark:hover:bg-slate-800"}
                         onClick={() => setIsUserMenuOpen(false)}
                         role="menuitem"
                       >
-                        <User size={16} className="mr-3" aria-hidden="true" />
+                        <User className="h-4 w-4 mr-3" aria-hidden="true" />
                         Profile
                       </Link>
                       <Link
                         to="/orders"
                         {...createPrefetchProps("/orders")}
-                        className={cn(
-                          "flex items-center px-4 py-2 text-sm transition-colors duration-200",
-                          focusRing,
-                          mutedText,
-                          "hover:bg-slate-100 dark:hover:bg-slate-800"
-                        )}
+                        className={"flex items-center px-4 py-2 text-sm transition-colors duration-200 " + focusRing + " " + mutedText + " hover:bg-slate-100 dark:hover:bg-slate-800"}
                         onClick={() => setIsUserMenuOpen(false)}
                         role="menuitem"
                       >
-                        <ShoppingBag
-                          size={16}
-                          className="mr-3"
-                          aria-hidden="true"
-                        />
+                        <ShoppingBag className="h-4 w-4 mr-3" aria-hidden="true" />
                         Orders
                       </Link>
                       <hr className="my-2 border-slate-200/70 dark:border-slate-800/70" />
@@ -851,105 +692,23 @@ const Header = () => {
                           prefetchRoute("/logout");
                           navigate("/logout");
                         }}
-                        className={cn(
-                          "w-full flex items-center px-4 py-2 text-sm transition-colors duration-200 text-red-500 hover:bg-red-500/10",
-                          focusRing.replace("ring-blue-500", "ring-red-500")
-                        )}
+                        className={"w-full flex items-center px-4 py-2 text-sm transition-colors duration-200 text-red-500 hover:bg-red-500/10 " + focusRing.replace("ring-blue-500", "ring-red-500")}
                         role="menuitem"
                       >
-                        <LogOut size={16} className="mr-3" aria-hidden="true" />
+                        <LogOut className="h-4 w-4 mr-3" aria-hidden="true" />
                         Logout
                       </button>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={toggleMobileMenu}
-                className={cn(
-                  "lg:hidden p-2 rounded-xl border border-slate-200/70 dark:border-slate-800/70 bg-white/70 dark:bg-slate-900/60 transition-all duration-200 hover:scale-105",
-                  hoverSurface,
-                  focusRing
-                )}
-                aria-label={
-                  isMenuOpen ? "Close mobile menu" : "Open mobile menu"
-                }
-                aria-expanded={isMenuOpen}
-                aria-controls="mobile-menu"
-              >
-                {isMenuOpen ? (
-                  <X
-                    size={20}
-                    className={cn("transition-colors duration-200", mutedText)}
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <Menu
-                    size={20}
-                    className={cn("transition-colors duration-200", mutedText)}
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
             </div>
           </div>
 
-          {/* Mobile Navigation Menu */}
-          {isMenuOpen && (
-            <div
-              ref={mobileMenuRef}
-              className="lg:hidden py-4"
-              id="mobile-menu"
-              role="navigation"
-              aria-label="Mobile navigation"
-            >
-              <nav className="flex flex-col space-y-2">
-                {navigationLinks.map((link) => {
-                  const IconComponent = link.icon;
-                  const isActive = location.pathname === link.to;
-
-                  return (
-                    <Link
-                      key={link.to}
-                      to={link.to}
-                      {...createPrefetchProps(link.to)}
-                      onClick={() => setIsMenuOpen(false)}
-                      className={cn(
-                        "relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm sm:text-base",
-                        focusRing,
-                        isActive
-                          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300"
-                          : `${mutedText} hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400`
-                      )}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <IconComponent size={20} aria-hidden="true" />
-                      <span className="font-medium">{link.label}</span>
-                      {link.badge && (
-                        <span className="bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 text-xs font-bold text-white rounded-full">
-                          {link.badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          )}
+          {/* Optional: no mobile nav drawer on desktop, so skip lg:hidden mobile nav block */}
         </div>
-
-        {/* Mobile menu backdrop */}
-        {isMenuOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm lg:hidden -z-10"
-            onClick={() => setIsMenuOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-      </header>
-    </>
+      </div>
+    </header>
   );
 };
 

@@ -196,9 +196,6 @@ const Search = () => {
   const searchInputRef = useRef(null);
   const resultsRef = useRef(null);
 
-  // Debounced search
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
   // Get initial search query from URL
   useEffect(() => {
     const query = searchParams.get('q') || '';

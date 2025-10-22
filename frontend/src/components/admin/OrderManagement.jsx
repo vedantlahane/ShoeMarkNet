@@ -28,7 +28,6 @@ import OrderTrackingModal from './orders/OrderTrackingModal';
 // Hooks
 import useWebSocket from '../../hooks/useWebSocket';
 import useLocalStorage from '../../hooks/useLocalStorage';
-import useDebounce from '../../hooks/useDebounce';
 import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts';
 
 // Utils
@@ -91,9 +90,6 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
 
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   // Initialize
   useEffect(() => {
     setTimeout(() => setAnimateCards(true), 100);
@@ -132,7 +128,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
         limit: ordersPerPage,
         sort: `${sortBy}:${sortOrder}`,
         ...(statusFilter !== ORDER_STATUSES.ALL && { status: statusFilter }),
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+        ...(searchTerm && { search: searchTerm }),
         ...(dateRange.start && { startDate: dateRange.start }),
         ...(dateRange.end && { endDate: dateRange.end }),
         ...(priceRange.min && { minPrice: priceRange.min }),
@@ -146,7 +142,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
     } finally {
       setRefreshing(false);
     }
-  }, [dispatch, currentPage, ordersPerPage, sortBy, sortOrder, statusFilter, debouncedSearchTerm, dateRange, priceRange]);
+  }, [dispatch, currentPage, ordersPerPage, sortBy, sortOrder, statusFilter, searchTerm, dateRange, priceRange]);
 
   useEffect(() => {
     if (!externalAction) {
@@ -205,7 +201,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   useEffect(() => {
     setCurrentPage(1);
     fetchOrdersData();
-  }, [statusFilter, debouncedSearchTerm, sortBy, sortOrder, dateRange, priceRange]);
+  }, [statusFilter, searchTerm, sortBy, sortOrder, dateRange, priceRange]);
 
   // Refetch when page or page size changes
   useEffect(() => {
@@ -574,13 +570,13 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
                 No Orders Found
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {debouncedSearchTerm || statusFilter !== ORDER_STATUSES.ALL
+                {searchTerm || statusFilter !== ORDER_STATUSES.ALL
                   ? 'No orders match your current filters. Try adjusting your search criteria.'
                   : 'Orders will appear here when customers start placing them.'
                 }
               </p>
               <div className="flex justify-center space-x-4">
-                {(debouncedSearchTerm || statusFilter !== ORDER_STATUSES.ALL) && (
+                {(searchTerm || statusFilter !== ORDER_STATUSES.ALL) && (
                   <button
                     onClick={() => {
                       setSearchTerm('');
@@ -690,7 +686,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
             totalOrders={orderStats.totalOrders}
             filters={{
               status: statusFilter,
-              search: debouncedSearchTerm,
+              search: searchTerm,
               dateRange,
               priceRange
             }}

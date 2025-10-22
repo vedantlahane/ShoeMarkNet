@@ -34,7 +34,6 @@ import RoleManagementModal from './users/RoleManagementModal';
 // Hooks
 import useWebSocket from '../../hooks/useWebSocket';
 import useLocalStorage from '../../hooks/useLocalStorage';
-import useDebounce from '../../hooks/useDebounce';
 import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts';
 import usePermissions from '../../hooks/usePermissions';
 
@@ -130,9 +129,6 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
   const tableRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   // Keyboard shortcuts
   useKeyboardShortcuts({
     'ctrl+n': () => hasPermission('users.create') && openCreateModal(),
@@ -175,7 +171,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
     setCurrentPage(1);
     loadUsersData();
   }, [
-    debouncedSearchTerm,
+    searchTerm,
     roleFilter,
     statusFilter,
     sortBy,
@@ -247,7 +243,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
         page: currentPage,
         limit: usersPerPage,
         sort: `${sortBy}:${sortOrder}`,
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+        ...(searchTerm && { search: searchTerm }),
         ...(roleFilter !== 'all' && { role: roleFilter }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(dateRange.start && { startDate: dateRange.start }),
@@ -268,7 +264,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
     usersPerPage,
     sortBy,
     sortOrder,
-    debouncedSearchTerm,
+    searchTerm,
     roleFilter,
     statusFilter,
     dateRange,
@@ -772,19 +768,19 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
                 <i className="fas fa-users text-4xl text-white"></i>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                {debouncedSearchTerm || roleFilter !== 'all' || statusFilter !== 'all'
+                {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
                   ? 'No Users Match Your Filters'
                   : 'No Users Found'
                 }
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-8">
-                {debouncedSearchTerm || roleFilter !== 'all' || statusFilter !== 'all'
+                {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
                   ? 'Try adjusting your search criteria or filters to find what you\'re looking for.'
                   : 'Users will appear here when they register for your platform.'
                 }
               </p>
               <div className="flex justify-center space-x-4">
-                {(debouncedSearchTerm || roleFilter !== 'all' || statusFilter !== 'all') ? (
+                {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') ? (
                   <button
                     onClick={() => {
                       setSearchTerm('');

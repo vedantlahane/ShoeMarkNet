@@ -27,7 +27,6 @@ import CompareDrawer from '../components/products/CompareDrawer';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
-import useDebounce from '../hooks/useDebounce';
 import usePermissions from '../hooks/usePermissions';
 
 // Utils
@@ -114,9 +113,6 @@ const Category = () => {
 
   const canViewAnalytics = hasRole('admin');
   
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   // Initialize animations
   useEffect(() => {
     setTimeout(() => setAnimateElements(true), 100);
@@ -179,7 +175,7 @@ const Category = () => {
       categoryId: categoryName,
       filters: {
         ...filters,
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm })
+        ...(searchTerm && { search: searchTerm })
       },
       includeTree: true
     }));
@@ -190,7 +186,7 @@ const Category = () => {
     itemsPerPage,
     sortBy,
     filterBy,
-    debouncedSearchTerm,
+    searchTerm,
     priceRange,
     selectedBrands,
     selectedRating
