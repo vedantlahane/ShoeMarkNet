@@ -2,10 +2,11 @@
 
 > A modern, full-stack e-commerce platform for premium footwear with advanced features and beautiful UI
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-18.x-blue.svg)](https://reactjs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-7.x-green.svg)](https://www.mongodb.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-19.x-blue.svg)](https://reactjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-8.x-green.svg)](https://www.mongodb.com/)
 
 ## 🌟 Overview
 
@@ -30,38 +31,47 @@ ShoeMarkNet is a comprehensive e-commerce platform designed specifically for foo
 ## 🏗️ Technology Stack
 
 ### Frontend
-- **React 18** - Modern component-based UI library
+- **React 19** - Modern component-based UI library
 - **Redux Toolkit** - State management
-- **React Router Dom** - Client-side routing
-- **Tailwind CSS** - Utility-first CSS framework
+- **React Router Dom v7** - Client-side routing
+- **Tailwind CSS v4** - Utility-first CSS framework
 - **Vite** - Fast build tool and development server
 - **Axios** - HTTP client for API calls
-- **React Query** - Server state management
+- **TanStack Query** - Server state management
 - **React Hot Toast** - Beautiful notifications
+- **Framer Motion** - Animation library
+- **Chart.js** - Data visualization
+- **Lucide React** - Icon library
+- **React Intersection Observer** - Intersection detection
 
 ### Backend
 - **Node.js** - JavaScript runtime
-- **Express.js** - Web application framework
+- **Express.js v5** - Web application framework
 - **MongoDB** - NoSQL database
-- **Mongoose** - MongoDB object modeling
+- **Mongoose v8** - MongoDB object modeling
 - **JWT** - JSON Web Tokens for authentication
 - **Bcrypt** - Password hashing
 - **Nodemailer** - Email sending
 - **Express Rate Limit** - API rate limiting
 - **Helmet** - Security middleware
+- **UUID** - Unique identifier generation
+- **Slugify** - URL-friendly string generation
 
 ### Development Tools
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
+- **ESLint v9** - Code linting with modern configuration
+- **Vite** - Fast build tool with custom logging filters
+- **Tailwind CSS v4** - Latest utility-first CSS framework
 - **Nodemon** - Development server auto-restart
 - **Morgan** - HTTP request logger
 - **Compression** - Response compression
+- **UUID** - Unique identifier generation
+- **Slugify** - URL-friendly string generation
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- MongoDB (v7 or higher)
+- Node.js (v20 or higher)
+- MongoDB (v8 or higher)
 - npm or yarn package manager
 
 ### Installation
@@ -100,21 +110,34 @@ NODE_ENV=development
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/shoemarknet
 JWT_SECRET=your_jwt_secret_key
+REFRESH_TOKEN_SECRET=your_refresh_token_secret
 JWT_EXPIRE=30d
-EMAIL_HOST=smtp.example.com
-EMAIL_PORT=587
-EMAIL_USER=your_email@example.com
-EMAIL_PASS=your_email_password
+REFRESH_TOKEN_EXPIRE=7d
+
+# Email Configuration (SMTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+FROM_NAME=ShoeMarkNet
+FROM_EMAIL=noreply@shoemarknet.com
+
+# Optional: Realtime metrics interval (milliseconds)
 REALTIME_METRICS_INTERVAL=15000
 ```
 
 Frontend `.env`:
 ```env
 VITE_API_URL=http://localhost:5000/api
-VITE_APP_NAME=ShoeMarkNet
-# Optional: enable realtime WebSocket features
+VITE_API_TIMEOUT=15000
+
+# Optional: WebSocket configuration for real-time features
 # VITE_WS_BASE_URL=ws://localhost:5000
 # VITE_WS_ENABLED=true
+
+# Optional: Analytics and tracking
+# VITE_GA_MEASUREMENT_ID=your_google_analytics_id
+# VITE_MIXPANEL_TOKEN=your_mixpanel_token
 ```
 
 5. **Start Development Servers**
@@ -172,18 +195,22 @@ ShoeMarkNet/
 │   ├── models/               # Database models
 │   ├── routes/               # API routes
 │   ├── middleware/           # Custom middleware
+│   ├── services/             # Business logic services
 │   ├── utils/                # Utility functions
-│   ├── data/                 # Sample data
+│   ├── scripts/              # Database seeding scripts
+│   ├── docs/                 # API documentation
 │   └── public/               # Static files
 ├── frontend/                  # React frontend
 │   ├── src/
-│   │   ├── components/       # React components
+│   │   ├── components/       # React components (organized by feature)
 │   │   ├── pages/            # Page components
 │   │   ├── redux/            # Redux store & slices
 │   │   ├── services/         # API service functions
 │   │   ├── hooks/            # Custom React hooks
-│   │   ├── utils/            # Utility functions
-│   │   └── routes/           # Route configurations
+│   │   ├── context/          # React context providers
+│   │   ├── routes/           # Route configurations
+│   │   ├── lib/              # Library configurations
+│   │   └── utils/            # Utility functions
 │   └── public/               # Static assets
 └── README.md                 # Project documentation
 ```
@@ -191,27 +218,32 @@ ShoeMarkNet/
 ## 🎯 Features Deep Dive
 
 ### User Features
-- **Authentication**: Secure login/register with JWT tokens
-- **Product Browsing**: Browse products with advanced filtering
-- **Shopping Cart**: Add/remove items with quantity management  
-- **Wishlist**: Save favorite products
-- **Order Management**: Track order status and history
-- **User Profile**: Manage personal information and addresses
-- **Support Access**: Submit contact or support tickets with attachments
-- **Reviews**: Leave product reviews and ratings
+- **Authentication**: Secure login/register with JWT tokens, password reset, email verification
+- **Product Browsing**: Browse products with advanced filtering (category, brand, price, gender, etc.)
+- **Shopping Cart**: Add/remove items with quantity management and persistence
+- **Wishlist**: Save favorite products for later
+- **Checkout Process**: Complete checkout flow with billing, shipping, and payment forms
+- **Order Management**: Track order status and history with detailed order views
+- **User Profile**: Manage personal information, addresses, and preferences
+- **Product Reviews**: Leave product reviews and ratings
+- **Search Functionality**: Advanced product search with filters
+- **Contact Support**: Submit support tickets with file attachments
+- **Responsive Design**: Mobile-first design that works on all devices
 
 ### Admin Features
-- **Dashboard Analytics**: Sales, revenue, and user metrics
-- **Product Management**: CRUD operations for products
-- **Order Management**: Process and track orders
+- **Dashboard Analytics**: Comprehensive sales, revenue, and user metrics with charts
+- **Product Management**: Full CRUD operations for products with image uploads
+- **Order Management**: Process and track orders with status updates
 - **User Management**: View and manage customer accounts
-- **Campaign Management**: Create promotional campaigns
-- **Coupon Engine**: Validate and monitor discount codes with usage limits
-- **Lead Scoring**: Track customer engagement metrics
-- **Inventory Management**: Stock level monitoring
-- **Contact Operations**: Triage, assign, and close customer support tickets
-- **Notification Center**: Manage high-priority operational alerts
-- **Realtime Dashboard**: Stream live stats with auto-refresh fallbacks
+- **Category Management**: Organize products with categories
+- **Campaign Management**: Create and manage promotional campaigns
+- **Coupon System**: Create and monitor discount codes with usage limits
+- **Lead Scoring**: Track customer engagement and behavior metrics
+- **Contact Center**: Triage, assign, and close customer support tickets with SLA tracking
+- **Notification Center**: Manage operational alerts and notifications
+- **Realtime Dashboard**: Live statistics with auto-refresh capabilities
+- **Settings Panel**: Configure application settings
+- **Analytics Panel**: Detailed analytics and reporting
 
 ### Technical Features
 - **Responsive Design**: Mobile-first approach
@@ -229,14 +261,26 @@ ShoeMarkNet/
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password/:token` - Reset password with token
+- `GET /api/auth/verify-email/:token` - Verify email address
+- `POST /api/auth/refresh-token` - Refresh access token
 - `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/profile` - Update user profile
 
 ### Products
-- `GET /api/products` - Get all products
+- `GET /api/products` - Get all products (with filters)
 - `GET /api/products/:id` - Get product by ID
 - `POST /api/products` - Create product (Admin)
 - `PUT /api/products/:id` - Update product (Admin)
 - `DELETE /api/products/:id` - Delete product (Admin)
+
+### Categories
+- `GET /api/categories` - Get all categories
+- `GET /api/categories/:id` - Get category by ID
+- `POST /api/categories` - Create category (Admin)
+- `PUT /api/categories/:id` - Update category (Admin)
+- `DELETE /api/categories/:id` - Delete category (Admin)
 
 ### Orders
 - `GET /api/orders` - Get user orders
@@ -247,8 +291,17 @@ ShoeMarkNet/
 ### Cart & Wishlist
 - `GET /api/cart` - Get user cart
 - `POST /api/cart` - Add item to cart
+- `PUT /api/cart/:itemId` - Update cart item
+- `DELETE /api/cart/:itemId` - Remove item from cart
 - `GET /api/wishlist` - Get user wishlist
 - `POST /api/wishlist` - Add item to wishlist
+- `DELETE /api/wishlist/:productId` - Remove item from wishlist
+
+### Reviews
+- `GET /api/reviews/:productId` - Get product reviews
+- `POST /api/reviews` - Create review
+- `PUT /api/reviews/:id` - Update review
+- `DELETE /api/reviews/:id` - Delete review
 
 ### Contact Center
 - `POST /api/contact` - Submit a support request (public)
@@ -258,6 +311,16 @@ ShoeMarkNet/
 - `POST /api/admin/contacts/:id/respond` - Record responses and timeline events (Admin)
 - `DELETE /api/admin/contacts/:id` - Remove a ticket (Admin)
 - `GET /api/admin/contacts/stats` - Retrieve SLA and workload analytics (Admin)
+
+### Admin Dashboard
+- `GET /api/admin/dashboard/stats` - Get dashboard statistics
+- `GET /api/admin/users` - Get all users
+- `GET /api/admin/orders` - Get all orders
+- `GET /api/admin/products` - Get all products for admin
+- `GET /api/admin/campaigns` - Get marketing campaigns
+- `POST /api/admin/campaigns` - Create campaign
+- `GET /api/admin/coupons` - Get discount coupons
+- `POST /api/admin/coupons` - Create coupon
 
 ## � Environment Setup
 
@@ -309,6 +372,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Vedant Lahane**
 - GitHub: [@vedantlahane](https://github.com/vedantlahane)
 - Email: vedant.lahane@gmail.com
+- LinkedIn: [Vedant Lahane](https://linkedin.com/in/vedantlahane)
+
+*Last updated: October 2025*
 
 ## 🙏 Acknowledgments
 
@@ -320,10 +386,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📚 Documentation
 
 For detailed documentation, please visit:
-- [API Documentation](docs/api.md)
-- [Frontend Guide](docs/frontend.md)
-- [Backend Guide](docs/backend.md)
-- [Deployment Guide](docs/deployment.md)
+- [API Reference](backend/docs/api-reference.md)
+- [Frontend Components](frontend/README.md)
+- [Backend Architecture](backend/README.md)
+
+Additional documentation files are available in the respective directories.
 
 ## 🐛 Support & Issues
 
@@ -348,13 +415,35 @@ If you encounter any issues or have questions:
 
 ## 📈 Roadmap
 
-- [ ] Payment integration (Stripe, PayPal, Razorpay)
-- [ ] Real-time chat support
+### ✅ Completed Features
+- [x] Complete e-commerce platform with user and admin functionality
+- [x] Advanced authentication with email verification and password reset
+- [x] Comprehensive product catalog with categories and reviews
+- [x] Shopping cart and wishlist functionality
+- [x] Full checkout process with order management
+- [x] Admin dashboard with analytics and management tools
+- [x] Contact center with ticket management
+- [x] Real-time features and notifications
+- [x] Responsive design with dark mode support
+- [x] API documentation and comprehensive testing
+
+### 🚧 In Progress
+- [ ] Payment gateway integration (Stripe, PayPal, Razorpay)
+- [ ] Real-time chat support system
+- [ ] Advanced inventory management
+- [ ] Multi-language support (i18n)
+
+### 📋 Planned Features
 - [ ] Mobile application (React Native)
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support
-- [ ] Inventory automation
+- [ ] Advanced analytics and reporting
 - [ ] Social media integration
+- [ ] AI-powered product recommendations
+- [ ] Loyalty program and rewards system
+- [ ] Advanced search with AI-powered suggestions
+- [ ] Email marketing campaigns
+- [ ] Integration with shipping providers
+- [ ] Product comparison feature
+- [ ] Wishlist sharing functionality
 
 ---
 
