@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatPercentage } from '../../../utils/helpers';
+import { formatPercentage } from '../../utils/helpers';
 
 const StatsCard = ({
   title,

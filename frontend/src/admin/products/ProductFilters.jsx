@@ -33,7 +33,7 @@ const ProductFilters = ({
 
   return (
     <section
-      className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-6 shadow-xl space-y-6 ${
+      className={`rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm space-y-6 dark:border-slate-800 dark:bg-slate-900/80 ${
         animateCards ? 'animate-fade-in-up' : ''
       } ${className}`}
     >
@@ -47,18 +47,18 @@ const ProductFilters = ({
               value={searchTerm}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search products, SKU or brand..."
-              className="w-full px-4 py-3 bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
             />
-            <i className="fas fa-search absolute right-4 top-3 text-gray-400"></i>
+            <i className="fas fa-search absolute right-4 top-3 text-slate-400"></i>
           </label>
 
           <div className="flex items-center space-x-3">
             <button
               type="button"
-              className={`w-10 h-10 rounded-2xl border border-white/30 backdrop-blur-lg flex items-center justify-center transition-all ${
+              className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
                 viewMode === 'cards'
-                  ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white'
-                  : 'bg-white/10 text-gray-600 dark:text-gray-300'
+                  ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300'
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
               }`}
               title="Card view"
               onClick={() => onViewModeChange('cards')}
@@ -67,10 +67,10 @@ const ProductFilters = ({
             </button>
             <button
               type="button"
-              className={`w-10 h-10 rounded-2xl border border-white/30 backdrop-blur-lg flex items-center justify-center transition-all ${
+              className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
                 viewMode === 'table'
-                  ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white'
-                  : 'bg-white/10 text-gray-600 dark:text-gray-300'
+                  ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300'
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
               }`}
               title="Table view"
               onClick={() => onViewModeChange('table')}
@@ -81,23 +81,23 @@ const ProductFilters = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="text-sm text-slate-500 dark:text-slate-300">
             {selectedCount > 0 ? (
               <button
                 type="button"
                 onClick={onClearSelection}
-                className="text-blue-500 hover:text-blue-400 mr-2"
+                className="mr-3 text-blue-600 transition hover:text-blue-500"
               >
                 Clear selection
               </button>
             ) : null}
-            <span className="font-semibold text-gray-900 dark:text-white">
+            <span className="font-semibold text-slate-900 dark:text-slate-100">
               {selectedCount > 0 ? `${selectedCount} selected` : `${totalCount} products`}
             </span>
           </div>
           <button
             type="button"
-            className="px-4 py-2 bg-white/10 backdrop-blur-lg border border-white/30 rounded-2xl text-sm text-gray-700 dark:text-gray-200 hover:bg-white/20"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
             onClick={onSelectAll}
           >
             {selectedCount > 0 ? 'Select none' : 'Select all'}
@@ -106,12 +106,12 @@ const ProductFilters = ({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+        <label className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
           <span>Status</span>
           <select
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value)}
-            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
           >
             {statusFilters.map((option) => (
               <option key={option.value} value={option.value} className="text-gray-900">
@@ -121,12 +121,12 @@ const ProductFilters = ({
           </select>
         </label>
 
-        <label className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+        <label className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
           <span>Category</span>
           <select
             value={categoryFilter}
             onChange={(event) => onCategoryFilterChange(event.target.value)}
-            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
           >
             <option value="all">All Categories</option>
             {categories.map((category) => (
@@ -137,12 +137,12 @@ const ProductFilters = ({
           </select>
         </label>
 
-        <label className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+        <label className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
           <span>Sort by</span>
           <select
             value={`${sortBy}-${sortOrder}`}
             onChange={handleSortChange}
-            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -152,12 +152,12 @@ const ProductFilters = ({
           </select>
         </label>
 
-        <label className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+        <label className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
           <span>Per page</span>
           <select
             value={productsPerPage}
             onChange={(event) => onProductsPerPageChange(Number(event.target.value))}
-            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
           >
             {perPageOptions.map((option) => (
               <option key={option} value={option}>

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
-import { formatCurrency, formatDate, getRelativeTime } from '../../../utils/helpers';
+import { formatCurrency, formatDate, getRelativeTime } from '../../utils/helpers';
 
 const OrderDetailsModal = ({ order, onClose, onStatusUpdate, onTrackOrder }) => {
   const orderItems = useMemo(() => {

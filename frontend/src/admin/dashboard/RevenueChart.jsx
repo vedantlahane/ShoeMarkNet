@@ -1,26 +1,30 @@
 import React, { useMemo } from 'react';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 } from 'chart.js';
-import { formatNumber } from '../../../utils/helpers';
+import { formatCurrency, formatPercentage } from '../../utils/helpers';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
-const OrdersChart = ({ data, timeRange, totalOrders, pending }) => {
+const RevenueChart = ({ data, timeRange, totalRevenue, growth }) => {
   const chartData = useMemo(() => {
     const labels = data.map(item => {
       const date = new Date(item.date);
@@ -29,29 +33,24 @@ const OrdersChart = ({ data, timeRange, totalOrders, pending }) => {
         date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     });
 
-    const orders = data.map(item => item.orders || 0);
-    const completedOrders = data.map(item => item.completed || 0);
+    const revenues = data.map(item => item.revenue || 0);
 
     return {
       labels,
       datasets: [
         {
-          label: 'Total Orders',
-          data: orders,
-          backgroundColor: 'rgba(139, 92, 246, 0.8)',
-          borderColor: 'rgb(139, 92, 246)',
-          borderWidth: 1,
-          borderRadius: 8,
-          borderSkipped: false,
-        },
-        {
-          label: 'Completed',
-          data: completedOrders,
-          backgroundColor: 'rgba(16, 185, 129, 0.8)',
-          borderColor: 'rgb(16, 185, 129)',
-          borderWidth: 1,
-          borderRadius: 8,
-          borderSkipped: false,
+          label: 'Revenue',
+          data: revenues,
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: 'rgb(59, 130, 246)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8,
         }
       ]
     };
@@ -62,23 +61,18 @@ const OrdersChart = ({ data, timeRange, totalOrders, pending }) => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
-        labels: {
-          color: '#6B7280',
-          usePointStyle: true,
-          padding: 20
-        }
+        display: false
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         titleColor: '#fff',
         bodyColor: '#fff',
-        borderColor: 'rgba(139, 92, 246, 0.3)',
+        borderColor: 'rgba(59, 130, 246, 0.3)',
         borderWidth: 1,
         cornerRadius: 12,
         callbacks: {
           label: function(context) {
-            return `${context.dataset.label}: ${formatNumber(context.parsed.y)}`;
+            return `Revenue: ${formatCurrency(context.parsed.y)}`;
           }
         }
       }
@@ -100,10 +94,14 @@ const OrdersChart = ({ data, timeRange, totalOrders, pending }) => {
         ticks: {
           color: '#6B7280',
           callback: function(value) {
-            return formatNumber(value);
+            return formatCurrency(value);
           }
         }
       }
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index'
     }
   };
 
@@ -112,33 +110,35 @@ const OrdersChart = ({ data, timeRange, totalOrders, pending }) => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-            <i className="fas fa-shopping-cart mr-3 text-purple-500"></i>
-            Orders Overview
+            <i className="fas fa-chart-line mr-3 text-blue-500"></i>
+            Revenue Analytics
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Monitor order trends and fulfillment
+            Track your earnings over time
           </p>
         </div>
         
         <div className="text-right">
           <div className="text-3xl font-bold text-gray-900 dark:text-white">
-            {formatNumber(totalOrders)}
+            {formatCurrency(totalRevenue)}
           </div>
-          <div className="text-sm text-yellow-600 dark:text-yellow-400">
-            <i className="fas fa-clock mr-1"></i>
-            {pending} pending
+          <div className={`text-sm font-medium ${
+            growth >= 0 ? 'text-green-600' : 'text-red-600'
+          }`}>
+            <i className={`fas ${growth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1`}></i>
+            {formatPercentage(Math.abs(growth))} vs last period
           </div>
         </div>
       </div>
       
       <div className="h-80">
         {data.length > 0 ? (
-          <Bar data={chartData} options={options} />
+          <Line data={chartData} options={options} />
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <i className="fas fa-shopping-cart text-gray-400 text-4xl mb-4"></i>
-              <p className="text-gray-500 dark:text-gray-400">No order data available</p>
+              <i className="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
+              <p className="text-gray-500 dark:text-gray-400">No revenue data available</p>
             </div>
           </div>
         )}
@@ -147,4 +147,4 @@ const OrdersChart = ({ data, timeRange, totalOrders, pending }) => {
   );
 };
 
-export default OrdersChart;
+export default RevenueChart;

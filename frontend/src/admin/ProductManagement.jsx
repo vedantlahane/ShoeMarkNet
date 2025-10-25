@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-import PageMeta from "../seo/PageMeta";
 
 // Redux actions
 import {
@@ -13,14 +12,14 @@ import {
   deleteProduct,
   bulkUpdateProducts,
   clearProductError
-} from "../../redux/slices/productSlice";
-import productService from "../../services/productService";
+} from "../redux/slices/productSlice";
+import productService from "../services/productService";
 
 // Components
-import LoadingSpinner from "../common/LoadingSpinner";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
-import Pagination from "../common/Pagination";
-import ProductCard from "../products/ProductCard";
+import Pagination from "../components/common/Pagination";
+import ProductCard from "../components/products/ProductCard";
 import ProductTable from "./products/ProductTable";
 import ProductModal from "./products/ProductModal";
 import ProductFilters from "./products/ProductFilters";
@@ -31,14 +30,14 @@ import ImportModal from "./products/ImportModal";
 import ImageGalleryModal from "./products/ImageGalleryModal";
 
 // Hooks
-import useWebSocket from "../../hooks/useWebSocket";
-import useLocalStorage from "../../hooks/useLocalStorage";
-import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
-import useDragAndDrop from "../../hooks/useDragAndDrop";
+import useWebSocket from "../hooks/useWebSocket";
+import useLocalStorage from "../hooks/useLocalStorage";
+import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
+import useDragAndDrop from "../hooks/useDragAndDrop";
 
 // Utils
-import { trackEvent } from "../../utils/analytics";
-import { validateProduct, generateSKU } from "../../utils/productUtils";
+import { trackEvent } from "../utils/analytics";
+import { validateProduct, generateSKU } from "../utils/productUtils";
 
 // Constants
 const PRODUCTS_PER_PAGE_OPTIONS = [12, 24, 48, 96];
@@ -831,310 +830,295 @@ const ProductManagement = ({ realtimeData, onDataUpdate, isLoading, externalActi
   }
 
   return (
-    <>
-      <PageMeta
-        title="Product Management | Admin Dashboard - ShoeMarkNet"
-        description="Manage your product catalog, inventory, and pricing with comprehensive admin tools."
-        robots="noindex, nofollow"
-      />
-
-      <section
-        className="space-y-6"
-        {...dragProps}
-      >
-        {isDragging && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/15 backdrop-blur-sm">
-            <div className="rounded-2xl border border-slate-200 bg-white/95 p-10 text-center shadow-xl dark:border-slate-700 dark:bg-slate-900/85">
-              <i className="fa-solid fa-cloud-arrow-up mb-4 text-5xl text-blue-500" />
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Drop files to upload</h3>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Supports images, CSV, and Excel formats</p>
-            </div>
+    <div className="space-y-6" {...dragProps}>
+      {isDragging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10 backdrop-blur-sm">
+          <div className="rounded-2xl border border-slate-200/80 bg-white/95 px-10 py-12 text-center shadow-xl dark:border-slate-700/70 dark:bg-slate-900/85">
+            <i className="fa-solid fa-cloud-arrow-up mb-5 text-5xl text-blue-500" />
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Drop files to upload</h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Images, CSV, and Excel files are supported.</p>
           </div>
-        )}
-
-        <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
-                  <i className="fa-solid fa-boxes-stacked text-blue-500" />
-                  Products
-                </div>
-                <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Product Management</h1>
-                <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                  <i className="fa-solid fa-store" />
-                  Manage your product catalog and inventory
-                </p>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                  <span className="inline-flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                    {isConnected ? 'Live updates enabled' : 'Offline'}
-                  </span>
-                  {refreshing && (
-                    <span className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-                      Refreshing…
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
-                  title="Refresh products (Ctrl+R)"
-                >
-                  <i className={`fa-solid fa-arrow-rotate-right ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900"
-                  title="Import products (Ctrl+I)"
-                >
-                  <i className="fa-solid fa-file-arrow-up" />
-                  Import
-                </button>
-                <button
-                  onClick={() => setShowExportModal(true)}
-                  className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1 dark:focus:ring-offset-slate-900"
-                  title="Export products (Ctrl+E)"
-                >
-                  <i className="fa-solid fa-file-arrow-down" />
-                  Export
-                </button>
-                <button
-                  onClick={openCreateModal}
-                  disabled={loading}
-                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 dark:focus:ring-offset-slate-900"
-                  title="Add new product (Ctrl+N)"
-                >
-                  <i className="fa-solid fa-plus" />
-                  Add product
-                </button>
-              </div>
-            </div>
-          </header>
         </div>
+      )}
 
-        {/* Enhanced Stats */}
-        <ProductStats 
-          stats={productStats}
-          realtimeData={realtimeData}
-          animateCards={animateCards}
-          className="mb-8"
-        />
-
-        {/* Enhanced Filters */}
-        <ProductFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={(field, order) => {
-            setSortBy(field);
-            setSortOrder(order);
-          }}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          productsPerPage={productsPerPage}
-          onProductsPerPageChange={setProductsPerPage}
-          selectedCount={selectedProducts.length}
-          totalCount={filteredAndSortedProducts.length}
-          onSelectAll={handleSelectAll}
-          onClearSelection={() => setSelectedProducts([])}
-          categories={categories}
-          statusFilters={STATUS_FILTERS}
-          sortOptions={SORT_OPTIONS}
-          perPageOptions={PRODUCTS_PER_PAGE_OPTIONS}
-          animateCards={animateCards}
-          className="mb-8"
-        />
-
-        {/* Bulk Actions */}
-        {selectedProducts.length > 0 && (
-          <BulkActionsPanel
-            selectedCount={selectedProducts.length}
-            actions={BULK_ACTIONS}
-            onBulkAction={handleBulkAction}
-            onClearSelection={() => setSelectedProducts([])}
-            animateCards={animateCards}
-            className="mb-8"
-          />
-        )}
-
-        {/* Products Display */}
-        {filteredAndSortedProducts.length === 0 ? (
-          <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
-                <i className="fa-solid fa-box-open text-3xl" />
+      <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-300">
+                <i className="fa-solid fa-boxes-stacked text-blue-500" />
+                Catalog
+              </span>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Product Management</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Maintain pricing, inventory, and merchandising from a streamlined workspace.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
-                  ? 'No products match your filters'
-                  : 'No products found'}
-              </h3>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
-                  ? 'Adjust your search or filters to see more results.'
-                  : 'Start building your catalog by adding your first product.'}
-              </p>
-              <div className="mt-6 flex justify-center gap-3">
-                {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all' ? (
-                  <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setStatusFilter('all');
-                      setCategoryFilter('all');
-                    }}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
-                  >
-                    <i className="fa-solid fa-xmark" />
-                    Clear filters
-                  </button>
-                ) : (
-                  <button
-                    onClick={openCreateModal}
-                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-                  >
-                    <i className="fa-solid fa-plus" />
-                    Add your first product
-                  </button>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                  {isConnected ? 'Live updates on' : 'Offline'}
+                </span>
+                {refreshing && (
+                  <span className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                    Syncing products…
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-2">
+                  <i className="fa-solid fa-layer-group" />
+                  {filteredAndSortedProducts.length.toLocaleString()} visible
+                </span>
+                {selectedProducts.length > 0 && (
+                  <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                    <i className="fa-solid fa-check-double" />
+                    {selectedProducts.length} selected
+                  </span>
                 )}
               </div>
             </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                title="Refresh products (Ctrl+R)"
+              >
+                <i className={`fa-solid fa-arrow-rotate-right ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                title="Import products (Ctrl+I)"
+              >
+                <i className="fa-solid fa-file-arrow-up" />
+                Import
+              </button>
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                title="Export products (Ctrl+E)"
+              >
+                <i className="fa-solid fa-file-arrow-down" />
+                Export
+              </button>
+              <button
+                onClick={openCreateModal}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-900"
+                title="Add new product (Ctrl+N)"
+              >
+                <i className="fa-solid fa-plus" />
+                New product
+              </button>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* Loading overlay */}
-            {(loading || refreshing) && products && (
-              <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-                <LoadingSpinner size="medium" message="Updating products..." />
-              </div>
-            )}
+        </div>
+      </div>
 
-            {viewMode === 'cards' ? (
-              /* Enhanced Cards View */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                {filteredAndSortedProducts.map((product, index) => (
-                  <ProductCard
-                    key={product._id}
-                    product={product}
-                    index={index}
-                    isSelected={selectedProducts.includes(product._id)}
-                    stockInfo={getStockStatus(product)}
-                    stockCount={calculateTotalStock(product)}
-                    onSelect={() => handleProductSelect(product._id)}
-                    onEdit={() => openEditModal(product)}
-                    onDelete={() => handleDeleteProduct(product._id, product.name)}
-                    onImageGallery={(images) => {
-                      setGalleryImages(images);
-                      setShowImageGallery(true);
-                    }}
-                    categories={categories}
-                    animateCards={animateCards}
-                  />
-                ))}
-              </div>
-            ) : (
-              /* Enhanced Table View */
-              <ProductTable
-                products={filteredAndSortedProducts}
-                selectedProducts={selectedProducts}
-                onSelect={handleProductSelect}
-                onSelectAll={handleSelectAll}
-                onEdit={openEditModal}
-                onDelete={handleDeleteProduct}
-                onImageGallery={(images) => {
-                  setGalleryImages(images);
-                  setShowImageGallery(true);
-                }}
-                getStockStatus={getStockStatus}
-                calculateTotalStock={calculateTotalStock}
-                categories={categories}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={(field) => {
-                  const newOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
-                  setSortBy(field);
-                  setSortOrder(newOrder);
-                }}
-                animateCards={animateCards}
-                className="mb-8"
-              />
-            )}
+      <ProductStats
+        stats={productStats}
+        realtimeData={realtimeData}
+        animateCards={animateCards}
+      />
 
-            {/* Enhanced Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={pagination.totalPages}
-                  onPageChange={setCurrentPage}
-                  showInfo={true}
-                  totalItems={pagination.totalItems}
-                  itemsPerPage={productsPerPage}
-                  className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
+      <ProductFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={(field, order) => {
+          setSortBy(field);
+          setSortOrder(order);
+        }}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        productsPerPage={productsPerPage}
+        onProductsPerPageChange={setProductsPerPage}
+        selectedCount={selectedProducts.length}
+        totalCount={filteredAndSortedProducts.length}
+        onSelectAll={handleSelectAll}
+        onClearSelection={() => setSelectedProducts([])}
+        categories={categories}
+        statusFilters={STATUS_FILTERS}
+        sortOptions={SORT_OPTIONS}
+        perPageOptions={PRODUCTS_PER_PAGE_OPTIONS}
+        animateCards={animateCards}
+      />
+
+      {selectedProducts.length > 0 && (
+        <BulkActionsPanel
+          selectedCount={selectedProducts.length}
+          actions={BULK_ACTIONS}
+          onBulkAction={handleBulkAction}
+          onClearSelection={() => setSelectedProducts([])}
+          animateCards={animateCards}
+        />
+      )}
+
+      {filteredAndSortedProducts.length === 0 ? (
+        <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+          <div className="rounded-2xl border border-slate-200 bg-white/80 px-10 py-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+              <i className="fa-solid fa-box-open text-2xl" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
+                ? 'No products match your filters'
+                : 'No products found'}
+            </h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
+                ? 'Try adjusting filters or clearing the search to broaden results.'
+                : 'Add your first product to start building the catalog.'}
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all' ? (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                    setCategoryFilter('all');
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                >
+                  <i className="fa-solid fa-xmark" />
+                  Clear filters
+                </button>
+              ) : (
+                <button
+                  onClick={openCreateModal}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                >
+                  <i className="fa-solid fa-plus" />
+                  Add your first product
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {(loading || refreshing) && products && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+              <LoadingSpinner size="medium" message="Updating products..." />
+            </div>
+          )}
+
+          {viewMode === 'cards' ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredAndSortedProducts.map((product, index) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  index={index}
+                  isSelected={selectedProducts.includes(product._id)}
+                  stockInfo={getStockStatus(product)}
+                  stockCount={calculateTotalStock(product)}
+                  onSelect={() => handleProductSelect(product._id)}
+                  onEdit={() => openEditModal(product)}
+                  onDelete={() => handleDeleteProduct(product._id, product.name)}
+                  onImageGallery={(images) => {
+                    setGalleryImages(images);
+                    setShowImageGallery(true);
+                  }}
+                  categories={categories}
+                  animateCards={animateCards}
                 />
-              </div>
-            )}
-          </>
-        )}
+              ))}
+            </div>
+          ) : (
+            <ProductTable
+              products={filteredAndSortedProducts}
+              selectedProducts={selectedProducts}
+              onSelect={handleProductSelect}
+              onSelectAll={handleSelectAll}
+              onEdit={openEditModal}
+              onDelete={handleDeleteProduct}
+              onImageGallery={(images) => {
+                setGalleryImages(images);
+                setShowImageGallery(true);
+              }}
+              getStockStatus={getStockStatus}
+              calculateTotalStock={calculateTotalStock}
+              categories={categories}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSort={(field) => {
+                const newOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
+                setSortBy(field);
+                setSortOrder(newOrder);
+              }}
+              animateCards={animateCards}
+            />
+          )}
 
-        {/* Modals */}
-        {isModalOpen && (
-          <ProductModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            isEditing={isEditing}
-            formData={formData}
-            formErrors={formErrors}
-            onFormChange={handleFormChange}
-            onSubmit={handleSubmit}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            categories={categories}
-            loading={loading}
-          />
-        )}
+          {pagination && pagination.totalPages > 1 && (
+            <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={setCurrentPage}
+                showInfo
+                totalItems={pagination.totalItems}
+                itemsPerPage={productsPerPage}
+                className="rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900/80"
+              />
+            </div>
+          )}
+        </>
+      )}
 
-        {showExportModal && (
-          <ExportModal
-            onClose={() => setShowExportModal(false)}
-            products={products}
-            selectedProducts={selectedProducts}
-            onExport={async (format, options) => {
-              // Export logic here
-              toast.success(`Products exported as ${format.toUpperCase()}`);
-            }}
-          />
-        )}
+      {isModalOpen && (
+        <ProductModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          isEditing={isEditing}
+          formData={formData}
+          formErrors={formErrors}
+          onFormChange={handleFormChange}
+          onSubmit={handleSubmit}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          categories={categories}
+          loading={loading}
+        />
+      )}
 
-        {showImportModal && (
-          <ImportModal
-            onClose={() => setShowImportModal(false)}
-            onImport={async (file, options) => {
-              // Import logic here
-              toast.success('Products imported successfully');
-              loadProductsData();
-            }}
-          />
-        )}
+      {showExportModal && (
+        <ExportModal
+          onClose={() => setShowExportModal(false)}
+          products={products}
+          selectedProducts={selectedProducts}
+          onExport={async (format) => {
+            toast.success(`Products exported as ${format.toUpperCase()}`);
+          }}
+        />
+      )}
 
-        {showImageGallery && (
-          <ImageGalleryModal
-            images={galleryImages}
-            onClose={() => setShowImageGallery(false)}
-          />
-        )}
-      </section>
-    </>
+      {showImportModal && (
+        <ImportModal
+          onClose={() => setShowImportModal(false)}
+          onImport={async () => {
+            toast.success('Products imported successfully');
+            loadProductsData();
+          }}
+        />
+      )}
+
+      {showImageGallery && (
+        <ImageGalleryModal
+          images={galleryImages}
+          onClose={() => setShowImageGallery(false)}
+        />
+      )}
+    </div>
   );
 };
 

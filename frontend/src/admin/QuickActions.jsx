@@ -25,7 +25,7 @@ const QuickActions = ({ onActionClick }) => {
         <i className="fa-solid fa-bolt mr-2 text-amber-500" />
         Quick actions
       </h4>
-      <div className="flex flex-col divide-y divide-slate-200/70 overflow-hidden rounded-md border border-slate-200/80 dark:divide-slate-800/70 dark:border-slate-700/70">
+      <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
           <button
             key={action.id}
@@ -35,13 +35,11 @@ const QuickActions = ({ onActionClick }) => {
                 onActionClick(action);
               }
             }}
-            className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/80"
+            className="group inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-slate-800"
           >
-            <span className="flex items-center gap-2">
-              <i className={`fa-solid ${action.icon}`} />
-              {action.label}
-            </span>
-            <i className="fa-solid fa-arrow-right text-xs text-slate-400 dark:text-slate-500" />
+            <i className={`fa-solid ${action.icon} text-xs`} />
+            {action.label}
+            <i className="fa-solid fa-arrow-right text-[11px] text-slate-400 transition group-hover:text-blue-500 dark:text-slate-500 dark:group-hover:text-blue-300" />
           </button>
         ))}
       </div>

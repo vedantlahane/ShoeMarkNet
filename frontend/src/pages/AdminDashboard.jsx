@@ -11,16 +11,16 @@ import { fetchAllOrders } from '../redux/slices/orderSlice';
 import { fetchUsers } from '../redux/slices/authSlice';
 import adminService from '../services/adminService';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import DashboardOverview from '../components/admin/DashboardOverview';
-import ProductManagement from '../components/admin/ProductManagement';
-import OrderManagement from '../components/admin/OrderManagement';
-import UserManagement from '../components/admin/UserManagement';
-import AnalyticsPanel from '../components/admin/AnalyticsPanel';
-import SettingsPanel from '../components/admin/SettingsPanel';
-import NotificationCenter from '../components/admin/NotificationCenter';
-import QuickActions from '../components/admin/QuickActions';
-import RealtimeStats from '../components/admin/RealtimeStats';
-import AdminSearchModal from '../components/admin/AdminSearchModal';
+import DashboardOverview from '../admin/DashboardOverview';
+import ProductManagement from '../admin/ProductManagement';
+import OrderManagement from '../admin/OrderManagement';
+import UserManagement from '../admin/UserManagement';
+import AnalyticsPanel from '../admin/AnalyticsPanel';
+import SettingsPanel from '../admin/SettingsPanel';
+import NotificationCenter from '../admin/NotificationCenter';
+import QuickActions from '../admin/QuickActions';
+import RealtimeStats from '../admin/RealtimeStats';
+import AdminSearchModal from '../admin/AdminSearchModal';
 
 // Hooks
 import useWebSocket from '../hooks/useWebSocket';
@@ -130,7 +130,6 @@ const AdminDashboard = ({ section = "overview" }) => {
   
   // Local state
   const [activeSection, setActiveSection] = useLocalStorage('adminActiveSection', section);
-  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('adminSidebarCollapsed', false);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [realtimeData, setRealtimeData] = useState({});
@@ -951,258 +950,196 @@ const AdminDashboard = ({ section = "overview" }) => {
   // SEO meta data for admin
   const currentSection = ADMIN_SECTIONS[activeSection];
   const metaTitle = `${currentSection?.label || 'Dashboard'} | Admin Panel - ShoeMarkNet`;
+  const showRealtimeStats =
+    isConnected && realtimeData && Object.keys(realtimeData || {}).length > 0;
 
   return (
     <>
-      {/* SEO Meta Tags */}
       <PageMeta
         title={metaTitle}
         description={`ShoeMarkNet admin panel - ${currentSection?.description || 'Manage your e-commerce platform'}`}
         robots="noindex, nofollow"
       />
 
-      <div className="flex min-h-screen">
-        <aside
-          className={`${sidebarCollapsed ? 'w-20' : 'w-72'} flex flex-col border-r border-slate-200/70 bg-white/70 backdrop-blur transition-all duration-300 dark:border-slate-800/70 dark:bg-slate-900/40`}
-        >
-          <div className="flex items-center justify-between px-4 py-4 border-b border-slate-200/60 dark:border-slate-800/60">
-            {!sidebarCollapsed && (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800/70 dark:bg-slate-900/70">
+          <div className="mx-auto max-w-7xl px-4 py-4 md:px-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
-                  <i className="fa-solid fa-crown text-sm"></i>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                  <i className="fa-solid fa-crown text-lg" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Admin Panel</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">ShoeMarkNet Control</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    ShoeMarkNet Control
+                  </p>
+                  <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                    Admin Console
+                  </h1>
                 </div>
               </div>
-            )}
 
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/70 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-blue-500"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <i className={`fas ${sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-sm`}></i>
-            </button>
-          </div>
-
-          {!sidebarCollapsed && (
-            <div className="px-4 pb-4 pt-3">
-              <div className="space-y-3 rounded-md border border-slate-200/80 bg-white/70 px-4 py-4 dark:border-slate-800/70 dark:bg-slate-900/40">
-                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                  <div className="relative">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-white font-semibold">
-                      {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-                    </span>
-                    <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white dark:border-slate-900 ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      {user?.name || 'Administrator'}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {userRole === 'admin' ? 'Super Admin' : 'Admin'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowSearchModal(true)}
+                  className="group hidden h-10 w-56 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 sm:flex"
+                  title="Open quick search"
+                >
                   <span className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                    {connectionStatus || (isConnected ? 'Connected' : 'Offline')}
+                    <i className="fa-solid fa-magnifying-glass" />
+                    Search anything...
                   </span>
-                  <span>{new Date().toLocaleTimeString()}</span>
-                </div>
+                  <span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                    ⌘K
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setShowSearchModal(true)}
+                  className="sm:hidden h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  aria-label="Open search"
+                >
+                  <i className="fa-solid fa-magnifying-glass" />
+                </button>
+
+                <button
+                  onClick={() => setShowNotificationCenter(true)}
+                  className="relative h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  title="Notifications"
+                >
+                  <i className="fa-solid fa-bell" />
+                  {unreadNotifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-semibold text-white">
+                      {unreadNotifications.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={toggleTheme}
+                  className="h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-label="Toggle theme"
+                >
+                  <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'}`} />
+                </button>
+
+                <button
+                  onClick={() => handleSectionChange('settings')}
+                  className="h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  title="Settings"
+                  aria-label="Open settings"
+                >
+                  <i className="fa-solid fa-gear" />
+                </button>
               </div>
             </div>
-          )}
 
-          <nav className="flex-1 overflow-y-auto px-3 pb-6">
-            <ul className="space-y-1">
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               {availableSections.map((item) => {
                 const isActive = activeSection === item.id;
 
                 return (
-                  <li key={item.id}>
-                    <button
-                      onClick={() => handleSectionChange(item.id)}
-                      className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                        sidebarCollapsed ? 'justify-center' : 'justify-start'
-                      } ${
-                        isActive
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                      title={sidebarCollapsed ? item.label : undefined}
-                    >
-                      <span
-                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
-                          isActive
-                            ? 'bg-white/20 text-white'
-                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'
-                        }`}
-                      >
-                        <i className={`fa-solid ${item.icon}`} />
-                      </span>
-                      {!sidebarCollapsed && (
-                        <span className="flex-1 text-left">
-                          <span className="block">{item.label}</span>
-                          <span className="block text-xs font-normal text-slate-500 dark:text-slate-400">
-                            {item.description}
-                          </span>
-                        </span>
-                      )}
-                    </button>
-                  </li>
+                  <button
+                    key={item.id}
+                    onClick={() => handleSectionChange(item.id)}
+                    className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      isActive
+                        ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                        : 'border-transparent bg-slate-100/70 text-slate-600 hover:border-slate-300 hover:bg-white dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-slate-600'
+                    }`}
+                    title={item.description}
+                  >
+                    <i className={`fa-solid ${item.icon} text-xs`} />
+                    <span>{item.label}</span>
+                  </button>
                 );
               })}
-            </ul>
+            </div>
+          </div>
+        </header>
 
-            {!sidebarCollapsed && (
-              <div className="mt-6 border-t border-slate-200/70 dark:border-slate-800/70 pt-6">
+        <main className="px-4 py-8 md:px-6">
+          <div className="mx-auto max-w-7xl space-y-8">
+            <section className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[2fr,1fr]">
+              <div className="space-y-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <i className={`fa-solid ${currentSection?.icon || 'fa-chart-pie'}`} />
+                  {currentSection?.label || 'Dashboard'}
+                </div>
+
+                <div className="space-y-3">
+                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                    {currentSection?.label || 'Dashboard'}
+                  </h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {currentSection?.description || 'Manage your e-commerce platform with a focused, simplified workspace.'}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-2">
+                    <i className="fa-solid fa-calendar-days" />
+                    {new Date().toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                    {connectionStatus || (isConnected ? 'Live updates on' : 'Offline')}
+                  </span>
+                  {unreadNotifications.length > 0 && (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
+                      <i className="fa-solid fa-bell" />
+                      {unreadNotifications.length} new
+                    </span>
+                  )}
+                </div>
+
+                {showRealtimeStats && (
+                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-700/70 dark:bg-slate-800/60">
+                    <RealtimeStats data={realtimeData} isConnected={isConnected} />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-slate-50/70 p-5 dark:border-slate-700/70 dark:bg-slate-800/60">
                 <QuickActions onActionClick={(action) => handleQuickAction(action.id)} />
               </div>
-            )}
-          </nav>
-        </aside>
+            </section>
 
-        <div className="flex flex-1 flex-col">
-          <header className="flex flex-col gap-4 border-b border-slate-200/70 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 dark:border-slate-800/70">
-            <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:gap-4">
-              <button
-                onClick={() => setSidebarCollapsed((prev) => !prev)}
-                className="hidden h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 md:flex"
-                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                <i className={`fas ${sidebarCollapsed ? 'fa-bars-staggered' : 'fa-bars'}`}></i>
-              </button>
-
-              <div>
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-300">
-                    <i className={`fa-solid ${currentSection?.icon || 'fa-chart-pie'}`} />
-                    {currentSection?.label || 'Dashboard'}
-                  </span>
-                </div>
-                <p className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 md:text-sm">
-                  <i className="fa-solid fa-calendar-days" />
-                  {new Date().toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-
-              <RealtimeStats data={realtimeData} isConnected={isConnected} />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowSearchModal(true)}
-                className="group hidden h-10 w-52 items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 sm:flex"
-              >
-                <span className="flex items-center gap-2">
-                  <i className="fa-solid fa-magnifying-glass" />
-                  Search anything...
-                </span>
-                <span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
-                  ⌘K
-                </span>
-              </button>
-
-              <button
-                onClick={() => setShowSearchModal(true)}
-                className="sm:hidden h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
-                aria-label="Open search"
-              >
-                <i className="fa-solid fa-magnifying-glass" />
-              </button>
-
-              <button
-                onClick={() => setShowNotificationCenter(true)}
-                className="relative h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
-                title="Notifications"
-              >
-                <i className="fa-solid fa-bell" />
-                {unreadNotifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-semibold text-white">
-                    {unreadNotifications.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={toggleTheme}
-                className="h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
-                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                aria-label="Toggle theme"
-              >
-                <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'}`} />
-              </button>
-
-              <button
-                onClick={() => handleSectionChange('settings')}
-                className="h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
-                title="Settings"
-                aria-label="Open settings"
-              >
-                <i className="fa-solid fa-gear" />
-              </button>
-            </div>
-          </header>
-
-          <main className="flex-1 overflow-y-auto">
-            <div className="px-4 py-6 md:px-6">
-              {renderSectionContent()}
-            </div>
-          </main>
-        </div>
-
-        {showSearchModal && (
-          <AdminSearchModal
-            onClose={() => setShowSearchModal(false)}
-            onSearch={handleSearch}
-            searchQuery={searchQuery}
-            onResultSelect={handleSearchResultSelect}
-          />
-        )}
-
-        {showNotificationCenter && (
-          <NotificationCenter
-            isOpen={showNotificationCenter}
-            notifications={notifications}
-            onClose={() => setShowNotificationCenter(false)}
-            onNotificationsChange={(updated) =>
-              setNotifications((updated || []).map(normalizeDashboardNotification))
-            }
-            onNotificationClick={handleNotificationClick}
-            onNotificationAction={handleNotificationAction}
-            position="right"
-          />
-        )}
+            {renderSectionContent()}
+          </div>
+        </main>
       </div>
+
+      {showSearchModal && (
+        <AdminSearchModal
+          onClose={() => setShowSearchModal(false)}
+          onSearch={handleSearch}
+          searchQuery={searchQuery}
+          onResultSelect={handleSearchResultSelect}
+        />
+      )}
+
+      {showNotificationCenter && (
+        <NotificationCenter
+          isOpen={showNotificationCenter}
+          notifications={notifications}
+          onClose={() => setShowNotificationCenter(false)}
+          onNotificationsChange={(updated) =>
+            setNotifications((updated || []).map(normalizeDashboardNotification))
+          }
+          onNotificationClick={handleNotificationClick}
+          onNotificationAction={handleNotificationAction}
+          position="right"
+        />
+      )}
     </>
   );
-};
-
-// Helper function for time formatting
-const formatTimeAgo = (value) => {
-  const targetDate = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(targetDate.getTime())) {
-    return '';
-  }
-
-  const now = new Date();
-  const diffInMinutes = Math.floor((now - targetDate) / (1000 * 60));
-  
-  if (diffInMinutes < 1) return 'Just now';
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-  return `${Math.floor(diffInMinutes / 1440)}d ago`;
 };
 
 export default AdminDashboard;

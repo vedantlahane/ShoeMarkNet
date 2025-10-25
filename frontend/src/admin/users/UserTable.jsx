@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
 // Utils
-import { trackEvent } from '../../../utils/analytics';
-import { formatDate, formatCurrency } from '../../../utils/helpers';
+import { trackEvent } from '../../utils/analytics';
+import { formatDate, formatCurrency } from '../../utils/helpers';
 
 // Hooks
-import useLocalStorage from '../../../hooks/useLocalStorage';
+import useLocalStorage from '../../hooks/useLocalStorage';
 
 const UserTable = ({
   users = [],

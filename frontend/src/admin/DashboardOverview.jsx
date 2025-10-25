@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-import PageMeta from '../seo/PageMeta';
+import PageMeta from '../components/seo/PageMeta';
 
-import adminService from '../../services/adminService';
+import adminService from '../services/adminService';
 
 // Components
-import LoadingSpinner from '../common/LoadingSpinner';
-import ErrorMessage from '../common/ErrorMessage';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
 import StatsCard from './dashboard/StatsCard';
 import RevenueChart from './dashboard/RevenueChart';
 import OrdersChart from './dashboard/OrdersChart';
@@ -19,12 +19,12 @@ import CustomerAnalytics from './dashboard/CustomerAnalytics';
 import LiveActivityFeed from './dashboard/LiveActivityFeed';
 
 // Hooks
-import useWebSocket from '../../hooks/useWebSocket';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import useWebSocket from '../hooks/useWebSocket';
+import useLocalStorage from '../hooks/useLocalStorage';
 
 // Utils
-import { trackEvent } from '../../utils/analytics';
-import { formatCurrency, formatNumber } from '../../utils/helpers';
+import { trackEvent } from '../utils/analytics';
+import { formatCurrency, formatNumber } from '../utils/helpers';
 
 // Constants
 const REFRESH_INTERVAL = 30000; // 30 seconds

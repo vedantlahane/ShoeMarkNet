@@ -5,10 +5,10 @@ const ToggleButton = ({ active, children, onClick, title }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`px-4 py-2 rounded-2xl border transition-all duration-200 flex items-center space-x-2 ${
+    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
       active
-        ? 'border-blue-500 text-blue-600 bg-blue-500/10'
-        : 'border-transparent hover:border-white/40 text-gray-600 dark:text-gray-300 hover:bg-white/10'
+        ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300'
+        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
     }`}
     title={title}
   >
@@ -17,15 +17,15 @@ const ToggleButton = ({ active, children, onClick, title }) => (
 );
 
 const SelectControl = ({ label, icon, value, options, onChange }) => (
-  <label className="flex flex-col lg:flex-row lg:items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-    <span className="flex items-center gap-2 font-semibold">
+  <label className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-300">
+    <span className="flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-200">
       <i className={`fas ${icon}`}></i>
       {label}
     </span>
     <select
       value={value}
       onChange={onChange}
-      className="bg-white/10 backdrop-blur-md border border-white/20 dark:border-gray-700/20 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
     >
       {options.map(option => (
         <option key={option.value} value={option.value}>
@@ -78,7 +78,7 @@ const UserFilters = ({
 
   return (
     <section
-      className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl p-6 space-y-6 transition-transform duration-300 ${
+      className={`rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm space-y-6 transition-transform duration-300 dark:border-slate-800 dark:bg-slate-900/80 ${
         animateCards ? 'animate-fade-in-up' : ''
       } ${className}`}
     >
@@ -86,14 +86,14 @@ const UserFilters = ({
       <div className="flex flex-col xl:flex-row xl:items-center gap-4 justify-between">
         <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="relative flex-1 min-w-[220px]">
-            <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input
               ref={searchInputRef}
               type="search"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search users by name, email, or ID..."
-              className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-xl border border-slate-200 bg-white pl-12 pr-4 py-3 text-sm text-slate-700 placeholder-slate-400 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-blue-500"
             />
           </div>
 
@@ -117,7 +117,7 @@ const UserFilters = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+        <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-300">
           <span>
             {selectedCount > 0
               ? `${selectedCount} selected`
@@ -129,14 +129,14 @@ const UserFilters = ({
               <button
                 type="button"
                 onClick={onSelectAll}
-                className="px-3 py-1 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 dark:border-gray-700/20"
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
               >
                 Select All
               </button>
               <button
                 type="button"
                 onClick={onClearSelection}
-                className="px-3 py-1 rounded-2xl bg-transparent hover:bg-white/10 text-red-500"
+                className="rounded-xl border border-transparent px-3 py-2 text-xs font-semibold text-rose-500 transition hover:border-rose-400 hover:bg-rose-50/60 dark:hover:bg-rose-500/10"
               >
                 Clear
               </button>
@@ -179,7 +179,7 @@ const UserFilters = ({
 
       {/* Advanced filters */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label className="flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <label className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-300">
           <span className="font-semibold flex items-center gap-2">
             <i className="fas fa-calendar"></i>
             Registered After
@@ -188,10 +188,10 @@ const UserFilters = ({
             type="date"
             value={dateRange.start || ''}
             onChange={(e) => onDateRangeChange({ ...dateRange, start: e.target.value })}
-            className="bg-white/10 backdrop-blur-md border border-white/20 dark:border-gray-700/20 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
           />
         </label>
-        <label className="flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <label className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-300">
           <span className="font-semibold flex items-center gap-2">
             <i className="fas fa-calendar-day"></i>
             Registered Before
@@ -200,10 +200,10 @@ const UserFilters = ({
             type="date"
             value={dateRange.end || ''}
             onChange={(e) => onDateRangeChange({ ...dateRange, end: e.target.value })}
-            className="bg-white/10 backdrop-blur-md border border-white/20 dark:border-gray-700/20 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
           />
         </label>
-        <label className="flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <label className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-300">
           <span className="font-semibold flex items-center gap-2">
             <i className="fas fa-bullseye"></i>
             Lead Score Range
@@ -215,20 +215,20 @@ const UserFilters = ({
               max={100}
               value={leadScoreRange.min}
               onChange={(e) => onLeadScoreRangeChange({ ...leadScoreRange, min: Number(e.target.value) })}
-              className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 dark:border-gray-700/20 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
             />
-            <span className="text-gray-400">to</span>
+            <span className="text-slate-400 dark:text-slate-500">to</span>
             <input
               type="number"
               min={0}
               max={100}
               value={leadScoreRange.max}
               onChange={(e) => onLeadScoreRangeChange({ ...leadScoreRange, max: Number(e.target.value) })}
-              className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 dark:border-gray-700/20 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
             />
           </div>
         </label>
-        <label className="flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <label className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-300">
           <span className="font-semibold flex items-center gap-2">
             <i className="fas fa-map-marker-alt"></i>
             Location
@@ -238,7 +238,7 @@ const UserFilters = ({
             value={locationFilter}
             onChange={(e) => onLocationFilterChange(e.target.value)}
             placeholder="City, state, or country"
-            className="bg-white/10 backdrop-blur-md border border-white/20 dark:border-gray-700/20 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-500"
           />
         </label>
       </div>

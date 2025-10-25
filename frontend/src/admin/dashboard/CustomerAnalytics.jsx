@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { formatCurrency, formatNumber, formatPercentage } from '../../../utils/helpers';
+import { formatCurrency, formatNumber, formatPercentage } from '../../utils/helpers';
 
 const CustomerAnalytics = ({ users = [], orders = [], metrics }) => {
   const summary = useMemo(() => {

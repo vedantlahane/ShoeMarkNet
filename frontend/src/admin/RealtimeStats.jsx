@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatNumber, formatCurrency } from '../../utils/helpers';
+import { formatNumber, formatCurrency } from '../utils/helpers';
 
 const RealtimeStats = ({ data, isConnected }) => {
   if (!data || !isConnected) return null;

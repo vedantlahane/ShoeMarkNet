@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { formatCurrency, formatNumber } from '../../../utils/helpers';
+import { formatCurrency, formatNumber } from '../../utils/helpers';
 
 const SortButton = ({ field, activeField, activeOrder, onSort, children }) => {
   const isActive = activeField === field;

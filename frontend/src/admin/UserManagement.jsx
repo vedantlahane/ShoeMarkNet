@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
-import PageMeta from '../seo/PageMeta';
 
 // Redux actions
 import {
@@ -11,14 +10,14 @@ import {
   deleteUser,
   bulkUpdateUsers,
   exportUsers
-} from '../../redux/slices/authSlice';
-import userService from '../../services/userService';
+} from '../redux/slices/authSlice';
+import userService from '../services/userService';
 
 // Components
-import LoadingSpinner from '../common/LoadingSpinner';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
-import ErrorMessage from '../common/ErrorMessage';
-import Pagination from '../common/Pagination';
+import ErrorMessage from '../components/common/ErrorMessage';
+import Pagination from '../components/common/Pagination';
 import UserCard from './users/UserCard';
 import UserTable from './users/UserTable';
 import UserModal from './users/UserModal';
@@ -30,16 +29,17 @@ import ExportModal from './users/ExportModal';
 import ImportModal from './users/ImportModal';
 import UserActivityModal from './users/UserActivityModal';
 import RoleManagementModal from './users/RoleManagementModal';
+import PageMeta from '../components/seo/PageMeta';
 
 // Hooks
-import useWebSocket from '../../hooks/useWebSocket';
-import useLocalStorage from '../../hooks/useLocalStorage';
-import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts';
-import usePermissions from '../../hooks/usePermissions';
+import useWebSocket from '../hooks/useWebSocket';
+import useLocalStorage from '../hooks/useLocalStorage';
+import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
+import usePermissions from '../hooks/usePermissions';
 
 // Utils
-import { trackEvent } from '../../utils/analytics';
-import { formatDate, getRelativeTime } from '../../utils/helpers';
+import { trackEvent } from '../utils/analytics';
+import { formatDate, getRelativeTime } from '../utils/helpers';
 // import { validateUser, calculateLeadScore } from '../../utils/userUtils';
 
 // Constants

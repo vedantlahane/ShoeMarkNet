@@ -2,37 +2,37 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
-import PageMeta from '../seo/PageMeta';
+import PageMeta from '../components/seo/PageMeta';
 
 // Redux actions
 import { 
   fetchAllOrders, 
   updateOrderStatus, 
   deleteOrder 
-} from '../../redux/slices/orderSlice';
-import orderService from '../../services/orderService';
+} from '../redux/slices/orderSlice';
+import orderService from '../services/orderService';
 
 // Components
-import LoadingSpinner from '../common/LoadingSpinner';
-import ErrorMessage from '../common/ErrorMessage';
-import Pagination from '../common/Pagination';
-import OrderCard from '../orders/OrderCard';
-import OrderTable from '../orders/OrderTable';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
+import Pagination from '../components/common/Pagination';
+import OrderCard from '../components/orders/OrderCard';
+import OrderTable from '../components/orders/OrderTable';
 import OrderDetailsModal from './orders/OrderDetailsModal';
-import OrderFilters from '../orders/OrderFilters';
-import OrderStats from '../orders/OrderStats';
+import OrderFilters from '../components/orders/OrderFilters';
+import OrderStats from '../components/orders/OrderStats';
 import OrderBulkActions from './orders/OrderBulkActions';
 import ExportModal from './orders/ExportModal';
 import OrderTrackingModal from './orders/OrderTrackingModal';
 
 // Hooks
-import useWebSocket from '../../hooks/useWebSocket';
-import useLocalStorage from '../../hooks/useLocalStorage';
-import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts';
+import useWebSocket from '../hooks/useWebSocket';
+import useLocalStorage from '../hooks/useLocalStorage';
+import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 
 // Utils
-import { trackEvent } from '../../utils/analytics';
-import { formatCurrency, formatDate, getRelativeTime } from '../../utils/helpers';
+import { trackEvent } from '../utils/analytics';
+import { formatCurrency, formatDate, getRelativeTime } from '../utils/helpers';
 
 // Constants
 const ORDER_STATUSES = {

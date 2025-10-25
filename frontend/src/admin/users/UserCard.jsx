@@ -3,8 +3,8 @@ import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
 // Utils
-import { trackEvent } from '../../../utils/analytics';
-import { formatDate } from '../../../utils/helpers';
+import { trackEvent } from '../../utils/analytics';
+import { formatDate } from '../../utils/helpers';
 
 const UserCard = ({
   user = {},

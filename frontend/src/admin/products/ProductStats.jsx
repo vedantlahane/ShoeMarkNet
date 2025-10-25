@@ -1,25 +1,25 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { formatCurrency, formatNumber } from '../../../utils/helpers';
+import { formatCurrency, formatNumber } from '../../utils/helpers';
 
 const MetricCard = ({ icon, title, value, helper, accent, animate, style }) => (
   <div
-    className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-6 shadow-xl transition-transform duration-300 ${
+    className={`rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm transition duration-300 dark:border-slate-800 dark:bg-slate-900/80 ${
       animate ? 'animate-fade-in-up' : ''
     }`}
     style={style}
   >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">{title}</p>
-        <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{value}</h3>
+    <div className="flex items-center justify-between gap-4">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{title}</p>
+        <h3 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</h3>
       </div>
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white ${accent}`}>
-        <i className={`fas ${icon} text-lg`}></i>
-      </div>
+      <span className={`flex h-12 w-12 items-center justify-center rounded-xl text-white ${accent}`}>
+        <i className={`fas ${icon} text-lg`} />
+      </span>
     </div>
     {helper && (
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">{helper}</p>
+      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{helper}</p>
     )}
   </div>
 );
@@ -69,7 +69,7 @@ const ProductStats = ({ stats, realtimeData, animateCards = false, className = '
   ];
 
   return (
-    <section className={`grid gap-6 sm:grid-cols-2 xl:grid-cols-4 ${className}`}>
+  <section className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-4 ${className}`}>
       {cards.map((card, index) => (
         <MetricCard
           key={card.key}

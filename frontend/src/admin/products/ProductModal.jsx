@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { validateProduct } from '../../../utils/productUtils';
-import { formatCurrency } from '../../../utils/helpers';
+import { validateProduct } from '../../utils/productUtils';
+import { formatCurrency } from '../../utils/helpers';
 
 const TABS = [
   { id: 'basic', label: 'Basic Info', icon: 'fa-info-circle' },

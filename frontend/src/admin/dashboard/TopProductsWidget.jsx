@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { formatCurrency, formatNumber } from '../../../utils/helpers';
+import { formatCurrency, formatNumber } from '../../utils/helpers';
 
 const getProductKey = (item) => {
   if (!item) return null;

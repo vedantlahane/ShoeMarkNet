@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import orderService from '../../../services/orderService';
-import { formatDate, getRelativeTime } from '../../../utils/helpers';
+import orderService from '../../services/orderService';
+import { formatDate, getRelativeTime } from '../../utils/helpers';
 
 const OrderTrackingModal = ({ orderId, onClose }) => {
   const [trackingInfo, setTrackingInfo] = useState(null);
