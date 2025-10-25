@@ -14,10 +14,10 @@ import {
 import userService from '../../services/userService';
 
 // Components
-import LoadingSpinner from '../common/LoadingSpinner';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-import ErrorMessage from '../common/ErrorMessage';
-import Pagination from '../common/Pagination';
+import ErrorMessage from '../../components/common/ErrorMessage';
+import Pagination from '../../components/common/Pagination';
 import UserCard from './users/UserCard';
 import UserTable from './users/UserTable';
 import UserModal from './users/UserModal';
@@ -29,7 +29,7 @@ import ExportModal from './users/ExportModal';
 import ImportModal from './users/ImportModal';
 import UserActivityModal from './users/UserActivityModal';
 import RoleManagementModal from './users/RoleManagementModal';
-import PageMeta from '../seo/PageMeta';
+import PageMeta from '../../components/seo/PageMeta';
 
 // Hooks
 import useWebSocket from '../../hooks/useWebSocket';
