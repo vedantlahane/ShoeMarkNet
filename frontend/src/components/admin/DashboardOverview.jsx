@@ -280,7 +280,7 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
 
   if (isLoading || (!enhancedMetrics && (productsLoading || ordersLoading || usersLoading))) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="admin-page admin-page--center">
         <div className="flex justify-center items-center h-96">
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
             <LoadingSpinner size="large" />
@@ -300,7 +300,7 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
 
   if (!enhancedMetrics) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+      <div className="admin-page">
         <ErrorMessage 
           message="Failed to load dashboard data"
           onRetry={fetchDashboardData}
@@ -317,9 +317,9 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
         description="Comprehensive admin dashboard with real-time analytics, order management, and business insights for ShoeMarkNet."
         robots="noindex, nofollow"
       />
+      <div className="admin-page">
+        <div className="admin-content">
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-        
         {/* Enhanced Header */}
         <div className={`mb-8 ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`}>
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
@@ -553,9 +553,8 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
         <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.3s' }}>
           <QuickActionGrid onAction={(action) => onQuickAction?.(action.id)} />
         </div>
-
-        {/* Custom Styles */}
       </div>
+    </div>
     </>
   );
 };

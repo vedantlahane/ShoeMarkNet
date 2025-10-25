@@ -5,27 +5,24 @@ const QuickActions = ({ onActionClick }) => {
     {
       id: 'add_product',
       label: 'Add Product',
-      icon: 'fa-plus',
-      color: 'from-green-500 to-emerald-500'
+      icon: 'fa-plus'
     },
     {
       id: 'bulk_import',
       label: 'Bulk Import',
-      icon: 'fa-upload',
-      color: 'from-blue-500 to-cyan-500'
+      icon: 'fa-upload'
     },
     {
       id: 'export_data',
       label: 'Export Data',
-      icon: 'fa-download',
-      color: 'from-purple-500 to-pink-500'
+      icon: 'fa-download'
     }
   ];
 
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-        <i className="fas fa-bolt mr-2 text-yellow-500"></i>
+      <h4 className="mb-3 flex items-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <i className="fas fa-bolt mr-2 text-amber-400"></i>
         Quick Actions
       </h4>
       <div className="space-y-2">
@@ -37,10 +34,13 @@ const QuickActions = ({ onActionClick }) => {
                 onActionClick(action);
               }
             }}
-            className={`w-full flex items-center p-3 rounded-xl bg-gradient-to-r ${action.color} text-white hover:scale-105 transition-all duration-200 shadow-lg`}
+            className="admin-quick-action"
           >
-            <i className={`fas ${action.icon} mr-3`}></i>
-            <span className="font-medium">{action.label}</span>
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <i className={`fas ${action.icon}`}></i>
+              {action.label}
+            </span>
+            <i className="fas fa-arrow-right text-xs text-slate-400 dark:text-slate-500"></i>
           </button>
         ))}
       </div>

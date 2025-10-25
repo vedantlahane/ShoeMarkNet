@@ -961,80 +961,64 @@ const AdminDashboard = ({ section = "overview" }) => {
         robots="noindex, nofollow"
       />
 
-      <div className="flex h-screen overflow-hidden">
-
-        {/* Enhanced Admin Sidebar */}
-        <div className={`${sidebarCollapsed ? 'w-20' : 'w-80'} transition-all duration-300 bg-white/10 backdrop-blur-xl border-r border-white/20 dark:border-gray-700/20 shadow-2xl relative flex flex-col`}>
-
-          {/* Sidebar Header */}
-          <div className="p-3 border-b border-white/20 dark:border-gray-700/20 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              {!sidebarCollapsed && (
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                      <i className="fas fa-crown"></i>
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        Admin Panel
-                      </h2>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">ShoeMarkNet Control Center</p>
-                    </div>
-                  </div>
-
-                  {/* Enhanced Admin Info */}
-                  <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-lg p-2">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="relative">
-                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-                        </div>
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-                          isConnected ? 'bg-green-500' : 'bg-red-500'
-                        }`}></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 dark:text-white text-xs truncate">
-                          {user?.name || 'Administrator'}
-                        </p>
-                        <div className="flex items-center space-x-1">
-                          <i className="fas fa-crown text-yellow-500 text-xs"></i>
-                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                            {userRole === 'admin' ? 'Super Admin' : 'Admin'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Connection Status */}
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center space-x-1">
-                        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {isConnected ? 'Connected' : 'Disconnected'}
-                        </span>
-                      </div>
-                      <span className="text-gray-500 dark:text-gray-500">
-                        {new Date().toLocaleTimeString()}
-                      </span>
-                    </div>
-                  </div>
+      <div className="admin-dashboard flex min-h-screen">
+        <aside
+          className={`${sidebarCollapsed ? 'w-20' : 'w-72'} admin-sidebar flex flex-col transition-all duration-300`}
+        >
+          <div className="flex items-center justify-between px-4 py-4 border-b border-slate-200/60 dark:border-slate-800/60">
+            {!sidebarCollapsed && (
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
+                  <i className="fas fa-crown text-sm"></i>
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Admin Panel</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ShoeMarkNet Control</p>
                 </div>
-              )}
+              </div>
+            )}
 
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="w-8 h-8 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200 ml-auto"
-                title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-              >
-                <i className={`fas ${sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
-              </button>
-            </div>
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/70 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-blue-500"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <i className={`fas ${sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-sm`}></i>
+            </button>
           </div>
 
-          {/* Enhanced Navigation */}
-          <nav className="flex-1 overflow-y-auto p-2">
+          {!sidebarCollapsed && (
+            <div className="px-4 pb-4 pt-3">
+              <div className="admin-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-semibold">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                    </span>
+                    <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white dark:border-slate-900 ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {user?.name || 'Administrator'}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {userRole === 'admin' ? 'Super Admin' : 'Admin'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    {connectionStatus || (isConnected ? 'Connected' : 'Offline')}
+                  </span>
+                  <span>{new Date().toLocaleTimeString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <nav className="flex-1 overflow-y-auto px-3 pb-6">
             <ul className="space-y-1">
               {availableSections.map((item) => {
                 const isActive = activeSection === item.id;
@@ -1043,37 +1027,31 @@ const AdminDashboard = ({ section = "overview" }) => {
                   <li key={item.id}>
                     <button
                       onClick={() => handleSectionChange(item.id)}
-                      className={`group w-full flex items-center ${sidebarCollapsed ? 'justify-center p-2' : 'justify-start p-3'} rounded-lg transition-all duration-300 relative overflow-hidden ${
+                      className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                        sidebarCollapsed ? 'justify-center' : 'justify-start'
+                      } ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-xl transform scale-105 ring-2 ring-white/20`
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-white/20 hover:text-gray-900 dark:hover:text-white hover:scale-102'
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
-                      title={sidebarCollapsed ? item.label : ''}
+                      title={sidebarCollapsed ? item.label : undefined}
                     >
-                      {/* Background shimmer effect for active item */}
-                      {isActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 animate-shimmer"></div>
-                      )}
-
-                      <div className={`${sidebarCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg flex items-center justify-center ${
-                        isActive
-                          ? 'bg-white/20 text-white shadow-lg'
-                          : 'bg-white/10 group-hover:bg-white/20 text-current'
-                      } transition-all duration-200 relative z-10`}>
-                        <i className={`fas ${item.icon} ${sidebarCollapsed ? 'text-base' : 'text-lg'}`}></i>
-                      </div>
-
+                      <span
+                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+                          isActive
+                            ? 'bg-white/20 text-white'
+                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'
+                        }`}
+                      >
+                        <i className={`fas ${item.icon}`}></i>
+                      </span>
                       {!sidebarCollapsed && (
-                        <div className="ml-3 flex-1 relative z-10">
-                          <span className="block font-semibold text-sm leading-tight">{item.label}</span>
-                          <span className="block text-xs opacity-75 mt-0.5">{item.description}</span>
-                        </div>
-                      )}
-
-                      {!sidebarCollapsed && isActive && (
-                        <div className="ml-auto relative z-10">
-                          <i className="fas fa-chevron-right opacity-75"></i>
-                        </div>
+                        <span className="flex-1 text-left">
+                          <span className="block">{item.label}</span>
+                          <span className="block text-xs font-normal text-slate-500 dark:text-slate-400">
+                            {item.description}
+                          </span>
+                        </span>
                       )}
                     </button>
                   </li>
@@ -1081,114 +1059,109 @@ const AdminDashboard = ({ section = "overview" }) => {
               })}
             </ul>
 
-            {/* Quick Actions */}
             {!sidebarCollapsed && (
-              <div className="mt-4 pt-3 border-t border-white/20 dark:border-gray-700/20">
-                <QuickActions
-                  onActionClick={(action) => handleQuickAction(action.id)}
-                />
+              <div className="mt-6 border-t border-slate-200/70 dark:border-slate-800/70 pt-6">
+                <QuickActions onActionClick={(action) => handleQuickAction(action.id)} />
               </div>
             )}
           </nav>
-         
-        </div>
+        </aside>
 
-        {/* Enhanced Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col">
+          <header className="admin-topbar flex flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+            <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:gap-4">
+              <button
+                onClick={() => setSidebarCollapsed((prev) => !prev)}
+                className="hidden h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 md:flex"
+                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                <i className={`fas ${sidebarCollapsed ? 'fa-bars-staggered' : 'fa-bars'}`}></i>
+              </button>
 
-          {/* Enhanced Top Bar */}
-          <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 p-3 shadow-lg flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setSidebarCollapsed(prev => !prev)}
-                  className="hidden md:flex w-10 h-10 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-lg items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
-                  title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-                  aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                >
-                  <i className={`fas ${sidebarCollapsed ? 'fa-bars-staggered' : 'fa-bars'}`}></i>
-                </button>
-
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                    <i className={`fas ${currentSection?.icon} mr-2 text-blue-500`}></i>
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="admin-pill">
+                    <i className={`fas ${currentSection?.icon || 'fa-chart-pie'}`}></i>
                     {currentSection?.label || 'Dashboard'}
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 flex items-center mt-0.5 text-sm">
-                    <i className="fas fa-calendar mr-1"></i>
-                    {new Date().toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
+                  </span>
                 </div>
-
-                {/* Real-time Stats Bar */}
-                <RealtimeStats
-                  data={realtimeData}
-                  isConnected={isConnected}
-                />
+                <p className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 md:text-sm">
+                  <i className="fas fa-calendar"></i>
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
               </div>
 
-              <div className="flex items-center space-x-2">
-                {/* Enhanced Search */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowSearchModal(true)}
-                    className="w-48 flex items-center justify-start pl-3 pr-8 py-1.5 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-white/20 transition-all duration-200 text-sm"
-                  >
-                    <i className="fas fa-search mr-2"></i>
-                    <span>Search anything...</span>
-                    <span className="absolute right-2 text-xs bg-white/20 px-1.5 py-0.5 rounded">⌘K</span>
-                  </button>
-                </div>
-
-                {/* Enhanced Notifications */}
-                <button
-                  onClick={() => setShowNotificationCenter(true)}
-                  className="relative w-10 h-10 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
-                  title="Notifications"
-                >
-                  <i className="fas fa-bell"></i>
-                  {unreadNotifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
-                      {unreadNotifications.length}
-                    </span>
-                  )}
-                </button>
-
-                {/* Theme Toggle */}
-                <button
-                  onClick={toggleTheme}
-                  className="w-10 h-10 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
-                  title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                  aria-label="Toggle theme"
-                >
-                  <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-                </button>
-
-
-                {/* Settings */}
-                <button
-                  onClick={() => handleSectionChange('settings')}
-                  className="w-10 h-10 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/20 transition-all duration-200"
-                  title="Settings"
-                >
-                  <i className="fas fa-cog"></i>
-                </button>
-              </div>
+              <RealtimeStats data={realtimeData} isConnected={isConnected} />
             </div>
-          </div>
 
-          {/* Main Content Area */}
-          <div className="flex-1 overflow-auto p-3">
-            {renderSectionContent()}
-          </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="group hidden h-10 w-52 items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 sm:flex"
+              >
+                <span className="flex items-center gap-2">
+                  <i className="fas fa-search"></i>
+                  Search anything...
+                </span>
+                <span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                  ⌘K
+                </span>
+              </button>
+
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="sm:hidden h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                aria-label="Open search"
+              >
+                <i className="fas fa-search"></i>
+              </button>
+
+              <button
+                onClick={() => setShowNotificationCenter(true)}
+                className="relative h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                title="Notifications"
+              >
+                <i className="fas fa-bell"></i>
+                {unreadNotifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-semibold text-white">
+                    {unreadNotifications.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className="h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label="Toggle theme"
+              >
+                <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+              </button>
+
+              <button
+                onClick={() => handleSectionChange('settings')}
+                className="h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                title="Settings"
+                aria-label="Open settings"
+              >
+                <i className="fas fa-cog"></i>
+              </button>
+            </div>
+          </header>
+
+          <main className="admin-scroll flex-1">
+            <div className="admin-content">
+              {renderSectionContent()}
+            </div>
+          </main>
         </div>
 
-        {/* Modals */}
         {showSearchModal && (
           <AdminSearchModal
             onClose={() => setShowSearchModal(false)}
@@ -1211,8 +1184,6 @@ const AdminDashboard = ({ section = "overview" }) => {
             position="right"
           />
         )}
-
-        {/* Custom Styles */}
       </div>
     </>
   );

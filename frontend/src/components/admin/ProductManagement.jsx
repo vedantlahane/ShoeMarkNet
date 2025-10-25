@@ -815,7 +815,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
   // Loading state
   if (isLoading || (loading && !products)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+      <div className="admin-page">
         <div className="flex justify-center items-center h-96">
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
             <LoadingSpinner size="large" />
@@ -841,9 +841,10 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
       />
 
       <div 
-        className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6"
+        className="admin-page"
         {...dragProps}
       >
+        <div className="admin-content">
         
         {/* Drag overlay */}
         {isDragging && (
@@ -1143,6 +1144,7 @@ const ProductManagement = ({ stats, realtimeData, onDataUpdate, isLoading, exter
         )}
 
         {/* Custom Styles */}
+        </div>
       </div>
     </>
   );

@@ -420,18 +420,16 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   // Loading state
   if (isLoading || (loading && !adminOrders?.items?.length)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-        <div className="flex justify-center items-center h-96">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-            <LoadingSpinner size="large" />
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 mt-6">
-              <i className="fas fa-shopping-cart mr-2 text-blue-500"></i>
-              Loading Orders
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Fetching order data and analytics...
-            </p>
-          </div>
+      <div className="admin-page admin-page--center">
+        <div className="admin-card max-w-md w-full p-10 text-center">
+          <LoadingSpinner size="large" />
+          <h3 className="mt-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
+            <i className="fas fa-shopping-cart mr-2 text-blue-500"></i>
+            Loading orders
+          </h3>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Fetching order data and analytics…
+          </p>
         </div>
       </div>
     );
@@ -440,7 +438,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   // Error state
   if (error && !adminOrders?.items?.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+      <div className="admin-page admin-page--center">
         <ErrorMessage
           message={error.message || 'Failed to load orders'}
           onRetry={fetchOrdersData}
@@ -460,250 +458,244 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-        
-        {/* Enhanced Header */}
-        <div className={`mb-8 ${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-            
-            {/* Background Effects */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
-            
-            <div className="relative z-10">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                <div>
-                  <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                    <i className="fas fa-shopping-cart mr-3"></i>
-                    Order Management
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-lg flex items-center">
-                    <i className="fas fa-chart-line mr-2"></i>
-                    Monitor and manage all customer orders
-                    {isConnected && (
-                      <span className="ml-4 flex items-center text-green-600 dark:text-green-400">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                        Live Updates
-                      </span>
-                    )}
-                  </p>
-                </div>
-                
-                {/* Enhanced Action Buttons */}
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-2xl hover:bg-white/30 transition-all duration-200 disabled:opacity-50"
-                    title="Refresh Orders"
-                  >
-                    <i className={`fas fa-sync-alt mr-2 ${refreshing ? 'animate-spin' : ''}`}></i>
-                    Refresh
-                  </button>
-                  <button
-                    onClick={() => setShowExportModal(true)}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                  >
-                    <i className="fas fa-file-export mr-2"></i>
-                    Export
-                  </button>
-                  <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105">
-                    <i className="fas fa-plus mr-2"></i>
-                    Add Order
-                  </button>
+      <div className="admin-page">
+        <div className="admin-content space-y-8">
+          {/* Enhanced Header */}
+          <section className={animateCards ? 'animate-fade-in-up' : 'opacity-0'}>
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+              {/* Background Effects */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
+              <div className="relative z-10">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                      <i className="fas fa-shopping-cart mr-3"></i>
+                      Order Management
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg flex items-center">
+                      <i className="fas fa-chart-line mr-2"></i>
+                      Monitor and manage all customer orders
+                      {isConnected && (
+                        <span className="ml-4 flex items-center text-green-600 dark:text-green-400">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+                          Live Updates
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  {/* Enhanced Action Buttons */}
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                      className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-2xl hover:bg-white/30 transition-all duration-200 disabled:opacity-50"
+                      title="Refresh Orders"
+                    >
+                      <i className={`fas fa-sync-alt mr-2 ${refreshing ? 'animate-spin' : ''}`}></i>
+                      Refresh
+                    </button>
+                    <button
+                      onClick={() => setShowExportModal(true)}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105"
+                    >
+                      <i className="fas fa-file-export mr-2"></i>
+                      Export
+                    </button>
+                    <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105">
+                      <i className="fas fa-plus mr-2"></i>
+                      Add Order
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </section>
 
-        {/* Enhanced Stats */}
-        <OrderStats 
-          stats={orderStats}
-          realtimeData={realtimeData}
-          animateCards={animateCards}
-          className="mb-8"
-        />
-
-        {/* Enhanced Filters */}
-        <OrderFilters
-          statusFilter={statusFilter}
-          searchTerm={searchTerm}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          viewMode={viewMode}
-          ordersPerPage={ordersPerPage}
-          dateRange={dateRange}
-          priceRange={priceRange}
-          selectedCount={selectedOrders.length}
-          totalCount={orders.length}
-          onFilterChange={handleFilterChange}
-          onViewModeChange={setViewMode}
-          onOrdersPerPageChange={setOrdersPerPage}
-          onSelectAll={handleSelectAll}
-          onClearSelection={() => setSelectedOrders([])}
-          sortOptions={SORT_OPTIONS}
-          animateCards={animateCards}
-          className="mb-8"
-        />
-
-        {/* Bulk Actions */}
-        {selectedOrders.length > 0 && (
-          <OrderBulkActions
-            selectedCount={selectedOrders.length}
-            actions={BULK_ACTIONS}
-            onBulkAction={handleBulkAction}
-            onClearSelection={() => setSelectedOrders([])}
+          {/* Enhanced Stats */}
+          <OrderStats
+            stats={orderStats}
+            realtimeData={realtimeData}
             animateCards={animateCards}
-            className="mb-8"
           />
-        )}
 
-        {/* Orders Display */}
-        {orders.length === 0 ? (
-          /* Empty State */
-          <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-              <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i className="fas fa-shopping-cart text-gray-400 text-4xl"></i>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                No Orders Found
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {searchTerm || statusFilter !== ORDER_STATUSES.ALL
-                  ? 'No orders match your current filters. Try adjusting your search criteria.'
-                  : 'Orders will appear here when customers start placing them.'
-                }
-              </p>
-              <div className="flex justify-center space-x-4">
-                {(searchTerm || statusFilter !== ORDER_STATUSES.ALL) && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setStatusFilter(ORDER_STATUSES.ALL);
-                      setDateRange({ start: '', end: '' });
-                      setPriceRange({ min: '', max: '' });
-                    }}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-200"
-                  >
-                    <i className="fas fa-times mr-2"></i>
-                    Clear Filters
-                  </button>
-                )}
-                <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-2xl hover:bg-white/30 transition-all duration-200">
-                  <i className="fas fa-plus mr-2"></i>
-                  Create Test Order
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Loading overlay */}
-            {(loading || refreshing) && orders.length > 0 && (
-              <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-                <LoadingSpinner size="medium" message="Updating orders..." />
-              </div>
-            )}
+          {/* Enhanced Filters */}
+          <OrderFilters
+            statusFilter={statusFilter}
+            searchTerm={searchTerm}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            viewMode={viewMode}
+            ordersPerPage={ordersPerPage}
+            dateRange={dateRange}
+            priceRange={priceRange}
+            selectedCount={selectedOrders.length}
+            totalCount={orders.length}
+            onFilterChange={handleFilterChange}
+            onViewModeChange={setViewMode}
+            onOrdersPerPageChange={setOrdersPerPage}
+            onSelectAll={handleSelectAll}
+            onClearSelection={() => setSelectedOrders([])}
+            sortOptions={SORT_OPTIONS}
+            animateCards={animateCards}
+          />
 
-            {viewMode === 'cards' ? (
-              /* Cards View */
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-                {orders.map((order, index) => (
-                  <OrderCard
-                    key={order._id}
-                    order={order}
-                    index={index}
-                    isSelected={selectedOrders.includes(order._id)}
-                    priority={getPriorityLevel(order)}
-                    onSelect={() => handleOrderSelect(order._id)}
-                    onStatusUpdate={handleStatusUpdate}
-                    onViewDetails={() => handleOrderDetails(order)}
-                    onTrackOrder={() => handleTrackOrder(order._id)}
-                    animateCards={animateCards}
-                  />
-                ))}
+          {/* Bulk Actions */}
+          {selectedOrders.length > 0 && (
+            <OrderBulkActions
+              selectedCount={selectedOrders.length}
+              actions={BULK_ACTIONS}
+              onBulkAction={handleBulkAction}
+              onClearSelection={() => setSelectedOrders([])}
+              animateCards={animateCards}
+            />
+          )}
+
+          {/* Orders Display */}
+          <section className="space-y-6">
+            {orders.length === 0 ? (
+              /* Empty State */
+              <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
+                  <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i className="fas fa-shopping-cart text-gray-400 text-4xl"></i>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    No Orders Found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    {searchTerm || statusFilter !== ORDER_STATUSES.ALL
+                      ? 'No orders match your current filters. Try adjusting your search criteria.'
+                      : 'Orders will appear here when customers start placing them.'
+                    }
+                  </p>
+                  <div className="flex justify-center space-x-4">
+                    {(searchTerm || statusFilter !== ORDER_STATUSES.ALL) && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setStatusFilter(ORDER_STATUSES.ALL);
+                          setDateRange({ start: '', end: '' });
+                          setPriceRange({ min: '', max: '' });
+                        }}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-200"
+                      >
+                        <i className="fas fa-times mr-2"></i>
+                        Clear Filters
+                      </button>
+                    )}
+                    <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-2xl hover:bg-white/30 transition-all duration-200">
+                      <i className="fas fa-plus mr-2"></i>
+                      Create Test Order
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
-              /* Table View */
-              <OrderTable
-                orders={orders}
-                selectedOrders={selectedOrders}
-                onSelect={handleOrderSelect}
-                onSelectAll={handleSelectAll}
-                onStatusUpdate={handleStatusUpdate}
-                onViewDetails={handleOrderDetails}
-                onTrackOrder={handleTrackOrder}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={(field) => {
-                  const newOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
-                  setSortBy(field);
-                  setSortOrder(newOrder);
-                }}
-                animateCards={animateCards}
-                className="mb-8"
-              />
-            )}
+              <div className="space-y-6">
+                {/* Loading overlay */}
+                {(loading || refreshing) && orders.length > 0 && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                    <LoadingSpinner size="medium" message="Updating orders..." />
+                  </div>
+                )}
 
-            {/* Enhanced Pagination */}
-            {adminOrders?.pagination && adminOrders.pagination.totalPages > 1 && (
-              <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={adminOrders.pagination.totalPages}
-                  onPageChange={setCurrentPage}
-                  showInfo={true}
-                  totalItems={adminOrders.pagination.totalItems}
-                  itemsPerPage={ordersPerPage}
-                  className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
-                />
+                {viewMode === 'cards' ? (
+                  /* Cards View */
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+                    {orders.map((order, index) => (
+                      <OrderCard
+                        key={order._id}
+                        order={order}
+                        index={index}
+                        isSelected={selectedOrders.includes(order._id)}
+                        priority={getPriorityLevel(order)}
+                        onSelect={() => handleOrderSelect(order._id)}
+                        onStatusUpdate={handleStatusUpdate}
+                        onViewDetails={() => handleOrderDetails(order)}
+                        onTrackOrder={() => handleTrackOrder(order._id)}
+                        animateCards={animateCards}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  /* Table View */
+                  <OrderTable
+                    orders={orders}
+                    selectedOrders={selectedOrders}
+                    onSelect={handleOrderSelect}
+                    onSelectAll={handleSelectAll}
+                    onStatusUpdate={handleStatusUpdate}
+                    onViewDetails={handleOrderDetails}
+                    onTrackOrder={handleTrackOrder}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={(field) => {
+                      const newOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
+                      setSortBy(field);
+                      setSortOrder(newOrder);
+                    }}
+                    animateCards={animateCards}
+                  />
+                )}
+
+                {/* Enhanced Pagination */}
+                {adminOrders?.pagination && adminOrders.pagination.totalPages > 1 && (
+                  <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={adminOrders.pagination.totalPages}
+                      onPageChange={setCurrentPage}
+                      showInfo={true}
+                      totalItems={adminOrders.pagination.totalItems}
+                      itemsPerPage={ordersPerPage}
+                      className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
+                    />
+                  </div>
+                )}
               </div>
             )}
-          </>
-        )}
+          </section>
 
-        {/* Modals */}
-        {showOrderDetails && selectedOrder && (
-          <OrderDetailsModal
-            order={selectedOrder}
-            onClose={() => {
-              setShowOrderDetails(false);
-              setSelectedOrder(null);
-            }}
-            onStatusUpdate={handleStatusUpdate}
-            onTrackOrder={() => {
-              setShowOrderDetails(false);
-              handleTrackOrder(selectedOrder._id);
-            }}
-          />
-        )}
+          {/* Modals */}
+          {showOrderDetails && selectedOrder && (
+            <OrderDetailsModal
+              order={selectedOrder}
+              onClose={() => {
+                setShowOrderDetails(false);
+                setSelectedOrder(null);
+              }}
+              onStatusUpdate={handleStatusUpdate}
+              onTrackOrder={() => {
+                setShowOrderDetails(false);
+                handleTrackOrder(selectedOrder._id);
+              }}
+            />
+          )}
 
-        {showExportModal && (
-          <ExportModal
-            onClose={() => setShowExportModal(false)}
-            onExport={handleExport}
-            totalOrders={orderStats.totalOrders}
-            filters={{
-              status: statusFilter,
-              search: searchTerm,
-              dateRange,
-              priceRange
-            }}
-          />
-        )}
+          {showExportModal && (
+            <ExportModal
+              onClose={() => setShowExportModal(false)}
+              onExport={handleExport}
+              totalOrders={orderStats.totalOrders}
+              filters={{
+                status: statusFilter,
+                search: searchTerm,
+                dateRange,
+                priceRange
+              }}
+            />
+          )}
 
-        {showTrackingModal && trackingOrderId && (
-          <OrderTrackingModal
-            orderId={trackingOrderId}
-            onClose={() => {
-              setShowTrackingModal(false);
-              setTrackingOrderId(null);
-            }}
-          />
-        )}
-
-        {/* Custom Styles */}
+          {showTrackingModal && trackingOrderId && (
+            <OrderTrackingModal
+              orderId={trackingOrderId}
+              onClose={() => {
+                setShowTrackingModal(false);
+                setTrackingOrderId(null);
+              }}
+            />
+          )}
+        </div>
       </div>
     </>
   );

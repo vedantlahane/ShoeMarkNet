@@ -597,7 +597,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
   // Loading state
   if (isLoading || (loading && !users)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+  <div className="admin-page">
         <div className="flex justify-center items-center h-96">
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
             <LoadingSpinner size="large" />
@@ -617,7 +617,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
   // Error state
   if (error && !users) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+  <div className="admin-page">
         <ErrorMessage
           message={error.message || 'Failed to load users'}
           onRetry={loadUsersData}
@@ -635,7 +635,8 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+      <div className="admin-page">
+        <div className="admin-content">
         
         {/* Enhanced Header */}
         <div className={`mb-8 ${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
@@ -1020,6 +1021,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
           </div>
         )}
 
+        </div>
       </div>
           
     </>

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 import { useTheme } from '../../context/ThemeContext';
+import '../../styles/admin.css';
 
 /**
  * Provides the chrome for all admin-only experiences.
@@ -36,7 +37,7 @@ const AdminLayout = () => {
 
   return (
       <div
-        className={`min-h-screen selection:bg-primary/40 transition-colors duration-300 bg-theme text-theme`}
+        className={`admin-shell min-h-screen selection:bg-primary/40 transition-colors duration-300 bg-theme text-theme`}
         data-theme={theme}
       >
         <Outlet />
