@@ -60,38 +60,28 @@ const OrderStats = ({ stats, realtimeData, animateCards, className = '' }) => {
   ];
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 ${className}`}>
+    <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 ${className}`}>
       {statsData.map((stat, index) => (
         <div
           key={index}
-          className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-6 shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden group ${
-            animateCards ? 'animate-fade-in-up' : 'opacity-0'
+          className={`flex items-start justify-between border-t border-slate-200 pt-4 text-slate-600 first:border-none first:pt-0 dark:border-slate-700 dark:text-slate-300 ${
+            animateCards ? 'animate-fade-in-up' : ''
           }`}
-          style={{ animationDelay: `${index * 0.1}s` }}
         >
-          {/* Background Glow */}
-          <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${stat.color}/20 rounded-full blur-xl`}></div>
-          
-          {/* Shimmer Effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center shadow-lg`}>
-                <i className={`fas ${stat.icon} text-white text-lg`}></i>
-              </div>
-              <div className={`text-xs font-medium px-3 py-1 rounded-full ${
-                stat.positive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`}>
-                <i className={`fas ${stat.positive ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1`}></i>
-                {stat.change}
-              </div>
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+              <i className={`fa-solid ${stat.icon}`} />
+            </span>
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{stat.subtitle}</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{stat.value}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{stat.title}</p>
             </div>
-            
-            <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">{stat.title}</h3>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">{stat.subtitle}</p>
           </div>
+          <span className={`flex items-center gap-1 text-xs font-semibold ${stat.positive ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <i className={`fa-solid ${stat.positive ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}`} />
+            {stat.change}
+          </span>
         </div>
       ))}
     </div>

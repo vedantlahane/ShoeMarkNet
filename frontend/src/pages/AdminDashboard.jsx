@@ -961,15 +961,15 @@ const AdminDashboard = ({ section = "overview" }) => {
         robots="noindex, nofollow"
       />
 
-      <div className="admin-dashboard flex min-h-screen">
+      <div className="flex min-h-screen">
         <aside
-          className={`${sidebarCollapsed ? 'w-20' : 'w-72'} admin-sidebar flex flex-col transition-all duration-300`}
+          className={`${sidebarCollapsed ? 'w-20' : 'w-72'} flex flex-col border-r border-slate-200/70 bg-white/70 backdrop-blur transition-all duration-300 dark:border-slate-800/70 dark:bg-slate-900/40`}
         >
           <div className="flex items-center justify-between px-4 py-4 border-b border-slate-200/60 dark:border-slate-800/60">
             {!sidebarCollapsed && (
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
-                  <i className="fas fa-crown text-sm"></i>
+                  <i className="fa-solid fa-crown text-sm"></i>
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Admin Panel</p>
@@ -989,13 +989,13 @@ const AdminDashboard = ({ section = "overview" }) => {
 
           {!sidebarCollapsed && (
             <div className="px-4 pb-4 pt-3">
-              <div className="admin-card p-4">
-                <div className="flex items-center gap-3">
+              <div className="space-y-3 rounded-md border border-slate-200/80 bg-white/70 px-4 py-4 dark:border-slate-800/70 dark:bg-slate-900/40">
+                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
                   <div className="relative">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-semibold">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-white font-semibold">
                       {user?.name?.charAt(0)?.toUpperCase() || 'A'}
                     </span>
-                    <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white dark:border-slate-900 ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    <span className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white dark:border-slate-900 ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -1007,9 +1007,9 @@ const AdminDashboard = ({ section = "overview" }) => {
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                     {connectionStatus || (isConnected ? 'Connected' : 'Offline')}
                   </span>
                   <span>{new Date().toLocaleTimeString()}</span>
@@ -1043,7 +1043,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                             : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'
                         }`}
                       >
-                        <i className={`fas ${item.icon}`}></i>
+                        <i className={`fa-solid ${item.icon}`} />
                       </span>
                       {!sidebarCollapsed && (
                         <span className="flex-1 text-left">
@@ -1068,7 +1068,7 @@ const AdminDashboard = ({ section = "overview" }) => {
         </aside>
 
         <div className="flex flex-1 flex-col">
-          <header className="admin-topbar flex flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+          <header className="flex flex-col gap-4 border-b border-slate-200/70 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 dark:border-slate-800/70">
             <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:gap-4">
               <button
                 onClick={() => setSidebarCollapsed((prev) => !prev)}
@@ -1081,13 +1081,13 @@ const AdminDashboard = ({ section = "overview" }) => {
 
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="admin-pill">
-                    <i className={`fas ${currentSection?.icon || 'fa-chart-pie'}`}></i>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-300">
+                    <i className={`fa-solid ${currentSection?.icon || 'fa-chart-pie'}`} />
                     {currentSection?.label || 'Dashboard'}
                   </span>
                 </div>
                 <p className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 md:text-sm">
-                  <i className="fas fa-calendar"></i>
+                  <i className="fa-solid fa-calendar-days" />
                   {new Date().toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
@@ -1106,7 +1106,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                 className="group hidden h-10 w-52 items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 sm:flex"
               >
                 <span className="flex items-center gap-2">
-                  <i className="fas fa-search"></i>
+                  <i className="fa-solid fa-magnifying-glass" />
                   Search anything...
                 </span>
                 <span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
@@ -1119,7 +1119,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                 className="sm:hidden h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
                 aria-label="Open search"
               >
-                <i className="fas fa-search"></i>
+                <i className="fa-solid fa-magnifying-glass" />
               </button>
 
               <button
@@ -1127,7 +1127,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                 className="relative h-10 w-10 rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
                 title="Notifications"
               >
-                <i className="fas fa-bell"></i>
+                <i className="fa-solid fa-bell" />
                 {unreadNotifications.length > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-semibold text-white">
                     {unreadNotifications.length}
@@ -1141,7 +1141,7 @@ const AdminDashboard = ({ section = "overview" }) => {
                 title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                 aria-label="Toggle theme"
               >
-                <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+                <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'}`} />
               </button>
 
               <button
@@ -1150,13 +1150,13 @@ const AdminDashboard = ({ section = "overview" }) => {
                 title="Settings"
                 aria-label="Open settings"
               >
-                <i className="fas fa-cog"></i>
+                <i className="fa-solid fa-gear" />
               </button>
             </div>
           </header>
 
-          <main className="admin-scroll flex-1">
-            <div className="admin-content">
+          <main className="flex-1 overflow-y-auto">
+            <div className="px-4 py-6 md:px-6">
               {renderSectionContent()}
             </div>
           </main>

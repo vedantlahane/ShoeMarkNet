@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 import { useTheme } from '../../context/ThemeContext';
-import '../../styles/admin.css';
 
 /**
  * Provides the chrome for all admin-only experiences.
@@ -35,13 +34,16 @@ const AdminLayout = () => {
     });
   }, [location.pathname, prefersReducedMotion]);
 
+  const shellClassName = useMemo(() => (
+    theme === 'dark'
+      ? 'min-h-screen bg-slate-950 text-slate-100 transition-colors duration-300'
+      : 'min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300'
+  ), [theme]);
+
   return (
-      <div
-        className={`admin-shell min-h-screen selection:bg-primary/40 transition-colors duration-300 bg-theme text-theme`}
-        data-theme={theme}
-      >
-        <Outlet />
-      </div>
+    <div className={`${shellClassName} selection:bg-blue-200/60 dark:selection:bg-blue-500/40`} data-theme={theme}>
+      <Outlet />
+    </div>
   );
 };
 

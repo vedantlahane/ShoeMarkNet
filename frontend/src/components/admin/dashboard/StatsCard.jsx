@@ -5,7 +5,6 @@ const StatsCard = ({
   title,
   value,
   icon,
-  color,
   change,
   badge,
   subtitle,
@@ -15,74 +14,67 @@ const StatsCard = ({
   onClick,
   isActive
 }) => {
+  const hasChange = change !== undefined && change !== null;
+  const isChangeNumeric = typeof change === 'number';
+  const changePositive = isChangeNumeric ? change >= 0 : true;
+  const formattedChange = hasChange
+    ? isChangeNumeric
+      ? `${changePositive ? '' : '-'}${formatPercentage(Math.abs(change))}`
+      : change
+    : null;
+
   return (
-    <div 
-      className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden cursor-pointer ${
-        isActive ? 'ring-2 ring-blue-500 bg-white/20' : ''
-      } ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} 
-      style={{ animationDelay }}
+    <button
+      type="button"
       onClick={onClick}
+      className={`group flex w-full flex-col gap-3 border-l-4 px-4 py-3 text-left transition ${
+        isActive
+          ? 'border-blue-500 bg-blue-50/60 dark:border-blue-500 dark:bg-blue-900/20'
+          : 'border-slate-200 hover:border-blue-400 hover:bg-slate-100/60 dark:border-slate-700 dark:hover:border-blue-500 dark:hover:bg-slate-800/50'
+      } ${animateStats ? 'animate-fade-in-up' : ''}`}
+      style={{ animationDelay }}
     >
-      {/* Background Glow */}
-      <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${color}/20 rounded-full blur-xl`}></div>
-      
-      {/* Shimmer Effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-shimmer"></div>
-      
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`w-14 h-14 bg-gradient-to-r ${color} rounded-2xl flex items-center justify-center shadow-lg`}>
-            <i className={`fas ${icon} text-white text-xl`}></i>
-          </div>
-          
-          {/* Badges and Indicators */}
-          <div className="flex flex-col items-end space-y-2">
-            {change !== undefined && (
-              <div className={`text-xs font-medium px-3 py-1 rounded-full ${
-                change >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`}>
-                <i className={`fas ${change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1`}></i>
-                {formatPercentage(Math.abs(change))}
-              </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200/80 text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+            <i className={`fa-solid ${icon}`} />
+          </span>
+          <div className="space-y-1">
+            {subtitle && (
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{subtitle}</p>
             )}
-            
-            {badge && (
-              <div className={`text-xs font-medium px-3 py-1 rounded-full ${
-                badge.type === 'success' ? 'bg-green-100 text-green-700' :
-                badge.type === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-                badge.type === 'danger' ? 'bg-red-100 text-red-700' :
-                'bg-blue-100 text-blue-700'
-              }`}>
-                <i className={`fas ${
-                  badge.type === 'success' ? 'fa-check' :
-                  badge.type === 'warning' ? 'fa-exclamation' :
-                  badge.type === 'danger' ? 'fa-times' :
-                  'fa-info'
-                } mr-1`}></i>
-                {badge.text}
-              </div>
-            )}
-            
-            {urgent && (
-              <div className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full animate-pulse">
-                <i className="fas fa-exclamation-triangle mr-1"></i>
-                Urgent
-              </div>
-            )}
+            <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{value}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
           </div>
         </div>
-        
-        <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">{title}</h3>
-        <p className="text-3xl font-black text-gray-900 dark:text-white mb-2">{value}</p>
-        
-        {subtitle && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-            <i className="fas fa-info-circle mr-1"></i>
-            {subtitle}
-          </p>
-        )}
+
+        <div className="flex flex-col items-end gap-2">
+          {formattedChange && (
+            <span className={`flex items-center gap-1 text-xs font-semibold ${changePositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <i className={`fa-solid ${changePositive ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}`} />
+              {formattedChange}
+            </span>
+          )}
+          {badge && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:border-slate-600 dark:text-slate-300">
+              <i className={`fa-solid ${
+                badge.type === 'success' ? 'fa-circle-check' :
+                badge.type === 'warning' ? 'fa-triangle-exclamation' :
+                badge.type === 'danger' ? 'fa-circle-xmark' :
+                'fa-circle-info'
+              }`} />
+              {badge.text}
+            </span>
+          )}
+          {urgent && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-rose-300 px-2 py-0.5 text-[11px] font-semibold text-rose-500 dark:border-rose-500/50">
+              <i className="fa-solid fa-circle-exclamation" />
+              Urgent
+            </span>
+          )}
+        </div>
       </div>
-    </div>
+    </button>
   );
 };
 

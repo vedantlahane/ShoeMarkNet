@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 import PageMeta from '../seo/PageMeta';
 
-// Redux actions
-import { fetchProducts } from '../../redux/slices/productSlice';
-import { fetchAllOrders } from '../../redux/slices/orderSlice';
-import { fetchUsers } from '../../redux/slices/authSlice';
 import adminService from '../../services/adminService';
 
 // Components
@@ -29,21 +24,12 @@ import useLocalStorage from '../../hooks/useLocalStorage';
 
 // Utils
 import { trackEvent } from '../../utils/analytics';
-import { formatCurrency, formatNumber, formatPercentage } from '../../utils/helpers';
+import { formatCurrency, formatNumber } from '../../utils/helpers';
 
 // Constants
 const REFRESH_INTERVAL = 30000; // 30 seconds
-const CHART_COLORS = {
-  primary: '#3B82F6',
-  secondary: '#8B5CF6',
-  success: '#10B981',
-  warning: '#F59E0B',
-  danger: '#EF4444',
-  info: '#06B6D4'
-};
 
-const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQuickAction }) => {
-  const dispatch = useDispatch();
+const DashboardOverview = ({ realtimeData, onDataUpdate, isLoading, onQuickAction }) => {
 
   // Redux state
   const { products, loading: productsLoading } = useSelector(state => state.product);
@@ -280,19 +266,17 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
 
   if (isLoading || (!enhancedMetrics && (productsLoading || ordersLoading || usersLoading))) {
     return (
-      <div className="admin-page admin-page--center">
-        <div className="flex justify-center items-center h-96">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-            <LoadingSpinner size="large" />
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 mt-6">
-              <i className="fas fa-chart-line mr-2 text-blue-500"></i>
-              Loading Dashboard
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              <i className="fas fa-database mr-2"></i>
-              Fetching your analytics data...
-            </p>
-          </div>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="rounded-2xl border border-slate-200 bg-white/90 p-10 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900/80">
+          <LoadingSpinner size="large" />
+          <h3 className="mt-6 text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <i className="fa-solid fa-chart-line mr-2 text-blue-500" />
+            Loading dashboard
+          </h3>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <i className="fa-solid fa-database mr-2" />
+            Fetching the latest analytics…
+          </p>
         </div>
       </div>
     );
@@ -300,11 +284,11 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
 
   if (!enhancedMetrics) {
     return (
-      <div className="admin-page">
-        <ErrorMessage 
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <ErrorMessage
           message="Failed to load dashboard data"
           onRetry={fetchDashboardData}
-          className="max-w-md mx-auto"
+          className="mx-auto max-w-md"
         />
       </div>
     );
@@ -317,97 +301,82 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
         description="Comprehensive admin dashboard with real-time analytics, order management, and business insights for ShoeMarkNet."
         robots="noindex, nofollow"
       />
-      <div className="admin-page">
-        <div className="admin-content">
-
-        {/* Enhanced Header */}
-        <div className={`mb-8 ${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-            
-            {/* Background Effects */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
-            
-            <div className="relative z-10">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
-                <div>
-                  <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                    <i className="fas fa-tachometer-alt mr-3"></i>
-                    Admin Dashboard
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-lg flex items-center">
-                    <i className="fas fa-calendar-day mr-2"></i>
-                    {new Date().toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                  
-                  {/* Connection Status */}
-                  <div className="flex items-center mt-2 space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {isConnected ? 'Live Updates' : 'Offline'}
-                      </span>
-                    </div>
-                    {refreshing && (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-sm text-blue-600 dark:text-blue-400">Refreshing...</span>
-                      </div>
-                    )}
-                  </div>
+      <section className="space-y-6">
+        <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`}>
+          <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  <i className="fa-solid fa-gauge-high text-blue-500" />
+                  Overview
+                </div>
+                <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Admin Dashboard</h1>
+                <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <i className="fa-solid fa-calendar-days" />
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                    {isConnected ? 'Live updates enabled' : 'Offline'}
+                  </span>
+                  {refreshing && (
+                    <span className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                      Refreshing…
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-slate-600 dark:text-slate-300" htmlFor="dashboard-range">
+                    Period
+                  </label>
+                  <select
+                    id="dashboard-range"
+                    value={selectedTimeRange}
+                    onChange={(e) => handleTimeRangeChange(e.target.value)}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <option value="1d">Last 24 hours</option>
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="90d">Last 90 days</option>
+                    <option value="1y">Last year</option>
+                  </select>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                  
-                  {/* Time Range Selector */}
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Period:</label>
-                    <select
-                      value={selectedTimeRange}
-                      onChange={(e) => handleTimeRangeChange(e.target.value)}
-                      className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    >
-                      <option value="1d" className="bg-gray-800 text-white">Last 24 Hours</option>
-                      <option value="7d" className="bg-gray-800 text-white">Last 7 Days</option>
-                      <option value="30d" className="bg-gray-800 text-white">Last 30 Days</option>
-                      <option value="90d" className="bg-gray-800 text-white">Last 90 Days</option>
-                      <option value="1y" className="bg-gray-800 text-white">Last Year</option>
-                    </select>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                    title="Refresh dashboard"
+                  >
+                    <i className={`fa-solid fa-arrow-rotate-right ${refreshing ? 'animate-spin' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => setShowAdvancedMetrics(!showAdvancedMetrics)}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                    title="Toggle advanced metrics"
+                  >
+                    <i className="fa-solid fa-chart-simple" />
+                  </button>
+                </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={handleRefresh}
-                      disabled={refreshing}
-                      className="w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 transition-all duration-200 disabled:opacity-50"
-                      title="Refresh Dashboard"
-                    >
-                      <i className={`fas fa-sync-alt ${refreshing ? 'animate-spin' : ''}`}></i>
-                    </button>
-                    
-                    <button
-                      onClick={() => setShowAdvancedMetrics(!showAdvancedMetrics)}
-                      className="w-10 h-10 bg-white/20 backdrop-blur-lg border border-white/30 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-white/30 transition-all duration-200"
-                      title="Advanced Metrics"
-                    >
-                      <i className="fas fa-chart-bar"></i>
-                    </button>
-                  </div>
-
-                  {/* Today's Highlight */}
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-lg">
-                    <div className="text-2xl font-bold">{enhancedMetrics.orders.today}</div>
-                    <div className="text-sm text-green-100">Orders Today</div>
-                  </div>
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <p className="text-sm font-medium">Orders today</p>
+                  <p className="text-2xl font-semibold">{enhancedMetrics.orders.today}</p>
                 </div>
               </div>
             </div>
-          </div>
+          </header>
         </div>
         
         {/* Enhanced Stats Cards */}
@@ -553,8 +522,7 @@ const DashboardOverview = ({ stats, realtimeData, onDataUpdate, isLoading, onQui
         <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '1.3s' }}>
           <QuickActionGrid onAction={(action) => onQuickAction?.(action.id)} />
         </div>
-      </div>
-    </div>
+      </section>
     </>
   );
 };

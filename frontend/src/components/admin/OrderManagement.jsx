@@ -420,14 +420,14 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   // Loading state
   if (isLoading || (loading && !adminOrders?.items?.length)) {
     return (
-      <div className="admin-page admin-page--center">
-        <div className="admin-card max-w-md w-full p-10 text-center">
+      <div className="flex min-h-[24rem] items-center justify-center px-6 py-10">
+        <div className="space-y-3 text-center">
           <LoadingSpinner size="large" />
-          <h3 className="mt-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
-            <i className="fas fa-shopping-cart mr-2 text-blue-500"></i>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <i className="fa-solid fa-cart-shopping mr-2 text-blue-500" />
             Loading orders
           </h3>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Fetching order data and analytics…
           </p>
         </div>
@@ -438,11 +438,11 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   // Error state
   if (error && !adminOrders?.items?.length) {
     return (
-      <div className="admin-page admin-page--center">
+      <div className="flex min-h-[24rem] items-center justify-center px-6 py-10">
         <ErrorMessage
           message={error.message || 'Failed to load orders'}
           onRetry={fetchOrdersData}
-          className="max-w-md mx-auto"
+          className="w-full max-w-md"
         />
       </div>
     );
@@ -458,117 +458,147 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
         robots="noindex, nofollow"
       />
 
-      <div className="admin-page">
-        <div className="admin-content space-y-8">
-          {/* Enhanced Header */}
-          <section className={animateCards ? 'animate-fade-in-up' : 'opacity-0'}>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-              {/* Background Effects */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
-              <div className="relative z-10">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                      <i className="fas fa-shopping-cart mr-3"></i>
-                      Order Management
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400 text-lg flex items-center">
-                      <i className="fas fa-chart-line mr-2"></i>
-                      Monitor and manage all customer orders
-                      {isConnected && (
-                        <span className="ml-4 flex items-center text-green-600 dark:text-green-400">
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                          Live Updates
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  {/* Enhanced Action Buttons */}
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={handleRefresh}
-                      disabled={refreshing}
-                      className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-2xl hover:bg-white/30 transition-all duration-200 disabled:opacity-50"
-                      title="Refresh Orders"
-                    >
-                      <i className={`fas fa-sync-alt mr-2 ${refreshing ? 'animate-spin' : ''}`}></i>
-                      Refresh
-                    </button>
-                    <button
-                      onClick={() => setShowExportModal(true)}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    >
-                      <i className="fas fa-file-export mr-2"></i>
-                      Export
-                    </button>
-                    <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105">
-                      <i className="fas fa-plus mr-2"></i>
-                      Add Order
-                    </button>
+      <div className="min-h-full px-4 py-6 md:px-6">
+        <div className="flex flex-col divide-y divide-slate-200/70 dark:divide-slate-800/70">
+          {/* Header */}
+          <section className={`pb-6 ${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <i className="fa-solid fa-layer-group text-slate-400" />
+                  Admin / Orders
+                </div>
+                <div>
+                  <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Order Management</h1>
+                  <p className="mt-2 flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-2">
+                      <i className="fa-solid fa-chart-line text-slate-400" />
+                      Monitor and control active orders
+                    </span>
+                    {isConnected && (
+                      <span className="flex items-center gap-2 text-emerald-500">
+                        <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                        Live updates
+                      </span>
+                    )}
+                    {refreshing && (
+                      <span className="flex items-center gap-2 text-blue-500">
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+                        Syncing…
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <p className="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                    title="Refresh orders"
+                  >
+                    <i className={`fa-solid fa-rotate ${refreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                  <button
+                    onClick={() => setShowExportModal(true)}
+                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                  >
+                    <i className="fa-solid fa-file-arrow-down" />
+                    Export
+                  </button>
+                  <button
+                    className="inline-flex items-center gap-2 rounded-md border border-dashed border-slate-400 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                    type="button"
+                  >
+                    <i className="fa-solid fa-plus" />
+                    Add order
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 rounded-md border border-slate-200/80 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                  <i className="fa-solid fa-clipboard-check text-slate-400" />
+                  <div className="flex flex-col">
+                    <span className="text-xs uppercase tracking-wide text-slate-400">Orders today</span>
+                    <span className="text-base font-semibold text-slate-900 dark:text-slate-100">{orderStats.todayOrders ?? 0}</span>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Enhanced Stats */}
-          <OrderStats
-            stats={orderStats}
-            realtimeData={realtimeData}
-            animateCards={animateCards}
-          />
-
-          {/* Enhanced Filters */}
-          <OrderFilters
-            statusFilter={statusFilter}
-            searchTerm={searchTerm}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            viewMode={viewMode}
-            ordersPerPage={ordersPerPage}
-            dateRange={dateRange}
-            priceRange={priceRange}
-            selectedCount={selectedOrders.length}
-            totalCount={orders.length}
-            onFilterChange={handleFilterChange}
-            onViewModeChange={setViewMode}
-            onOrdersPerPageChange={setOrdersPerPage}
-            onSelectAll={handleSelectAll}
-            onClearSelection={() => setSelectedOrders([])}
-            sortOptions={SORT_OPTIONS}
-            animateCards={animateCards}
-          />
-
-          {/* Bulk Actions */}
-          {selectedOrders.length > 0 && (
-            <OrderBulkActions
-              selectedCount={selectedOrders.length}
-              actions={BULK_ACTIONS}
-              onBulkAction={handleBulkAction}
-              onClearSelection={() => setSelectedOrders([])}
+          {/* Stats */}
+          <section className="py-6">
+            <OrderStats
+              stats={orderStats}
+              realtimeData={realtimeData}
               animateCards={animateCards}
             />
+          </section>
+
+          {/* Filters */}
+          <section className="py-6">
+            <OrderFilters
+              statusFilter={statusFilter}
+              searchTerm={searchTerm}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              viewMode={viewMode}
+              ordersPerPage={ordersPerPage}
+              dateRange={dateRange}
+              priceRange={priceRange}
+              selectedCount={selectedOrders.length}
+              totalCount={orders.length}
+              onFilterChange={handleFilterChange}
+              onViewModeChange={setViewMode}
+              onOrdersPerPageChange={setOrdersPerPage}
+              onSelectAll={handleSelectAll}
+              onClearSelection={() => setSelectedOrders([])}
+              sortOptions={SORT_OPTIONS}
+              animateCards={animateCards}
+            />
+          </section>
+
+          {/* Bulk actions */}
+          {selectedOrders.length > 0 && (
+            <section className="py-6">
+              <OrderBulkActions
+                selectedCount={selectedOrders.length}
+                actions={BULK_ACTIONS}
+                onBulkAction={handleBulkAction}
+                onClearSelection={() => setSelectedOrders([])}
+                animateCards={animateCards}
+              />
+            </section>
           )}
 
           {/* Orders Display */}
-          <section className="space-y-6">
+          <section className="py-6">
             {orders.length === 0 ? (
               /* Empty State */
-              <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-                  <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i className="fas fa-shopping-cart text-gray-400 text-4xl"></i>
+              <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'} text-center`} style={{ animationDelay: '0.4s' }}>
+                <div className="space-y-4 rounded-md border border-dashed border-slate-300 px-6 py-10 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-slate-300 text-slate-400 dark:border-slate-600">
+                    <i className="fa-solid fa-cart-shopping text-2xl" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     No Orders Found
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     {searchTerm || statusFilter !== ORDER_STATUSES.ALL
                       ? 'No orders match your current filters. Try adjusting your search criteria.'
                       : 'Orders will appear here when customers start placing them.'
                     }
                   </p>
-                  <div className="flex justify-center space-x-4">
+                  <div className="flex flex-wrap justify-center gap-3">
                     {(searchTerm || statusFilter !== ORDER_STATUSES.ALL) && (
                       <button
                         onClick={() => {
@@ -577,14 +607,14 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
                           setDateRange({ start: '', end: '' });
                           setPriceRange({ min: '', max: '' });
                         }}
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-200"
+                        className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
                       >
-                        <i className="fas fa-times mr-2"></i>
+                        <i className="fa-solid fa-xmark" />
                         Clear Filters
                       </button>
                     )}
-                    <button className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-2xl hover:bg-white/30 transition-all duration-200">
-                      <i className="fas fa-plus mr-2"></i>
+                    <button className="inline-flex items-center gap-2 rounded-md border border-dashed border-slate-400 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400">
+                      <i className="fa-solid fa-plus" />
                       Create Test Order
                     </button>
                   </div>
@@ -601,7 +631,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
 
                 {viewMode === 'cards' ? (
                   /* Cards View */
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
                     {orders.map((order, index) => (
                       <OrderCard
                         key={order._id}
@@ -648,7 +678,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
                       showInfo={true}
                       totalItems={adminOrders.pagination.totalItems}
                       itemsPerPage={ordersPerPage}
-                      className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
+                      className="border border-slate-200/80 bg-white/70 text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200"
                     />
                   </div>
                 )}
@@ -656,47 +686,48 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
             )}
           </section>
 
-          {/* Modals */}
-          {showOrderDetails && selectedOrder && (
-            <OrderDetailsModal
-              order={selectedOrder}
-              onClose={() => {
-                setShowOrderDetails(false);
-                setSelectedOrder(null);
-              }}
-              onStatusUpdate={handleStatusUpdate}
-              onTrackOrder={() => {
-                setShowOrderDetails(false);
-                handleTrackOrder(selectedOrder._id);
-              }}
-            />
-          )}
-
-          {showExportModal && (
-            <ExportModal
-              onClose={() => setShowExportModal(false)}
-              onExport={handleExport}
-              totalOrders={orderStats.totalOrders}
-              filters={{
-                status: statusFilter,
-                search: searchTerm,
-                dateRange,
-                priceRange
-              }}
-            />
-          )}
-
-          {showTrackingModal && trackingOrderId && (
-            <OrderTrackingModal
-              orderId={trackingOrderId}
-              onClose={() => {
-                setShowTrackingModal(false);
-                setTrackingOrderId(null);
-              }}
-            />
-          )}
         </div>
       </div>
+
+      {/* Modals */}
+      {showOrderDetails && selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => {
+            setShowOrderDetails(false);
+            setSelectedOrder(null);
+          }}
+          onStatusUpdate={handleStatusUpdate}
+          onTrackOrder={() => {
+            setShowOrderDetails(false);
+            handleTrackOrder(selectedOrder._id);
+          }}
+        />
+      )}
+
+      {showExportModal && (
+        <ExportModal
+          onClose={() => setShowExportModal(false)}
+          onExport={handleExport}
+          totalOrders={orderStats.totalOrders}
+          filters={{
+            status: statusFilter,
+            search: searchTerm,
+            dateRange,
+            priceRange
+          }}
+        />
+      )}
+
+      {showTrackingModal && trackingOrderId && (
+        <OrderTrackingModal
+          orderId={trackingOrderId}
+          onClose={() => {
+            setShowTrackingModal(false);
+            setTrackingOrderId(null);
+          }}
+        />
+      )}
     </>
   );
 };

@@ -81,7 +81,7 @@ const BULK_ACTIONS = [
 
 const USERS_PER_PAGE_OPTIONS = [12, 24, 48, 96];
 
-const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externalAction, onActionHandled }) => {
+const UserManagement = ({ realtimeData, onDataUpdate, isLoading, externalAction, onActionHandled }) => {
   const dispatch = useDispatch();
 
   // Redux state
@@ -597,31 +597,28 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
   // Loading state
   if (isLoading || (loading && !users)) {
     return (
-  <div className="admin-page">
-        <div className="flex justify-center items-center h-96">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-            <LoadingSpinner size="large" />
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 mt-6">
-              <i className="fas fa-users mr-2 text-blue-500"></i>
-              Loading Users
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Fetching user data and analytics...
-            </p>
-          </div>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="rounded-2xl border border-slate-200 bg-white/90 p-10 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900/80">
+          <LoadingSpinner size="large" />
+          <h3 className="mt-6 text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <i className="fa-solid fa-users mr-2 text-blue-500" />
+            Loading users
+          </h3>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Fetching user data and analytics…
+          </p>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error && !users) {
     return (
-  <div className="admin-page">
+      <div className="flex min-h-[40vh] items-center justify-center">
         <ErrorMessage
           message={error.message || 'Failed to load users'}
           onRetry={loadUsersData}
-          className="max-w-md mx-auto"
+          className="mx-auto max-w-md"
         />
       </div>
     );
@@ -635,72 +632,69 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
         robots="noindex, nofollow"
       />
 
-      <div className="admin-page">
-        <div className="admin-content">
-        
-        {/* Enhanced Header */}
-        <div className={`mb-8 ${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-            
-            {/* Background Effects */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
-            
-            <div className="relative z-10">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                <div>
-                  <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                    <i className="fas fa-users mr-3"></i>
-                    User Management
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-lg flex items-center">
-                    <i className="fas fa-user-cog mr-2"></i>
-                    Manage user accounts, roles, and permissions
-                    {isConnected && (
-                      <span className="ml-4 flex items-center text-green-600 dark:text-green-400">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                        Live Updates
-                      </span>
-                    )}
-                  </p>
+      <section className="space-y-6">
+        <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
+          <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  <i className="fa-solid fa-users-line text-blue-500" />
+                  Users
                 </div>
-                
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-2xl hover:bg-white/30 transition-all duration-200 disabled:opacity-50"
-                    title="Refresh Users"
-                  >
-                    <i className={`fas fa-sync-alt mr-2 ${refreshing ? 'animate-spin' : ''}`}></i>
-                    Refresh
-                  </button>
-                  <button
-                    onClick={() => setShowImportModal(true)}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                  >
-                    <i className="fas fa-file-import mr-2"></i>
-                    Import
-                  </button>
-                  <button
-                    onClick={() => setShowExportModal(true)}
-                    className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                  >
-                    <i className="fas fa-file-export mr-2"></i>
-                    Export
-                  </button>
-                  {hasPermission('users.create') && (
-                    <button
-                      onClick={openCreateModal}
-                      className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    >
-                      <i className="fas fa-user-plus mr-2"></i>
-                      Add User
-                    </button>
+                <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">User Management</h1>
+                <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <i className="fa-solid fa-user-gear" />
+                  Manage user accounts, roles, and permissions
+                </p>
+                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                    {isConnected ? 'Live updates enabled' : 'Offline'}
+                  </span>
+                  {refreshing && (
+                    <span className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                      Refreshing…
+                    </span>
                   )}
                 </div>
               </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  title="Refresh users"
+                >
+                  <i className={`fa-solid fa-arrow-rotate-right ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900"
+                >
+                  <i className="fa-solid fa-file-arrow-up" />
+                  Import
+                </button>
+                <button
+                  onClick={() => setShowExportModal(true)}
+                  className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1 dark:focus:ring-offset-slate-900"
+                >
+                  <i className="fa-solid fa-file-arrow-down" />
+                  Export
+                </button>
+                {hasPermission('users.create') && (
+                  <button
+                    onClick={openCreateModal}
+                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900"
+                  >
+                    <i className="fa-solid fa-user-plus" />
+                    Add user
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          </header>
         </div>
 
         {/* Enhanced Stats */}
@@ -762,26 +756,23 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
 
         {/* Users Display */}
         {!users || users.length === 0 ? (
-          /* Enhanced Empty State */
           <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl">
-              <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                <i className="fas fa-users text-4xl text-white"></i>
+            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+                <i className="fa-solid fa-users text-3xl" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
-                  ? 'No Users Match Your Filters'
-                  : 'No Users Found'
-                }
+                  ? 'No users match your filters'
+                  : 'No users found'}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-8">
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
-                  ? 'Try adjusting your search criteria or filters to find what you\'re looking for.'
-                  : 'Users will appear here when they register for your platform.'
-                }
+                  ? 'Adjust your filters or search query to see more results.'
+                  : 'Users will appear here after they register on the platform.'}
               </p>
-              <div className="flex justify-center space-x-4">
-                {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') ? (
+              <div className="mt-6 flex justify-center gap-3">
+                {searchTerm || roleFilter !== 'all' || statusFilter !== 'all' ? (
                   <button
                     onClick={() => {
                       setSearchTerm('');
@@ -791,18 +782,18 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
                       setLeadScoreRange({ min: 0, max: 100 });
                       setLocationFilter('');
                     }}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-200"
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
                   >
-                    <i className="fas fa-times mr-2"></i>
-                    Clear Filters
+                    <i className="fa-solid fa-xmark" />
+                    Clear filters
                   </button>
                 ) : hasPermission('users.create') && (
                   <button
                     onClick={openCreateModal}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 transform hover:scale-105"
+                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                   >
-                    <i className="fas fa-user-plus mr-3"></i>
-                    Add Your First User
+                    <i className="fa-solid fa-user-plus" />
+                    Add your first user
                   </button>
                 )}
               </div>
@@ -895,7 +886,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
                   showInfo={true}
                   totalItems={pagination.totalItems}
                   itemsPerPage={usersPerPage}
-                  className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl shadow-2xl"
+                  className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
                 />
               </div>
             )}
@@ -979,41 +970,33 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
         )}
 
         {showDeleteConfirm && userToDelete && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl w-full max-w-md shadow-2xl animate-fade-in">
-              <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                  <i className="fas fa-exclamation-triangle text-white text-2xl"></i>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              <div className="text-center">
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
+                  <i className="fa-solid fa-triangle-exclamation text-2xl" />
                 </div>
-                
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Delete User Account?
-                </h3>
-                
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Are you sure you want to delete "<strong>{userToDelete.name}</strong>"?
-                  <br />
-                  <span className="text-sm">This action cannot be undone and will permanently remove all user data.</span>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Delete user account?</h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Are you sure you want to delete <strong>{userToDelete.name}</strong>? This action cannot be undone and removes all associated data.
                 </p>
-                
-                <div className="flex space-x-4">
+                <div className="mt-6 flex gap-3">
                   <button
                     onClick={() => {
                       setShowDeleteConfirm(false);
                       setUserToDelete(null);
                     }}
-                    className="flex-1 bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-2xl hover:bg-white/20 transition-all duration-200"
+                    className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
                   >
-                    <i className="fas fa-times mr-2"></i>
+                    <i className="fa-solid fa-xmark" />
                     Cancel
                   </button>
-                  
                   <button
                     onClick={confirmDeleteUser}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200"
+                    className="flex-1 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700"
                   >
-                    <i className="fas fa-trash mr-2"></i>
-                    Delete User
+                    <i className="fa-solid fa-trash" />
+                    Delete
                   </button>
                 </div>
               </div>
@@ -1021,9 +1004,7 @@ const UserManagement = ({ stats, realtimeData, onDataUpdate, isLoading, external
           </div>
         )}
 
-        </div>
-      </div>
-          
+      </section>
     </>
   );
 };
