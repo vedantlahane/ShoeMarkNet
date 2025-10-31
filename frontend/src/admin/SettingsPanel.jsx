@@ -3,11 +3,11 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
 // Utils
-import { trackEvent } from '../../utils/analytics';
+import { trackEvent } from '../utils/analytics';
 
 // Hooks
-import useLocalStorage from '../../hooks/useLocalStorage';
-import { useTheme } from '../../context/ThemeContext';
+import useLocalStorage from '../hooks/useLocalStorage';
+import { useTheme } from '../context/ThemeContext';
 
 const SettingsPanel = ({
   variant = 'default', // default, compact, tabbed

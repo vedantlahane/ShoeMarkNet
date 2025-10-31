@@ -1,4 +1,214 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap');
 @import 'tailwindcss';
 
-@custom-variant dark (&:where(.dark, .dark *));
+@layer base {
+	:root {
+		--admin-surface-bg: #ffffff;
+		--admin-surface-muted: #f8fafc;
+		--admin-border-color: rgba(15, 23, 42, 0.12);
+		--admin-border-strong: rgba(15, 23, 42, 0.24);
+		--admin-text-primary: #0f172a;
+		--admin-text-muted: #475569;
+		--admin-accent: #1d4ed8;
+		--admin-focus: rgba(59, 130, 246, 0.35);
+		--admin-space-xs: 0.375rem;
+		--admin-space-sm: 0.625rem;
+		--admin-space-md: 0.875rem;
+		--admin-space-lg: 1.25rem;
+		--admin-space-xl: 1.75rem;
+		--admin-font-xs: 0.7rem;
+		--admin-font-sm: 0.82rem;
+		--admin-font-md: 0.95rem;
+		--admin-font-lg: 1.15rem;
+	}
+
+	.dark {
+		--admin-surface-bg: #0f172a;
+		--admin-surface-muted: #020617;
+		--admin-border-color: rgba(148, 163, 184, 0.18);
+		--admin-border-strong: rgba(148, 163, 184, 0.35);
+		--admin-text-primary: #e2e8f0;
+		--admin-text-muted: #94a3b8;
+		--admin-accent: #60a5fa;
+		--admin-focus: rgba(96, 165, 250, 0.4);
+	}
+
+	[data-app-channel='admin'] {
+		font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		font-size: var(--admin-font-md);
+		line-height: 1.55;
+		background-color: var(--admin-surface-muted);
+		color: var(--admin-text-primary);
+	}
+
+	[data-app-channel='admin'] a {
+		color: var(--admin-accent);
+	}
+
+	[data-app-channel='admin'] a:hover {
+		color: color-mix(in srgb, var(--admin-accent) 85%, white 15%);
+	}
+
+	[data-app-channel='admin'] *:focus-visible {
+		outline: 2px solid var(--admin-focus);
+		outline-offset: 2px;
+		border-color: var(--admin-accent);
+	}
+}
+
+@layer components {
+	.admin-shell {
+		min-height: 100vh;
+		background-color: var(--admin-surface-muted);
+		color: var(--admin-text-primary);
+	}
+
+	.admin-shell.dark {
+		background-color: var(--admin-surface-muted);
+	}
+
+	.admin-surface {
+		border: 1px solid var(--admin-border-color);
+		background-color: var(--admin-surface-bg);
+		padding: var(--admin-space-lg);
+	}
+
+	.admin-surface-muted {
+		border: 1px solid var(--admin-border-color);
+		background-color: var(--admin-surface-muted);
+		padding: var(--admin-space-md);
+	}
+
+	.admin-section-heading {
+		font-size: var(--admin-font-lg);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.admin-section-subheading {
+		margin-top: var(--admin-space-xs);
+		font-size: var(--admin-font-sm);
+		color: var(--admin-text-muted);
+	}
+
+	.admin-meta-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: var(--admin-font-xs);
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--admin-text-muted);
+	}
+
+	.admin-grid-tight {
+		display: grid;
+		gap: var(--admin-space-md);
+	}
+
+	.admin-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: var(--admin-font-sm);
+	}
+
+	.admin-table thead tr {
+		border-bottom: 1px solid var(--admin-border-strong);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-size: var(--admin-font-xs);
+		color: var(--admin-text-muted);
+	}
+
+	.admin-table th,
+	.admin-table td {
+		padding: var(--admin-space-sm) var(--admin-space-md);
+		border-bottom: 1px solid var(--admin-border-color);
+		text-align: left;
+	}
+
+	.admin-table tbody tr:hover {
+		background-color: color-mix(in srgb, var(--admin-surface-bg) 85%, var(--admin-accent) 5%);
+	}
+
+	.admin-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.2rem 0.5rem;
+		border: 1px solid var(--admin-border-color);
+		font-size: var(--admin-font-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+		.admin-button {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.45rem;
+			padding: var(--admin-space-xs) var(--admin-space-md);
+			border: 1px solid var(--admin-border-color);
+			background-color: var(--admin-surface-bg);
+			color: var(--admin-text-primary);
+			font-size: var(--admin-font-sm);
+			font-weight: 500;
+			letter-spacing: 0.01em;
+			text-transform: none;
+			border-radius: 0;
+			transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+		}
+
+		.admin-button:hover {
+			border-color: var(--admin-accent);
+			color: var(--admin-accent);
+		}
+
+		.admin-button--primary {
+			border-color: var(--admin-accent);
+			background-color: var(--admin-accent);
+			color: white;
+		}
+
+		.admin-button--primary:hover {
+			background-color: color-mix(in srgb, var(--admin-accent) 90%, black 10%);
+			color: white;
+		}
+
+		.admin-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.4rem;
+			padding: 0.25rem 0.6rem;
+			border: 1px solid var(--admin-border-color);
+			font-size: var(--admin-font-xs);
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+		}
+
+		.admin-pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.4rem;
+			padding: 0.2rem 0.6rem;
+			background-color: var(--admin-surface-muted);
+			color: var(--admin-text-muted);
+			font-size: var(--admin-font-xs);
+		}
+
+				[data-app-channel='admin'] [class*="rounded"],
+				[data-app-channel='admin'] [class*="rounded-"] {
+				border-radius: 0 !important;
+			}
+
+				[data-app-channel='admin'] [class*="shadow"] {
+				box-shadow: none !important;
+			}
+
+					[data-app-channel='admin'] [class*="bg-white"] {
+						background-color: var(--admin-surface-bg) !important;
+					}
+
+					[data-app-channel='admin'] [class*="bg-slate"] {
+						background-color: var(--admin-surface-muted) !important;
+					}
+}

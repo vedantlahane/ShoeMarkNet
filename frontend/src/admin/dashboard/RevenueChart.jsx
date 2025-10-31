@@ -106,39 +106,38 @@ const RevenueChart = ({ data, timeRange, totalRevenue, growth }) => {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="admin-surface">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-            <i className="fas fa-chart-line mr-3 text-blue-500"></i>
-            Revenue Analytics
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Track your earnings over time
+          <p className="admin-meta-chip">
+            <i className="fas fa-chart-line"></i>
+            Revenue
           </p>
+          <h2 className="admin-section-heading">Revenue analytics</h2>
+          <p className="admin-section-subheading">Track earnings across the selected range.</p>
         </div>
         
         <div className="text-right">
-          <div className="text-3xl font-bold text-gray-900 dark:text-white">
+          <div className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             {formatCurrency(totalRevenue)}
           </div>
-          <div className={`text-sm font-medium ${
-            growth >= 0 ? 'text-green-600' : 'text-red-600'
+          <div className={`text-[11px] font-semibold ${
+            growth >= 0 ? 'text-emerald-500' : 'text-rose-500'
           }`}>
             <i className={`fas ${growth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1`}></i>
-            {formatPercentage(Math.abs(growth))} vs last period
+            {formatPercentage(Math.abs(growth))} vs prior period
           </div>
         </div>
       </div>
       
-      <div className="h-80">
+      <div className="h-72">
         {data.length > 0 ? (
           <Line data={chartData} options={options} />
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <i className="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
-              <p className="text-gray-500 dark:text-gray-400">No revenue data available</p>
+              <i className="fas fa-chart-line text-slate-400 text-3xl mb-3"></i>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No revenue data available</p>
             </div>
           </div>
         )}

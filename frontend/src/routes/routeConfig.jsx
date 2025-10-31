@@ -190,31 +190,13 @@ export const routeConfig = {
       componentProps: { section: 'users' }
     },
     {
-      path: 'categories',
+      path: 'analytics',
       component: AdminDashboard,
-      title: 'Manage Categories',
-      description: 'Category management',
+      title: 'Analytics',
+      description: 'Insights and reporting',
       requiredRole: 'admin',
-      section: 'categories',
-      componentProps: { section: 'categories' }
-    },
-    {
-      path: 'reviews',
-      component: AdminDashboard,
-      title: 'Manage Reviews',
-      description: 'Review management',
-      requiredRole: 'admin',
-      section: 'reviews',
-      componentProps: { section: 'reviews' }
-    },
-    {
-      path: 'reports',
-      component: AdminDashboard,
-      title: 'Reports',
-      description: 'View reports',
-      requiredRole: 'admin',
-      section: 'reports',
-      componentProps: { section: 'reports' }
+      section: 'analytics',
+      componentProps: { section: 'analytics' }
     },
     {
       path: 'settings',
@@ -224,15 +206,6 @@ export const routeConfig = {
       requiredRole: 'admin',
       section: 'settings',
       componentProps: { section: 'settings' }
-    },
-    {
-      path: 'campaigns',
-      component: AdminDashboard,
-      title: 'Campaigns',
-      description: 'Marketing campaigns',
-      requiredRole: 'admin',
-      section: 'campaigns',
-      componentProps: { section: 'campaigns' }
     }
   ],
 

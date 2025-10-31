@@ -55,10 +55,10 @@ const SORT_OPTIONS = [
 ];
 
 const BULK_ACTIONS = [
-  { id: 'markPaid', label: 'Mark as Paid', icon: 'fa-check-circle', color: 'from-green-600 to-emerald-600' },
-  { id: 'markDelivered', label: 'Mark as Delivered', icon: 'fa-truck', color: 'from-blue-600 to-cyan-600' },
-  { id: 'markProcessing', label: 'Mark as Processing', icon: 'fa-cog', color: 'from-yellow-600 to-orange-600' },
-  { id: 'delete', label: 'Delete Orders', icon: 'fa-trash', color: 'from-red-600 to-pink-600' }
+  { id: 'markPaid', label: 'Mark as Paid', icon: 'fa-check-circle', accentColor: '#166534', variant: 'primary' },
+  { id: 'markDelivered', label: 'Mark as Delivered', icon: 'fa-truck', accentColor: '#1d4ed8', variant: 'primary' },
+  { id: 'markProcessing', label: 'Mark as Processing', icon: 'fa-cog', accentColor: '#b45309', variant: 'primary' },
+  { id: 'delete', label: 'Delete Orders', icon: 'fa-trash', accentColor: '#b91c1c', variant: 'primary' }
 ];
 
 const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externalAction, onActionHandled }) => {
@@ -420,16 +420,11 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   // Loading state
   if (isLoading || (loading && !adminOrders?.items?.length)) {
     return (
-      <div className="flex min-h-[24rem] items-center justify-center px-6 py-10">
+      <div className="admin-surface min-h-[24rem] flex items-center justify-center px-6 py-10">
         <div className="space-y-3 text-center">
           <LoadingSpinner size="large" />
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            <i className="fa-solid fa-cart-shopping mr-2 text-blue-500" />
-            Loading orders
-          </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Fetching order data and analytics…
-          </p>
+          <h3 className="admin-section-heading text-base">Loading orders</h3>
+          <p className="admin-section-subheading">Fetching order data and analytics…</p>
         </div>
       </div>
     );
@@ -438,7 +433,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
   // Error state
   if (error && !adminOrders?.items?.length) {
     return (
-      <div className="flex min-h-[24rem] items-center justify-center px-6 py-10">
+      <div className="admin-surface min-h-[24rem] flex items-center justify-center px-6 py-10">
         <ErrorMessage
           message={error.message || 'Failed to load orders'}
           onRetry={fetchOrdersData}
@@ -458,85 +453,98 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-full px-4 py-6 md:px-6">
-        <div className="flex flex-col divide-y divide-slate-200/70 dark:divide-slate-800/70">
-          {/* Header */}
-          <section className={`pb-6 ${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <i className="fa-solid fa-layer-group text-slate-400" />
+      <div className="px-4 py-6 md:px-6">
+        <div className="admin-grid-tight">
+          <section
+            className={`admin-surface ${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}
+            style={{ animationDelay: '0.05s' }}
+          >
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-4">
+                <span className="admin-meta-chip">
+                  <i className="fa-solid fa-layer-group text-[0.65rem]"></i>
                   Admin / Orders
-                </div>
-                <div>
-                  <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Order Management</h1>
-                  <p className="mt-2 flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-2">
-                      <i className="fa-solid fa-chart-line text-slate-400" />
-                      Monitor and control active orders
-                    </span>
-                    {isConnected && (
-                      <span className="flex items-center gap-2 text-emerald-500">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                        Live updates
-                      </span>
-                    )}
-                    {refreshing && (
-                      <span className="flex items-center gap-2 text-blue-500">
-                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-                        Syncing…
-                      </span>
-                    )}
+                </span>
+                <div className="space-y-2">
+                  <h1 className="admin-section-heading">Order Management</h1>
+                  <p className="admin-section-subheading">
+                    Monitor and control active orders across channels.
                   </p>
                 </div>
-                <p className="text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div className="flex flex-wrap gap-3 text-xs text-[var(--admin-text-muted)]">
+                  <span className="admin-pill">
+                    <i className="fa-solid fa-chart-line text-[0.65rem]"></i>
+                    Insights refreshed hourly
+                  </span>
+                  {isConnected && (
+                    <span
+                      className="admin-pill"
+                      style={{ color: '#047857', backgroundColor: 'rgba(4, 120, 87, 0.08)' }}
+                    >
+                      <span className="inline-flex h-2 w-2 border border-current" />
+                      Live updates
+                    </span>
+                  )}
+                  {refreshing && (
+                    <span
+                      className="admin-pill"
+                      style={{ color: '#1d4ed8', backgroundColor: 'rgba(29, 78, 216, 0.08)' }}
+                    >
+                      <span className="inline-flex h-2 w-2 border border-current animate-spin" />
+                      Syncing…
+                    </span>
+                  )}
+                </div>
+                <span className="admin-meta-chip">
                   {new Date().toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                   })}
-                </p>
+                </span>
               </div>
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-2">
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-wrap gap-2">
                   <button
+                    type="button"
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                    className="admin-button"
                     title="Refresh orders"
                   >
-                    <i className={`fa-solid fa-rotate ${refreshing ? 'animate-spin' : ''}`} />
+                    <i className={`fa-solid fa-rotate text-xs ${refreshing ? 'animate-spin' : ''}`}></i>
                     Refresh
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowExportModal(true)}
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                    className="admin-button"
                   >
-                    <i className="fa-solid fa-file-arrow-down" />
+                    <i className="fa-solid fa-file-arrow-down text-xs"></i>
                     Export
                   </button>
                   <button
-                    className="inline-flex items-center gap-2 rounded-md border border-dashed border-slate-400 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
                     type="button"
+                    className="admin-button admin-button--primary"
                   >
-                    <i className="fa-solid fa-plus" />
+                    <i className="fa-solid fa-plus text-xs"></i>
                     Add order
                   </button>
                 </div>
-                <div className="flex items-center gap-3 rounded-md border border-slate-200/80 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                  <i className="fa-solid fa-clipboard-check text-slate-400" />
-                  <div className="flex flex-col">
-                    <span className="text-xs uppercase tracking-wide text-slate-400">Orders today</span>
-                    <span className="text-base font-semibold text-slate-900 dark:text-slate-100">{orderStats.todayOrders ?? 0}</span>
+                <div className="admin-surface-muted flex items-center gap-3">
+                  <i className="fa-solid fa-clipboard-check text-[var(--admin-text-muted)]"></i>
+                  <div className="space-y-1">
+                    <span className="admin-meta-chip">Orders today</span>
+                    <span className="text-base font-semibold">{orderStats.todayOrders ?? 0}</span>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Stats */}
-          <section className="py-6">
+          <section className="admin-surface">
             <OrderStats
               stats={orderStats}
               realtimeData={realtimeData}
@@ -544,8 +552,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
             />
           </section>
 
-          {/* Filters */}
-          <section className="py-6">
+          <section className="admin-surface">
             <OrderFilters
               statusFilter={statusFilter}
               searchTerm={searchTerm}
@@ -567,70 +574,67 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
             />
           </section>
 
-          {/* Bulk actions */}
           {selectedOrders.length > 0 && (
-            <section className="py-6">
-              <OrderBulkActions
-                selectedCount={selectedOrders.length}
-                actions={BULK_ACTIONS}
-                onBulkAction={handleBulkAction}
-                onClearSelection={() => setSelectedOrders([])}
-                animateCards={animateCards}
-              />
-            </section>
+            <OrderBulkActions
+              selectedCount={selectedOrders.length}
+              actions={BULK_ACTIONS}
+              onBulkAction={handleBulkAction}
+              onClearSelection={() => setSelectedOrders([])}
+              animateCards={animateCards}
+            />
           )}
 
-          {/* Orders Display */}
-          <section className="py-6">
+          <section className="admin-surface">
             {orders.length === 0 ? (
-              /* Empty State */
-              <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'} text-center`} style={{ animationDelay: '0.4s' }}>
-                <div className="space-y-4 rounded-md border border-dashed border-slate-300 px-6 py-10 text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-slate-300 text-slate-400 dark:border-slate-600">
-                    <i className="fa-solid fa-cart-shopping text-2xl" />
+              <div
+                className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'} text-center`}
+                style={{ animationDelay: '0.2s' }}
+              >
+                <div className="space-y-4">
+                  <div
+                    className="inline-flex px-4 py-3"
+                    style={{ border: `1px solid var(--admin-border-color)` }}
+                  >
+                    <i className="fa-solid fa-cart-shopping text-sm text-[var(--admin-text-muted)]"></i>
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                    No Orders Found
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <h3 className="admin-section-heading text-base">No orders found</h3>
+                  <p className="admin-section-subheading">
                     {searchTerm || statusFilter !== ORDER_STATUSES.ALL
-                      ? 'No orders match your current filters. Try adjusting your search criteria.'
-                      : 'Orders will appear here when customers start placing them.'
-                    }
+                      ? 'No orders match your current filters. Adjust criteria to expand the results.'
+                      : 'Orders will appear here once customers begin placing them.'}
                   </p>
-                  <div className="flex flex-wrap justify-center gap-3">
+                  <div className="flex flex-wrap justify-center gap-2">
                     {(searchTerm || statusFilter !== ORDER_STATUSES.ALL) && (
                       <button
+                        type="button"
                         onClick={() => {
                           setSearchTerm('');
                           setStatusFilter(ORDER_STATUSES.ALL);
                           setDateRange({ start: '', end: '' });
                           setPriceRange({ min: '', max: '' });
                         }}
-                        className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                        className="admin-button"
                       >
-                        <i className="fa-solid fa-xmark" />
-                        Clear Filters
+                        <i className="fa-solid fa-xmark text-xs"></i>
+                        Clear filters
                       </button>
                     )}
-                    <button className="inline-flex items-center gap-2 rounded-md border border-dashed border-slate-400 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400">
-                      <i className="fa-solid fa-plus" />
-                      Create Test Order
+                    <button type="button" className="admin-button admin-button--primary">
+                      <i className="fa-solid fa-plus text-xs"></i>
+                      Create test order
                     </button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                {/* Loading overlay */}
+              <div className="admin-grid-tight">
                 {(loading || refreshing) && orders.length > 0 && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10">
                     <LoadingSpinner size="medium" message="Updating orders..." />
                   </div>
                 )}
 
                 {viewMode === 'cards' ? (
-                  /* Cards View */
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
                     {orders.map((order, index) => (
                       <OrderCard
@@ -648,7 +652,6 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
                     ))}
                   </div>
                 ) : (
-                  /* Table View */
                   <OrderTable
                     orders={orders}
                     selectedOrders={selectedOrders}
@@ -668,9 +671,8 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
                   />
                 )}
 
-                {/* Enhanced Pagination */}
                 {adminOrders?.pagination && adminOrders.pagination.totalPages > 1 && (
-                  <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
+                  <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
                     <Pagination
                       currentPage={currentPage}
                       totalPages={adminOrders.pagination.totalPages}
@@ -678,7 +680,7 @@ const OrderManagement = ({ stats, realtimeData, onDataUpdate, isLoading, externa
                       showInfo={true}
                       totalItems={adminOrders.pagination.totalItems}
                       itemsPerPage={ordersPerPage}
-                      className="border border-slate-200/80 bg-white/70 text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200"
+                      className="admin-surface-muted"
                     />
                   </div>
                 )}

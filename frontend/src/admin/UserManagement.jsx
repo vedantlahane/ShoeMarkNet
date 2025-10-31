@@ -40,7 +40,7 @@ import usePermissions from '../hooks/usePermissions';
 // Utils
 import { trackEvent } from '../utils/analytics';
 import { formatDate, getRelativeTime } from '../utils/helpers';
-// import { validateUser, calculateLeadScore } from '../../utils/userUtils';
+// import { validateUser, calculateLeadScore } from '../utils/userUtils';
 
 // Constants
 const USER_ROLES = [

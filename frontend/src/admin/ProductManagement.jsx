@@ -815,13 +815,13 @@ const ProductManagement = ({ realtimeData, onDataUpdate, isLoading, externalActi
   if (isLoading || (loading && !products)) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="rounded-2xl border border-slate-200 bg-white/90 p-10 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="admin-surface text-center">
           <LoadingSpinner size="large" />
-          <h3 className="mt-6 text-lg font-semibold text-slate-900 dark:text-slate-100">
-            <i className="fa-solid fa-box mr-2 text-blue-500" />
+          <h3 className="mt-4 text-base font-semibold">
+            <i className="fa-solid fa-box mr-2" />
             Loading products
           </h3>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-slate-500">
             Fetching product data and analytics…
           </p>
         </div>
@@ -833,16 +833,16 @@ const ProductManagement = ({ realtimeData, onDataUpdate, isLoading, externalActi
     <div className="space-y-6" {...dragProps}>
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10 backdrop-blur-sm">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/95 px-10 py-12 text-center shadow-xl dark:border-slate-700/70 dark:bg-slate-900/85">
-            <i className="fa-solid fa-cloud-arrow-up mb-5 text-5xl text-blue-500" />
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Drop files to upload</h3>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Images, CSV, and Excel files are supported.</p>
+          <div className="admin-surface text-center shadow-none">
+            <i className="fa-solid fa-cloud-arrow-up mb-4 text-3xl" />
+            <h3 className="text-base font-semibold">Drop files to upload</h3>
+            <p className="mt-1 text-sm text-slate-500">Images, CSV, and Excel files are supported.</p>
           </div>
         </div>
       )}
 
       <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`}>
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="admin-surface">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="space-y-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-300">
@@ -963,9 +963,9 @@ const ProductManagement = ({ realtimeData, onDataUpdate, isLoading, externalActi
       )}
 
       {filteredAndSortedProducts.length === 0 ? (
-        <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-          <div className="rounded-2xl border border-slate-200 bg-white/80 px-10 py-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+          <div className={`${animateCards ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+            <div className="admin-surface text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
               <i className="fa-solid fa-box-open text-2xl" />
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">

@@ -157,6 +157,16 @@ const AdminDashboard = ({ section = "overview" }) => {
   const initialLoadComplete = useRef(false);
   const websocketRef = useRef(null);
   const notificationTimeouts = useRef(new Map());
+  const currentDateLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }),
+    []
+  );
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -953,6 +963,19 @@ const AdminDashboard = ({ section = "overview" }) => {
   const showRealtimeStats =
     isConnected && realtimeData && Object.keys(realtimeData || {}).length > 0;
 
+  const headerSurfaceStyle = useMemo(() => ({
+    backgroundColor: 'var(--admin-surface-bg)',
+    borderColor: 'var(--admin-border-color)'
+  }), []);
+
+  const connectionPillStyle = useMemo(() => ({
+    color: isConnected ? '#047857' : '#b91c1c',
+    backgroundColor: isConnected
+      ? 'rgba(4, 120, 87, 0.08)'
+      : 'rgba(185, 28, 28, 0.08)',
+    border: `1px solid ${isConnected ? '#047857' : '#b91c1c'}`
+  }), [isConnected]);
+
   return (
     <>
       <PageMeta
@@ -961,157 +984,191 @@ const AdminDashboard = ({ section = "overview" }) => {
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-        <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800/70 dark:bg-slate-900/70">
-          <div className="mx-auto max-w-7xl px-4 py-4 md:px-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-                  <i className="fa-solid fa-crown text-lg" />
+      <div className="w-full">
+        <header className="sticky top-0 z-30 border-b" style={headerSurfaceStyle}>
+          <div className="px-4 py-3 md:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="admin-meta-chip">ShoeMarkNet Admin</span>
+                <h1 className="text-lg font-semibold">{currentSection?.label || 'Dashboard'}</h1>
+                <span className="admin-pill">
+                  <i className="fa-solid fa-calendar-days text-[0.65rem]"></i>
+                  {currentDateLabel}
                 </span>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    ShoeMarkNet Control
-                  </p>
-                  <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                    Admin Console
-                  </h1>
-                </div>
+                <span className="admin-pill" style={connectionPillStyle}>
+                  <span className="inline-flex h-2 w-2 border border-current"></span>
+                  {connectionStatus || (isConnected ? 'Live' : 'Offline')}
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => setShowSearchModal(true)}
-                  className="group hidden h-10 w-56 items-center justify-between rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 sm:flex"
+                  className="admin-button h-9 hidden sm:inline-flex"
                   title="Open quick search"
                 >
-                  <span className="flex items-center gap-2">
-                    <i className="fa-solid fa-magnifying-glass" />
-                    Search anything...
-                  </span>
-                  <span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                  <i className="fa-solid fa-magnifying-glass text-[0.7rem]"></i>
+                  Search
+                  <span className="admin-pill text-[0.65rem]">
                     ⌘K
                   </span>
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => setShowSearchModal(true)}
-                  className="sm:hidden h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  className="admin-button h-9 sm:hidden"
                   aria-label="Open search"
                 >
-                  <i className="fa-solid fa-magnifying-glass" />
+                  <i className="fa-solid fa-magnifying-glass text-[0.7rem]"></i>
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => setShowNotificationCenter(true)}
-                  className="relative h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  className="admin-button h-9 relative"
                   title="Notifications"
                 >
-                  <i className="fa-solid fa-bell" />
+                  <i className="fa-solid fa-bell text-[0.7rem]"></i>
                   {unreadNotifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-semibold text-white">
+                    <span
+                      className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] items-center justify-center text-[0.6rem] font-semibold"
+                      style={{
+                        backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                        border: '1px solid #dc2626',
+                        color: '#dc2626'
+                      }}
+                    >
                       {unreadNotifications.length}
                     </span>
                   )}
                 </button>
-
                 <button
+                  type="button"
                   onClick={toggleTheme}
-                  className="h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  className="admin-button h-9"
                   title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                   aria-label="Toggle theme"
                 >
-                  <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'}`} />
+                  <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-[0.7rem]`}></i>
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => handleSectionChange('settings')}
-                  className="h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                  className="admin-button h-9"
                   title="Settings"
                   aria-label="Open settings"
                 >
-                  <i className="fa-solid fa-gear" />
+                  <i className="fa-solid fa-gear text-[0.7rem]"></i>
                 </button>
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <nav className="mt-3 flex flex-wrap gap-2">
               {availableSections.map((item) => {
                 const isActive = activeSection === item.id;
-
                 return (
                   <button
                     key={item.id}
+                    type="button"
                     onClick={() => handleSectionChange(item.id)}
-                    className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      isActive
-                        ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                        : 'border-transparent bg-slate-100/70 text-slate-600 hover:border-slate-300 hover:bg-white dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-slate-600'
-                    }`}
+                    className={`admin-button h-8 ${isActive ? 'admin-button--primary' : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
                     title={item.description}
                   >
-                    <i className={`fa-solid ${item.icon} text-xs`} />
-                    <span>{item.label}</span>
+                    <i className={`fa-solid ${item.icon} text-[0.65rem]`}></i>
+                    {item.label}
                   </button>
                 );
               })}
-            </div>
+            </nav>
           </div>
         </header>
 
-        <main className="px-4 py-8 md:px-6">
-          <div className="mx-auto max-w-7xl space-y-8">
-            <section className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[2fr,1fr]">
-              <div className="space-y-5">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <i className={`fa-solid ${currentSection?.icon || 'fa-chart-pie'}`} />
-                  {currentSection?.label || 'Dashboard'}
-                </div>
-
-                <div className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+        <main className="w-full px-4 py-6 md:px-8">
+          <div className="space-y-5">
+            <section className="admin-surface">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="admin-meta-chip">
+                    <i className={`fa-solid ${currentSection?.icon || 'fa-chart-pie'} text-[11px]`} />
+                    {currentSection?.label || 'Dashboard'}
+                  </p>
+                  <h2 className="admin-section-heading">
                     {currentSection?.label || 'Dashboard'}
                   </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {currentSection?.description || 'Manage your e-commerce platform with a focused, simplified workspace.'}
+                  <p className="admin-section-subheading">
+                    {currentSection?.description || 'Manage your commerce operations from a focused, lightweight workspace.'}
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                  <span className="inline-flex items-center gap-2">
-                    <i className="fa-solid fa-calendar-days" />
-                    {new Date().toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-1.5">
+                    <i className="fa-solid fa-calendar-days text-slate-400" />
+                    {currentDateLabel}
                   </span>
-                  <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5">
                     <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                    {connectionStatus || (isConnected ? 'Live updates on' : 'Offline')}
+                    {connectionStatus || (isConnected ? 'Live updates' : 'Offline')}
                   </span>
                   {unreadNotifications.length > 0 && (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
-                      <i className="fa-solid fa-bell" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-2 py-1 text-[10px] font-semibold text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
+                      <i className="fa-solid fa-bell text-[10px]" />
                       {unreadNotifications.length} new
                     </span>
                   )}
                 </div>
-
-                {showRealtimeStats && (
-                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-700/70 dark:bg-slate-800/60">
-                    <RealtimeStats data={realtimeData} isConnected={isConnected} />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-slate-50/70 p-5 dark:border-slate-700/70 dark:bg-slate-800/60">
-                <QuickActions onActionClick={(action) => handleQuickAction(action.id)} />
               </div>
             </section>
 
-            {renderSectionContent()}
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr),260px]">
+              <div className="space-y-4">
+                {showRealtimeStats && (
+                  <div className="admin-surface">
+                    <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <span>Realtime snapshot</span>
+                      <span className={isConnected ? 'text-emerald-500' : 'text-rose-400'}>
+                        {isConnected ? 'Live' : 'Paused'}
+                      </span>
+                    </div>
+                    <RealtimeStats data={realtimeData} isConnected={isConnected} />
+                  </div>
+                )}
+
+                {renderSectionContent()}
+              </div>
+
+              <aside className="space-y-4">
+                <div className="admin-surface">
+                  <div className="mb-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <span>Quick actions</span>
+                    <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">Shortcuts</span>
+                  </div>
+                  <QuickActions onActionClick={(action) => handleQuickAction(action.id)} />
+                </div>
+
+                <div className="admin-surface text-[11px] text-slate-600 dark:text-slate-400">
+                  <div className="mb-2 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Session overview</div>
+                  <ul className="space-y-1.5">
+                    <li className="flex items-center justify-between gap-4">
+                      <span>Signed in</span>
+                      <span className="truncate text-slate-800 dark:text-slate-200">{user?.name || user?.email || 'Admin'}</span>
+                    </li>
+                    <li className="flex items-center justify-between gap-4">
+                      <span>Role</span>
+                      <span className="text-slate-800 dark:text-slate-200">{userRole || 'admin'}</span>
+                    </li>
+                    <li className="flex items-center justify-between gap-4">
+                      <span>Active section</span>
+                      <span className="text-slate-800 dark:text-slate-200">{currentSection?.label || 'Dashboard'}</span>
+                    </li>
+                    <li className="flex items-center justify-between gap-4">
+                      <span>Notifications</span>
+                      <span className="text-slate-800 dark:text-slate-200">{unreadNotifications.length} pending</span>
+                    </li>
+                  </ul>
+                </div>
+              </aside>
+            </div>
           </div>
         </main>
       </div>

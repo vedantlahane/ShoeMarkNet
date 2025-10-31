@@ -36,8 +36,8 @@ const AdminLayout = () => {
 
   const shellClassName = useMemo(() => (
     theme === 'dark'
-      ? 'min-h-screen bg-slate-950 text-slate-100 transition-colors duration-300'
-      : 'min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300'
+      ? 'admin-shell dark'
+      : 'admin-shell'
   ), [theme]);
 
   return (

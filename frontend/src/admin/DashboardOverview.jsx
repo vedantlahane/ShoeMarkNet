@@ -267,14 +267,11 @@ const DashboardOverview = ({ realtimeData, onDataUpdate, isLoading, onQuickActio
   if (isLoading || (!enhancedMetrics && (productsLoading || ordersLoading || usersLoading))) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="rounded-2xl border border-slate-200 bg-white/90 p-10 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="admin-surface text-center">
           <LoadingSpinner size="large" />
-          <h3 className="mt-6 text-lg font-semibold text-slate-900 dark:text-slate-100">
-            <i className="fa-solid fa-chart-line mr-2 text-blue-500" />
-            Loading dashboard
-          </h3>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            <i className="fa-solid fa-database mr-2" />
+          <h3 className="mt-4 text-base font-semibold">Loading dashboard</h3>
+          <p className="mt-1 text-[13px] text-slate-500">
+            <i className="fa-solid fa-database mr-1" />
             Fetching the latest analytics…
           </p>
         </div>
@@ -303,15 +300,15 @@ const DashboardOverview = ({ realtimeData, onDataUpdate, isLoading, onQuickActio
       />
       <section className="space-y-6">
         <div className={`${animateStats ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
-                  <i className="fa-solid fa-gauge-high text-blue-500" />
+          <header className="admin-surface">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-2">
+                <span className="admin-meta-chip">
+                  <i className="fa-solid fa-gauge-high" />
                   Overview
-                </div>
-                <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Admin Dashboard</h1>
-                <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                </span>
+                <h1 className="admin-section-heading">Admin Dashboard</h1>
+                <p className="admin-section-subheading flex items-center gap-2">
                   <i className="fa-solid fa-calendar-days" />
                   {new Date().toLocaleDateString('en-US', {
                     weekday: 'long',
@@ -320,29 +317,27 @@ const DashboardOverview = ({ realtimeData, onDataUpdate, isLoading, onQuickActio
                     day: 'numeric'
                   })}
                 </p>
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                  <span className="inline-flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                     {isConnected ? 'Live updates enabled' : 'Offline'}
                   </span>
                   {refreshing && (
-                    <span className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                    <span className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                      <span className="h-3 w-3 animate-spin border border-blue-500 border-t-transparent" />
                       Refreshing…
                     </span>
                   )}
                 </div>
               </div>
-              <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-600 dark:text-slate-300" htmlFor="dashboard-range">
-                    Period
-                  </label>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <label className="flex items-center gap-2 text-[13px] font-medium" htmlFor="dashboard-range">
+                  <span>Period</span>
                   <select
                     id="dashboard-range"
                     value={selectedTimeRange}
                     onChange={(e) => handleTimeRangeChange(e.target.value)}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    className="border border-slate-300 px-2 py-1 text-[13px] font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900"
                   >
                     <option value="1d">Last 24 hours</option>
                     <option value="7d">Last 7 days</option>
@@ -350,29 +345,29 @@ const DashboardOverview = ({ realtimeData, onDataUpdate, isLoading, onQuickActio
                     <option value="90d">Last 90 days</option>
                     <option value="1y">Last year</option>
                   </select>
-                </div>
+                </label>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                    className="inline-flex h-9 w-9 items-center justify-center border border-slate-300 text-slate-600 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300"
                     title="Refresh dashboard"
                   >
                     <i className={`fa-solid fa-arrow-rotate-right ${refreshing ? 'animate-spin' : ''}`} />
                   </button>
                   <button
                     onClick={() => setShowAdvancedMetrics(!showAdvancedMetrics)}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+                    className="inline-flex h-9 w-9 items-center justify-center border border-slate-300 text-slate-600 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-600 dark:text-slate-300"
                     title="Toggle advanced metrics"
                   >
                     <i className="fa-solid fa-chart-simple" />
                   </button>
                 </div>
 
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-                  <p className="text-sm font-medium">Orders today</p>
-                  <p className="text-2xl font-semibold">{enhancedMetrics.orders.today}</p>
+                <div className="border border-slate-300 px-3 py-2 text-left text-slate-700 dark:border-slate-600 dark:text-slate-200">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.12em]">Orders today</p>
+                  <p className="text-lg font-semibold">{enhancedMetrics.orders.today}</p>
                 </div>
               </div>
             </div>
