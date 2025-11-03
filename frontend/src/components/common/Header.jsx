@@ -28,7 +28,6 @@ const routePrefetchers = {
   "/sale": () => import("../../pages/Products"),
   "/cart": () => import("../../pages/Cart"),
   "/wishlist": () => import("../../pages/Wishlist"),
-  "/search": () => import("../../pages/Search"),
   "/profile": () => import("../../pages/Profile"),
   "/orders": () => import("../../pages/Orders"),
   "/login": () => import("../../pages/Login"),

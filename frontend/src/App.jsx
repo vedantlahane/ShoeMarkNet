@@ -1,5 +1,4 @@
-// Main App component for ShoeMarkNet - sets up providers, routing, and global state management
-import React, { Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store";
@@ -12,16 +11,10 @@ import LoadingSpinner from "./components/common/LoadingSpinner";
 import routeConfig from "./routes/routeConfig";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
-const basePageClasses =
-  "min-h-screen w-full flex items-center justify-center bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100";
-
 // Fallback component shown while lazy-loaded components are being fetched
 const SuspenseFallback = () => (
-  <div className={basePageClasses}>
-    <LoadingSpinner
-      size="xl"
-      message="Crafting your ShoeMarkNet experience…"
-    />
+  <div className="min-h-screen w-full flex items-center justify-center bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+    <LoadingSpinner size="xl" message="Crafting your ShoeMarkNet experience…" />
   </div>
 );
 
@@ -70,7 +63,7 @@ const AppContent = () => {
   // Show loading screen while auth is initializing
   if (!isInitialized && isLoading) {
     return (
-      <div className={basePageClasses}>
+      <div className="min-h-screen w-full flex items-center justify-center bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
         <LoadingSpinner size="xl" message="Getting everything ready…" />
       </div>
     );
@@ -119,8 +112,8 @@ const AppContent = () => {
 };
 
 const App = () => (
-      <Provider store={store}>
-      <AppContent />
+  <Provider store={store}>
+    <AppContent />
   </Provider>
 );
 

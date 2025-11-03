@@ -15,7 +15,7 @@ import {
 } from '../redux/slices/categorySlice';
 
 // Components
-import ProductCard from '../components/ProductCard';
+import ProductCard from '../components/products/ProductCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Pagination from '../components/common/Pagination';

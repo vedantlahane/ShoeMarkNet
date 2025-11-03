@@ -20,8 +20,6 @@ import {
 // Components
 import ErrorMessage from '../components/common/ErrorMessage';
 import Rating from '../components/common/Rating';
-import ProductCard from '../components/ProductCard';
-import ProductBreadcrumb from '../components/products/ProductBreadcrumb';
 import StockIndicator from '../components/products/StockIndicator';
 import SocialShare from '../components/common/SocialShare';
 import PriceDisplay from '../components/products/PriceDisplay';
@@ -587,15 +585,6 @@ const ProductDetail = () => {
         </div>
 
   <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
-          
-          {/* Enhanced Breadcrumb Navigation */}
-          <div className="mb-8">
-            <ProductBreadcrumb 
-              product={product}
-              onBack={() => navigate(-1)}
-            />
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
             
             {/* Enhanced Product Images */}

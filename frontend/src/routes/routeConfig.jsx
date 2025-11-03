@@ -5,7 +5,6 @@ const Home = lazy(() => import('../pages/Home'));
 const ProductDetail = lazy(() => import('../pages/ProductDetail'));
 const Products = lazy(() => import('../pages/Products'));
 const Category = lazy(() => import('../pages/Category'));
-const Search = lazy(() => import('../pages/Search'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
 const Profile = lazy(() => import('../pages/Profile'));
@@ -58,12 +57,6 @@ export const routeConfig = {
       component: Category,
       title: 'Category',
       description: 'View category products'
-    },
-    {
-      path: 'search',
-      component: Search,
-      title: 'Search Results',
-      description: 'Search results'
     },
     {
       path: 'access-denied',

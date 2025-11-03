@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { FaStar } from 'react-icons/fa';
-import { createReview } from '../redux/slices/productSlice';
+import { createReview } from '../../redux/slices/productSlice';
 import Rating from './Rating';
 
 const ReviewForm = ({ productId }) => {

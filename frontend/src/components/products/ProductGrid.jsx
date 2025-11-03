@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import ProductCard from '../ProductCard';
+import ProductCard from './ProductCard';
 import { AnimatePresence } from 'framer-motion';
 
 const ProductGrid = ({ products, onAddToCart, onToggleWishlist, wishlistProductIds = [], className = '' }) => {

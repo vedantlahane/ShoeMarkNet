@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { FaInfoCircle, FaListUl, FaShippingFast, FaStar } from 'react-icons/fa';
 import Rating from '../common/Rating';
-import ReviewForm from '../ReviewForm';
+import ReviewForm from './ReviewForm';
 import { formatDate, formatCurrency, getRelativeTime } from '../../utils/helpers';
 
 const ProductTabs = ({

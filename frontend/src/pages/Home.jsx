@@ -1,14 +1,11 @@
 import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useDispatch } from "react-redux";
-import PageMeta from "../components/seo/PageMeta";
 import HeroSection from "../components/home/HeroSection";
 import { addToCart } from "../redux/slices/cartSlice";
 import useFeaturedProducts from "../hooks/api/useFeaturedProducts";
 import useHomeContent from "../hooks/api/useHomeContent";
 
-const FeaturedProducts = lazy(() =>
-  import("../components/home/FeaturedProducts")
-);
+const FeaturedProducts = lazy(() => import("../components/home/FeaturedProducts"));
 const CardSection = lazy(() => import("../components/home/CardsSection"));
 const OffersSection = lazy(() => import("../components/home/OffersSection"));
 
@@ -53,14 +50,6 @@ const Home = () => {
   const heroData = homeOverview?.hero;
   const promotions = homeOverview?.promotions ?? [];
 
-  /**
-   * Handles adding a product to the cart.
-   * Dispatches the addToCart action with product details.
-   *
-   * @param {Object} product - The product object to add to cart
-   * @param {string} product._id - Product ID
-   * @param {Object} product - Full product object for cart display
-   */
   const handleAddToCart = useCallback(
     (product) => {
       dispatch(
@@ -97,16 +86,10 @@ const Home = () => {
 
   return (
     <>
-      {/* SEO metadata for search engines */}
-      <PageMeta
-        title="ShoeMarkNet - Premium Footwear Online"
-        description="Discover premium footwear brands and styles with AI-powered recommendations and lightning-fast delivery"
-        keywords="shoes, footwear, sneakers, premium, online shopping, AI recommendations"
-      />
 
       {/* Main page content with gradient background */}
       <main className="relative min-h-screen overflow-hidden text-slate-900 transition-colors duration-500 dark:text-slate-100">
-        <div className="relative z-10 flex flex-col pb-24 pt-12 sm:pt-16">
+        <div className="relative z-10 flex flex-col pt-12 sm:pt-16">
           {/* Hero section - Main banner and call-to-action */}
           <HeroSection data={heroData} isLoading={isHomePending && !heroData} />
 
