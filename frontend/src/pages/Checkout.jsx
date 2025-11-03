@@ -556,7 +556,7 @@ const Checkout = () => {
   // Show order completion screen
   if (orderCompleted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-theme flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl max-w-md animate-fade-in">
           <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <i className="fas fa-check text-white text-3xl"></i>
@@ -582,7 +582,7 @@ const Checkout = () => {
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-theme">
         
         {/* Checkout Header */}
         <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 py-6">

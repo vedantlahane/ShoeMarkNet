@@ -342,7 +342,7 @@ const NotFound = () => {
         }}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-theme flex items-center justify-center relative overflow-hidden">
         
         {/* Enhanced Dynamic Background */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10">

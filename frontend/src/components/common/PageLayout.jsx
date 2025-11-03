@@ -28,7 +28,7 @@ const PageLayout = ({
 
   return (
     <div className={`min-h-screen w-full ${backgroundClass} transition-colors duration-500 ${className}`}>
-  <div className={`w-full mx-auto px-4 sm:px-5 lg:px-6 ${maxWidth} ${paddingY} ${innerClassName}`}>
+      <div className={`w-full mx-auto px-4 sm:px-5 lg:px-6 ${maxWidth} ${paddingY} ${innerClassName}`}>
         {(breadcrumbs || title || description || actions || afterHeader || eyebrow) && (
           <header className={`flex flex-col ${headerSpacing} md:flex-row md:items-start md:justify-between ${headerClassName}`}>
             <div className="max-w-3xl space-y-3">

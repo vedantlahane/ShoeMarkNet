@@ -398,8 +398,8 @@ const Orders = () => {
   // Loading state
   if (loading && (!orders || orders.length === 0)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
+      <div className="min-h-screen bg-theme">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
           <LoadingSpinner size="large" message="Loading your orders..." />
         </div>
       </div>
@@ -409,7 +409,7 @@ const Orders = () => {
   // Error state
   if (error && (!orders || orders.length === 0)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-theme flex items-center justify-center p-4">
         <ErrorMessage
           message={error.message || 'Failed to load orders'}
           onRetry={handleRetry}
@@ -429,7 +429,7 @@ const Orders = () => {
         canonical="https://shoemarknet.com/orders"
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-theme">
         
         {/* Animated Background Elements */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -447,7 +447,7 @@ const Orders = () => {
           ))}
         </div>
 
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
           
           {/* Enhanced Header */}
           <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
@@ -468,7 +468,7 @@ const Orders = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Quick Stats */}
                 <div className="flex flex-wrap gap-3">
                   <div className="bg-blue-500/20 backdrop-blur-lg border border-blue-300/50 rounded-2xl px-4 py-2 text-blue-800 dark:text-blue-200">

@@ -425,8 +425,8 @@ const ProductDetail = () => {
   // Loading state
   if (productLoading && !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
+      <div className="min-h-screen bg-theme">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Image skeleton */}
             <div className="space-y-6">
@@ -457,7 +457,7 @@ const ProductDetail = () => {
   // Error state
   if (error && !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-theme flex items-center justify-center p-4">
         <ErrorMessage
           message={error.message || 'Failed to load product'}
           onRetry={() => {
@@ -474,7 +474,7 @@ const ProductDetail = () => {
   // Product not found
   if (!productLoading && !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-theme flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl max-w-md">
           <div className="w-20 h-20 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
             <i className="fas fa-search text-white text-3xl"></i>
@@ -568,7 +568,7 @@ const ProductDetail = () => {
         }}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-theme">
         
         {/* Animated Background Elements */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">

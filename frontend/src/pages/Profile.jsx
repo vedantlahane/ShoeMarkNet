@@ -367,8 +367,8 @@ const Profile = () => {
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-screen bg-gray-50 py-8">
-  <div className="max-w-4xl mx-auto w-full px-4 sm:px-5 lg:px-6">
+      <div className="min-h-screen bg-theme py-8 text-theme">
+        <div className="max-w-4xl mx-auto w-full px-4 sm:px-5 lg:px-6">
           
           {/* Profile Header */}
           <div className="bg-white shadow-sm rounded-lg mb-6 overflow-hidden">

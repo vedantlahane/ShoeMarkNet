@@ -592,29 +592,30 @@ const Products = () => {
         description={headerSubtitle}
         actions={headerActions}
         breadcrumbs={headerBreadcrumbs}
-        className="animate-fadeInUp"
+        background="subtle"
+        className="animate-in fade-in duration-300"
       >
-        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-8">
           <div className="lg:hidden">
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-              className="flex w-full items-center justify-between rounded-2xl border border-white/40 bg-white/70 px-4 py-3 font-semibold text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-lg active:scale-95 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
+              className="flex w-full items-center justify-between rounded-xl border border-theme bg-card px-4 py-3 font-semibold text-theme transition-all duration-200 hover:border-theme-strong hover:text-theme focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-theme"
             >
               <span className="flex items-center gap-2">
-                <i className={`fas fa-sliders-h text-blue-500 transition-transform duration-200 ${isMobileFilterOpen ? 'rotate-90' : ''}`}></i>
+                <i className={`fas fa-sliders-h text-primary-500 transition-transform duration-200 ${isMobileFilterOpen ? 'rotate-90' : ''}`}></i>
                 Filters
                 {activeFilters.size > 0 && (
-                  <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white animate-pulse">
+                  <span className="ml-2 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-medium text-white">
                     {activeFilters.size}
                   </span>
                 )}
               </span>
-              <i className={`fas fa-chevron-${isMobileFilterOpen ? 'up' : 'down'} text-sm opacity-60 transition-transform duration-200 ${isMobileFilterOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-${isMobileFilterOpen ? 'up' : 'down'} text-sm text-muted-theme transition-transform duration-200 ${isMobileFilterOpen ? 'rotate-180' : ''}`}></i>
             </button>
           </div>
 
           {activeFilters.size > 0 && (
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-[0_25px_45px_-24px_rgba(15,23,42,0.45)] transition-all duration-300 animate-in slide-in-from-top-2 hover:-translate-y-0.5 hover:shadow-xl dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+            <div className="rounded-2xl border border-theme bg-surface p-4 text-theme theme-shadow-soft transition-all duration-300">
               <FilterChips
                 filters={activeFilters}
                 onRemove={handleRemoveFilter}
@@ -643,15 +644,15 @@ const Products = () => {
                       : 'pointer-events-none fixed inset-y-0 left-0 z-40 h-full w-4/5 max-w-sm -translate-x-full lg:pointer-events-auto lg:static lg:translate-x-0'
                   }`}
                 >
-                  <div className="flex h-full flex-col overflow-y-auto bg-white/95 p-4 shadow-2xl backdrop-blur-xl dark:bg-slate-900/95 lg:h-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:shadow-none">
+                  <div className="flex h-full flex-col overflow-y-auto rounded-none bg-surface p-4 text-theme theme-shadow-soft lg:h-auto lg:overflow-visible lg:bg-transparent lg:p-0 lg:shadow-none">
                     <div className="mb-4 flex items-center justify-between lg:hidden">
-                      <h3 className="text-sm font-semibold uppercase tracking-[0.4em] text-gray-600">
+                      <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-theme">
                         Filters
                       </h3>
                       <button
                         type="button"
                         onClick={() => setIsMobileFilterOpen(false)}
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-gray-600 transition-colors duration-200 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        className="rounded-full border border-theme px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-muted-theme transition-colors duration-200 hover:border-theme-strong hover:text-theme"
                         aria-label="Close filters"
                       >
                         Close
@@ -669,7 +670,7 @@ const Products = () => {
                 </aside>
 
                 <section className="min-w-0 flex-1 space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-theme bg-surface p-4 text-theme theme-shadow-soft">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <SortDropdown
                         value={filters.sort}
@@ -678,7 +679,7 @@ const Products = () => {
                       />
 
                       <select
-                        className="rounded-2xl border border-white/40 bg-white/70 px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 active:scale-95 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white"
+                        className="rounded-xl border border-theme bg-card px-3 py-2 text-sm font-medium text-theme transition-colors focus:border-theme-strong focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-theme"
                         value={itemsPerPage}
                         onChange={(e) => handlePerPageChange(parseInt(e.target.value, 10))}
                         aria-label="Products per page"
@@ -698,7 +699,7 @@ const Products = () => {
                   </div>
 
                   {error && (
-                    <div className="rounded-2xl border border-slate-200/70 bg-white p-0 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+                    <div className="rounded-2xl border border-theme bg-surface text-theme theme-shadow-soft">
                       <ErrorMessage
                         message={error.message || 'Failed to load products'}
                         onRetry={handleRetry}
@@ -708,28 +709,25 @@ const Products = () => {
                   )}
 
                   {currentLoading ? (
-                    <div className="space-y-5 rounded-2xl border border-slate-200/70 bg-white p-1 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+                    <div className="space-y-5 rounded-2xl border border-theme bg-surface p-4 text-theme theme-shadow-soft">
                       {viewMode === 'grid' ? (
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                           {[...Array(itemsPerPage)].map((_, index) => (
                             <div
                               key={`skeleton-${index}`}
-                              className="group relative overflow-hidden rounded-2xl border border-white/30 bg-white/40 p-4 shadow-lg backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-900/60 animate-pulse"
-                              style={{
-                                animationDelay: `${index * 0.1}s`,
-                                animation: 'fadeInUp 0.6s ease-out forwards, shimmer 2s infinite'
-                              }}
+                              className="group relative overflow-hidden rounded-2xl border border-theme bg-card p-4 text-theme opacity-80 animate-pulse"
+                              style={{ animationDelay: `${index * 0.08}s` }}
                             >
                               <div className="flex h-full flex-col space-y-4">
-                                <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/20">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                                <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-card">
+                                  <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-card/60 to-transparent" />
                                 </div>
                                 <div className="space-y-3">
-                                  <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                                  <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                  <div className="h-4 w-3/4 rounded-full bg-card opacity-70"></div>
+                                  <div className="h-4 w-1/2 rounded-full bg-card opacity-60"></div>
                                   <div className="flex items-center justify-between">
-                                    <div className="h-6 w-1/3 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                                    <div className="h-8 w-20 rounded-xl bg-gradient-to-r from-blue-400/60 to-purple-400/60 dark:from-blue-500/60 dark:to-purple-500/60"></div>
+                                    <div className="h-6 w-1/3 rounded-full bg-card opacity-60"></div>
+                                    <div className="h-8 w-20 rounded-xl bg-primary-500/30"></div>
                                   </div>
                                 </div>
                               </div>
@@ -741,21 +739,16 @@ const Products = () => {
                           {[...Array(itemsPerPage)].map((_, index) => (
                             <div
                               key={`skeleton-list-${index}`}
-                              className="flex gap-4 rounded-2xl border border-white/30 bg-white/40 p-4 shadow-lg backdrop-blur-sm dark:border-slate-800/60 dark:bg-slate-900/60 animate-pulse"
-                              style={{
-                                animationDelay: `${index * 0.05}s`,
-                                animation: 'fadeInUp 0.4s ease-out forwards, shimmer 2s infinite'
-                              }}
+                              className="flex gap-4 rounded-2xl border border-theme bg-card p-4 text-theme opacity-80 animate-pulse"
+                              style={{ animationDelay: `${index * 0.06}s` }}
                             >
-                              <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/20">
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
-                              </div>
+                              <div className="h-20 w-20 flex-shrink-0 rounded-xl bg-card"></div>
                               <div className="flex flex-1 flex-col gap-3">
-                                <div className="h-4 w-3/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                                <div className="h-4 w-1/2 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
+                                <div className="h-4 w-3/4 rounded-full bg-card opacity-70"></div>
+                                <div className="h-4 w-1/2 rounded-full bg-card opacity-60"></div>
                                 <div className="flex items-center justify-between">
-                                  <div className="h-6 w-1/4 rounded-full bg-white/60 dark:bg-slate-800/60"></div>
-                                  <div className="h-8 w-24 rounded-xl bg-gradient-to-r from-blue-400/60 to-purple-400/60 dark:from-blue-500/60 dark:to-purple-500/60"></div>
+                                  <div className="h-6 w-1/4 rounded-full bg-card opacity-60"></div>
+                                  <div className="h-8 w-24 rounded-xl bg-primary-500/30"></div>
                                 </div>
                               </div>
                             </div>

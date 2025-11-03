@@ -35,7 +35,7 @@ const Logout = () => {
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-[60vh] flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-[60vh] flex items-center justify-center bg-theme">
         <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl border border-white/40 dark:border-gray-700/40 rounded-3xl p-10 text-center shadow-2xl max-w-md w-full space-y-6">
           {isProcessing ? (
             <LoadingSpinner size="large" message="Signing you out…" />
