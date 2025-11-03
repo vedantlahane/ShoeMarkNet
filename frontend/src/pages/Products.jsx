@@ -17,7 +17,6 @@ import { toggleWishlistItem } from "../redux/slices/wishlistSlice";
 // Components
 import ProductFilter from "../components/products/ProductFilter";
 import ErrorMessage from "../components/common/ErrorMessage";
-import SearchBar from "../components/common/SearchBar";
 import SortDropdown from "../components/products/SortDropdown";
 import ViewToggle from "../components/products/ViewToggle";
 import ProductGrid from "../components/products/ProductGrid";
@@ -155,8 +154,8 @@ const Products = () => {
     return rest;
   }, []);
 
-  const debouncedSearch = useCallback(
-    debounce((query, filterParams) => {
+  const debouncedSearch = useMemo(
+    () => debounce((query, filterParams) => {
       if (query.trim()) {
         dispatch(searchProducts({ query, filters: filterParams }));
         trackEvent("search", {
@@ -170,8 +169,8 @@ const Products = () => {
     [dispatch]
   );
 
-  const debouncedFetchProducts = useCallback(
-    debounce((filterParams) => {
+  const debouncedFetchProducts = useMemo(
+    () => debounce((filterParams) => {
       dispatch(fetchProducts(filterParams));
     }, 300),
     [dispatch]
@@ -311,12 +310,6 @@ const Products = () => {
     });
   }, []);
 
-  // Handle search
-  const handleSearch = useCallback((searchTerm) => {
-    setCurrentPage(1);
-    setFilters((prev) => ({ ...prev, search: searchTerm }));
-  }, []);
-
   // Handle sort change
   const handleSortChange = useCallback(
     (sortValue) => {
@@ -431,7 +424,7 @@ const Products = () => {
     trackEvent("retry_clicked", {
       error_type: "products_fetch_failed",
     });
-  }, [dispatch, filters, currentPage, itemsPerPage]);
+  }, [dispatch, filters, currentPage, itemsPerPage, buildFilterParams]);
 
   // Handle clear all filters
   const handleClearAllFilters = useCallback(() => {
@@ -454,14 +447,191 @@ const Products = () => {
     trackEvent("filters_cleared", {
       previous_filter_count: activeFilters.size,
     });
-  }, [dispatch, activeFilters.size]);
+  }, [dispatch, activeFilters.size, isSalePage]);
 
 
   
 
   return (
     <main className="relative min-h-screen overflow-hidden text-slate-900 transition-colors duration-500 dark:text-slate-100 pt-28 mx-auto w-full xl:max-w-11/12 px-3 sm:px-4 lg:px-6">
-        
+      <div className="relative z-10 space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col gap-6 rounded-2xl border border-slate-200/70 bg-white/60 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                {isSalePage ? 'Sale Products' : 'All Products'}
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400">
+                {totalCount > 0 ? `Showing ${productsList.length} of ${totalCount} products` : 'Discover our amazing collection'}
+              </p>
+            </div>
+
+            {/* Controls */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Items per page */}
+              <select
+                value={itemsPerPage}
+                onChange={(e) => handlePerPageChange(parseInt(e.target.value, 10))}
+                className="rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm backdrop-blur-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-100"
+              >
+                {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {/* Sort Dropdown */}
+              <SortDropdown
+                value={filters.sort}
+                options={SORT_OPTIONS}
+                onChange={handleSortChange}
+              />
+
+              {/* View Toggle */}
+              <ViewToggle value={viewMode} onChange={handleViewModeChange} />
+
+              {/* Mobile Filter Toggle */}
+              <button
+                onClick={() => setIsMobileFilterOpen(true)}
+                className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white/70 px-4 py-2 text-sm font-medium text-slate-900 shadow-sm backdrop-blur-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg lg:hidden dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-100"
+              >
+                <i className="fas fa-filter" />
+                Filters
+                {activeFilters.size > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
+                    {activeFilters.size}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Active Filters Display */}
+          {activeFilters.size > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Active filters:
+              </span>
+              {Array.from(activeFilters).map((filter) => (
+                <span
+                  key={filter}
+                  className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
+                >
+                  {filter}
+                </span>
+              ))}
+              <button
+                onClick={handleClearAllFilters}
+                className="text-xs font-medium text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Main Content */}
+        <div className="flex gap-8">
+          {/* Sidebar Filters - Desktop */}
+          <aside className="hidden w-80 lg:block">
+            <div className="sticky top-32 rounded-2xl border border-slate-200/70 bg-white/60 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+              <ProductFilter
+                currentFilters={filters}
+                onFilterChange={handleFilterChange}
+              />
+            </div>
+          </aside>
+
+          {/* Products Section */}
+          <div className="flex-1 space-y-6">
+            {/* Loading State */}
+            {currentLoading && productsList.length === 0 && (
+              <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    {isSearchMode ? 'Searching products...' : 'Loading products...'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <ErrorMessage
+                message={error}
+                onRetry={handleRetry}
+                className="rounded-2xl border border-red-200/80 bg-white/60 shadow-sm backdrop-blur-lg dark:border-red-900/60 dark:bg-slate-900/40"
+              />
+            )}
+
+            {/* Products Display */}
+            {!currentLoading && !error && productsList.length > 0 && (
+              <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+                {viewMode === 'grid' ? (
+                  <ProductGrid
+                    products={productsList}
+                    onAddToCart={handleAddProductToCart}
+                    onToggleWishlist={handleToggleProductWishlist}
+                    wishlistProductIds={wishlistProductIds}
+                  />
+                ) : (
+                  <ProductList
+                    products={productsList}
+                    onAddToCart={handleAddProductToCart}
+                    onToggleWishlist={handleToggleProductWishlist}
+                    wishlistProductIds={wishlistProductIds}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* No Products */}
+            {!currentLoading && !error && productsList.length === 0 && !isSearchMode && (
+              <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <i className="fas fa-box-open text-2xl text-slate-400 dark:text-slate-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    No products found
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    Try adjusting your filters or check back later.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Filter Modal */}
+        {isMobileFilterOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileFilterOpen(false)} />
+            <div className="absolute right-0 top-0 h-full w-80 bg-white/95 p-6 shadow-xl backdrop-blur-lg dark:bg-slate-900/95">
+              <ProductFilter
+                currentFilters={filters}
+                onFilterChange={handleFilterChange}
+                onClose={() => setIsMobileFilterOpen(false)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </main>
   );
 };

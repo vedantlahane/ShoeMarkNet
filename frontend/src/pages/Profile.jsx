@@ -367,24 +367,67 @@ const Profile = () => {
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-screen bg-theme py-8 text-theme">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        {/* Animated floating orbs */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute left-[10%] top-[15%] h-64 w-64 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-400/5 animate-pulse" />
+          <div className="absolute right-[15%] top-[25%] h-72 w-72 rounded-full bg-indigo-400/10 blur-3xl dark:bg-indigo-400/5 animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-[20%] left-[20%] h-56 w-56 rounded-full bg-rose-400/10 blur-3xl dark:bg-rose-400/5 animate-pulse" style={{ animationDelay: '4s' }} />
+        </div>
+
+        <div className="relative z-10 py-8 text-slate-900 dark:text-slate-100">
         <div className="max-w-4xl mx-auto w-full px-4 sm:px-5 lg:px-6">
           
           {/* Profile Header */}
-          <div className="bg-white shadow-sm rounded-lg mb-6 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-8">
-              <div className="flex items-center space-x-6">
-                <ProfileAvatar user={user} size="large" />
-                <div className="text-white">
-                  <h1 className="text-3xl font-bold">{user.name}</h1>
-                  <p className="text-blue-100">{user.email}</p>
-                  <div className="flex items-center mt-2">
-                    <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
-                      Member since {new Date(user.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long'
-                      })}
-                    </span>
+          <div className="relative mb-8 overflow-hidden">
+            {/* Glassmorphism card with gradient background */}
+            <div className="relative rounded-3xl border border-slate-200/50 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-xl shadow-slate-900/10 dark:shadow-slate-900/30 overflow-hidden">
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-rose-500/10 dark:from-sky-500/5 dark:via-indigo-500/5 dark:to-rose-500/5" />
+              
+              {/* Animated background elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sky-400/20 to-indigo-400/20 rounded-full blur-2xl" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-rose-400/20 to-pink-400/20 rounded-full blur-2xl" />
+
+              <div className="relative px-8 py-12 lg:px-12 lg:py-16">
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+                  {/* Avatar section */}
+                  <div className="flex-shrink-0">
+                    <div className="relative">
+                      {/* Avatar glow effect */}
+                      <div className="absolute -inset-2 bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 rounded-full blur-lg opacity-30" />
+                      <div className="relative">
+                        <ProfileAvatar user={user} size="xl" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User info section */}
+                  <div className="flex-1 text-center lg:text-left">
+                    <div className="space-y-4">
+                      {/* Name with gradient */}
+                      <h1 className="text-4xl lg:text-5xl font-bold">
+                        <span className="bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 dark:from-sky-400 dark:via-indigo-400 dark:to-rose-400 bg-clip-text text-transparent">
+                          {user.name}
+                        </span>
+                      </h1>
+                      
+                      {/* Email */}
+                      <p className="text-lg text-slate-600 dark:text-slate-300 font-medium">
+                        {user.email}
+                      </p>
+
+                      {/* Member badge */}
+                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 px-6 py-3 backdrop-blur-sm">
+                        <div className="w-2 h-2 bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full animate-pulse" />
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          Member since {new Date(user.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long'
+                          })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -396,60 +439,103 @@ const Profile = () => {
           
           {/* Success Messages */}
           {profileUpdateSuccess && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <i className="fas fa-check-circle mr-2"></i>
-              <span>Profile updated successfully!</span>
+            <div className="relative mb-8 overflow-hidden rounded-2xl border border-green-200/50 dark:border-green-800/50 bg-green-50/70 dark:bg-green-950/70 backdrop-blur-xl shadow-lg shadow-green-500/10">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10" />
+              <div className="relative flex items-center p-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                    <i className="fas fa-check text-white text-sm"></i>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-semibold text-green-800 dark:text-green-200">
+                    Profile Updated Successfully!
+                  </h3>
+                  <p className="mt-1 text-sm text-green-700 dark:text-green-300">
+                    Your profile information has been saved.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
           {passwordChangeSuccess && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <i className="fas fa-shield-check mr-2"></i>
-              <span>Password changed successfully!</span>
+            <div className="relative mb-8 overflow-hidden rounded-2xl border border-green-200/50 dark:border-green-800/50 bg-green-50/70 dark:bg-green-950/70 backdrop-blur-xl shadow-lg shadow-green-500/10">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10" />
+              <div className="relative flex items-center p-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                    <i className="fas fa-shield-check text-white text-sm"></i>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-semibold text-green-800 dark:text-green-200">
+                    Password Changed Successfully!
+                  </h3>
+                  <p className="mt-1 text-sm text-green-700 dark:text-green-300">
+                    Your password has been updated securely.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
           {/* Main Profile Card */}
-          <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200/50 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-xl shadow-slate-900/10 dark:shadow-slate-900/30">
             
             {/* Tabs Navigation */}
-            <div className="border-b border-gray-200">
-              <nav className="flex -mb-px">
+            <div className="border-b border-slate-200/50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-sm">
+              <nav className="flex -mb-px px-2">
                 <button
                   onClick={() => handleTabChange('profile')}
-                  className={`py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  className={`relative flex-1 py-5 px-4 text-center font-semibold text-sm transition-all duration-300 rounded-t-xl ${
                     activeTab === 'profile'
-                      ? 'border-blue-500 text-blue-600 bg-blue-50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'text-white bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 shadow-lg'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/50'
                   }`}
                   aria-current={activeTab === 'profile' ? 'page' : undefined}
                 >
-                  <i className="fas fa-user mr-2"></i>
-                  Profile Information
+                  <div className="flex items-center justify-center gap-2">
+                    <i className={`fas fa-user ${activeTab === 'profile' ? 'text-white' : 'text-sky-500'}`}></i>
+                    <span>Profile Information</span>
+                  </div>
+                  {activeTab === 'profile' && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-white rounded-full" />
+                  )}
                 </button>
                 <button
                   onClick={() => handleTabChange('security')}
-                  className={`py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  className={`relative flex-1 py-5 px-4 text-center font-semibold text-sm transition-all duration-300 rounded-t-xl ${
                     activeTab === 'security'
-                      ? 'border-blue-500 text-blue-600 bg-blue-50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'text-white bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 shadow-lg'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/50'
                   }`}
                   aria-current={activeTab === 'security' ? 'page' : undefined}
                 >
-                  <i className="fas fa-shield-alt mr-2"></i>
-                  Security
+                  <div className="flex items-center justify-center gap-2">
+                    <i className={`fas fa-shield-alt ${activeTab === 'security' ? 'text-white' : 'text-indigo-500'}`}></i>
+                    <span>Security</span>
+                  </div>
+                  {activeTab === 'security' && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-white rounded-full" />
+                  )}
                 </button>
                 <button
                   onClick={() => handleTabChange('preferences')}
-                  className={`py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  className={`relative flex-1 py-5 px-4 text-center font-semibold text-sm transition-all duration-300 rounded-t-xl ${
                     activeTab === 'preferences'
-                      ? 'border-blue-500 text-blue-600 bg-blue-50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'text-white bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 shadow-lg'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/50'
                   }`}
                   aria-current={activeTab === 'preferences' ? 'page' : undefined}
                 >
-                  <i className="fas fa-cog mr-2"></i>
-                  Preferences
+                  <div className="flex items-center justify-center gap-2">
+                    <i className={`fas fa-cog ${activeTab === 'preferences' ? 'text-white' : 'text-rose-500'}`}></i>
+                    <span>Preferences</span>
+                  </div>
+                  {activeTab === 'preferences' && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-white rounded-full" />
+                  )}
                 </button>
               </nav>
             </div>
@@ -467,7 +553,7 @@ const Profile = () => {
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                      className="relative group inline-flex items-center px-6 py-3 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 hover:from-sky-600 hover:via-indigo-600 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 shadow-lg shadow-sky-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-105"
                       aria-label="Edit profile information"
                     >
                       <i className="fas fa-edit mr-2"></i>
@@ -476,7 +562,7 @@ const Profile = () => {
                   ) : (
                     <button
                       onClick={handleCancel}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                      className="inline-flex items-center px-6 py-3 border border-slate-200/50 dark:border-slate-700/50 text-sm font-semibold rounded-xl text-slate-700 dark:text-slate-300 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-lg shadow-slate-900/10 dark:shadow-slate-900/30 transition-all duration-300 hover:shadow-xl hover:scale-105"
                       aria-label="Cancel editing"
                     >
                       <i className="fas fa-times mr-2"></i>
@@ -487,13 +573,19 @@ const Profile = () => {
                 
                 {/* Error Display */}
                 {profileErrorMessage && (
-                  <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-6 mt-4">
-                    <div className="flex">
+                  <div className="relative mb-6 overflow-hidden rounded-2xl border border-red-200/50 dark:border-red-800/50 bg-red-50/70 dark:bg-red-950/70 backdrop-blur-xl shadow-lg shadow-red-500/10">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-400/10 to-rose-400/10" />
+                    <div className="relative flex p-6">
                       <div className="flex-shrink-0">
-                        <i className="fas fa-exclamation-circle text-red-400"></i>
+                        <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center">
+                          <i className="fas fa-exclamation-triangle text-white text-sm"></i>
+                        </div>
                       </div>
-                      <div className="ml-3">
-                        <p className="text-sm text-red-700">
+                      <div className="ml-4">
+                        <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                          Error Updating Profile
+                        </h3>
+                        <p className="mt-1 text-sm text-red-700 dark:text-red-300">
                           {profileErrorMessage}
                         </p>
                       </div>
@@ -518,10 +610,10 @@ const Profile = () => {
                             ref={profileNameInputRef}
                             value={formData.name}
                             onChange={handleInputChange('name')}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 ${
+                            className={`w-full px-4 py-4 border rounded-xl backdrop-blur-sm transition-all duration-300 ${
                               formTouched.name && !validation.name.isValid
-                                ? 'border-red-300 bg-red-50'
-                                : 'border-gray-300 hover:border-gray-400 focus:border-transparent'
+                                ? 'border-red-300/50 bg-red-50/50 dark:bg-red-950/50 text-red-900 dark:text-red-100 placeholder-red-400'
+                                : 'border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 hover:bg-white/70 dark:hover:bg-slate-800/70 focus:bg-white dark:focus:bg-slate-900 focus:border-sky-400 dark:focus:border-sky-500'
                             }`}
                             aria-required="true"
                             aria-invalid={formTouched.name && !validation.name.isValid}
@@ -548,7 +640,7 @@ const Profile = () => {
                               id="email"
                               value={user.email}
                               disabled
-                              className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                              className="w-full px-4 py-4 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 cursor-not-allowed backdrop-blur-sm"
                               aria-describedby="email-description"
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -572,10 +664,10 @@ const Profile = () => {
                             id="phone"
                             value={formData.phone}
                             onChange={handleInputChange('phone')}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 ${
+                            className={`w-full px-4 py-4 border rounded-xl backdrop-blur-sm transition-all duration-300 ${
                               formTouched.phone && !validation.phone.isValid
-                                ? 'border-red-300 bg-red-50'
-                                : 'border-gray-300 hover:border-gray-400 focus:border-transparent'
+                                ? 'border-red-300/50 bg-red-50/50 dark:bg-red-950/50 text-red-900 dark:text-red-100 placeholder-red-400'
+                                : 'border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 hover:bg-white/70 dark:hover:bg-slate-800/70 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-400 dark:focus:border-indigo-500'
                             }`}
                             aria-invalid={formTouched.phone && !validation.phone.isValid}
                             aria-describedby={formTouched.phone && !validation.phone.isValid ? "phone-error" : undefined}
@@ -600,10 +692,10 @@ const Profile = () => {
                             id="address"
                             value={formData.address}
                             onChange={handleInputChange('address')}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 ${
+                            className={`w-full px-4 py-4 border rounded-xl backdrop-blur-sm transition-all duration-300 ${
                               formTouched.address && !validation.address.isValid
-                                ? 'border-red-300 bg-red-50'
-                                : 'border-gray-300 hover:border-gray-400 focus:border-transparent'
+                                ? 'border-red-300/50 bg-red-50/50 dark:bg-red-950/50 text-red-900 dark:text-red-100 placeholder-red-400'
+                                : 'border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 hover:bg-white/70 dark:hover:bg-slate-800/70 focus:bg-white dark:focus:bg-slate-900 focus:border-rose-400 dark:focus:border-rose-500'
                             }`}
                             aria-invalid={formTouched.address && !validation.address.isValid}
                             aria-describedby={formTouched.address && !validation.address.isValid ? "address-error" : undefined}
@@ -628,10 +720,10 @@ const Profile = () => {
                             rows="4"
                             value={formData.bio}
                             onChange={handleInputChange('bio')}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 resize-none ${
+                            className={`w-full px-4 py-4 border rounded-xl backdrop-blur-sm resize-none transition-all duration-300 ${
                               formTouched.bio && !validation.bio.isValid
-                                ? 'border-red-300 bg-red-50'
-                                : 'border-gray-300 hover:border-gray-400 focus:border-transparent'
+                                ? 'border-red-300/50 bg-red-50/50 dark:bg-red-950/50 text-red-900 dark:text-red-100 placeholder-red-400'
+                                : 'border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 hover:bg-white/70 dark:hover:bg-slate-800/70 focus:bg-white dark:focus:bg-slate-900 focus:border-sky-400 dark:focus:border-sky-500'
                             }`}
                             aria-invalid={formTouched.bio && !validation.bio.isValid}
                             aria-describedby={formTouched.bio && !validation.bio.isValid ? "bio-error" : "bio-help"}
@@ -655,14 +747,14 @@ const Profile = () => {
                         <button
                           type="button"
                           onClick={handleCancel}
-                          className="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                          className="px-6 py-3 border border-slate-200/50 dark:border-slate-700/50 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-lg shadow-slate-900/10 dark:shadow-slate-900/30 transition-all duration-300 hover:shadow-xl hover:scale-105"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
                           disabled={profileUpdateLoading || !validation.isValid}
-                          className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                          className="relative group inline-flex items-center px-6 py-3 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 hover:from-sky-600 hover:via-indigo-600 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-105 disabled:hover:scale-100"
                           aria-busy={profileUpdateLoading}
                         >
                           {profileUpdateLoading ? (
@@ -967,6 +1059,7 @@ const Profile = () => {
             )}
           </div>
         </div>
+      </div>
       </div>
     </>
   );

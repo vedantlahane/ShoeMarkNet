@@ -5,6 +5,7 @@ const Home = lazy(() => import('../pages/Home'));
 const ProductDetail = lazy(() => import('../pages/ProductDetail'));
 const Products = lazy(() => import('../pages/Products'));
 const Category = lazy(() => import('../pages/Category'));
+const Sale = lazy(() => import('../pages/Sale'));
 const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
 const Profile = lazy(() => import('../pages/Profile'));
@@ -48,9 +49,9 @@ export const routeConfig = {
     },
     {
       path: 'sale',
-      component: Products,
-      title: 'Sale',
-      description: 'Shop discounted products and limited-time offers'
+      component: Sale,
+      title: 'Sale & Discounts',
+      description: 'Limited time offers and discounts on premium footwear'
     },
     {
       path: 'categories/:categoryId',
