@@ -174,52 +174,15 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
       aria-label="Featured products"
     >
       
-      <style jsx>{`
-        .carousel-card {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          transform-origin: center center;
-        }
-        
-        .carousel-mask-left {
-          background: linear-gradient(to right,
-            rgba(255, 255, 255, 0.85) 0%,
-            rgba(255, 255, 255, 0.7) 20%,
-            rgba(255, 255, 255, 0.45) 40%,
-            rgba(255, 255, 255, 0.2) 60%,
-            transparent 85%
-          );
-        }
+            {/* Background effects */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className={`absolute -top-24 left-1/4 h-64 w-64 rotate-12 rounded-full bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 blur-3xl ${enableAnimations ? 'animate-pulse' : ''}`}></div>
+        <div className={`absolute bottom-[-6rem] right-1/5 h-72 w-72 rounded-full bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-rose-500/10 blur-3xl ${enableAnimations ? 'animate-pulse' : ''}`}></div>
+      </div>
 
-        .carousel-mask-right {
-          background: linear-gradient(to left,
-            rgba(255, 255, 255, 0.85) 0%,
-            rgba(255, 255, 255, 0.7) 20%,
-            rgba(255, 255, 255, 0.45) 40%,
-            rgba(255, 255, 255, 0.2) 60%,
-            transparent 85%
-          );
-        }
-
-        .dark .carousel-mask-left {
-          background: linear-gradient(to right,
-            rgba(2, 6, 23, 0.85) 0%,
-            rgba(2, 6, 23, 0.7) 20%,
-            rgba(2, 6, 23, 0.45) 40%,
-            rgba(2, 6, 23, 0.2) 60%,
-            transparent 85%
-          );
-        }
-
-        .dark .carousel-mask-right {
-          background: linear-gradient(to left,
-            rgba(2, 6, 23, 0.85) 0%,
-            rgba(2, 6, 23, 0.7) 20%,
-            rgba(2, 6, 23, 0.45) 40%,
-            rgba(2, 6, 23, 0.2) 60%,
-            transparent 85%
-          );
-        }
-      `}</style>
+      {/* Carousel Masks */}
+      <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-32 bg-gradient-to-r from-white/85 via-white/7 to-transparent dark:from-slate-950/85 dark:via-slate-950/7 md:w-48" />
+      <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-32 bg-gradient-to-l from-white/85 via-white/7 to-transparent dark:from-slate-950/85 dark:via-slate-950/7 md:w-48" />
 
       {/* Background effects */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -278,7 +241,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
               return (
                 <div
                   key={productId}
-                  className="carousel-card flex-shrink-0"
+                  className="flex-shrink-0 transition-all duration-300 ease-out transform-gpu"
                   style={{ width: `${CARD_WIDTH}px` }}
                 >
                   <div

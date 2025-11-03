@@ -7,7 +7,6 @@ import { trackEvent } from '../utils/analytics';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
-import { useTheme } from '../context/ThemeContext';
 
 const SettingsPanel = ({
   variant = 'default', // default, compact, tabbed
@@ -19,7 +18,6 @@ const SettingsPanel = ({
     user: state.auth?.user || {},
     notifications: state.notifications?.preferences || {}
   }));
-  const { preference, setTheme: setGlobalTheme } = useTheme();
 
   // Local state
   const [activeCategory, setActiveCategory] = useState('general');

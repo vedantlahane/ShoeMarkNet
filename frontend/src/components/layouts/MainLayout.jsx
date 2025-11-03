@@ -7,7 +7,6 @@ import Header from '../common/Header';
 import Footer from '../common/Footer';
 
 import useReducedMotion from '../../hooks/useReducedMotion';
-import { useTheme } from '../../context/ThemeContext';
 
 const ROUTE_CONFIG = {
   '/': {
@@ -64,7 +63,6 @@ const MainLayout = () => {
 
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-  const { theme: currentTheme } = useTheme();
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -129,7 +127,6 @@ const MainLayout = () => {
       <PageMeta
         title={currentRoute.title}
         description={currentRoute.description}
-        meta={[{ name: 'theme-color', content: currentTheme === 'dark' ? '#0f172a' : '#ffffff' }]}
       />
 
       <div className="relative flex min-h-screen max-w-screen flex-col overflow-x-hidden bg-white text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 ">

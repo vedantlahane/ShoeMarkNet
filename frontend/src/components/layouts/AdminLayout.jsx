@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
-import { useTheme } from '../../context/ThemeContext';
 
 /**
  * Provides the chrome for all admin-only experiences.
@@ -12,7 +11,6 @@ import { useTheme } from '../../context/ThemeContext';
 const AdminLayout = () => {
   const location = useLocation();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const { theme } = useTheme();
 
   useEffect(() => {
     const previousAttribute = document.body.getAttribute('data-app-channel');

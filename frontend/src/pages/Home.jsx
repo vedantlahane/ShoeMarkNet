@@ -13,13 +13,16 @@ const CardSection = lazy(() => import("../components/home/CardsSection"));
 const OffersSection = lazy(() => import("../components/home/OffersSection"));
 
 const Home = () => {
+  // Redux dispatch function to send actions to the store
   const dispatch = useDispatch();
+
+  // Fetch featured products with caching 
   const {
     data: featuredList = [],
     isPending,
     refetch,
   } = useFeaturedProducts({
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,// stale time of 5 minutes for caching
   });
 
   const {
@@ -102,7 +105,6 @@ const Home = () => {
       />
 
       {/* Main page content with gradient background */}
-            {/* Main page content with gradient background */}
       <main className="relative min-h-screen overflow-hidden text-slate-900 transition-colors duration-500 dark:text-slate-100">
         <div className="relative z-10 flex flex-col pb-24 pt-12 sm:pt-16">
           {/* Hero section - Main banner and call-to-action */}
@@ -128,17 +130,6 @@ const Home = () => {
           >
             <CardSection />
           </Suspense>
-
-          {/* Product categories navigation */}
-          {/* <Suspense
-            fallback={<SectionSkeleton title="Shop by category" rows={4} />}
-          >
-            {isHomePending && categoryCollection.length === 0 ? (
-              <SectionSkeleton title="Shop by category" rows={4} />
-            ) : (
-              <CategoriesSection categories={categoryCollection} />
-            )}
-          </Suspense> */}
 
           {/* Special offers and promotions */}
           <Suspense

@@ -19,7 +19,7 @@ import {
   ChevronDown,
   LogOut,
 } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
+import useLocalStorage from "../../hooks/useLocalStorage";
 
 const routePrefetchers = {
   "/": () => import("../../pages/Home"),
@@ -34,7 +34,6 @@ const routePrefetchers = {
   "/login": () => import("../../pages/Login"),
   "/register": () => import("../../pages/Register"),
   "/logout": () => import("../../pages/Logout"),
-  // "/admin": () => import("../../pages/Admin"),
 };
 
 const prefetched = new Set();
@@ -98,6 +97,17 @@ const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // mobile menu
   const [isMenuOpen, setIsMenuOpen] = useState(false); // desktop mobile nav
 
+  // Theme preference
+  const [preference, setPreference] = useLocalStorage('theme-preference', 'system');
+
+  // Computed theme state
+  const isDarkMode = useMemo(() => {
+    if (preference === 'dark') return true;
+    if (preference === 'light') return false;
+    // For 'system', check if the user prefers dark mode
+    return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }, [preference]);
+
   // Store
   const { user, isAuthenticated } = useSelector((s) => s.auth || { user: null, isAuthenticated: false });
   const { items: cartItems = [] } = useSelector((s) => s.cart || { items: [] });
@@ -105,7 +115,6 @@ const Header = () => {
   const cartCount = cartItems.length || 0;
   const wishlistCount = wishlistItems.length || 0;
 
-  const { isDarkMode, preference, setPreference } = useTheme();
 
   useFocusTrap(isUserMenuOpen, userMenuRef);
   useFocusTrap(isDropdownOpen, dropdownRef);
@@ -200,6 +209,17 @@ const Header = () => {
       document.removeEventListener("mousedown", onDown);
     };
   }, []);
+
+  // Apply theme to document
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Helpers
   const createPrefetchProps = (path) => ({
@@ -705,7 +725,6 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Optional: no mobile nav drawer on desktop, so skip lg:hidden mobile nav block */}
         </div>
       </div>
     </header>

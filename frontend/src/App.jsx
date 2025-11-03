@@ -8,7 +8,6 @@ import { initAuth } from "./redux/slices/authSlice";
 import MainLayout from "./components/layouts/MainLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-import { ThemeProvider } from "./context/ThemeContext";
 
 import routeConfig from "./routes/routeConfig";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -120,10 +119,8 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <Provider store={store}>
-    <ThemeProvider>
+      <Provider store={store}>
       <AppContent />
-    </ThemeProvider>
   </Provider>
 );
 

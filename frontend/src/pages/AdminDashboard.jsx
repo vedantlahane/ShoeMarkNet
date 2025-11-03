@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
-import { useTheme } from '../context/ThemeContext';
 
 // Redux actions
 import { fetchProducts } from '../redux/slices/productSlice';
@@ -121,7 +120,6 @@ const AdminDashboard = ({ section = "overview" }) => {
   // Hooks
   const { hasPermission, userRole } = usePermissions();
   const { isConnected, connectionStatus } = useWebSocket('/admin');
-  const { isDarkMode, toggleTheme } = useTheme();
   
   // Redux state
   const { user, isAuthenticated, users } = useSelector((state) => state.auth);

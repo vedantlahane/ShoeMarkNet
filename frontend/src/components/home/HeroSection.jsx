@@ -15,8 +15,8 @@ const HeroSection = () => {
 
       {/* Animated floating orbs */}
       <div className="absolute left-[10%] top-[20%] h-64 w-64 rounded-full bg-sky-400/20 blur-3xl dark:bg-sky-400/10 animate-pulse" />
-      <div className="absolute right-[15%] top-[30%] h-72 w-72 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-400/10 animate-pulse animation-delay-2000" />
-      <div className="absolute bottom-[20%] left-[20%] h-56 w-56 rounded-full bg-rose-400/20 blur-3xl dark:bg-rose-400/10 animate-pulse animation-delay-4000" />
+      <div className="absolute right-[15%] top-[30%] h-72 w-72 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-400/10 animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="absolute bottom-[20%] left-[20%] h-56 w-56 rounded-full bg-rose-400/20 blur-3xl dark:bg-rose-400/10 animate-pulse" style={{ animationDelay: '4s' }} />
 
       <div className="relative z-10 mx-auto w-full px-4 sm:px-5 lg:px-6">
         <div className="mx-auto max-w-4/5">
@@ -119,23 +119,6 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
-
-      {/* CSS for custom animations */}
-      <style jsx>{`
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-        @media (max-width: 640px) {
-          .group:active .rotate-\
-$$ -15deg\
-$$ {
-            transform: rotate(0deg) scale(1.05);
-          }
-        }
-      `}</style>
     </section>
   );
 };
