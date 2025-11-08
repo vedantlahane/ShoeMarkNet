@@ -78,6 +78,19 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
     }
   }, [priceRange, currentFilters.priceRange]);
 
+  useEffect(() => {
+    const nextMin = currentFilters.priceRange?.min ?? 0;
+    const nextMax = currentFilters.priceRange?.max ?? 1000;
+
+    setPriceRange(prev => {
+      if (Number(prev.min) === Number(nextMin) && Number(prev.max) === Number(nextMax)) {
+        return prev;
+      }
+
+      return { min: nextMin, max: nextMax };
+    });
+  }, [currentFilters.priceRange?.min, currentFilters.priceRange?.max]);
+
   // Extract unique brands
   const { products } = useSelector((state) => state.product);
   const brands = [...new Set(products?.map(product => product.brand).filter(Boolean))];
@@ -86,7 +99,9 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
     const filters = [];
 
     if (currentFilters.category) {
-      const categoryMatch = categories?.find(category => (category._id || category.name) === currentFilters.category);
+      const categoryMatch = categories?.find(
+        category => (category._id || category.name) === currentFilters.category
+      );
       filters.push({
         key: 'category',
         label: `Category: ${categoryMatch?.name || currentFilters.category}`
@@ -98,7 +113,9 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
     }
 
     if (currentFilters.gender) {
-      const genderLabel = genderOptions.find(option => option.value === currentFilters.gender)?.label || currentFilters.gender;
+      const genderLabel =
+        genderOptions.find(option => option.value === currentFilters.gender)?.label ||
+        currentFilters.gender;
       filters.push({ key: 'gender', label: `Gender: ${genderLabel}` });
     }
 
@@ -158,7 +175,7 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
       </div>
 
       {/* Active Filters */}
-      {activeFilters.size > 0 && (
+      {activeFilters.length > 0 && (
         <div className="mb-6 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
@@ -172,14 +189,14 @@ const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {Array.from(activeFilters).map((filter) => (
+            {activeFilters.map((filter) => (
               <span
-                key={filter}
+                key={filter.key}
                 className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
               >
-                {filter}
+                {filter.label}
                 <button
-                  onClick={() => handleRemoveFilter(filter.split(':')[0])}
+                  onClick={() => handleRemoveFilter(filter.key)}
                   className="ml-1 hover:text-blue-800 dark:hover:text-blue-200"
                 >
                   <i className="fas fa-times text-xs" />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useSearchParams, useLocation, Link } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { debounce } from "lodash";
 
 // Redux actions
@@ -28,6 +28,7 @@ import useLocalStorage from "../hooks/useLocalStorage";
 
 // Utils
 import { trackEvent } from "../utils/analytics";
+import { formatCurrency } from "../utils/helpers";
 
 const DEFAULT_PRICE_RANGE = { min: 0, max: 1000 };
 
@@ -55,6 +56,12 @@ const ITEMS_PER_PAGE_OPTIONS = [
   { value: 48, label: "48 per page" },
   { value: 96, label: "96 per page" },
 ];
+
+const GENDER_LABELS = {
+  men: "Men",
+  women: "Women",
+  unisex: "Unisex",
+};
 
 const Products = () => {
   const dispatch = useDispatch();
@@ -85,7 +92,7 @@ const Products = () => {
     parseInt(searchParams.get("limit") || "12", 10)
   );
   const [viewMode, setViewMode] = useLocalStorage("productsViewMode", "grid");
-  const [activeFilters, setActiveFilters] = useState(new Set());
+  const [activeFilters, setActiveFilters] = useState([]);
 
   // Initialize filters from URL params
   const [filters, setFilters] = useState(() => ({
@@ -206,21 +213,66 @@ const Products = () => {
 
   // Update active filters for filter chips
   useEffect(() => {
-    const active = new Set();
-    if (filters.category) active.add(`category:${filters.category}`);
-    if (filters.brand) active.add(`brand:${filters.brand}`);
-    if (filters.gender) active.add(`gender:${filters.gender}`);
-    if (filters.rating > 0) active.add(`rating:${filters.rating}`);
-    if (filters.inStock) active.add("inStock");
-    if (filters.onSale) active.add("onSale");
-    if (
-      filters.priceRange?.min > DEFAULT_PRICE_RANGE.min ||
-      filters.priceRange.max < DEFAULT_PRICE_RANGE.max
-    ) {
-      active.add(`price:${filters.priceRange.min}-${filters.priceRange.max}`);
+    const chips = [];
+
+    if (filters.search) {
+      chips.push({ key: "search", label: `Search: "${filters.search}"`, removable: true });
     }
-    setActiveFilters(active);
-  }, [filters]);
+
+    if (filters.category) {
+      const categoryMatch = categories.find(
+        (category) => (category._id || category.name) === filters.category
+      );
+      chips.push({
+        key: "category",
+        label: `Category: ${categoryMatch?.name || filters.category}`,
+        removable: true,
+      });
+    }
+
+    if (filters.brand) {
+      chips.push({ key: "brand", label: `Brand: ${filters.brand}`, removable: true });
+    }
+
+    if (filters.gender) {
+      const genderLabel = GENDER_LABELS[filters.gender] || filters.gender;
+      chips.push({ key: "gender", label: `Gender: ${genderLabel}`, removable: true });
+    }
+
+    if (filters.rating > 0) {
+      chips.push({ key: "rating", label: `Rating: ${filters.rating}+`, removable: true });
+    }
+
+    if (filters.inStock) {
+      chips.push({ key: "inStock", label: "In stock only", removable: true });
+    }
+
+    if (filters.onSale && !isSalePage) {
+      chips.push({
+        key: "onSale",
+        label: "On sale",
+        removable: true,
+      });
+    }
+
+    const minPriceValue = Number(filters.priceRange?.min ?? DEFAULT_PRICE_RANGE.min);
+    const maxPriceValue = Number(filters.priceRange?.max ?? DEFAULT_PRICE_RANGE.max);
+
+    if (minPriceValue > DEFAULT_PRICE_RANGE.min || maxPriceValue < DEFAULT_PRICE_RANGE.max) {
+      const maxLabel =
+        maxPriceValue >= DEFAULT_PRICE_RANGE.max
+          ? `${formatCurrency(DEFAULT_PRICE_RANGE.max)}+`
+          : formatCurrency(maxPriceValue);
+
+      chips.push({
+        key: "priceRange",
+        label: `Price: ${formatCurrency(minPriceValue)} - ${maxLabel}`,
+        removable: true,
+      });
+    }
+
+    setActiveFilters(chips);
+  }, [filters, categories, isSalePage]);
 
   // Load categories on mount
   useEffect(() => {
@@ -445,18 +497,55 @@ const Products = () => {
     dispatch(clearSearchResults());
 
     trackEvent("filters_cleared", {
-      previous_filter_count: activeFilters.size,
+      previous_filter_count: activeFilters.length,
     });
-  }, [dispatch, activeFilters.size, isSalePage]);
+  }, [dispatch, activeFilters.length, isSalePage, setFilters, setCurrentPage]);
+
+  const handleRemoveActiveFilter = useCallback(
+    (key) => {
+      switch (key) {
+        case "category":
+          handleFilterChange({ category: "" });
+          break;
+        case "brand":
+          handleFilterChange({ brand: "" });
+          break;
+        case "gender":
+          handleFilterChange({ gender: "" });
+          break;
+        case "rating":
+          handleFilterChange({ rating: 0 });
+          break;
+        case "inStock":
+          handleFilterChange({ inStock: false });
+          break;
+        case "priceRange":
+          handleFilterChange({ priceRange: { ...DEFAULT_PRICE_RANGE } });
+          break;
+        case "onSale":
+          if (!isSalePage) {
+            handleFilterChange({ onSale: false });
+          }
+          break;
+        case "search":
+          handleFilterChange({ search: "" });
+          dispatch(clearSearchResults());
+          break;
+        default:
+          break;
+      }
+    },
+    [dispatch, handleFilterChange, isSalePage]
+  );
 
 
   
 
   return (
-    <main className="relative min-h-screen overflow-hidden text-slate-900 transition-colors duration-500 dark:text-slate-100 pt-28 mx-auto w-full xl:max-w-11/12 px-3 sm:px-4 lg:px-6">
+    <main className="relative mx-auto w-full min-h-screen px-3 pt-24 text-slate-900 transition-colors duration-500 sm:px-4 lg:px-6  dark:text-slate-100">
       <div className="relative z-10 space-y-8">
         {/* Header Section */}
-        <div className="flex flex-col gap-6 rounded-2xl border border-slate-200/70 bg-white/60 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+        <div className="flex flex-col gap-6 rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/60">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
@@ -499,9 +588,9 @@ const Products = () => {
               >
                 <i className="fas fa-filter" />
                 Filters
-                {activeFilters.size > 0 && (
+                {activeFilters.length > 0 && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
-                    {activeFilters.size}
+                    {activeFilters.length}
                   </span>
                 )}
               </button>
@@ -509,17 +598,27 @@ const Products = () => {
           </div>
 
           {/* Active Filters Display */}
-          {activeFilters.size > 0 && (
+          {activeFilters.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Active filters:
               </span>
-              {Array.from(activeFilters).map((filter) => (
+              {activeFilters.map((filter) => (
                 <span
-                  key={filter}
+                  key={filter.key}
                   className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
                 >
-                  {filter}
+                  {filter.label}
+                  {filter.removable && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveActiveFilter(filter.key)}
+                      className="ml-1 text-blue-500 transition-colors hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-100"
+                      aria-label={`Remove ${filter.label}`}
+                    >
+                      <i className="fas fa-times text-[10px]" />
+                    </button>
+                  )}
                 </span>
               ))}
               <button
@@ -533,10 +632,10 @@ const Products = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex gap-8">
+        <div className="flex flex-col gap-8 lg:flex-row">
           {/* Sidebar Filters - Desktop */}
-          <aside className="hidden w-80 lg:block">
-            <div className="sticky top-32 rounded-2xl border border-slate-200/70 bg-white/60 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+          <aside className="hidden w-full max-w-sm lg:block">
+            <div className="sticky top-32 rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/60">
               <ProductFilter
                 currentFilters={filters}
                 onFilterChange={handleFilterChange}
@@ -548,7 +647,7 @@ const Products = () => {
           <div className="flex-1 space-y-6">
             {/* Loading State */}
             {currentLoading && productsList.length === 0 && (
-              <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+              <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/80 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/60">
                 <div className="text-center">
                   <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                   <p className="text-slate-600 dark:text-slate-400">
@@ -563,13 +662,13 @@ const Products = () => {
               <ErrorMessage
                 message={error}
                 onRetry={handleRetry}
-                className="rounded-2xl border border-red-200/80 bg-white/60 shadow-sm backdrop-blur-lg dark:border-red-900/60 dark:bg-slate-900/40"
+                className="rounded-2xl border border-red-200/80 bg-white/80 shadow-sm backdrop-blur-lg dark:border-red-900/60 dark:bg-slate-900/60"
               />
             )}
 
             {/* Products Display */}
             {!currentLoading && !error && productsList.length > 0 && (
-              <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+              <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/60">
                 {viewMode === 'grid' ? (
                   <ProductGrid
                     products={productsList}
@@ -590,7 +689,7 @@ const Products = () => {
 
             {/* No Products */}
             {!currentLoading && !error && productsList.length === 0 && !isSearchMode && (
-              <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+              <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/80 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/60">
                 <div className="text-center">
                   <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                     <i className="fas fa-box-open text-2xl text-slate-400 dark:text-slate-600" />
@@ -607,7 +706,7 @@ const Products = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+              <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white/80 p-4 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/60">
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -622,7 +721,7 @@ const Products = () => {
         {isMobileFilterOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileFilterOpen(false)} />
-            <div className="absolute right-0 top-0 h-full w-80 bg-white/95 p-6 shadow-xl backdrop-blur-lg dark:bg-slate-900/95">
+            <div className="absolute right-0 top-0 h-full w-full max-w-sm bg-white/95 p-6 shadow-xl backdrop-blur-lg dark:bg-slate-900/95">
               <ProductFilter
                 currentFilters={filters}
                 onFilterChange={handleFilterChange}

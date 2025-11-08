@@ -4,9 +4,22 @@ import { toast } from "react-toastify";
 
 // Helper function to extract products array from different response formats
 const extractProducts = (response) => {
+  if (!response) return [];
   if (Array.isArray(response)) return response;
-  if (response?.products && Array.isArray(response.products)) return response.products;
-  if (response?.data && Array.isArray(response.data)) return response.data;
+  if (Array.isArray(response?.products)) return response.products;
+  if (Array.isArray(response?.items)) return response.items;
+  if (Array.isArray(response?.results)) return response.results;
+  if (response?.data) return extractProducts(response.data);
+
+  if (response && typeof response === 'object') {
+    const keys = Object.keys(response);
+    if (keys.length > 0 && keys.every((key) => /^\d+$/.test(key))) {
+      return keys
+        .sort((a, b) => Number(a) - Number(b))
+        .map((key) => response[key]);
+    }
+  }
+
   return [];
 };
 

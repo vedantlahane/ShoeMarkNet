@@ -173,7 +173,7 @@ const getHomeOverview = asyncHandler(async (req, res) => {
         },
       },
       { $sort: { productCount: -1, avgRating: -1 } },
-      { $limit: 6 },
+  { $limit: 8 },
       {
         $lookup: {
           from: 'categories',
@@ -190,7 +190,7 @@ const getHomeOverview = asyncHandler(async (req, res) => {
     ]),
     Category.find({ isActive: true })
       .sort({ isFeatured: -1, productCount: -1, name: 1 })
-      .limit(6)
+  .limit(10)
       .select('name slug description image productCount level')
       .lean(),
     Campaign.find({

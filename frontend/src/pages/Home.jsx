@@ -147,7 +147,13 @@ const Home = () => {
             <SectionSkeleton title="Spotlight collections" rows={3} />
           }
         >
-          <CardSection />
+          <CardSection
+            partners={homeOverview?.brands?.partners ?? []}
+            categories={homeOverview?.categories ?? []}
+            isLoading={isHomePending}
+            error={homeError}
+            onRetry={handleRetry}
+          />
         </Suspense>
 
         {/* Special offers and promotions */}

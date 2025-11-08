@@ -21,8 +21,8 @@ import ErrorMessage from "../components/common/ErrorMessage";
 import Pagination from "../components/common/Pagination";
 import CategoryFilters from "../components/category/CategoryFilters";
 import SubcategoryNav from "../components/category/SubcategoryNav";
-import ProductQuickView from "../components/products/ProductQuickView";
-import CompareDrawer from "../components/products/CompareDrawer";
+import ProductQuickView from "../components/product-details/ProductQuickView";
+import CompareDrawer from "../components/product-details/CompareDrawer";
 
 // Hooks
 import useLocalStorage from "../hooks/useLocalStorage";

@@ -187,13 +187,20 @@ const getAllProducts = asyncHandler(async (req, res) => {
         filters.category = categoryDoc._id;
       } else {
         // If category name not found, return empty results
+        const parsedPage = Number(page);
+        const pageNumber = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+        const pageSizeValue = Number(limit);
+        const safePageSize = Number.isFinite(pageSizeValue) && pageSizeValue > 0 ? pageSizeValue : 10;
+
         return res.status(200).json({
           products: [],
+          totalProducts: 0,
           pagination: {
             total: 0,
-            page: parseInt(page),
-            pages: 0,
-            limit: parseInt(limit)
+            totalPages: 0,
+            page: pageNumber,
+            limit: safePageSize,
+            hasMore: false
           }
         });
       }
@@ -235,26 +242,33 @@ const getAllProducts = asyncHandler(async (req, res) => {
     sortOption = { createdAt: -1 }; // Default sort by newest
   }
   
-  // Calculate pagination skip value
-  const skip = (Number(page) - 1) * Number(limit);
-  
+  // Calculate pagination values
+  const parsedPage = Number(page);
+  const pageNumber = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const pageSizeValue = Number(limit);
+  const safePageSize = Number.isFinite(pageSizeValue) && pageSizeValue > 0 ? pageSizeValue : 10;
+  const skip = (pageNumber - 1) * safePageSize;
+
   // Execute the main query with filters, sorting, and pagination
   const products = await Product.find(filters)
     .sort(sortOption)
     .skip(skip)
-    .limit(Number(limit))
+    .limit(safePageSize)
     .lean({ virtuals: true });
   
   // Get the total count of documents matching the filters for pagination info
   const total = await Product.countDocuments(filters);
-  
+  const totalPages = total > 0 ? Math.ceil(total / safePageSize) : 0;
+
   res.status(200).json({
     products,
+    totalProducts: total,
     pagination: {
       total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
-      hasMore: Number(page) < Math.ceil(total / Number(limit))
+      totalPages,
+      page: pageNumber,
+      limit: safePageSize,
+      hasMore: pageNumber < totalPages
     }
   });
 });

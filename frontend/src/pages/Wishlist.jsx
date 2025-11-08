@@ -19,7 +19,7 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import WishlistItem from '../components/wishlist/WishlistItem';
 import WishlistFilters from '../components/wishlist/WishlistFilters';
 import ShareModal from '../components/common/ShareModal';
-import CompareModal from '../components/products/CompareModal';
+import CompareModal from '../components/product-details/CompareModal';
 import Pagination from '../components/common/Pagination';
 
 // Hooks

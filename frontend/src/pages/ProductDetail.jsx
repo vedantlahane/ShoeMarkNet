@@ -20,11 +20,11 @@ import {
 // Components
 import ErrorMessage from '../components/common/ErrorMessage';
 import Rating from '../components/common/Rating';
-import StockIndicator from '../components/products/StockIndicator';
+import StockIndicator from '../components/product-details/StockIndicator';
 import SocialShare from '../components/common/SocialShare';
 import PriceDisplay from '../components/products/PriceDisplay';
 import ProductTabs from '../components/products/ProductTabs';
-import RecentlyViewed from '../components/products/RecentlyViewed';
+import RecentlyViewed from '../components/product-details/RecentlyViewed';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';

@@ -37,6 +37,10 @@ const responseFormatter = (req, res, next) => {
   res.fail = res.error;
 
   res.json = (body) => {
+    if (Array.isArray(body)) {
+      return originalJson(buildSuccess('OK', body, null));
+    }
+
     if (!body || typeof body !== 'object') {
       return originalJson(buildSuccess('OK', body ?? null));
     }

@@ -1,6 +1,63 @@
 // src/services/productService.js
 import api from '../utils/api';
 
+const unwrapResponse = (response) => {
+  const payload = response?.data ?? response;
+  if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    return payload.data;
+  }
+  return payload;
+};
+
+const isNumericKeyedObject = (value) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  const keys = Object.keys(value);
+  if (keys.length === 0) {
+    return false;
+  }
+
+  return keys.every((key) => /^\d+$/.test(key));
+};
+
+const normaliseCollection = (value, preferredKeys = []) => {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  for (const key of preferredKeys) {
+    if (Array.isArray(value?.[key])) {
+      return value[key];
+    }
+  }
+
+  if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, 'data')) {
+    return normaliseCollection(value.data, preferredKeys);
+  }
+
+  if (Array.isArray(value?.items)) {
+    return value.items;
+  }
+
+  if (Array.isArray(value?.results)) {
+    return value.results;
+  }
+
+  if (isNumericKeyedObject(value)) {
+    return Object.keys(value)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => value[key]);
+  }
+
+  return [];
+};
+
 /**
  * Fetch featured products from the API
  * @returns {Promise<Array>} Array of featured products
@@ -8,7 +65,7 @@ import api from '../utils/api';
 const getFeaturedProducts = async () => {
   try {
     const response = await api.get('/products/featured');
-    return response.data;
+    return normaliseCollection(unwrapResponse(response), ['products']);
   } catch (error) {
     console.error('Error fetching featured products:', error);
     throw error;
@@ -31,7 +88,7 @@ const getNewArrivals = async (options = {}) => {
     
     const url = queryParams.toString() ? `/products/new-arrivals?${queryParams.toString()}` : '/products/new-arrivals';
     const response = await api.get(url);
-    return response.data;
+    return normaliseCollection(unwrapResponse(response), ['products']);
   } catch (error) {
     console.error('Error fetching new arrivals:', error);
     throw error;
@@ -45,7 +102,7 @@ const getNewArrivals = async (options = {}) => {
 const getCategories = async () => {
   try {
     const response = await api.get('/categories');
-    return response.data;
+    return normaliseCollection(unwrapResponse(response), ['categories']);
   } catch (error) {
     console.error('Error fetching categories:', error);
     throw error;
@@ -69,7 +126,7 @@ const getProducts = async (filters = {}) => {
     });
     
     const response = await api.get(`/products?${queryParams.toString()}`);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Error fetching products:', error);
     throw error;
@@ -97,7 +154,7 @@ const searchProducts = async (query, filters = {}) => {
     const queryString = queryParams.toString();
     const url = queryString ? `/search?${queryString}` : '/search';
     const response = await api.get(url);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Error searching products:', error);
     throw error;
@@ -112,7 +169,7 @@ const searchProducts = async (query, filters = {}) => {
 const getProductBySlug = async (slug) => {
   try {
     const response = await api.get(`/products/slug/${slug}`);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Error fetching product by slug ${slug}:`, error);
     throw error;
@@ -127,7 +184,7 @@ const getProductBySlug = async (slug) => {
 const getProductById = async (id) => {
   try {
     const response = await api.get(`/products/${id}`);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Error fetching product ${id}:`, error);
     throw error;
@@ -154,7 +211,7 @@ const getRelatedProducts = async (productId, options = {}) => {
       : `/products/${productId}/related`;
     
     const response = await api.get(url);
-    return response.data;
+    return normaliseCollection(unwrapResponse(response), ['products']);
   } catch (error) {
     console.error(`Error fetching related products for ${productId}:`, error);
     throw error;
@@ -169,7 +226,7 @@ const getRelatedProducts = async (productId, options = {}) => {
 const checkProductAvailability = async (checkData) => {
   try {
     const response = await api.post('/products/check-availability', checkData);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Error checking product availability:', error);
     throw error;
@@ -196,7 +253,7 @@ const getProductReviews = async (productId, options = {}) => {
       : `/products/${productId}/reviews`;
     
     const response = await api.get(url);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Error fetching reviews for product ${productId}:`, error);
     throw error;
@@ -212,7 +269,7 @@ const getProductReviews = async (productId, options = {}) => {
 const createReview = async (productId, reviewData) => {
   try {
     const response = await api.post(`/products/${productId}/reviews`, reviewData);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Error creating review for product ${productId}:`, error);
     throw error;
@@ -229,7 +286,7 @@ const createReview = async (productId, reviewData) => {
 const updateReview = async (productId, reviewId, reviewData) => {
   try {
     const response = await api.put(`/products/${productId}/reviews/${reviewId}`, reviewData);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Error updating review ${reviewId} for product ${productId}:`, error);
     throw error;
@@ -245,7 +302,7 @@ const updateReview = async (productId, reviewId, reviewData) => {
 const deleteReview = async (productId, reviewId) => {
   try {
     const response = await api.delete(`/products/${productId}/reviews/${reviewId}`);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Error deleting review ${reviewId} for product ${productId}:`, error);
     throw error;
@@ -276,7 +333,8 @@ const createProduct = async (productData) => {
     }
     
     const response = await api.post('/products', cleanedData);
-    return response.data;
+    const data = unwrapResponse(response);
+    return data?.product ?? data;
   } catch (error) {
     console.error('Error creating product:', error.response?.data || error.message);
     throw error;
@@ -293,7 +351,8 @@ const createProduct = async (productData) => {
 const updateProduct = async (id, productData) => {
   try {
     const response = await api.put(`/products/${id}`, productData);
-    return response.data;
+    const data = unwrapResponse(response);
+    return data?.product ?? data;
   } catch (error) {
     console.error(`Error updating product ${id}:`, error);
     throw error;
@@ -308,7 +367,7 @@ const updateProduct = async (id, productData) => {
 const deleteProduct = async (id) => {
   try {
     const response = await api.delete(`/products/${id}`);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Error deleting product ${id}:`, error);
     throw error;
@@ -323,7 +382,7 @@ const deleteProduct = async (id) => {
 const batchUpdatePrices = async (updates) => {
   try {
     const response = await api.post('/products/batch-update-prices', { updates });
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Error batch updating prices:', error);
     throw error;
@@ -338,7 +397,7 @@ const batchUpdatePrices = async (updates) => {
 const batchUpdateStock = async (updates) => {
   try {
     const response = await api.post('/products/batch-update-stock', { updates });
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Error batch updating stock:', error);
     throw error;
@@ -353,7 +412,7 @@ const batchUpdateStock = async (updates) => {
 const bulkUpdateProducts = async ({ productIds, updates }) => {
   try {
     const response = await api.post('/products/bulk-update', { productIds, updates });
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Error bulk updating products:', error);
     throw error;
