@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import {
   Heart,
   ShoppingBag,
-  Star,
   Eye,
   Zap,
   TrendingUp,
@@ -23,6 +22,13 @@ import { showCartToast, showWishlistToast, showErrorToast } from '../../utils/to
 // Hooks
 import useReducedMotion from '../../hooks/useReducedMotion';
 
+const defaultProduct = {
+  name: 'Product',
+  brand: '',
+  price: 0,
+  images: ['https://via.placeholder.com/400x500?text=Product']
+};
+
 const ProductCard = ({
   product = {},
   variant = 'default', // default, compact, featured, grid
@@ -39,28 +45,7 @@ const ProductCard = ({
   const actionsRef = useRef(null);
   const badgeRef = useRef(null);
 
-  // Default product data
-  const defaultProduct = {
-    id: '1',
-    name: 'Premium Running Shoes',
-    brand: 'ShoeMarkNet',
-    price: 129.99,
-    originalPrice: 159.99,
-    discount: 19,
-    images: [
-      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=400&auto=format&fit=crop'
-    ],
-    rating: 4.8,
-    reviewCount: 156,
-    isNew: false,
-    isTrending: false,
-    isBestseller: false,
-    inStock: true,
-    category: 'Running Shoes'
-  };
-
-  const productData = { ...defaultProduct, ...product };
+  const productData = { ...product };
   const productId = productData._id || productData.id;
   const productSlug = productData.slug || productId;
   const dispatch = useDispatch();
@@ -92,9 +77,6 @@ const ProductCard = ({
       .slice(0, 6);
   }, [productData?.sizes]);
 
-  const displayedSizes = useMemo(() => availableSizes.slice(0, 4), [availableSizes]);
-  const remainingSizeCount = Math.max(availableSizes.length - displayedSizes.length, 0);
-
   const productImages = Array.isArray(productData.images) && productData.images.length > 0
     ? productData.images
     : defaultProduct.images;
@@ -111,36 +93,6 @@ const ProductCard = ({
     }
     return null;
   }, [productData.discount, productData.discountPercentage, productData.originalPrice, productData.price]);
-
-  const ratingValue = Number(productData.rating ?? defaultProduct.rating ?? 0);
-  const reviewCount = Number(productData.reviewCount ?? defaultProduct.reviewCount ?? 0);
-  const ratingLabel = ratingValue > 0 ? ratingValue.toFixed(1) : 'New';
-  const reviewLabel = reviewCount > 0 ? `${reviewCount.toLocaleString()} reviews` : 'Be the first to review';
-
-  const categoryLabel = useMemo(() => {
-    if (!productData.category) return null;
-    if (typeof productData.category === 'string') return productData.category;
-    return productData.category?.name || productData.category?.title || null;
-  }, [productData.category]);
-
-  const stockStatus = useMemo(() => {
-    const status = productData.stockStatus;
-    if (status === 'out-of-stock') {
-      return { label: 'Out of stock', badgeClass: 'bg-rose-500/15 text-rose-300', dotClass: 'bg-rose-400' };
-    }
-    if (status === 'low-stock') {
-      return { label: 'Low stock', badgeClass: 'bg-amber-500/15 text-amber-300', dotClass: 'bg-amber-400' };
-    }
-
-    const total = productData.calculatedCountInStock ?? productData.countInStock ?? (productData.inStock ? 10 : 0);
-    if (!productData.inStock || total <= 0) {
-      return { label: 'Out of stock', badgeClass: 'bg-rose-500/15 text-rose-300', dotClass: 'bg-rose-400' };
-    }
-    if (total <= 5) {
-      return { label: 'Low stock', badgeClass: 'bg-amber-500/15 text-amber-300', dotClass: 'bg-amber-400' };
-    }
-    return { label: 'In stock', badgeClass: 'bg-emerald-500/15 text-emerald-300', dotClass: 'bg-emerald-400' };
-  }, [productData.calculatedCountInStock, productData.countInStock, productData.inStock, productData.stockStatus]);
 
   useEffect(() => {
     if (!secondaryImage) return;
@@ -305,26 +257,22 @@ const ProductCard = ({
   const badgeInfo = getBadgeInfo();
 
   const renderStars = () => {
+    const rating = Number(productData.rating ?? 0);
     const stars = [];
-    const fullStars = Math.floor(productData.rating);
-    const hasHalfStar = productData.rating % 1 !== 0;
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i += 1) {
+      const isFilled = rating >= i + 1;
       stars.push(
-        <Star
+        <span
           key={i}
-          size={14}
-          className={`${
-            i < fullStars 
-              ? 'text-yellow-400 fill-current' 
-              : i === fullStars && hasHalfStar 
-                ? 'text-yellow-400 fill-current opacity-50'
-                : 'text-gray-300'
+          className={`h-2 w-2 rounded-full ${
+            isFilled ? 'bg-yellow-400' : 'bg-slate-600'
           }`}
         />
       );
     }
-    return stars;
+
+    return <div className="flex items-center gap-1">{stars}</div>;
   };
 
   // Compact variant
@@ -575,100 +523,27 @@ const ProductCard = ({
         </div>
 
         <div className="flex flex-1 flex-col gap-4 p-4">
-          {categoryLabel && (
-            <span className="inline-flex w-fit items-center rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-200">
-              {categoryLabel}
-            </span>
-          )}
-
           <div className="space-y-1">
-            <h3 className="text-base font-semibold text-white transition-colors duration-150 group-hover:text-blue-200">
+            <h3 className="text-sm font-semibold text-white transition-colors duration-150 group-hover:text-blue-200">
               {productData.name}
             </h3>
-            <p className="text-sm text-slate-300">{productData.brand ?? defaultProduct.brand}</p>
+            {productData.brand && (
+              <p className="text-xs text-slate-300">{productData.brand}</p>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-[11px] font-medium text-slate-300">
-            <span className="flex items-center gap-1">
-              <Star size={12} className="text-amber-400" />
-              {ratingLabel}
-            </span>
-            <span className="truncate text-center text-muted-theme">{reviewLabel}</span>
-            <span className={`flex items-center justify-end gap-1 rounded-full px-2 py-1 ${stockStatus.badgeClass}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${stockStatus.dotClass}`}></span>
-              {stockStatus.label}
-            </span>
-          </div>
-
-          {displayedSizes.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              {displayedSizes.map(size => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setSelectedSize(size);
-                  }}
-                  className={`rounded-lg px-2.5 py-1 font-semibold transition-all duration-150 ${
-                    selectedSize === size
-                      ? 'bg-white text-slate-900 shadow'
-                      : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                  }`}
-                  aria-label={`Select size ${size}`}
-                >
-                  {size}
-                </button>
-              ))}
-              {remainingSizeCount > 0 && (
-                <span className="rounded-lg bg-white/5 px-2.5 py-1 font-semibold text-slate-300">
-                  +{remainingSizeCount}
-                </span>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-semibold text-white">
+          <div className="mt-auto flex items-start justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-lg font-semibold text-white">
                 {formatCurrency(productData.price)}
               </span>
               {productData.originalPrice > productData.price && (
-                <span className="text-xs text-muted-theme line-through">
+                <span className="text-[11px] text-muted-theme line-through">
                   {formatCurrency(productData.originalPrice)}
                 </span>
               )}
             </div>
-
-            {discountPercentage && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-1 text-[11px] font-semibold text-rose-200">
-                <Zap size={12} className="text-rose-300" />
-                Save {discountPercentage}%
-              </span>
-            )}
           </div>
-
-          <button
-            onClick={handleAddToCart}
-            disabled={!productData.inStock}
-            className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 ${
-              !productData.inStock
-                ? 'cursor-not-allowed bg-slate-700/60 text-muted-theme'
-                : isInCart
-                  ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-500 hover:to-purple-500'
-            }`}
-          >
-            <ShoppingBag size={16} />
-            <span>
-              {!productData.inStock
-                ? 'Out of Stock'
-                : isInCart
-                  ? 'In Cart'
-                  : 'Add to Cart'}
-            </span>
-          </button>
         </div>
       </article>
     </Link>

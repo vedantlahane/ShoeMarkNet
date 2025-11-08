@@ -1,395 +1,197 @@
-// src/components/ProductFilter.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 
-const genderOptions = [
-  { value: 'men', label: 'Men', icon: 'fa-mars', color: 'from-blue-500 to-cyan-500' },
-  { value: 'women', label: 'Women', icon: 'fa-venus', color: 'from-pink-500 to-rose-500' },
-  { value: 'unisex', label: 'Unisex', icon: 'fa-venus-mars', color: 'from-purple-500 to-indigo-500' }
+const GENDER_OPTIONS = [
+  { value: 'men', label: 'Men', icon: 'fa-mars' },
+  { value: 'women', label: 'Women', icon: 'fa-venus' },
+  { value: 'unisex', label: 'Unisex', icon: 'fa-venus-mars' }
 ];
 
-const ProductFilter = ({ currentFilters, onFilterChange, onClose }) => {
-  const { categories } = useSelector((state) => state.product);
+const DEFAULT_PRICE = { min: 0, max: 1000 };
+
+const ProductFilter = ({ currentFilters, onFilterChange }) => {
+  const { categories, products } = useSelector((state) => state.product);
+  
   const [priceRange, setPriceRange] = useState({
-    min: currentFilters.priceRange?.min || 0,
-    max: currentFilters.priceRange?.max || 1000
-  });
-  const [expanded, setExpanded] = useState({
-    categories: true,
-    price: true,
-    brand: true,
-    gender: true,
-    features: false
+    min: currentFilters.priceRange?.min || DEFAULT_PRICE.min,
+    max: currentFilters.priceRange?.max || DEFAULT_PRICE.max
   });
 
-  // Debounced price change handler
+  // Memoized brands list
+  const brands = useMemo(
+    () => [...new Set(products?.map(p => p.brand).filter(Boolean))].sort(),
+    [products]
+  );
+
+  // Debounced price change
   const debouncedPriceChange = useMemo(
-    () => debounce((newPriceRange) => {
-      if (Number(newPriceRange.min) <= Number(newPriceRange.max)) {
-        onFilterChange({ priceRange: newPriceRange });
+    () => debounce((range) => {
+      if (Number(range.min) <= Number(range.max)) {
+        onFilterChange({ priceRange: range });
       }
     }, 500),
     [onFilterChange]
   );
 
-  // Enhanced handlers
-  const handleCategoryChange = (categoryId) => {
-    onFilterChange({ category: categoryId === currentFilters.category ? '' : categoryId });
-  };
-
-  const handlePriceChange = (e) => {
-    const { name, value } = e.target;
-    const newPriceRange = { ...priceRange, [name]: value };
-    setPriceRange(newPriceRange);
-    debouncedPriceChange(newPriceRange);
-  };
-
-  const handleBrandChange = (brand) => {
-    onFilterChange({ brand: brand === currentFilters.brand ? '' : brand });
-  };
-
-  const handleGenderChange = (gender) => {
-    onFilterChange({ gender: gender === currentFilters.gender ? '' : gender });
-  };
-
-  const toggleSection = (section) => {
-    setExpanded({ ...expanded, [section]: !expanded[section] });
-  };
-
-  const clearAllFilters = () => {
-    onFilterChange({
-      category: '',
-      brand: '',
-      gender: '',
-      priceRange: { min: 0, max: 1000 },
-      sort: 'newest'
-    });
-    setPriceRange({ min: 0, max: 1000 });
-  };
-
-  // Reset price inputs if invalid
   useEffect(() => {
-    if (Number(priceRange.min) > Number(priceRange.max)) {
-      setPriceRange({
-        min: currentFilters.priceRange?.min || 0,
-        max: currentFilters.priceRange?.max || 1000
-      });
-    }
-  }, [priceRange, currentFilters.priceRange]);
+    return () => debouncedPriceChange.cancel?.();
+  }, [debouncedPriceChange]);
 
   useEffect(() => {
-    const nextMin = currentFilters.priceRange?.min ?? 0;
-    const nextMax = currentFilters.priceRange?.max ?? 1000;
+    const newMin = currentFilters.priceRange?.min ?? DEFAULT_PRICE.min;
+    const newMax = currentFilters.priceRange?.max ?? DEFAULT_PRICE.max;
 
     setPriceRange(prev => {
-      if (Number(prev.min) === Number(nextMin) && Number(prev.max) === Number(nextMax)) {
+      if (Number(prev.min) === Number(newMin) && Number(prev.max) === Number(newMax)) {
         return prev;
       }
-
-      return { min: nextMin, max: nextMax };
+      return { min: newMin, max: newMax };
     });
   }, [currentFilters.priceRange?.min, currentFilters.priceRange?.max]);
 
-  // Extract unique brands
-  const { products } = useSelector((state) => state.product);
-  const brands = [...new Set(products?.map(product => product.brand).filter(Boolean))];
+  const handleFilterToggle = useCallback((filterKey, value) => {
+    onFilterChange({
+      [filterKey]: currentFilters[filterKey] === value ? '' : value
+    });
+  }, [currentFilters, onFilterChange]);
 
-  const activeFilters = useMemo(() => {
-    const filters = [];
+  const handlePriceChange = useCallback((event) => {
+    const { name, value } = event.target;
+    const updatedRange = {
+      ...priceRange,
+      [name]: Number(value) || 0
+    };
 
-    if (currentFilters.category) {
-      const categoryMatch = categories?.find(
-        category => (category._id || category.name) === currentFilters.category
-      );
-      filters.push({
-        key: 'category',
-        label: `Category: ${categoryMatch?.name || currentFilters.category}`
-      });
-    }
-
-    if (currentFilters.brand) {
-      filters.push({ key: 'brand', label: `Brand: ${currentFilters.brand}` });
-    }
-
-    if (currentFilters.gender) {
-      const genderLabel =
-        genderOptions.find(option => option.value === currentFilters.gender)?.label ||
-        currentFilters.gender;
-      filters.push({ key: 'gender', label: `Gender: ${genderLabel}` });
-    }
-
-    const minPrice = Number(currentFilters.priceRange?.min ?? 0);
-    const maxPrice = Number(currentFilters.priceRange?.max ?? 1000);
-    if (minPrice > 0 || maxPrice < 1000) {
-      filters.push({
-        key: 'priceRange',
-        label: `Price: $${minPrice} - $${maxPrice >= 1000 ? '1000+' : maxPrice}`
-      });
-    }
-
-    return filters;
-  }, [categories, currentFilters.category, currentFilters.brand, currentFilters.gender, currentFilters.priceRange]);
-
-  const handleRemoveFilter = (key) => {
-    switch (key) {
-      case 'category':
-        onFilterChange({ category: '' });
-        break;
-      case 'brand':
-        onFilterChange({ brand: '' });
-        break;
-      case 'gender':
-        onFilterChange({ gender: '' });
-        break;
-      case 'priceRange':
-        onFilterChange({ priceRange: { min: 0, max: 1000 } });
-        setPriceRange({ min: 0, max: 1000 });
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Enhanced options
-  const featureOptions = [
-    { value: 'waterproof', label: 'Waterproof', icon: 'fa-tint' },
-    { value: 'breathable', label: 'Breathable', icon: 'fa-wind' },
-    { value: 'lightweight', label: 'Lightweight', icon: 'fa-feather' },
-    { value: 'cushioned', label: 'Cushioned', icon: 'fa-bed' },
-    { value: 'durable', label: 'Durable', icon: 'fa-shield-alt' },
-    { value: 'eco-friendly', label: 'Eco-Friendly', icon: 'fa-leaf' }
-  ];
+    setPriceRange(updatedRange);
+    debouncedPriceChange(updatedRange);
+  }, [priceRange, debouncedPriceChange]);
 
   return (
-    <>
-      {/* Mobile Filter Toggle */}
-      <div className="mb-4 block lg:hidden">
-        <button
-          onClick={onClose}
-          className="flex w-full items-center justify-between rounded-xl border border-slate-200/70 bg-white/70 px-4 py-3 text-left font-medium text-slate-900 shadow-sm backdrop-blur-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-100"
-        >
-          <span>Filters</span>
-          <i className="fas fa-times text-slate-500 dark:text-slate-400" />
-        </button>
-      </div>
-
-      {/* Active Filters */}
-      {activeFilters.length > 0 && (
-        <div className="mb-6 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
-              Active Filters
-            </h3>
-            <button
-              onClick={clearAllFilters}
-              className="text-xs font-medium text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
-            >
-              Clear All
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {activeFilters.map((filter) => (
-              <span
-                key={filter.key}
-                className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
+    <div className="space-y-5">
+      {/* Categories */}
+      <section className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 shadow-sm backdrop-blur-md dark:border-slate-700/60 dark:bg-slate-900/40">
+        <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
+          Categories
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {categories?.map((category) => {
+            const isSelected = currentFilters.category === (category._id || category.name);
+            return (
+              <button
+                key={category._id || category.name}
+                onClick={() => handleFilterToggle('category', category._id || category.name)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                  isSelected
+                    ? 'border-blue-500/70 bg-blue-500/80 text-white shadow-sm dark:border-blue-400/70 dark:bg-blue-500/80'
+                    : 'border-transparent bg-white/70 text-slate-700 hover:border-slate-300 hover:bg-white/90 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-900/70'
+                }`}
               >
-                {filter.label}
-                <button
-                  onClick={() => handleRemoveFilter(filter.key)}
-                  className="ml-1 hover:text-blue-800 dark:hover:text-blue-200"
-                >
-                  <i className="fas fa-times text-xs" />
-                </button>
-              </span>
-            ))}
+                {category.name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Price Range */}
+      <section className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 shadow-sm backdrop-blur-md dark:border-slate-700/60 dark:bg-slate-900/40">
+        <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
+          Price Range
+        </h3>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+            <input
+              type="number"
+              name="min"
+              value={priceRange.min}
+              onChange={handlePriceChange}
+              min="0"
+              placeholder="Min"
+              className="w-full rounded-xl border border-slate-200/70 bg-white/70 py-2.5 pl-7 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+            />
+          </div>
+          <span className="text-slate-400">—</span>
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">$</span>
+            <input
+              type="number"
+              name="max"
+              value={priceRange.max}
+              onChange={handlePriceChange}
+              min="0"
+              placeholder="Max"
+              className="w-full rounded-xl border border-slate-200/70 bg-white/70 py-2.5 pl-7 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+            />
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Filter Sections */}
-      <div className="space-y-6">
-        {/* Categories */}
-        <div className="space-y-3">
-          <button
-            onClick={() => toggleSection('categories')}
-            className="flex w-full items-center justify-between text-left"
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
-              Categories
-            </h3>
-            <i className={`fas fa-chevron-down text-xs text-slate-500 transition-transform duration-200 dark:text-slate-400 ${expanded.categories ? 'rotate-180' : ''}`} />
-          </button>
-          {expanded.categories && (
-            <div className="space-y-2">
-              {categories?.map((category) => (
-                <button
-                  key={category._id || category.name}
-                  onClick={() => handleCategoryChange(category._id || category.name)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors duration-200 ${
-                    currentFilters.category === (category._id || category.name)
-                      ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <span>{category.name}</span>
-                  {currentFilters.category === (category._id || category.name) && (
-                    <i className="fas fa-check text-blue-500" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Price Range */}
-        <div className="space-y-3">
-          <button
-            onClick={() => toggleSection('price')}
-            className="flex w-full items-center justify-between text-left"
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
-              Price Range
-            </h3>
-            <i className={`fas fa-chevron-down text-xs text-slate-500 transition-transform duration-200 dark:text-slate-400 ${expanded.price ? 'rotate-180' : ''}`} />
-          </button>
-          {expanded.price && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Min Price
-                  </label>
-                  <input
-                    type="number"
-                    name="min"
-                    value={priceRange.min}
-                    onChange={handlePriceChange}
-                    placeholder="0"
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Max Price
-                  </label>
-                  <input
-                    type="number"
-                    name="max"
-                    value={priceRange.max}
-                    onChange={handlePriceChange}
-                    placeholder="1000"
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Brand */}
-        <div className="space-y-3">
-          <button
-            onClick={() => toggleSection('brand')}
-            className="flex w-full items-center justify-between text-left"
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
-              Brand
-            </h3>
-            <i className={`fas fa-chevron-down text-xs text-slate-500 transition-transform duration-200 dark:text-slate-400 ${expanded.brand ? 'rotate-180' : ''}`} />
-          </button>
-          {expanded.brand && (
-            <div className="space-y-2">
-              {brands.map((brand) => (
-                <button
+      {/* Brands */}
+      {brands.length > 0 && (
+        <section className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 shadow-sm backdrop-blur-md dark:border-slate-700/60 dark:bg-slate-900/40">
+          <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
+            Brands
+          </h3>
+          <div className="max-h-56 space-y-2 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-700">
+            {brands.map((brand) => {
+              const isSelected = currentFilters.brand === brand;
+              return (
+                <label
                   key={brand}
-                  onClick={() => handleBrandChange(brand)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors duration-200 ${
-                    currentFilters.brand === brand
-                      ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                  className={`group flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 transition-colors backdrop-blur-sm ${
+                    isSelected
+                      ? 'border-blue-500/60 bg-blue-500/10 text-blue-600 dark:border-blue-400/60 dark:bg-blue-500/10 dark:text-blue-300'
+                      : 'border-slate-200/50 bg-white/50 text-slate-600 hover:border-slate-300/70 hover:bg-white/70 dark:border-slate-700/50 dark:bg-slate-900/30 dark:text-slate-400 dark:hover:border-slate-600/60 dark:hover:bg-slate-900/50'
                   }`}
                 >
-                  <span>{brand}</span>
-                  {currentFilters.brand === brand && (
-                    <i className="fas fa-check text-blue-500" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Gender */}
-        <div className="space-y-3">
-          <button
-            onClick={() => toggleSection('gender')}
-            className="flex w-full items-center justify-between text-left"
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
-              Gender
-            </h3>
-            <i className={`fas fa-chevron-down text-xs text-slate-500 transition-transform duration-200 dark:text-slate-400 ${expanded.gender ? 'rotate-180' : ''}`} />
-          </button>
-          {expanded.gender && (
-            <div className="space-y-2">
-              {genderOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleGenderChange(option.value)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors duration-200 ${
-                    currentFilters.gender === option.value
-                      ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <i className={`fas ${option.icon} text-sm`} />
-                    <span>{option.label}</span>
-                  </div>
-                  {currentFilters.gender === option.value && (
-                    <i className="fas fa-check text-blue-500" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Features */}
-        <div className="space-y-3">
-          <button
-            onClick={() => toggleSection('features')}
-            className="flex w-full items-center justify-between text-left"
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
-              Features
-            </h3>
-            <i className={`fas fa-chevron-down text-xs text-slate-500 transition-transform duration-200 dark:text-slate-400 ${expanded.features ? 'rotate-180' : ''}`} />
-          </button>
-          {expanded.features && (
-            <div className="space-y-2">
-              {featureOptions.map((feature) => (
-                <div key={feature.value} className="flex items-center gap-3">
                   <input
                     type="checkbox"
-                    id={feature.value}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
+                    checked={isSelected}
+                    onChange={() => handleFilterToggle('brand', brand)}
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900/40 dark:text-blue-400 dark:focus:ring-blue-400"
                   />
-                  <label
-                    htmlFor={feature.value}
-                    className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
-                  >
-                    <i className={`fas ${feature.icon} text-slate-500`} />
-                    <span>{feature.label}</span>
-                  </label>
-                </div>
-              ))}
-            </div>
-          )}
+                  <span className={`text-sm ${
+                    isSelected
+                      ? 'font-medium'
+                      : 'font-normal'
+                  }`}>
+                    {brand}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Gender */}
+      <section className="rounded-2xl border border-slate-200/70 bg-white/60 p-5 shadow-sm backdrop-blur-md dark:border-slate-700/60 dark:bg-slate-900/40">
+        <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
+          Gender
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          {GENDER_OPTIONS.map((option) => {
+            const isSelected = currentFilters.gender === option.value;
+            return (
+              <button
+                key={option.value}
+                onClick={() => handleFilterToggle('gender', option.value)}
+                className={`flex flex-col items-center gap-2 rounded-xl border px-3 py-4 text-xs font-medium transition-all backdrop-blur-sm ${
+                  isSelected
+                    ? 'border-blue-500/70 bg-blue-500/10 text-blue-600 shadow-sm dark:border-blue-400/70 dark:bg-blue-500/15 dark:text-blue-300'
+                    : 'border-slate-200/70 bg-white/60 text-slate-600 hover:border-slate-300 hover:bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-900/60'
+                }`}
+              >
+                <i className={`fas ${option.icon} text-lg`} />
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
         </div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 };
 

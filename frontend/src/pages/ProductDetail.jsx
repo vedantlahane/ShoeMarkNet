@@ -23,7 +23,7 @@ import Rating from '../components/common/Rating';
 import StockIndicator from '../components/product-details/StockIndicator';
 import SocialShare from '../components/common/SocialShare';
 import PriceDisplay from '../components/products/PriceDisplay';
-import ProductTabs from '../components/products/ProductTabs';
+// import ProductTabs from '../components/products/ProductTabs';
 import RecentlyViewed from '../components/product-details/RecentlyViewed';
 
 // Hooks
@@ -974,15 +974,6 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Enhanced Product Tabs */}
-          <ProductTabs
-            product={product}
-            user={user}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            className="mb-16"
-          />
-
           {/* Related Products */}
           {relatedProducts?.length > 0 && (
             <div className="mb-16">
@@ -991,15 +982,7 @@ const ProductDetail = () => {
                   <i className="fas fa-heart mr-3"></i>
                   You May Also Like
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {relatedProducts.map((relatedProduct) => (
-                    <ProductCard 
-                      key={relatedProduct._id} 
-                      product={relatedProduct}
-                      variant="compact"
-                    />
-                  ))}
-                </div>
+                
               </div>
             </div>
           )}
