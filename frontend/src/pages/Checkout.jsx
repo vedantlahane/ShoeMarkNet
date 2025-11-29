@@ -557,15 +557,15 @@ const Checkout = () => {
   // Show order completion screen
   if (orderCompleted) {
     return (
-      <div className="min-h-screen bg-theme flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 text-center shadow-2xl max-w-md animate-fade-in">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center shadow-2xl max-w-md animate-fade-in">
           <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <i className="fas fa-check text-white text-3xl"></i>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
             Order Placed Successfully!
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
+          <p className="text-slate-600 dark:text-slate-400 mb-8">
             Thank you for your purchase. You will receive a confirmation email shortly.
           </p>
           <LoadingSpinner size="medium" message="Redirecting to confirmation..." />
@@ -583,7 +583,7 @@ const Checkout = () => {
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-screen bg-theme">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         
         {/* Checkout Header */}
         <div className="container-app py-6">

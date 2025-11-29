@@ -86,7 +86,7 @@ const Home = () => {
           {Array.from({ length: rows }).map((_, index) => (
             <div
               key={index}
-              className="h-40 rounded-xl border border-slate-200/60 bg-white/60 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40"
+              className="h-40 rounded-xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40"
             />
           ))}
         </div>
@@ -117,7 +117,7 @@ const Home = () => {
   );
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+    <main className="relative min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <div className="relative z-10 flex flex-col">
         {/* Hero section */}
         <HeroSection 

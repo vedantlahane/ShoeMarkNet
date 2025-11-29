@@ -2,8 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const backgroundStyles = {
-  gradient: 'bg-gray-50 dark:bg-slate-900',
-  subtle: 'bg-white dark:bg-slate-900',
+  gradient: 'bg-slate-50 dark:bg-slate-950',
+  subtle: 'bg-white dark:bg-slate-950',
   plain: 'bg-white dark:bg-slate-950'
 };
 
@@ -39,12 +39,12 @@ const PageLayout = ({
                 </p>
               )}
               {title && (
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">
                   {title}
                 </h1>
               )}
               {description && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   {description}
                 </p>
               )}

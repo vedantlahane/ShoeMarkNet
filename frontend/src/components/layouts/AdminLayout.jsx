@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 
@@ -32,14 +32,8 @@ const AdminLayout = () => {
     });
   }, [location.pathname, prefersReducedMotion]);
 
-  const shellClassName = useMemo(() => (
-    theme === 'dark'
-      ? 'admin-shell dark'
-      : 'admin-shell'
-  ), [theme]);
-
   return (
-    <div className={`${shellClassName} selection:bg-blue-200/60 dark:selection:bg-blue-500/40`} data-theme={theme}>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-blue-200/60 dark:selection:bg-blue-500/40">
       <Outlet />
     </div>
   );

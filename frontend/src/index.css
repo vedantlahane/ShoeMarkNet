@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700;800;900&display=swap');
 @import 'tailwindcss';
 
+/* Enable dark mode with class selector (Tailwind v4) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ========================================
    DESIGN SYSTEM VARIABLES
    ======================================== */
@@ -53,13 +56,13 @@
   --z-toast: 600;
   
   /* Colors - Light Theme */
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-bg-tertiary: #f1f5f9;
+  --color-bg: #f8fafc;
+  --color-bg-secondary: #f1f5f9;
+  --color-bg-tertiary: #e2e8f0;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
   
-  --color-text: #1e293b;
+  --color-text: #0f172a;
   --color-text-secondary: #475569;
   --color-text-muted: #64748b;
   
@@ -83,18 +86,18 @@
 }
 
 .dark {
-  --color-bg: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-bg-tertiary: #334155;
-  --color-surface: #1e293b;
-  --color-surface-elevated: #334155;
+  --color-bg: #020617;
+  --color-bg-secondary: #0f172a;
+  --color-bg-tertiary: #1e293b;
+  --color-surface: #0f172a;
+  --color-surface-elevated: #1e293b;
   
-  --color-text: #f1f5f9;
-  --color-text-secondary: #cbd5e1;
+  --color-text: #f8fafc;
+  --color-text-secondary: #e2e8f0;
   --color-text-muted: #94a3b8;
   
-  --color-border: #334155;
-  --color-border-strong: #475569;
+  --color-border: #1e293b;
+  --color-border-strong: #334155;
   
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
@@ -202,6 +205,84 @@ body {
   border: 1px solid rgba(71, 85, 105, 0.8);
   border: 1px solid var(--color-border-strong);
   box-shadow: var(--shadow-lg);
+}
+
+/* ========================================
+   THEME UTILITY CLASSES
+   ======================================== */
+
+/* Background Theme Classes - Use these for consistent theming */
+.bg-theme {
+  background-color: var(--color-bg);
+}
+
+.bg-theme-secondary {
+  background-color: var(--color-bg-secondary);
+}
+
+.bg-theme-tertiary {
+  background-color: var(--color-bg-tertiary);
+}
+
+/* Page Background - Main pages should use this */
+.bg-page {
+  background-color: #f8fafc;
+}
+.dark .bg-page {
+  background-color: #0f172a;
+}
+
+/* Page Background Alternative */
+.bg-page-alt {
+  background-color: #ffffff;
+}
+.dark .bg-page-alt {
+  background-color: #1e293b;
+}
+
+/* Card/Panel Backgrounds */
+.bg-card {
+  background-color: #ffffff;
+}
+.dark .bg-card {
+  background-color: #1e293b;
+}
+
+.bg-card-elevated {
+  background-color: #ffffff;
+}
+.dark .bg-card-elevated {
+  background-color: #334155;
+}
+
+/* Input/Form Field Backgrounds */
+.bg-input {
+  background-color: #ffffff;
+}
+.dark .bg-input {
+  background-color: #1e293b;
+}
+
+/* Text Theme Classes */
+.text-theme {
+  color: var(--color-text);
+}
+
+.text-theme-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-theme-muted {
+  color: var(--color-text-muted);
+}
+
+/* Border Theme Classes */
+.border-theme {
+  border-color: var(--color-border);
+}
+
+.border-theme-strong {
+  border-color: var(--color-border-strong);
 }
 
 /* Card Styles */

@@ -35,8 +35,8 @@ const Logout = () => {
         robots="noindex, nofollow"
       />
 
-      <div className="min-h-[60vh] flex items-center justify-center bg-theme">
-        <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl border border-white/40 dark:border-gray-700/40 rounded-3xl p-10 text-center shadow-2xl max-w-md w-full space-y-6">
+      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="bg-white dark:bg-slate-900 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center shadow-2xl max-w-md w-full space-y-6">
           {isProcessing ? (
             <LoadingSpinner size="large" message="Signing you out…" />
           ) : (
@@ -47,8 +47,8 @@ const Logout = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Signed out</h1>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Signed out</h1>
+                <p className="text-slate-600 dark:text-slate-300">
                   You have been signed out. Redirecting you to the login page…
                 </p>
                 <Link

@@ -174,45 +174,45 @@ const AnalyticsPanel = ({ className = "" }) => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Trend</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-            <p className="text-gray-500">Revenue chart would go here</p>
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow dark:shadow-none border border-slate-200 dark:border-slate-800 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Revenue Trend</h3>
+          <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded">
+            <p className="text-slate-500 dark:text-slate-400">Revenue chart would go here</p>
           </div>
         </div>
 
         {/* Orders Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Volume</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-            <p className="text-gray-500">Orders chart would go here</p>
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow dark:shadow-none border border-slate-200 dark:border-slate-800 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Order Volume</h3>
+          <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded">
+            <p className="text-slate-500 dark:text-slate-400">Orders chart would go here</p>
           </div>
         </div>
       </div>
 
       {/* Additional Metrics */}
-      <div className="mt-8 bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Metrics</h3>
+      <div className="mt-8 bg-white dark:bg-slate-900 rounded-lg shadow dark:shadow-none border border-slate-200 dark:border-slate-800 p-6">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Key Metrics</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 mb-1">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
               {loading ? '...' : '67.2%'}
             </div>
-            <div className="text-sm text-gray-600">Customer Retention</div>
+            <div className="text-sm text-slate-600 dark:text-slate-400">Customer Retention</div>
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 mb-1">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
               {loading ? '...' : '$89.50'}
             </div>
-            <div className="text-sm text-gray-600">Average Order Value</div>
+            <div className="text-sm text-slate-600 dark:text-slate-400">Average Order Value</div>
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600 mb-1">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
               {loading ? '...' : '4.7'}
             </div>
-            <div className="text-sm text-gray-600">Customer Satisfaction</div>
+            <div className="text-sm text-slate-600 dark:text-slate-400">Customer Satisfaction</div>
           </div>
         </div>
       </div>

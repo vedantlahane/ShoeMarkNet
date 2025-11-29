@@ -342,7 +342,7 @@ const NotFound = () => {
         }}
       />
 
-      <div className="min-h-screen bg-theme flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center relative overflow-hidden">
         
         {/* Enhanced Dynamic Background */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10">

@@ -266,7 +266,7 @@ const ProductCard = ({
         <span
           key={i}
           className={`h-2 w-2 rounded-full ${
-            isFilled ? 'bg-yellow-400' : 'bg-slate-600'
+            isFilled ? 'bg-yellow-400' : 'bg-slate-300 dark:bg-slate-600'
           }`}
         />
       );
@@ -301,12 +301,12 @@ const ProductCard = ({
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">{productData.name}</h3>
-          <p className="text-sm text-gray-300 truncate">{productData.brand}</p>
+          <h3 className="font-semibold text-slate-900 dark:text-white truncate">{productData.name}</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300 truncate">{productData.brand}</p>
           <div className="flex items-center space-x-2 mt-1">
-            <span className="font-bold text-cyan-400">{formatCurrency(productData.price)}</span>
+            <span className="font-bold text-cyan-600 dark:text-cyan-400">{formatCurrency(productData.price)}</span>
             {productData.originalPrice > productData.price && (
-              <span className="text-xs text-gray-400 line-through">
+              <span className="text-xs text-slate-500 dark:text-slate-400 line-through">
                 {formatCurrency(productData.originalPrice)}
               </span>
             )}

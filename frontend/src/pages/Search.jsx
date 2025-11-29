@@ -474,7 +474,7 @@ const Search = () => {
           onChange={handleSearchChange}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search for shoes, brands, styles..."
-          className="w-full pl-12 pr-24 py-4 text-base md:text-lg bg-white/25 dark:bg-slate-900/50 backdrop-blur-xl border border-white/30 dark:border-slate-700/40 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-[0_20px_40px_-25px_rgba(59,130,246,0.65)]"
+          className="w-full pl-12 pr-24 py-4 text-base md:text-lg bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700/40 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 shadow-sm dark:shadow-[0_20px_40px_-25px_rgba(59,130,246,0.65)]"
         />
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
           <i className="fas fa-search text-lg" />
@@ -490,7 +490,7 @@ const Search = () => {
         <span className="flex items-center gap-2">
           <i className="fas fa-keyboard text-blue-500" />
           <span className="hidden sm:inline">Press</span>
-          <span className="rounded-lg border border-gray-200 bg-white/70 px-2 py-0.5 font-semibold text-gray-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-gray-300">
+          <span className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-semibold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
             Ctrl / Cmd + K
           </span>
         </span>

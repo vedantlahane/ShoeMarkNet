@@ -31,7 +31,7 @@ const OrderCard = ({
 
   return (
     <div
-      className={`bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl overflow-hidden shadow-2xl hover:scale-105 transition-all duration-500 relative group cursor-pointer ${
+      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg hover:shadow-xl dark:shadow-none hover:scale-[1.02] transition-all duration-500 relative group cursor-pointer ${
         animateCards ? 'animate-fade-in-up' : 'opacity-0'
       }`}
       style={{ animationDelay: `${index * 0.1}s` }}
@@ -83,16 +83,16 @@ const OrderCard = ({
         </div>
 
         {/* Customer Info */}
-        <div className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 rounded-2xl p-4 mb-4">
+        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
               {order.user?.name?.charAt(0)?.toUpperCase() || 'G'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-white truncate">
+              <p className="font-semibold text-slate-900 dark:text-white truncate">
                 {order.user?.name || 'Guest User'}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+              <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
                 {order.user?.email || 'No email provided'}
               </p>
             </div>
@@ -102,14 +102,14 @@ const OrderCard = ({
         {/* Order Details */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">
+            <p className="text-sm text-slate-600 dark:text-slate-400">Total Amount</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">
               {formatCurrency(order.totalPrice)}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Items</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">
+            <p className="text-sm text-slate-600 dark:text-slate-400">Items</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">
               {order.orderItems?.length || 0}
             </p>
           </div>
@@ -119,16 +119,16 @@ const OrderCard = ({
         <div className="flex gap-2 mb-4">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
             order.isPaid 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
           }`}>
             <i className={`fas ${order.isPaid ? 'fa-check-circle' : 'fa-times-circle'} mr-1`}></i>
             {order.isPaid ? 'Paid' : 'Unpaid'}
           </span>
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
             order.isDelivered 
-              ? 'bg-blue-100 text-blue-800' 
-              : 'bg-yellow-100 text-yellow-800'
+              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
+              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
           }`}>
             <i className={`fas ${order.isDelivered ? 'fa-truck' : 'fa-clock'} mr-1`}></i>
             {order.isDelivered ? 'Delivered' : 'Processing'}
@@ -142,7 +142,7 @@ const OrderCard = ({
               e.stopPropagation();
               onTrackOrder();
             }}
-            className="flex items-center justify-center py-2 px-3 bg-white/20 backdrop-blur-lg border border-white/30 rounded-xl font-medium text-gray-900 dark:text-white hover:bg-white/30 transition-all duration-200"
+            className="flex items-center justify-center py-2 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
           >
             <i className="fas fa-map-marker-alt mr-2 text-blue-500"></i>
             Track

@@ -257,7 +257,7 @@ const Login = () => {
         canonical="https://shoemarknet.com/login"
       />
 
-      <div className="min-h-screen bg-theme">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_480px]">
           <section className="relative hidden overflow-hidden lg:flex">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />

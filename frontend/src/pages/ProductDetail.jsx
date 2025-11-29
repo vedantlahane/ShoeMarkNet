@@ -423,28 +423,28 @@ const ProductDetail = () => {
   // Loading state
   if (productLoading && !product) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="container-app py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Image skeleton */}
             <div className="space-y-4">
-              <div className="aspect-square bg-gray-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+              <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
               <div className="grid grid-cols-5 gap-2">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="aspect-square bg-gray-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
+                  <div key={i} className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
                 ))}
               </div>
             </div>
             
             {/* Content skeleton */}
             <div className="space-y-6">
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-6">
-                <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-24 mb-3 animate-pulse"></div>
-                <div className="h-8 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mb-4 animate-pulse"></div>
-                <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/2 animate-pulse"></div>
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-6">
+                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24 mb-3 animate-pulse"></div>
+                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-4 animate-pulse"></div>
+                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/2 animate-pulse"></div>
               </div>
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-6">
-                <div className="h-20 bg-gray-200 dark:bg-slate-700 rounded animate-pulse"></div>
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-6">
+                <div className="h-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
               </div>
             </div>
           </div>
@@ -456,7 +456,7 @@ const ProductDetail = () => {
   // Error state
   if (error && !product) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
         <ErrorMessage
           message={error.message || 'Failed to load product'}
           onRetry={() => {
@@ -473,15 +473,15 @@ const ProductDetail = () => {
   // Product not found
   if (!productLoading && !product) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-10 text-center shadow-sm border border-gray-200 dark:border-slate-700 max-w-md">
-          <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-5">
-            <i className="fas fa-search text-gray-400 dark:text-slate-500 text-2xl"></i>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-10 text-center shadow-sm border border-slate-200 dark:border-slate-800 max-w-md">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-5">
+            <i className="fas fa-search text-slate-400 dark:text-slate-500 text-2xl"></i>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
             Product Not Found
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
+          <p className="text-slate-500 dark:text-slate-400 mb-6">
             The product you're looking for doesn't exist or has been removed.
           </p>
           <Link
@@ -567,7 +567,7 @@ const ProductDetail = () => {
         }}
       />
 
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
 
   <div className="container-app py-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
@@ -576,14 +576,14 @@ const ProductDetail = () => {
             <div className="space-y-4">
               
               {/* Main Image Container */}
-              <div className="relative bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-slate-700 group">
+              <div className="relative bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group">
                 <div className="relative aspect-square overflow-hidden">
                   
                   {/* Image Loading Skeleton */}
                   {imageLoading && (
-                    <div className="absolute inset-0 bg-gray-100 dark:bg-slate-700 animate-pulse">
+                    <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 animate-pulse">
                       <div className="w-full h-full flex items-center justify-center">
-                        <i className="fas fa-image text-gray-300 dark:text-slate-500 text-5xl"></i>
+                        <i className="fas fa-image text-slate-300 dark:text-slate-500 text-5xl"></i>
                       </div>
                     </div>
                   )}
