@@ -6,8 +6,8 @@ import PageMeta from '../components/seo/PageMeta';
 import adminService from '../services/adminService';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorMessage from '../components/common/ErrorMessage';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
+import ErrorMessage from '../components/common/feedback/ErrorMessage';
 import StatsCard from './dashboard/StatsCard';
 import RevenueChart from './dashboard/RevenueChart';
 import OrdersChart from './dashboard/OrdersChart';

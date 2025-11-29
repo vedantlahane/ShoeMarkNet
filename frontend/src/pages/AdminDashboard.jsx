@@ -9,7 +9,7 @@ import { fetchProducts } from '../redux/slices/productSlice';
 import { fetchAllOrders } from '../redux/slices/orderSlice';
 import { fetchUsers } from '../redux/slices/authSlice';
 import adminService from '../services/adminService';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
 import DashboardOverview from '../admin/DashboardOverview';
 import ProductManagement from '../admin/ProductManagement';
 import OrderManagement from '../admin/OrderManagement';

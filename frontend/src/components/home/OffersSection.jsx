@@ -161,7 +161,7 @@ const OffersSection = memo(({ promotions = [], isLoading = false }) => {
       aria-label="Special offers and deals"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.22),_transparent_55%)]" />
-      <div className="relative mx-auto w-full max-w-4/5 px-4 sm:px-6 lg:px-8">
+      <div className="container-app relative">
         <div className="mb-12 text-center">
           <div className="mb-6 inline-flex items-center space-x-2 rounded-full bg-blue-100/80 px-6 py-3 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
             <Tag size={16} className={pulseClass} aria-hidden="true" />

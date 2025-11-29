@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback, forwardRef } from 're
 import { useSelector } from 'react-redux';
 
 // Hooks
-import useLocalStorage from '../../hooks/useLocalStorage';
+import useLocalStorage from '../../../hooks/useLocalStorage';
 
 // Utils
-import { trackEvent } from '../../utils/analytics';
+import { trackEvent } from '../../../utils/analytics';
 
 // Constants
 const LOADER_TYPES = {

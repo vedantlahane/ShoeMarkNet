@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import PageMeta from '../components/seo/PageMeta';
+import PageHeader from '../components/common/layout/PageHeader';
 import { toast } from 'react-toastify';
 
 // Redux actions
@@ -18,7 +19,7 @@ import {
 import { updateLastActivity } from '../redux/slices/authSlice';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummary from '../components/checkout/OrderSummary';
 import ShippingForm from '../components/checkout/ShippingForm';
@@ -585,37 +586,33 @@ const Checkout = () => {
       <div className="min-h-screen bg-theme">
         
         {/* Checkout Header */}
-        <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/20 py-6">
-          <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  <i className="fas fa-lock mr-3"></i>
-                  Secure Checkout
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Your information is protected with 256-bit SSL encryption
-                </p>
-              </div>
-              
+        <div className="container-app py-6">
+          <PageHeader
+            title="Secure Checkout"
+            description="Your information is protected with 256-bit SSL encryption"
+            breadcrumbItems={[
+              { label: 'Cart', path: '/cart' },
+              { label: 'Checkout' }
+            ]}
+            actions={
               <button
                 onClick={() => setShowSecurity(!showSecurity)}
-                className="bg-green-500/20 backdrop-blur-lg border border-green-300/50 text-green-800 dark:text-green-200 px-4 py-2 rounded-xl hover:bg-green-500/30 transition-all duration-200"
+                className="bg-green-500/20 backdrop-blur-lg border border-green-300/50 text-green-800 dark:text-green-200 px-3 py-1.5 rounded-lg text-sm hover:bg-green-500/30 transition-all duration-200"
               >
-                <i className="fas fa-shield-alt mr-2"></i>
+                <i className="fas fa-shield-alt mr-1.5"></i>
                 Security Info
               </button>
-            </div>
-          </div>
+            }
+          />
         </div>
 
         {/* Main Checkout Content */}
-        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
-          <div className="mx-auto w-full max-w-screen-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="container-app pb-6">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Main Checkout Form */}
-              <div className="lg:col-span-2 space-y-8">
+              <div className="lg:col-span-2 space-y-6">
                 
                 {/* Checkout Steps */}
                 <CheckoutSteps
@@ -643,9 +640,9 @@ const Checkout = () => {
                         }
                       }
                     }}
-                    className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-2xl hover:bg-white/20 transition-all duration-200"
+                    className="bg-white/10 backdrop-blur-lg border border-white/20 dark:border-gray-700/20 text-gray-900 dark:text-white font-semibold py-2.5 px-5 rounded-xl text-sm hover:bg-white/20 transition-all duration-200"
                   >
-                    <i className="fas fa-arrow-left mr-2"></i>
+                    <i className="fas fa-arrow-left mr-1.5"></i>
                     {currentStep === 'cart' ? 'Back to Cart' : 'Previous'}
                   </button>
 

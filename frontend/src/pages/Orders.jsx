@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import PageMeta from '../components/seo/PageMeta';
+import PageLayout from '../components/common/layout/PageLayout';
 import { toast } from 'react-toastify';
+import PageHeader from '../components/common/layout/PageHeader';
 
 // Redux actions
 import { 
@@ -13,9 +15,9 @@ import {
 } from '../redux/slices/orderSlice';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorMessage from '../components/common/ErrorMessage';
-import Pagination from '../components/common/Pagination';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
+import ErrorMessage from '../components/common/feedback/ErrorMessage';
+import Pagination from '../components/common/navigation/Pagination';
 import OrderCard from '../components/orders/OrderCard';
 import OrderTable from '../components/orders/OrderTable';
 import OrderFilters from '../components/orders/OrderFilters';
@@ -399,7 +401,7 @@ const Orders = () => {
   if (loading && (!orders || orders.length === 0)) {
     return (
       <div className="min-h-screen bg-theme">
-        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8">
+        <div className="container-app py-8">
           <LoadingSpinner size="large" message="Loading your orders..." />
         </div>
       </div>
@@ -433,10 +435,10 @@ const Orders = () => {
         
         {/* Animated Background Elements */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          {[...Array(12)].map((_, i) => (
+          {[...Array(10)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-float"
+              className="absolute w-1.5 h-1.5 bg-blue-400/20 rounded-full animate-float"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
@@ -447,57 +449,35 @@ const Orders = () => {
           ))}
         </div>
 
-        <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-8 relative z-10">
-          
-          {/* Enhanced Header */}
-          <div className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                <div>
-                  <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                    <i className="fas fa-shopping-bag mr-3"></i>
-                    My Orders
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-lg">
-                    <i className="fas fa-user mr-2"></i>
-                    Welcome back, {user?.name}! Track and manage your purchases here.
-                  </p>
-                  {filteredOrders.length > 0 && (
-                    <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                      Showing {Math.min(paginatedOrders.length, filteredOrders.length)} of {filteredOrders.length} orders
-                    </div>
-                  )}
-                </div>
-
-                {/* Quick Stats */}
-                <div className="flex flex-wrap gap-3">
-                  <div className="bg-blue-500/20 backdrop-blur-lg border border-blue-300/50 rounded-2xl px-4 py-2 text-blue-800 dark:text-blue-200">
-                    <i className="fas fa-chart-line mr-2"></i>
+        <div className="container-app py-6 relative z-10">
+          <PageHeader
+            title="My Orders"
+            description={`Welcome back${user?.name ? ', ' + user.name : ''}! Track and manage your purchases here.`}
+            breadcrumbItems={[{ label: 'Orders' }]}
+            actions={
+              filteredOrders.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <div className="bg-blue-500/20 backdrop-blur-lg border border-blue-300/50 rounded-xl px-3 py-1.5 text-sm text-blue-800 dark:text-blue-200">
+                    <i className="fas fa-chart-line mr-1.5"></i>
                     {orderStats.total} Total Orders
                   </div>
-                  <div className="bg-green-500/20 backdrop-blur-lg border border-green-300/50 rounded-2xl px-4 py-2 text-green-800 dark:text-green-200">
-                    <i className="fas fa-dollar-sign mr-2"></i>
+                  <div className="bg-green-500/20 backdrop-blur-lg border border-green-300/50 rounded-xl px-3 py-1.5 text-sm text-green-800 dark:text-green-200">
+                    <i className="fas fa-dollar-sign mr-1.5"></i>
                     {formatPrice(orderStats.totalValue)} Lifetime
                   </div>
-                  {orderStats.averageValue > 0 && (
-                    <div className="bg-purple-500/20 backdrop-blur-lg border border-purple-300/50 rounded-2xl px-4 py-2 text-purple-800 dark:text-purple-200">
-                      <i className="fas fa-calculator mr-2"></i>
-                      {formatPrice(orderStats.averageValue)} Avg
-                    </div>
-                  )}
                 </div>
-              </div>
-            </div>
-          </div>
+              )
+            }
+          />
 
           {(!orders || orders.length === 0) ? (
             /* Enhanced Empty State */
-            <div className={`text-center py-16 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-              <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-12 shadow-2xl max-w-2xl mx-auto">
-                <div className="w-24 h-24 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                  <i className="fas fa-shopping-bag text-4xl text-white"></i>
+            <div className={`text-center py-12 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-2xl p-10 shadow-xl max-w-xl mx-auto">
+                <div className="w-20 h-20 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+                  <i className="fas fa-shopping-bag text-3xl text-white"></i>
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                   No Orders Yet
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg leading-relaxed">

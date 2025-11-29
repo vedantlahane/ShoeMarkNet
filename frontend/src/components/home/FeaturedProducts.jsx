@@ -139,26 +139,26 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
 
   if (loading) {
     return (
-      <section className="py-16 bg-gray-50 dark:bg-gray-900">
+      <section className="py-12 bg-slate-50 dark:bg-slate-900/50">
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
-              <Star size={14} className="animate-pulse" aria-hidden="true" />
+        <div className="container-app">
+          <div className="mb-10 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+              <Star size={12} className="animate-pulse" aria-hidden="true" />
               Featured Collection
             </div>
-            <h2 className="mt-6 text-3xl font-semibold text-gray-900 dark:text-white md:text-4xl">Trending Picks</h2>
-            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 md:text-base">
-              <Truck size={18} className="mr-2 inline" aria-hidden="true" />
+            <h2 className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white md:text-3xl">Trending Picks</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              <Truck size={16} className="mr-1.5 inline" aria-hidden="true" />
               Curating the latest drops while we load your recommendations
             </p>
           </div>
-          <div className="flex gap-6 overflow-hidden">
+          <div className="flex gap-4 overflow-hidden">
             {[...Array(4)].map((_, index) => (
-              <div key={index} className="flex-shrink-0 w-80 space-y-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
-                <div className="aspect-square w-full rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                <div className="h-3 w-2/5 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+              <div key={index} className="flex-shrink-0 w-72 space-y-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+                <div className="aspect-square w-full rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+                <div className="h-2.5 w-3/4 rounded bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+                <div className="h-2.5 w-2/5 rounded bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
               </div>
             ))}
           </div>
@@ -170,7 +170,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   return (
     <section
       id="featured"
-      className="relative overflow-hidden bg-gradient-to-b from-white/50 to-transparent dark:from-slate-950/70 dark:to-transparent py-16 md:py-20"
+      className="relative overflow-hidden bg-gradient-to-b from-white/50 to-transparent dark:from-slate-950/70 dark:to-transparent py-12 md:py-16"
       aria-label="Featured products"
     >
       
@@ -191,20 +191,20 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
       </div>
 
       {/* Section Header */}
-      <div className="relative z-10 mb-14 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
-          <Star size={14} className={enableAnimations ? 'animate-pulse' : ''} aria-hidden="true" />
+      <div className="relative z-10 mb-10 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+          <Star size={12} className={enableAnimations ? 'animate-pulse' : ''} aria-hidden="true" />
           Featured collection
         </div>
 
-        <h2 className="mt-6 text-3xl font-semibold text-gray-900 dark:text-white md:text-4xl">
+        <h2 className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white md:text-3xl">
           Curated{' '}
           <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             Highlights
           </span>
         </h2>
-        <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 md:text-base">
-          <Truck size={18} className="mr-2 inline" aria-hidden="true" />
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          <Truck size={16} className="mr-1.5 inline" aria-hidden="true" />
           Discover the pieces people keep coming back for
         </p>
       </div>
@@ -217,14 +217,14 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
         onMouseLeave={() => setIsPaused(false)}
       >
         {/* Fade masks */}
-        <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-32 md:w-48 carousel-mask-left" />
-        <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-32 md:w-48 carousel-mask-right" />
+        <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-24 md:w-40 carousel-mask-left" />
+        <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-24 md:w-40 carousel-mask-right" />
 
         {/* Carousel Container */}
         <div className="overflow-hidden">
           <div
             ref={scrollRef}
-            className="flex gap-6 py-4"
+            className="flex gap-4 py-3"
             style={{ width: 'max-content', willChange: 'transform' }}
           >
             {scrollProducts.map((product, index) => {
@@ -245,9 +245,9 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                   style={{ width: `${CARD_WIDTH}px` }}
                 >
                   <div
-                    className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border ${
-                      isActiveCard ? 'border-blue-500/60 shadow-2xl' : 'border-gray-200 dark:border-gray-700 shadow-sm'
-                    } bg-white dark:bg-gray-800 transform-gpu transition-all duration-300`}
+                    className={`group relative flex h-full flex-col overflow-hidden rounded-xl border ${
+                      isActiveCard ? 'border-blue-500/60 shadow-xl' : 'border-slate-200 dark:border-slate-700 shadow-sm'
+                    } bg-white dark:bg-slate-800 transform-gpu transition-all duration-300`}
                     onPointerMove={(event) => handleCardPointerMove(event, productId)}
                     onPointerLeave={handleCardLeave}
                     onFocus={(event) => handleCardPointerMove(event, productId)}

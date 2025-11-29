@@ -351,7 +351,7 @@ const CardSection = ({
         />
       </div>
 
-      <div className="relative z-10 mx-auto px-4 sm:w-11/12 sm:px-6 lg:w-4/5 lg:px-8">
+      <div className="container-app relative z-10">
         <div className="mx-auto mb-16 max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-100 px-5 py-2 text-xs font-semibold uppercase tracking-widest text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-teal-200">
             <Sparkles
@@ -396,10 +396,11 @@ const CardSection = ({
               ) : null}
             </div>
           ) : (
-            <motion.ul
-              layout
-              className="grid grid-flow-dense grid-cols-2 gap-5 auto-rows-[220px] sm:grid-cols-2 sm:auto-rows-[240px] md:grid-cols-4 md:auto-rows-[220px] xl:grid-cols-7 xl:auto-rows-[200px]"
-            >
+            <div className="relative h-[600px] md:h-[650px] lg:h-[900px] overflow-hidden rounded-2xl">
+              <motion.ul
+                layout
+                className="grid grid-flow-dense grid-cols-2 gap-5 auto-rows-[220px] sm:grid-cols-2 sm:auto-rows-[240px] md:grid-cols-4 md:auto-rows-[220px] xl:grid-cols-7 xl:auto-rows-[200px]"
+              >
               {showSkeleton
                 ? renderSkeletonItems()
                 : orderedCards.map((item) => {
@@ -476,7 +477,10 @@ const CardSection = ({
                       </motion.li>
                     );
                   })}
-            </motion.ul>
+              </motion.ul>
+              {/* Bottom fade gradient overlay */}
+              <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent dark:from-black dark:via-slate-900/80" />
+            </div>
           )}
         </div>
 

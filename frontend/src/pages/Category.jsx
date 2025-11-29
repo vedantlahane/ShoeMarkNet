@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import PageMeta from "../components/seo/PageMeta";
-import PageLayout from "../components/common/PageLayout";
+import PageLayout from '../components/common/layout/PageLayout';
 import { toast } from "react-toastify";
 
 // Redux actions
@@ -16,9 +16,9 @@ import {
 
 // Components
 import ProductCard from "../components/products/ProductCard";
-import LoadingSpinner from "../components/common/LoadingSpinner";
-import ErrorMessage from "../components/common/ErrorMessage";
-import Pagination from "../components/common/Pagination";
+import LoadingSpinner from "../components/common/feedback/LoadingSpinner";
+import ErrorMessage from '../components/common/feedback/ErrorMessage';
+import Pagination from '../components/common/navigation/Pagination';
 import CategoryFilters from "../components/category/CategoryFilters";
 import SubcategoryNav from "../components/category/SubcategoryNav";
 import ProductQuickView from "../components/product-details/ProductQuickView";
@@ -93,6 +93,7 @@ const Category = () => {
 
   // Redux state
   const {
+    categories,
     categoryTree,
     currentCategory,
     breadcrumb,
@@ -155,13 +156,17 @@ const Category = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch category details and breadcrumb
+        // Always fetch categories and tree for navigation
+        await Promise.all([
+          dispatch(fetchCategories()),
+          dispatch(fetchCategoryTree()),
+        ]);
+        
+        // Fetch category details and breadcrumb only if a category is selected
         if (categoryName) {
           await Promise.all([
             dispatch(getCategoryById(categoryName)),
             dispatch(getCategoryBreadcrumb(categoryName)),
-            dispatch(fetchCategories()),
-            dispatch(fetchCategoryTree()),
           ]);
         }
 
@@ -180,8 +185,11 @@ const Category = () => {
     fetchData();
   }, [dispatch, categoryName, isSalePage]);
 
-  // Fetch products with filters
+  // Fetch products with filters - only when a category is selected
   useEffect(() => {
+    // Don't fetch products if no category is selected
+    if (!categoryName) return;
+    
     const filters = {
       category: categoryName,
       page: currentPage,
@@ -750,163 +758,234 @@ const Category = () => {
       />
 
       <PageLayout
-        title={headerTitle}
-        description={headerDescription}
-        breadcrumbs={headerBreadcrumbs}
+        title={categoryName ? headerTitle : "Browse Categories"}
+        description={categoryName ? headerDescription : "Explore our wide range of product categories"}
+        breadcrumbs={categoryName ? headerBreadcrumbs : (
+          <nav className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+            <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">Home</Link>
+            <span className="opacity-60">/</span>
+            <span className="text-gray-900 dark:text-gray-200">Categories</span>
+          </nav>
+        )}
       >
-        {isSalePage ? (
+        {!categoryName ? (
+          // Category Listing Page - Show all categories when no category is selected
+          <div className="space-y-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-700 dark:bg-slate-800">
+                <LoadingSpinner size="large" message="Loading categories..." />
+              </div>
+            ) : error ? (
+              <div className="rounded-xl border border-red-200 bg-white p-8 dark:border-red-900 dark:bg-slate-800">
+                <ErrorMessage
+                  message={error}
+                  onRetry={() => {
+                    dispatch(fetchCategories());
+                    dispatch(fetchCategoryTree());
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {(categoryTree.length > 0 ? categoryTree : categories).map((category) => (
+                  <Link
+                    key={category._id || category.slug}
+                    to={`/categories/${category.slug || category._id}`}
+                    className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-600"
+                  >
+                    {category.image && (
+                      <div className="mb-3 aspect-video overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <img
+                          src={category.image}
+                          alt={category.name}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                      </div>
+                    )}
+                    <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+                      {category.name}
+                    </h3>
+                    {category.description && (
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                        {category.description}
+                      </p>
+                    )}
+                    {category.productCount > 0 && (
+                      <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                        {category.productCount} products
+                      </p>
+                    )}
+                    {category.children && category.children.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {category.children.slice(0, 3).map((child) => (
+                          <span
+                            key={child._id || child.slug}
+                            className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                          >
+                            {child.name}
+                          </span>
+                        ))}
+                        {category.children.length > 3 && (
+                          <span className="text-xs text-slate-400">
+                            +{category.children.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+            
+            {(categoryTree.length === 0 && categories.length === 0 && !isLoading) && (
+              <div className="rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700">
+                  <i className="fas fa-folder-open text-2xl text-slate-400"></i>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No categories found</h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Check back later for new categories.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : isSalePage ? (
           // Sale Page Layout - Focused on Discounts, Sales, and Offers
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Sale Hero Section */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 p-8 text-white shadow-2xl">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 p-6 text-white">
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                    <i className="fas fa-fire text-2xl text-yellow-300"></i>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                    <i className="fas fa-fire text-xl text-yellow-300"></i>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">Limited Time Sale!</h2>
-                    <p className="text-white/90">Up to 70% off on selected items</p>
+                    <h2 className="text-xl font-bold">Limited Time Sale!</h2>
+                    <p className="text-white/90 text-sm">Up to 70% off on selected items</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 text-center">
-                    <div className="text-3xl font-bold">{categoryStats.total}</div>
-                    <div className="text-sm text-white/80">Items on Sale</div>
+                <div className="grid grid-cols-3 gap-3 mt-4">
+                  <div className="rounded-lg bg-white/10 p-3 text-center">
+                    <div className="text-2xl font-bold">{categoryStats.total}</div>
+                    <div className="text-xs text-white/80">Items on Sale</div>
                   </div>
-                  <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 text-center">
-                    <div className="text-3xl font-bold">70%</div>
-                    <div className="text-sm text-white/80">Max Discount</div>
+                  <div className="rounded-lg bg-white/10 p-3 text-center">
+                    <div className="text-2xl font-bold">70%</div>
+                    <div className="text-xs text-white/80">Max Discount</div>
                   </div>
-                  <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 text-center">
-                    <div className="text-3xl font-bold">24hrs</div>
-                    <div className="text-sm text-white/80">Time Left</div>
+                  <div className="rounded-lg bg-white/10 p-3 text-center">
+                    <div className="text-2xl font-bold">24hrs</div>
+                    <div className="text-xs text-white/80">Time Left</div>
                   </div>
                 </div>
               </div>
-              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10"></div>
-              <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/5"></div>
             </div>
 
             {/* Discount Tiers */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="group relative overflow-hidden rounded-2xl border border-red-200/50 bg-gradient-to-br from-red-50 to-red-100 p-6 text-center shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-red-800/50 dark:from-red-950/50 dark:to-red-900/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                <div className="relative z-10">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-white shadow-lg">
-                    <i className="fas fa-percentage text-2xl"></i>
-                  </div>
-                  <h3 className="text-xl font-bold text-red-800 dark:text-red-200">50%+ Off</h3>
-                  <p className="text-red-600 dark:text-red-300">Premium Brands</p>
-                  <div className="mt-4 text-2xl font-bold text-red-800 dark:text-red-200">
-                    {productsList.filter(p => (p.discount || 0) >= 50).length} Items
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 p-4 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-white">
+                  <i className="fas fa-percentage text-lg"></i>
+                </div>
+                <h3 className="text-lg font-bold text-red-800 dark:text-red-200">50%+ Off</h3>
+                <p className="text-sm text-red-600 dark:text-red-300">Premium Brands</p>
+                <div className="mt-3 text-xl font-bold text-red-800 dark:text-red-200">
+                  {productsList.filter(p => (p.discount || 0) >= 50).length} Items
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-2xl border border-orange-200/50 bg-gradient-to-br from-orange-50 to-orange-100 p-6 text-center shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-orange-800/50 dark:from-orange-950/50 dark:to-orange-900/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                <div className="relative z-10">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg">
-                    <i className="fas fa-tags text-2xl"></i>
-                  </div>
-                  <h3 className="text-xl font-bold text-orange-800 dark:text-orange-200">30-50% Off</h3>
-                  <p className="text-orange-600 dark:text-orange-300">Popular Items</p>
-                  <div className="mt-4 text-2xl font-bold text-orange-800 dark:text-orange-200">
-                    {productsList.filter(p => (p.discount || 0) >= 30 && (p.discount || 0) < 50).length} Items
-                  </div>
+              <div className="rounded-xl border border-orange-200 dark:border-orange-800/50 bg-orange-50 dark:bg-orange-900/20 p-4 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-white">
+                  <i className="fas fa-tags text-lg"></i>
+                </div>
+                <h3 className="text-lg font-bold text-orange-800 dark:text-orange-200">30-50% Off</h3>
+                <p className="text-sm text-orange-600 dark:text-orange-300">Popular Items</p>
+                <div className="mt-3 text-xl font-bold text-orange-800 dark:text-orange-200">
+                  {productsList.filter(p => (p.discount || 0) >= 30 && (p.discount || 0) < 50).length} Items
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-2xl border border-yellow-200/50 bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 text-center shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-yellow-800/50 dark:from-yellow-950/50 dark:to-yellow-900/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                <div className="relative z-10">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500 text-white shadow-lg">
-                    <i className="fas fa-star text-2xl"></i>
-                  </div>
-                  <h3 className="text-xl font-bold text-yellow-800 dark:text-yellow-200">Under 30% Off</h3>
-                  <p className="text-yellow-600 dark:text-yellow-300">Clearance Sale</p>
-                  <div className="mt-4 text-2xl font-bold text-yellow-800 dark:text-yellow-200">
-                    {productsList.filter(p => (p.discount || 0) > 0 && (p.discount || 0) < 30).length} Items
-                  </div>
+              <div className="rounded-xl border border-yellow-200 dark:border-yellow-800/50 bg-yellow-50 dark:bg-yellow-900/20 p-4 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-500 text-white">
+                  <i className="fas fa-star text-lg"></i>
+                </div>
+                <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200">Under 30% Off</h3>
+                <p className="text-sm text-yellow-600 dark:text-yellow-300">Clearance Sale</p>
+                <div className="mt-3 text-xl font-bold text-yellow-800 dark:text-yellow-200">
+                  {productsList.filter(p => (p.discount || 0) > 0 && (p.discount || 0) < 30).length} Items
                 </div>
               </div>
             </div>
 
             {/* Sale Products Grid */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   🔥 Hot Deals
                 </h3>
-                <div className="flex items-center gap-4">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                    className="rounded-xl border border-slate-200/70 bg-white/70 px-4 py-2 text-sm font-medium text-slate-900 shadow-sm backdrop-blur-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-slate-100"
-                  >
-                    <option value="discount:desc">Best Deals</option>
-                    <option value="price:asc">Lowest Price</option>
-                    <option value="rating:desc">Highest Rated</option>
-                    <option value="newest">Newest</option>
-                  </select>
-                </div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  <option value="discount:desc">Best Deals</option>
+                  <option value="price:asc">Lowest Price</option>
+                  <option value="rating:desc">Highest Rated</option>
+                  <option value="newest">Newest</option>
+                </select>
               </div>
 
               {isLoading ? (
-                <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+                <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-700 dark:bg-slate-800">
                   <LoadingSpinner size="large" message="Loading amazing deals..." />
                 </div>
               ) : error ? (
-                <div className="rounded-2xl border border-red-200/80 bg-white/60 p-12 shadow-sm backdrop-blur-lg dark:border-red-900/60 dark:bg-slate-900/40">
+                <div className="rounded-xl border border-red-200 bg-white p-8 dark:border-red-900 dark:bg-slate-800">
                   <ErrorMessage
                     message={error}
                     onRetry={() => window.location.reload()}
                   />
                 </div>
               ) : productsList.length === 0 ? (
-                <div className="flex items-center justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-12 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+                <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-700 dark:bg-slate-800">
                   <div className="text-center">
-                    <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                      <i className="fas fa-tags text-2xl text-slate-400 dark:text-slate-600" />
+                    <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                      <i className="fas fa-tags text-xl text-slate-400 dark:text-slate-500" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                       No sale items available
                     </h3>
-                    <p className="text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
                       Check back later for amazing deals!
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-slate-200/70 bg-white/60 p-6 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {productsList.map((product, index) => (
-                      <div key={product._id || product.id} className="relative">
-                        {/* Sale Badge */}
-                        {product.discount > 0 && (
-                          <div className="absolute -top-2 -right-2 z-10 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-                            -{product.discount}%
-                          </div>
-                        )}
-                        <ProductCard
-                          key={product._id || product.id || index}
-                          product={product}
-                          viewMode={viewMode}
-                          showCompareButton={true}
-                          onAddToCompare={() => handleAddToCompare(product)}
-                          onQuickView={() => handleQuickView(product)}
-                          categoryContext={categoryName}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {productsList.map((product, index) => (
+                    <div key={product._id || product.id} className="relative">
+                      {product.discount > 0 && (
+                        <div className="absolute -top-2 -right-2 z-10 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                          -{product.discount}%
+                        </div>
+                      )}
+                      <ProductCard
+                        key={product._id || product.id || index}
+                        product={product}
+                        viewMode={viewMode}
+                        showCompareButton={true}
+                        onAddToCompare={() => handleAddToCompare(product)}
+                        onQuickView={() => handleQuickView(product)}
+                        categoryContext={categoryName}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
 
               {/* Sale Pagination */}
               {pagination && pagination.totalPages > 1 && (
-                <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-lg dark:border-slate-700/60 dark:bg-slate-900/40">
+                <div className="flex justify-center">
                   <Pagination
                     currentPage={currentPage}
                     totalPages={pagination.totalPages}
@@ -920,26 +999,25 @@ const Category = () => {
             </div>
 
             {/* Sale Footer Message */}
-            <div className="rounded-2xl border border-green-200/50 bg-gradient-to-r from-green-50 to-emerald-50 p-6 text-center dark:border-green-800/50 dark:from-green-950/50 dark:to-emerald-950/50">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white">
-                  <i className="fas fa-clock text-lg"></i>
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center dark:border-green-800 dark:bg-green-900/20">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white">
+                  <i className="fas fa-clock text-sm"></i>
                 </div>
-                <h3 className="text-lg font-bold text-green-800 dark:text-green-200">
+                <h3 className="text-base font-bold text-green-800 dark:text-green-200">
                   Limited Time Offer
                 </h3>
               </div>
-              <p className="text-green-700 dark:text-green-300">
+              <p className="text-sm text-green-700 dark:text-green-300">
                 These amazing deals won't last long! Shop now and save big on premium footwear.
-                Free shipping on orders over $50. Easy returns within 30 days.
               </p>
             </div>
           </div>
         ) : (
           // Regular Category Layout
-          <div className="space-y-8">
+          <div className="space-y-6">
             {subcategoryList.length > 0 && (
-              <div className="overflow-x-auto rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
                 <SubcategoryNav
                   categories={subcategoryList}
                   currentCategory={currentCategoryForNav}
@@ -948,7 +1026,7 @@ const Category = () => {
               </div>
             )}
 
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
               <CategoryFilters
                 searchTerm={searchTerm}
                 onSearchChange={handleSearchChange}
@@ -980,7 +1058,7 @@ const Category = () => {
             </div>
 
             {error && (
-              <div className="rounded-2xl border border-slate-200/70 bg-white p-0 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+              <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                 <ErrorMessage
                   message={
                     typeof error === "string"
@@ -1016,9 +1094,9 @@ const Category = () => {
             )}
 
             {isLoading && productsList.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+              <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                 <div
-                  className={`grid gap-6 ${
+                  className={`grid gap-4 ${
                     viewMode === "grid"
                       ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                       : viewMode === "list"
@@ -1029,13 +1107,13 @@ const Category = () => {
                   {Array.from({ length: itemsPerPage }).map((_, index) => (
                     <div
                       key={`category-skeleton-${index}`}
-                      className="rounded-2xl border border-white/30 bg-white/60 p-4 shadow-inner dark:border-slate-800/60 dark:bg-slate-900/60"
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900"
                     >
-                      <div className="flex h-full flex-col space-y-4 animate-pulse">
-                        <div className="h-44 rounded-xl bg-white/70 dark:bg-slate-800/70"></div>
-                        <div className="h-4 w-3/4 rounded-full bg-white/80 dark:bg-slate-800/80"></div>
-                        <div className="h-4 w-1/2 rounded-full bg-white/80 dark:bg-slate-800/80"></div>
-                        <div className="mt-auto h-10 w-2/3 rounded-2xl bg-white/80 dark:bg-slate-800/80"></div>
+                      <div className="flex h-full flex-col space-y-3 animate-pulse">
+                        <div className="h-40 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
+                        <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-700"></div>
+                        <div className="h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-700"></div>
+                        <div className="mt-auto h-8 w-2/3 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
                       </div>
                     </div>
                   ))}
@@ -1044,29 +1122,29 @@ const Category = () => {
             ) : (
               <>
                 {!isLoading && !error && productsList.length === 0 ? (
-                  <div className="rounded-2xl border border-slate-200/70 bg-white p-12 text-center text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
-                    <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white/60 text-blue-500 shadow-inner dark:bg-slate-800/70">
-                      <i className="fas fa-search text-3xl"></i>
+                  <div className="rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-blue-500 dark:bg-slate-700">
+                      <i className="fas fa-search text-2xl"></i>
                     </div>
-                    <h3 className="mb-3 text-2xl font-semibold text-gray-900 dark:text-white">
+                    <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                       No products found
                     </h3>
-                    <p className="mb-6 text-gray-600 dark:text-gray-400">
+                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
                       {searchTerm
                         ? `No results for "${searchTerm}" in ${displayCategoryName.toLowerCase()}`
                         : `We couldn't find any ${displayCategoryName.toLowerCase()} products matching your filters.`}
                     </p>
-                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
                       <button
                         onClick={handleClearFilters}
-                        className="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
+                        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
                       >
                         <i className="fas fa-times mr-2"></i>
                         Clear Filters
                       </button>
                       <Link
                         to="/products"
-                        className="rounded-2xl border border-white/40 bg-white/60 px-6 py-3 font-semibold text-gray-900 shadow-sm transition-colors duration-200 hover:bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/60 dark:text-white dark:hover:bg-slate-900"
+                        className="rounded-lg border border-slate-200 bg-white px-4 py-2 font-medium text-gray-900 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
                       >
                         <i className="fas fa-compass mr-2"></i>
                         Browse All Products
@@ -1084,40 +1162,38 @@ const Category = () => {
                       </div>
                     )}
 
-                    <div className="space-y-6 rounded-2xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
-                      <div
-                        className={`grid gap-6 ${
-                          viewMode === "grid"
-                            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                            : viewMode === "list"
-                            ? "grid-cols-1 max-w-4xl mx-auto"
-                            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-                        }`}
-                      >
-                        {productsList.map((product, index) => (
-                          <div
-                            key={product._id || product.id || index}
-                            className="animate-fade-in"
-                            style={{ animationDelay: `${index * 0.05}s` }}
-                          >
-                            <ProductCard
-                              product={product}
-                              viewMode={viewMode}
-                              showCompareButton={true}
-                              onAddToCompare={() => handleAddToCompare(product)}
-                              onQuickView={() => handleQuickView(product)}
-                              categoryContext={categoryName}
-                            />
-                          </div>
-                        ))}
-                      </div>
+                    <div
+                      className={`grid gap-4 ${
+                        viewMode === "grid"
+                          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                          : viewMode === "list"
+                          ? "grid-cols-1 max-w-4xl mx-auto"
+                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+                      }`}
+                    >
+                      {productsList.map((product, index) => (
+                        <div
+                          key={product._id || product.id || index}
+                          className="animate-fade-in"
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                          <ProductCard
+                            product={product}
+                            viewMode={viewMode}
+                            showCompareButton={true}
+                            onAddToCompare={() => handleAddToCompare(product)}
+                            onQuickView={() => handleQuickView(product)}
+                            categoryContext={categoryName}
+                          />
+                        </div>
+                      ))}
                     </div>
 
                     {!isLoading &&
                       !error &&
                       pagination &&
                       pagination.totalPages > 1 && (
-                        <div className="flex justify-center rounded-2xl border border-slate-200/70 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:text-slate-100">
+                        <div className="flex justify-center">
                           <Pagination
                             currentPage={currentPage}
                             totalPages={pagination.totalPages}
@@ -1134,59 +1210,17 @@ const Category = () => {
             )}
           </div>
         )}
-
-        {/* Quick View Modal */}
-        {quickViewProduct && (
-          <ProductQuickView
-            product={quickViewProduct}
-            isOpen={!!quickViewProduct}
-            onClose={() => setQuickViewProduct(null)}
-            onAddToCart={handleAddToCompare} // Using compare handler as placeholder
-            onToggleWishlist={handleQuickView} // Using quick view handler as placeholder
-          />
-        )}
-
-        {/* Compare Drawer */}
-        {showCompareModal && compareItems.length > 0 && (
-          <CompareDrawer
-            items={compareItems}
-            isOpen={showCompareModal}
-            onAddToCart={(product) => {
-              // Handle add to cart from compare
-              console.log("Add to cart from compare:", product);
-            }}
-            onRemoveItem={(productId) => {
-              setCompareItems((prev) => prev.filter((item) => item._id !== productId));
-            }}
-            onClearAll={() => {
-              setCompareItems([]);
-              setShowCompareModal(false);
-            }}
-            onClose={() => setShowCompareModal(false)}
-          />
-        )}
-
-        {/* Scroll to Top Button */}
-        {showScrollTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition-all duration-200 hover:bg-blue-600 hover:shadow-xl"
-            aria-label="Scroll to top"
-          >
-            <i className="fas fa-arrow-up"></i>
-          </button>
-        )}
       </PageLayout>
 
-      <div className="fixed bottom-8 right-8 z-40 flex flex-col space-y-4">
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
         {compareItems.length > 0 && (
           <button
             onClick={() => setShowCompareModal(true)}
-            className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-2xl transition-all duration-200 hover:scale-105 hover:from-purple-500 hover:to-pink-500"
+            className="relative flex h-12 w-12 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700"
             title={`Compare ${compareItems.length} products`}
           >
-            <i className="fas fa-balance-scale text-lg"></i>
-            <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+            <i className="fas fa-balance-scale"></i>
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
               {compareItems.length}
             </span>
           </button>
@@ -1195,10 +1229,10 @@ const Category = () => {
         {showScrollTop && (
           <button
             onClick={scrollToTop}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl transition-all duration-200 hover:scale-105 hover:from-blue-500 hover:to-purple-500"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700"
             title="Back to top"
           >
-            <i className="fas fa-chevron-up text-lg"></i>
+            <i className="fas fa-chevron-up"></i>
           </button>
         )}
       </div>

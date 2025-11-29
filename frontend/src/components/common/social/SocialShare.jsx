@@ -10,9 +10,9 @@ import {
   FaCheck,
   FaEllipsisH
 } from 'react-icons/fa';
-import ShareModal from './ShareModal';
+import ShareModal from '../modals/ShareModal';
 import { toast } from 'react-toastify';
-import { trackEvent } from '../../utils/analytics';
+import { trackEvent } from '../../../utils/analytics';
 
 const SocialShare = ({ url, title, description, image, className = '' }) => {
   const [copied, setCopied] = useState(false);

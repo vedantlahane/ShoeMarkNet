@@ -16,9 +16,9 @@ import {
 import productService from "../services/productService";
 
 // Components
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/common/feedback/LoadingSpinner";
 
-import Pagination from "../components/common/Pagination";
+import Pagination from '../components/common/navigation/Pagination';
 import ProductCard from "../components/products/ProductCard";
 import ProductTable from "./products/ProductTable";
 import ProductModal from "./products/ProductModal";

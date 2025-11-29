@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
 import { logoutUser } from '../redux/slices/authSlice';
 import { CheckCircle2 } from 'lucide-react';
 

@@ -452,38 +452,38 @@ const ProductCard = ({
         onMouseLeave={handleMouseLeave}
         onFocus={handleMouseEnter}
         onBlur={handleMouseLeave}
-        className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 transition-all duration-300 ${
-          isCardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'
+        className={`group relative flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900/50 transition-all duration-300 ${
+          isCardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-3 scale-98'
         } ${
-          isHovered ? 'shadow-2xl border-white/20' : 'shadow-lg'
+          isHovered ? 'shadow-lg border-slate-300/80 dark:border-slate-700/80' : 'shadow-sm'
         } ${className}`}
-        style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 60}ms` }}
+        style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 50}ms` }}
       >
-        <div className="relative aspect-[4/5] overflow-hidden bg-slate-900/30">
+        <div className="relative aspect-[4/5] overflow-hidden bg-slate-100 dark:bg-slate-800/40">
           <img
             ref={imageRef}
             src={productImages[currentImage] || primaryImage}
             alt={productData.name}
-            className={`h-full w-full object-cover transition-transform duration-500 ${isHovered ? 'scale-110' : 'scale-105'}`}
+            className={`h-full w-full object-cover transition-transform duration-500 ${isHovered ? 'scale-108' : 'scale-102'}`}
             onLoad={() => setIsImageLoaded(true)}
             loading="lazy"
           />
           {!isImageLoaded && (
-            <div className="absolute inset-0 animate-pulse bg-slate-800/40" />
+            <div className="absolute inset-0 animate-pulse bg-slate-200/60 dark:bg-slate-700/40" />
           )}
 
           {badgeInfo && (
             <div
               ref={badgeRef}
-              className={`badge absolute left-3 top-3 flex items-center gap-2 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${badgeInfo.color}`}
+              className={`badge absolute left-2 top-2 flex items-center gap-1.5 rounded-full bg-slate-900/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white ${badgeInfo.color}`}
             >
-              {React.createElement(badgeInfo.icon, { size: 12 })}
+              {React.createElement(badgeInfo.icon, { size: 10 })}
               <span>{badgeInfo.text}</span>
             </div>
           )}
 
           {discountPercentage && (
-            <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-3 py-1 text-[11px] font-semibold text-white">
+            <span className="absolute right-2 top-2 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-semibold text-white">
               -{discountPercentage}%
             </span>
           )}
@@ -491,18 +491,18 @@ const ProductCard = ({
           {showActionsProp && (
             <div
               ref={actionsRef}
-              className={`absolute right-3 top-14 flex flex-col gap-2 transition-all duration-200 ${
+              className={`absolute right-2 top-10 flex flex-col gap-1.5 transition-all duration-200 ${
                 isHovered && showActions ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0 pointer-events-none'
               }`}
             >
               <button
                 onClick={handleToggleWishlist}
-                className={`flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-white transition-colors duration-150 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors duration-150 ${
                   isInWishlist ? 'bg-rose-500 hover:bg-rose-600' : 'hover:bg-slate-800'
                 }`}
                 aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <Heart size={16} className={isInWishlist ? 'fill-current' : ''} />
+                <Heart size={14} className={isInWishlist ? 'fill-current' : ''} />
               </button>
 
               {onQuickView && showQuickView && (
@@ -512,33 +512,33 @@ const ProductCard = ({
                     e.stopPropagation();
                     onQuickView(productData);
                   }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-white transition-colors duration-150 hover:bg-blue-500"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors duration-150 hover:bg-blue-500"
                   aria-label="Quick view product"
                 >
-                  <Eye size={16} />
+                  <Eye size={14} />
                 </button>
               )}
             </div>
           )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-white transition-colors duration-150 group-hover:text-blue-200">
+        <div className="flex flex-1 flex-col gap-2 p-3">
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-white transition-colors duration-150 group-hover:text-blue-600 dark:group-hover:text-blue-300 line-clamp-1">
               {productData.name}
             </h3>
             {productData.brand && (
-              <p className="text-xs text-slate-300">{productData.brand}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{productData.brand}</p>
             )}
           </div>
 
-          <div className="mt-auto flex items-start justify-between gap-3">
+          <div className="mt-auto flex items-center justify-between gap-2">
             <div className="flex flex-col">
-              <span className="text-lg font-semibold text-white">
+              <span className="text-base font-semibold text-slate-900 dark:text-white">
                 {formatCurrency(productData.price)}
               </span>
               {productData.originalPrice > productData.price && (
-                <span className="text-[11px] text-muted-theme line-through">
+                <span className="text-[10px] text-slate-400 line-through">
                   {formatCurrency(productData.originalPrice)}
                 </span>
               )}

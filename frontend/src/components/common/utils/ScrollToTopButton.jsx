@@ -1,5 +1,5 @@
 import React from 'react';
-import useScrollToTopButton from '../../hooks/useScrollToTopButton';
+import useScrollToTopButton from '../../../hooks/useScrollToTopButton';
 
 const ScrollToTopButton = ({ 
   className = '',

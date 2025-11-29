@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useSearchParams, useLocation } from "react-router-dom";
+import { useSearchParams, useLocation, Link } from "react-router-dom";
 import { debounce } from "lodash";
 
 // Redux actions
@@ -16,9 +16,10 @@ import { toggleWishlistItem } from "../redux/slices/wishlistSlice";
 
 // Components
 import ProductFilter from "../components/products/ProductFilter";
-import ErrorMessage from "../components/common/ErrorMessage";
+import ErrorMessage from '../components/common/feedback/ErrorMessage';
 import SortDropdown from "../components/products/SortDropdown";
 import ProductGrid from "../components/products/ProductGrid";
+import PageLayout from '../components/common/layout/PageLayout';
 
 // Hooks
 import useLocalStorage from "../hooks/useLocalStorage";
@@ -642,31 +643,39 @@ const Products = () => {
   };
 
   return (
-    <main className="relative min-h-screen w-full bg-gradient-to-b from-gray-50 to-black dark:from-gray-900 dark:to-black">
-      <div className="mx-auto max-w-11/12 px-4 pt-24 pb-16 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="my-8 space-y-4">
-          {/* Controls Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Items per page */}
-              <select
-                value={itemsPerPage}
-                onChange={(e) =>
-                  handlePerPageChange(parseInt(e.target.value, 10))
-                }
-                className="h-10 rounded-lg border border-gray-300 px-4 text-sm text-gray-900 transition-colors hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-transparent dark:text-white dark:hover:border-gray-500"
-              >
-                {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+    <PageLayout
+      title={isSalePage ? "Sale" : "All Products"}
+      description={isSalePage ? "Great deals on your favorite shoes" : "Browse our complete collection of premium footwear"}
+      breadcrumbs={
+        <nav className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+          <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">Home</Link>
+          <span className="opacity-60">/</span>
+          <span className="text-gray-900 dark:text-gray-200">{isSalePage ? "Sale" : "Products"}</span>
+        </nav>
+      }
+    >
+      <div className="space-y-6">
+        {/* Controls Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Items per page */}
+            <select
+              value={itemsPerPage}
+              onChange={(e) =>
+                handlePerPageChange(parseInt(e.target.value, 10))
+              }
+              className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 transition-colors hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-slate-600"
+            >
+              {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
 
-              {/* Sort Dropdown */}
-              <SortDropdown
-                value={filters.sort}
+            {/* Sort Dropdown */}
+            <SortDropdown
+              value={filters.sort}
                 options={SORT_OPTIONS}
                 onChange={handleSortChange}
               />
@@ -675,9 +684,9 @@ const Products = () => {
             {/* Filter Toggle Button */}
             <button
               onClick={() => setIsFilterPanelOpen(true)}
-              className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-900 transition-colors hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:text-white dark:hover:border-gray-500 dark:hover:bg-gray-800"
+              className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 transition-colors hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-slate-600 dark:hover:bg-slate-700"
             >
-              <i className="fas fa-filter text-sm" />
+              <i className="fas fa-filter text-xs" />
               <span>Filters</span>
               {activeFilters.length > 0 && (
                 <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-semibold text-white">
@@ -689,24 +698,24 @@ const Products = () => {
 
           {/* Active Filters Display */}
           {activeFilters.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Active:
               </span>
               {activeFilters.map((filter) => (
                 <span
                   key={filter.key}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                  className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                 >
                   <span>{filter.label}</span>
                   {filter.removable && (
                     <button
                       type="button"
                       onClick={() => handleRemoveActiveFilter(filter.key)}
-                      className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800"
+                      className="flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800"
                       aria-label={`Remove ${filter.label}`}
                     >
-                      <i className="fas fa-times text-[10px]" />
+                      <i className="fas fa-times text-[9px]" />
                     </button>
                   )}
                 </span>
@@ -722,13 +731,13 @@ const Products = () => {
         </div>
 
         {/* Main Content */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Loading State */}
           {currentLoading && productsList.length === 0 && (
-            <div className="flex min-h-[400px] items-center justify-center">
+            <div className="flex min-h-[300px] items-center justify-center">
               <div className="text-center">
-                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-                <p className="text-gray-600 dark:text-gray-400">
+                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-3 border-blue-500 border-t-transparent"></div>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   {isSearchMode ? "Searching..." : "Loading..."}
                 </p>
               </div>
@@ -737,7 +746,7 @@ const Products = () => {
 
           {/* Error State */}
           {error && (
-            <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+            <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-800">
               <ErrorMessage message={error} onRetry={handleRetry} />
             </div>
           )}
@@ -757,15 +766,15 @@ const Products = () => {
             !error &&
             productsList.length === 0 &&
             !isSearchMode && (
-              <div className="flex min-h-[400px] items-center justify-center">
+              <div className="flex min-h-[300px] items-center justify-center">
                 <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                    <i className="fas fa-box-open text-2xl text-gray-400 dark:text-gray-500" />
+                  <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                    <i className="fas fa-box-open text-xl text-slate-400 dark:text-slate-500" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                     No products found
                   </h3>
-                  <p className="mt-1 text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     Try adjusting your filters or check back later.
                   </p>
                 </div>
@@ -774,31 +783,30 @@ const Products = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-8 flex justify-center">{renderPagination()}</div>
+            <div className="mt-6 flex justify-center">{renderPagination()}</div>
           )}
         </div>
-      </div>
 
       {isFilterPanelOpen && (
-        <div className="fixed inset-0 z-120">
+        <div className="fixed inset-0" style={{ zIndex: 'var(--z-modal)' }}>
           <div
             className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
             onClick={() => setIsFilterPanelOpen(false)}
           />
-          <div className="relative z-10 flex min-h-full items-start justify-center px-4 py-16 sm:px-6">
-            <div className="w-full max-w-4xl rounded-3xl border border-slate-200/70 bg-white/70 shadow-2xl backdrop-blur-xl dark:border-slate-700/60 dark:bg-slate-900/70">
-              <div className="flex items-center justify-between border-b border-slate-200/70 bg-white/40 px-6 py-4 dark:border-slate-700/60 dark:bg-slate-900/40">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Filters</h2>
+          <div className="relative z-10 flex min-h-full items-start justify-center px-4 py-12 sm:px-6">
+            <div className="w-full max-w-3xl rounded-2xl border border-slate-200/70 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-slate-700/60 dark:bg-slate-900/95">
+              <div className="flex items-center justify-between border-b border-slate-200/70 px-5 py-3 dark:border-slate-700/60">
+                <h2 className="text-base font-semibold text-slate-900 dark:text-white">Filters</h2>
                 <button
                   type="button"
                   onClick={() => setIsFilterPanelOpen(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-white/60 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                   aria-label="Close filters"
                 >
                   <i className="fas fa-times" />
                 </button>
               </div>
-              <div className="max-h-[70vh] overflow-y-auto px-6 py-5 custom-scrollbar">
+              <div className="max-h-[65vh] overflow-y-auto px-5 py-4 custom-scrollbar">
                 <ProductFilter
                   currentFilters={filters}
                   onFilterChange={handleFilterChange}
@@ -808,7 +816,7 @@ const Products = () => {
           </div>
         </div>
       )}
-    </main>
+    </PageLayout>
   );
 };
 

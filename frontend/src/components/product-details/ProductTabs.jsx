@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { FaInfoCircle, FaListUl, FaShippingFast, FaStar } from 'react-icons/fa';
-import Rating from '../common/Rating';
+import Rating from '../common/feedback/Rating';
 import ReviewForm from './ReviewForm';
 import { formatDate, formatCurrency, getRelativeTime } from '../../utils/helpers';
 

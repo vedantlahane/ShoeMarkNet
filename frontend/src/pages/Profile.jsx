@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
+import PageLayout from '../components/common/layout/PageLayout';
 import { toast } from 'react-toastify';
+import PageHeader from '../components/common/layout/PageHeader';
 
 // Redux actions
 import { 
@@ -13,8 +16,8 @@ import {
 } from '../redux/slices/authSlice';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import PasswordStrengthIndicator from '../components/common/PasswordStrengthIndicator';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
+import PasswordStrengthIndicator from '../components/common/forms/PasswordStrengthIndicator';
 import ProfileCompleteness from '../components/profile/ProfileCompleteness';
 import ProfileAvatar from '../components/profile/ProfileAvatar';
 
@@ -370,32 +373,37 @@ const Profile = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         {/* Animated floating orbs */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute left-[10%] top-[15%] h-64 w-64 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-400/5 animate-pulse" />
-          <div className="absolute right-[15%] top-[25%] h-72 w-72 rounded-full bg-indigo-400/10 blur-3xl dark:bg-indigo-400/5 animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute bottom-[20%] left-[20%] h-56 w-56 rounded-full bg-rose-400/10 blur-3xl dark:bg-rose-400/5 animate-pulse" style={{ animationDelay: '4s' }} />
+          <div className="absolute left-[10%] top-[15%] h-48 w-48 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-400/5 animate-pulse" />
+          <div className="absolute right-[15%] top-[25%] h-56 w-56 rounded-full bg-indigo-400/10 blur-3xl dark:bg-indigo-400/5 animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-[20%] left-[20%] h-44 w-44 rounded-full bg-rose-400/10 blur-3xl dark:bg-rose-400/5 animate-pulse" style={{ animationDelay: '4s' }} />
         </div>
 
-        <div className="relative z-10 py-8 text-slate-900 dark:text-slate-100">
-        <div className="max-w-4xl mx-auto w-full px-4 sm:px-5 lg:px-6">
+        <div className="relative z-10 py-6 text-slate-900 dark:text-slate-100">
+        <div className="container-app">
+          <PageHeader
+            title="Profile"
+            description="Manage your account settings and personal information."
+            breadcrumbItems={[{ label: 'Profile' }]}
+          />
           
           {/* Profile Header */}
-          <div className="relative mb-8 overflow-hidden">
+          <div className="relative mb-6 overflow-hidden">
             {/* Glassmorphism card with gradient background */}
-            <div className="relative rounded-3xl border border-slate-200/50 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-xl shadow-slate-900/10 dark:shadow-slate-900/30 overflow-hidden">
+            <div className="relative rounded-2xl border border-slate-200/50 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-lg shadow-slate-900/10 dark:shadow-slate-900/30 overflow-hidden">
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-rose-500/10 dark:from-sky-500/5 dark:via-indigo-500/5 dark:to-rose-500/5" />
               
               {/* Animated background elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sky-400/20 to-indigo-400/20 rounded-full blur-2xl" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-rose-400/20 to-pink-400/20 rounded-full blur-2xl" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-sky-400/20 to-indigo-400/20 rounded-full blur-2xl" />
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-rose-400/20 to-pink-400/20 rounded-full blur-2xl" />
 
-              <div className="relative px-8 py-12 lg:px-12 lg:py-16">
-                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+              <div className="relative px-6 py-8 lg:px-8 lg:py-10">
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
                   {/* Avatar section */}
                   <div className="flex-shrink-0">
                     <div className="relative">
                       {/* Avatar glow effect */}
-                      <div className="absolute -inset-2 bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 rounded-full blur-lg opacity-30" />
+                      <div className="absolute -inset-1.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 rounded-full blur-md opacity-30" />
                       <div className="relative">
                         <ProfileAvatar user={user} size="xl" />
                       </div>
@@ -404,23 +412,23 @@ const Profile = () => {
 
                   {/* User info section */}
                   <div className="flex-1 text-center lg:text-left">
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {/* Name with gradient */}
-                      <h1 className="text-4xl lg:text-5xl font-bold">
+                      <h1 className="text-3xl lg:text-4xl font-bold">
                         <span className="bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 dark:from-sky-400 dark:via-indigo-400 dark:to-rose-400 bg-clip-text text-transparent">
                           {user.name}
                         </span>
                       </h1>
                       
                       {/* Email */}
-                      <p className="text-lg text-slate-600 dark:text-slate-300 font-medium">
+                      <p className="text-base text-slate-600 dark:text-slate-300 font-medium">
                         {user.email}
                       </p>
 
                       {/* Member badge */}
-                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 px-6 py-3 backdrop-blur-sm">
-                        <div className="w-2 h-2 bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full animate-pulse" />
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 px-4 py-2 backdrop-blur-sm">
+                        <div className="w-1.5 h-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full animate-pulse" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                           Member since {new Date(user.createdAt).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long'
@@ -435,23 +443,23 @@ const Profile = () => {
           </div>
 
           {/* Profile Completeness */}
-          <ProfileCompleteness completeness={profileCompleteness} className="mb-6" />
+          <ProfileCompleteness completeness={profileCompleteness} className="mb-5" />
           
           {/* Success Messages */}
           {profileUpdateSuccess && (
-            <div className="relative mb-8 overflow-hidden rounded-2xl border border-green-200/50 dark:border-green-800/50 bg-green-50/70 dark:bg-green-950/70 backdrop-blur-xl shadow-lg shadow-green-500/10">
+            <div className="relative mb-6 overflow-hidden rounded-xl border border-green-200/50 dark:border-green-800/50 bg-green-50/70 dark:bg-green-950/70 backdrop-blur-xl shadow-md shadow-green-500/10">
               <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10" />
-              <div className="relative flex items-center p-6">
+              <div className="relative flex items-center p-4">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                    <i className="fas fa-check text-white text-sm"></i>
+                  <div className="w-7 h-7 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                    <i className="fas fa-check text-white text-xs"></i>
                   </div>
                 </div>
-                <div className="ml-4">
+                <div className="ml-3">
                   <h3 className="text-sm font-semibold text-green-800 dark:text-green-200">
                     Profile Updated Successfully!
                   </h3>
-                  <p className="mt-1 text-sm text-green-700 dark:text-green-300">
+                  <p className="mt-0.5 text-xs text-green-700 dark:text-green-300">
                     Your profile information has been saved.
                   </p>
                 </div>
@@ -460,19 +468,19 @@ const Profile = () => {
           )}
 
           {passwordChangeSuccess && (
-            <div className="relative mb-8 overflow-hidden rounded-2xl border border-green-200/50 dark:border-green-800/50 bg-green-50/70 dark:bg-green-950/70 backdrop-blur-xl shadow-lg shadow-green-500/10">
+            <div className="relative mb-6 overflow-hidden rounded-xl border border-green-200/50 dark:border-green-800/50 bg-green-50/70 dark:bg-green-950/70 backdrop-blur-xl shadow-md shadow-green-500/10">
               <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10" />
-              <div className="relative flex items-center p-6">
+              <div className="relative flex items-center p-4">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                    <i className="fas fa-shield-check text-white text-sm"></i>
+                  <div className="w-7 h-7 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                    <i className="fas fa-shield-check text-white text-xs"></i>
                   </div>
                 </div>
-                <div className="ml-4">
+                <div className="ml-3">
                   <h3 className="text-sm font-semibold text-green-800 dark:text-green-200">
                     Password Changed Successfully!
                   </h3>
-                  <p className="mt-1 text-sm text-green-700 dark:text-green-300">
+                  <p className="mt-0.5 text-xs text-green-700 dark:text-green-300">
                     Your password has been updated securely.
                   </p>
                 </div>
@@ -481,16 +489,16 @@ const Profile = () => {
           )}
 
           {/* Main Profile Card */}
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200/50 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-xl shadow-slate-900/10 dark:shadow-slate-900/30">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/50 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-lg shadow-slate-900/10 dark:shadow-slate-900/30">
             
             {/* Tabs Navigation */}
             <div className="border-b border-slate-200/50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-sm">
               <nav className="flex -mb-px px-2">
                 <button
                   onClick={() => handleTabChange('profile')}
-                  className={`relative flex-1 py-5 px-4 text-center font-semibold text-sm transition-all duration-300 rounded-t-xl ${
+                  className={`relative flex-1 py-4 px-3 text-center font-semibold text-sm transition-all duration-300 rounded-t-lg ${
                     activeTab === 'profile'
-                      ? 'text-white bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 shadow-lg'
+                      ? 'text-white bg-gradient-to-r from-sky-500 via-indigo-500 to-rose-500 shadow-md'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/50'
                   }`}
                   aria-current={activeTab === 'profile' ? 'page' : undefined}

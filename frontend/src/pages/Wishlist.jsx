@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
+import PageLayout from '../components/common/layout/PageLayout';
 import { toast } from 'react-toastify';
+import PageHeader from '../components/common/layout/PageHeader';
 
 // Redux actions
 import { 
@@ -14,13 +16,13 @@ import {
 import { addToCart } from '../redux/slices/cartSlice';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorMessage from '../components/common/ErrorMessage';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
+import ErrorMessage from '../components/common/feedback/ErrorMessage';
 import WishlistItem from '../components/wishlist/WishlistItem';
 import WishlistFilters from '../components/wishlist/WishlistFilters';
-import ShareModal from '../components/common/ShareModal';
+import ShareModal from '../components/common/modals/ShareModal';
 import CompareModal from '../components/product-details/CompareModal';
-import Pagination from '../components/common/Pagination';
+import Pagination from '../components/common/navigation/Pagination';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -472,34 +474,17 @@ const Wishlist = () => {
       />
 
       <div className="min-h-screen bg-theme text-theme">
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-12">
-          <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate(-1)}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-muted-theme transition-colors hover:text-theme"
-              >
-                <i className="fas fa-arrow-left text-xs"></i>
-                Back
-              </button>
-              <div>
-                <h1 className="text-3xl font-semibold text-theme md:text-4xl">Wishlist</h1>
-                <p className="mt-1 max-w-xl text-sm text-muted-theme md:text-base">
-                  Keep the shoes you love within reach. Move them to your cart whenever you’re ready.
-                </p>
-                {items.length > 0 && (
-                  <p className="mt-3 text-xs uppercase tracking-wide text-muted-strong md:text-sm">
-                    {items.length} saved • value {formatPrice(totalValue)}
-                    {totalSavings > 0 && (
-                      <span className="ml-2 text-accent">(saving {formatPrice(totalSavings)})</span>
-                    )}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {items.length > 0 && (
+  <div className="container-app py-10">
+        <PageHeader
+          title="Wishlist"
+          description="Keep the shoes you love within reach. Move them to your cart whenever you're ready."
+          breadcrumbItems={[{ label: 'Wishlist' }]}
+          actions={
+            items.length > 0 && (
               <div className="flex flex-wrap gap-3 text-sm text-muted-theme">
+                <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
+                  {items.length} saved • {formatPrice(totalValue)}
+                </div>
                 <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
                   {availableItems.length} in stock
                 </div>
@@ -513,8 +498,9 @@ const Wishlist = () => {
                   </button>
                 )}
               </div>
-            )}
-          </div>
+            )
+          }
+        />
 
           {items.length === 0 ? (
             <div className="rounded-2xl border border-theme-strong bg-card p-12 text-center">

@@ -11,7 +11,7 @@ import {
   List,
   Shuffle
 } from 'lucide-react';
-import useReducedMotion from '../../hooks/useReducedMotion';
+import useReducedMotion from '../../../hooks/useReducedMotion';
 
 const Carousel = ({
   items = [],

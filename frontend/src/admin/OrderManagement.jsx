@@ -13,9 +13,9 @@ import {
 import orderService from '../services/orderService';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorMessage from '../components/common/ErrorMessage';
-import Pagination from '../components/common/Pagination';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
+import ErrorMessage from '../components/common/feedback/ErrorMessage';
+import Pagination from '../components/common/navigation/Pagination';
 import OrderCard from '../components/orders/OrderCard';
 import OrderTable from '../components/orders/OrderTable';
 import OrderDetailsModal from './orders/OrderDetailsModal';

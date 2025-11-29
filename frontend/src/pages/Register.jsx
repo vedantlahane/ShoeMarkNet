@@ -13,9 +13,9 @@ import {
 } from '../redux/slices/authSlice';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import PasswordStrengthIndicator from '../components/common/PasswordStrengthIndicator';
-import SocialLoginButton from '../components/common/SocialLoginButton';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
+import PasswordStrengthIndicator from '../components/common/forms/PasswordStrengthIndicator';
+import SocialLoginButton from '../components/common/auth/SocialLoginButton';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';

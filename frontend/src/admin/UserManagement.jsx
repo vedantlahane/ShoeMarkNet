@@ -14,10 +14,10 @@ import {
 import userService from '../services/userService';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
 
-import ErrorMessage from '../components/common/ErrorMessage';
-import Pagination from '../components/common/Pagination';
+import ErrorMessage from '../components/common/feedback/ErrorMessage';
+import Pagination from '../components/common/navigation/Pagination';
 import UserCard from './users/UserCard';
 import UserTable from './users/UserTable';
 import UserModal from './users/UserModal';

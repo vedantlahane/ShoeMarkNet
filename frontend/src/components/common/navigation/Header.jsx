@@ -19,20 +19,20 @@ import {
   ChevronDown,
   LogOut,
 } from "lucide-react";
-import useLocalStorage from "../../hooks/useLocalStorage";
+import useLocalStorage from "../../../hooks/useLocalStorage";
 
 const routePrefetchers = {
-  "/": () => import("../../pages/Home"),
-  "/products": () => import("../../pages/Products"),
-  "/categories": () => import("../../pages/Category"),
-  "/sale": () => import("../../pages/Products"),
-  "/cart": () => import("../../pages/Cart"),
-  "/wishlist": () => import("../../pages/Wishlist"),
-  "/profile": () => import("../../pages/Profile"),
-  "/orders": () => import("../../pages/Orders"),
-  "/login": () => import("../../pages/Login"),
-  "/register": () => import("../../pages/Register"),
-  "/logout": () => import("../../pages/Logout"),
+  "/": () => import("../../../pages/Home"),
+  "/products": () => import("../../../pages/Products"),
+  "/categories": () => import("../../../pages/Category"),
+  "/sale": () => import("../../../pages/Products"),
+  "/cart": () => import("../../../pages/Cart"),
+  "/wishlist": () => import("../../../pages/Wishlist"),
+  "/profile": () => import("../../../pages/Profile"),
+  "/orders": () => import("../../../pages/Orders"),
+  "/login": () => import("../../../pages/Login"),
+  "/register": () => import("../../../pages/Register"),
+  "/logout": () => import("../../../pages/Logout"),
 };
 
 const prefetched = new Set();
@@ -98,14 +98,28 @@ const Header = () => {
 
   // Theme preference
   const [preference, setPreference] = useLocalStorage('theme-preference', 'system');
+  
+  // Track system preference changes
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  // Listen for system preference changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e) => setSystemPrefersDark(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   // Computed theme state
   const isDarkMode = useMemo(() => {
     if (preference === 'dark') return true;
     if (preference === 'light') return false;
-    // For 'system', check if the user prefers dark mode
-    return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }, [preference]);
+    return systemPrefersDark;
+  }, [preference, systemPrefersDark]);
 
   // Store
   const { user, isAuthenticated } = useSelector((s) => s.auth || { user: null, isAuthenticated: false });
@@ -251,10 +265,11 @@ const Header = () => {
   return (
     <header
       ref={headerRef}
-      className={`fixed top-0 left-0 right-0 z-50 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl transition-all duration-300 pt-[env(safe-area-inset-top)] ${isScrolled ? "shadow-lg dark:shadow-black/40" : "shadow-sm dark:shadow-black/20"}`}
+      className={`fixed top-0 left-0 right-0 border-b border-slate-200/70 dark:border-slate-800/70 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl transition-all duration-300 pt-[env(safe-area-inset-top)] ${isScrolled ? "shadow-md dark:shadow-black/30" : "shadow-sm dark:shadow-black/10"}`}
+      style={{ zIndex: 'var(--z-fixed)' }}
       role="banner"
     >
-      <div className="mx-auto w-full xl:max-w-11/12 px-3 sm:px-4 lg:px-6">
+      <div className="container-app">
         {/* MOBILE BAR: logo + search + dropdown (only < lg) */}
         <div className="flex items-center justify-between gap-2 py-2 lg:hidden">
           {/* Logo */}
@@ -264,8 +279,8 @@ const Header = () => {
             className={"flex items-center gap-2 p-1 rounded-lg " + focusRing}
             aria-label="ShoeMarkNet Home"
           >
-            <div className="relative w-9 h-9">
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-2xl shadow-lg" />
+            <div className="relative w-8 h-8">
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-xl shadow-md" />
               <div className="relative w-full h-full flex items-center justify-center">
                 {/* Shoe SVG */}
                 <svg viewBox="0 0 64 64" className="h-6 w-6 text-white" aria-hidden="true">

@@ -16,9 +16,9 @@ import {
 import useLocalStorage from '../hooks/useLocalStorage';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import PasswordStrengthIndicator from '../components/common/PasswordStrengthIndicator';
-import SocialLoginButton from '../components/common/SocialLoginButton';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
+import PasswordStrengthIndicator from '../components/common/forms/PasswordStrengthIndicator';
+import SocialLoginButton from '../components/common/auth/SocialLoginButton';
 
 // Utils
 import { validateEmail, validatePassword } from '../utils/validation';
@@ -340,39 +340,39 @@ const Login = () => {
             </div>
           </section>
 
-          <section className="flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12">
-            <div className="w-full max-w-md space-y-10">
-              <div className="space-y-4">
+          <section className="flex items-center justify-center px-4 py-8 sm:px-6 lg:px-10">
+            <div className="w-full max-w-md space-y-8">
+              <div className="space-y-3">
                 <Link
                   to="/"
-                  className="inline-flex items-center gap-3 text-lg font-semibold text-slate-900 transition-colors duration-200 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 lg:hidden"
+                  className="inline-flex items-center gap-2.5 text-lg font-semibold text-slate-900 transition-colors duration-200 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 lg:hidden"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
                     S
                   </span>
                   ShoeMarkNet
                 </Link>
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+                <div className="space-y-1.5">
+                  <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
                     Welcome back
                   </h1>
                   <p className="text-sm text-slate-600 dark:text-slate-300">
                     Sign in to manage your orders, wishlist, and personalized recommendations.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-200">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-200">
                     <i className="fas fa-shield-alt"></i>
                     Secure login
                   </span>
                   {retryCount > 0 && (
-                    <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/30 dark:text-amber-200">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 font-medium text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/30 dark:text-amber-200">
                       <i className="fas fa-sync"></i>
                       Attempt {retryCount + 1}
                     </span>
                   )}
                   {redirectPath !== '/' && (
-                    <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/30 dark:text-blue-200">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-medium text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/30 dark:text-blue-200">
                       <i className="fas fa-location-arrow"></i>
                       Redirect to {redirectPath}
                     </span>
@@ -380,18 +380,18 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="space-y-6 rounded-3xl border border-slate-200/80 bg-white p-8 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+              <div className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-lg dark:border-slate-800 dark:bg-slate-900">
                 {errorMessage && (
-                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-200">
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200">
+                    <div className="flex items-start gap-2.5">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-200">
                         <i className="fas fa-exclamation-triangle"></i>
                       </span>
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <p className="font-semibold">We couldn't sign you in</p>
                         <p className="text-xs leading-5 text-red-600/80 dark:text-red-300">{errorMessage}</p>
                         {retryCount >= 2 && (
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium">
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium">
                             <Link to="/forgot-password" className="text-red-600 underline transition-colors hover:text-red-500 dark:text-red-200 dark:hover:text-red-100">
                               Forgot password?
                             </Link>
@@ -409,7 +409,7 @@ const Login = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                   <div className="space-y-1.5">
                     <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-200">
                       Email address

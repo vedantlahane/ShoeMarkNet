@@ -3,8 +3,8 @@ import {
   Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, Linkedin,
   ArrowUp, Heart, Shield, Truck, CreditCard,
 } from "lucide-react";
-import { showSuccessToast, showErrorToast } from "../../utils/toast.jsx";
-import usePrefersReducedMotion from "../../hooks/usePrefersReducedMotion";
+import { showSuccessToast, showErrorToast } from "../../../utils/toast.jsx";
+import usePrefersReducedMotion from "../../../hooks/usePrefersReducedMotion";
 
 // --- UTILITY & DATA ---
 
@@ -54,13 +54,13 @@ const styles = {
 // --- SUB-COMPONENTS ---
 
 const FeatureBar = memo(({ features, shimmerClass, floatClass }) => (
-  <div className="py-8 border-b border-slate-200/60 dark:border-slate-800/70 footer-animate-child">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div className="py-6 border-b border-slate-200/60 dark:border-slate-800/70 footer-animate-child">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {features.map((feature, index) => (
-        <div key={index} className={cn("relative p-4 overflow-hidden transition-all duration-500 flex items-center justify-center space-x-4 text-center", styles.glassPanel, "hover:bg-slate-100/60 dark:hover:bg-slate-800/60")}>
+        <div key={index} className={cn("relative p-3 overflow-hidden transition-all duration-500 flex items-center justify-center space-x-3 text-center", styles.glassPanel, "hover:bg-slate-100/60 dark:hover:bg-slate-800/60")}>
           <div className={cn("absolute inset-[1px] rounded-[0.65rem] bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-purple-500/0 opacity-40", shimmerClass)} aria-hidden="true" />
-          <feature.icon className={cn("relative z-10 h-6 w-6 text-blue-500 shrink-0", floatClass)} aria-hidden="true" style={{ animationDelay: `${index * 150}ms` }} />
-          <span className="relative z-10 text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200">{feature.text}</span>
+          <feature.icon className={cn("relative z-10 h-5 w-5 text-blue-500 shrink-0", floatClass)} aria-hidden="true" style={{ animationDelay: `${index * 150}ms` }} />
+          <span className="relative z-10 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">{feature.text}</span>
         </div>
       ))}
     </div>
@@ -265,23 +265,23 @@ const Footer = memo(() => {
       </div>
       <div className="absolute inset-0 bg-white/40 dark:bg-slate-950/50 backdrop-blur-sm" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto w-full max-w-11/12 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 container-app">
         <FeatureBar features={footerData.features} shimmerClass={shimmerClass} floatClass={floatClass} />
 
-        <div className="py-16 footer-animate-child">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="py-12 footer-animate-child">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 xl:grid-cols-4">
             
             <div className="lg:col-span-1">
               <FooterInfo contact={footerData.contact} shimmerClass={shimmerClass} />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 lg:col-span-2 xl:col-span-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 lg:col-span-2 xl:col-span-2">
               <LinkSection title="Company" links={footerData.links.company} />
               <LinkSection title="Help" links={footerData.links.help} />
               <LinkSection title="Legal" links={footerData.links.legal} />
             </div>
 
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6">
               <Newsletter />
               <SocialLinks socials={footerData.socials} enableAnimations={enableAnimations} />
             </div>
@@ -289,9 +289,9 @@ const Footer = memo(() => {
           </div>
         </div>
 
-        <div className="py-8 border-t border-slate-200/60 dark:border-slate-800/70 flex flex-col-reverse gap-6 sm:flex-row sm:justify-between sm:items-center footer-animate-child">
-          <p className={cn("text-sm text-center sm:text-left opacity-80", styles.mutedText)}>
-            © {new Date().getFullYear()} ShoeMarkNet. All rights reserved. Made with <Heart className="inline h-4 w-4 text-pink-500 mx-1" aria-label="love" /> for sneaker lovers.
+        <div className="py-6 border-t border-slate-200/60 dark:border-slate-800/70 flex flex-col-reverse gap-4 sm:flex-row sm:justify-between sm:items-center footer-animate-child">
+          <p className={cn("text-xs text-center sm:text-left opacity-80", styles.mutedText)}>
+            © {new Date().getFullYear()} ShoeMarkNet. All rights reserved. Made with <Heart className="inline h-3.5 w-3.5 text-pink-500 mx-0.5" aria-label="love" /> for sneaker lovers.
           </p>
           <ScrollToTopButton />
         </div>

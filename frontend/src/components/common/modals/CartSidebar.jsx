@@ -28,9 +28,9 @@ import {
   selectCartTotal,
   selectCartItemCount,
   selectCartLoading
-} from '../../redux/slices/cartSlice';
-import { formatCurrency } from '../../utils/helpers';
-import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
+} from '../../../redux/slices/cartSlice';
+import { formatCurrency } from '../../../utils/helpers';
+import usePrefersReducedMotion from '../../../hooks/usePrefersReducedMotion';
 
 const CartSidebar = ({
   isOpen = false,

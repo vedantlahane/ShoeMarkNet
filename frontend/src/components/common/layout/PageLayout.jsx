@@ -2,9 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const backgroundStyles = {
-  gradient: 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-slate-900 dark:to-gray-950',
-  subtle: 'bg-theme',
-  plain: ''
+  gradient: 'bg-gray-50 dark:bg-slate-900',
+  subtle: 'bg-white dark:bg-slate-900',
+  plain: 'bg-white dark:bg-slate-950'
 };
 
 const PageLayout = ({
@@ -13,10 +13,9 @@ const PageLayout = ({
   description,
   actions,
   children,
-  maxWidth = 'max-w-screen-2xl',
   background = 'gradient',
-  paddingY = 'py-12 md:py-16',
-  headerSpacing = 'gap-4',
+  paddingY = 'py-6 md:py-8',
+  headerSpacing = 'gap-2',
   className = '',
   innerClassName = '',
   headerClassName = '',
@@ -27,31 +26,32 @@ const PageLayout = ({
   const backgroundClass = backgroundStyles[background] ?? backgroundStyles.gradient;
 
   return (
-    <div className={`min-h-screen w-full ${backgroundClass} transition-colors duration-500 ${className}`}>
-      <div className={`w-full mx-auto px-4 sm:px-5 lg:px-6 ${maxWidth} ${paddingY} ${innerClassName}`}>
+    <div className={`min-h-screen w-full ${backgroundClass} ${className}`}>
+      {/* Use container-app to match Header and Footer width */}
+      <div className={`container-app ${paddingY} ${innerClassName}`}>
         {(breadcrumbs || title || description || actions || afterHeader || eyebrow) && (
-          <header className={`flex flex-col ${headerSpacing} md:flex-row md:items-start md:justify-between ${headerClassName}`}>
-            <div className="max-w-3xl space-y-3">
+          <header className={`flex flex-col ${headerSpacing} md:flex-row md:items-start md:justify-between mb-6 ${headerClassName}`}>
+            <div className="max-w-2xl space-y-1">
               {breadcrumbs}
               {eyebrow && (
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
                   {eyebrow}
                 </p>
               )}
               {title && (
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                   {title}
                 </h1>
               )}
               {description && (
-                <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {description}
                 </p>
               )}
               {afterHeader}
             </div>
             {actions && (
-              <div className="w-full md:w-auto md:pl-8 flex-shrink-0">
+              <div className="w-full md:w-auto md:pl-6 flex-shrink-0 mt-3 md:mt-0">
                 {typeof actions === 'function' ? actions() : actions}
               </div>
             )}
@@ -59,13 +59,13 @@ const PageLayout = ({
         )}
 
         {children && (
-          <div className="mt-10 md:mt-12">
+          <div>
             {children}
           </div>
         )}
 
         {footer && (
-          <footer className="mt-16 md:mt-24">
+          <footer className="mt-12 md:mt-16">
             {footer}
           </footer>
         )}
@@ -80,7 +80,6 @@ PageLayout.propTypes = {
   description: PropTypes.node,
   actions: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
   children: PropTypes.node,
-  maxWidth: PropTypes.string,
   background: PropTypes.oneOf(['gradient', 'subtle', 'plain']),
   paddingY: PropTypes.string,
   headerSpacing: PropTypes.string,

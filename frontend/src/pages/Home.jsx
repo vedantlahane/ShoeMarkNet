@@ -79,14 +79,14 @@ const Home = () => {
     return (
       <section
         aria-label={`${title} loading state`}
-        className="mx-auto w-full px-4 py-16 sm:px-6 lg:px-8 animate-pulse"
+        className="container-app section-spacing animate-pulse"
       >
-        <div className="mb-6 h-8 w-48 rounded-full bg-slate-900/10 backdrop-blur dark:bg-slate-100/10" />
-        <div className={`grid gap-6 sm:grid-cols-2 ${gridColsClass}`}>
+        <div className="mb-4 h-7 w-40 rounded-full bg-slate-200/60 dark:bg-slate-800/60" />
+        <div className={`grid gap-4 sm:grid-cols-2 ${gridColsClass}`}>
           {Array.from({ length: rows }).map((_, index) => (
             <div
               key={index}
-              className="h-48 rounded-3xl border border-slate-900/10 bg-white/60 shadow-lg shadow-slate-900/5 backdrop-blur dark:border-slate-100/10 dark:bg-slate-900/40 dark:shadow-slate-900/30"
+              className="h-40 rounded-xl border border-slate-200/60 bg-white/60 shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40"
             />
           ))}
         </div>
@@ -97,18 +97,18 @@ const Home = () => {
   const ErrorFallback = ({ title, onRetry }) => (
     <section
       aria-label={`${title} error state`}
-      className="mx-auto w-full px-4 py-16 sm:px-6 lg:px-8 text-center"
+      className="container-app section-spacing text-center"
     >
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1.5">
           Unable to load {title.toLowerCase()}
         </h3>
-        <p className="text-slate-600 dark:text-slate-400 mb-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
           Something went wrong. Please try again.
         </p>
         <button
           onClick={onRetry}
-          className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200"
+          className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors duration-200"
         >
           Try Again
         </button>
@@ -117,8 +117,8 @@ const Home = () => {
   );
 
   return (
-    <main className="relative min-h-screen overflow-hidden text-slate-900 transition-colors duration-500 dark:text-slate-100">
-      <div className="relative z-10 flex flex-col pt-12 sm:pt-16">
+    <main className="relative min-h-screen overflow-hidden bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+      <div className="relative z-10 flex flex-col">
         {/* Hero section */}
         <HeroSection 
           data={heroData} 

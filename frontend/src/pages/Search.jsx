@@ -16,14 +16,14 @@ import { addToCart } from '../redux/slices/cartSlice';
 import { toggleWishlistItem as toggleWishlist } from '../redux/slices/wishlistSlice';
 
 // Components
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingSpinner from '../components/common/feedback/LoadingSpinner';
 import SearchFilters from '../components/search/SearchFilters';
 import SearchSuggestions from '../components/search/SearchSuggestions';
 import RecentSearches from '../components/search/RecentSearches';
 import SearchResults from '../components/search/SearchResults';
 import NoResults from '../components/search/NoResults';
-import Pagination from '../components/common/Pagination';
-import PageLayout from '../components/common/PageLayout';
+import Pagination from '../components/common/navigation/Pagination';
+import PageLayout from '../components/common/layout/PageLayout';
 
 // Hooks
 import useLocalStorage from '../hooks/useLocalStorage';

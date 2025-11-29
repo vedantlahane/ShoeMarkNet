@@ -6,7 +6,7 @@ import { initAuth } from "./redux/slices/authSlice";
 
 import MainLayout from "./components/layouts/MainLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
-import LoadingSpinner from "./components/common/LoadingSpinner";
+import LoadingSpinner from "./components/common/feedback/LoadingSpinner";
 
 import routeConfig from "./routes/routeConfig";
 import ProtectedRoute from "./routes/ProtectedRoute";

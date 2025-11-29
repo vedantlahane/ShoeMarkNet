@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/common/feedback/LoadingSpinner";
 
 const ProtectedRoute = ({ requiredRole = null }) => {
   const location = useLocation();

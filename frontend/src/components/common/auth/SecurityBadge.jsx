@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 // Hooks
-import useLocalStorage from '../../hooks/useLocalStorage';
-import useWebSocket from '../../hooks/useWebSocket';
+import useLocalStorage from '../../../hooks/useLocalStorage';
+import useWebSocket from '../../../hooks/useWebSocket';
 
 // Utils
-import { trackEvent } from '../../utils/analytics';
+import { trackEvent } from '../../../utils/analytics';
 
 // Constants
 const SECURITY_LEVELS = {

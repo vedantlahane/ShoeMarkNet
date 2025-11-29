@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchCart, updateCartItem, removeFromCart, clearCartError } from '../redux/slices/cartSlice';
-import Loader from '../components/common/Loader';
+import Loader from '../components/common/feedback/Loader';
+import PageLayout from '../components/common/layout/PageLayout';
+import PageHeader from '../components/common/layout/PageHeader';
 import { toast } from 'react-toastify';
 
 const Cart = () => {
@@ -106,7 +108,7 @@ const Cart = () => {
   // Enhanced loading state
   if (loading && items.length === 0) {
     return (
-      <div className="min-h-screen bg-theme text-theme flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <Loader />
       </div>
     );
@@ -115,36 +117,25 @@ const Cart = () => {
   const cartItems = Array.isArray(items) ? items : [];
 
   return (
-    <div className="min-h-screen bg-theme text-theme">
-  <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-5 lg:px-6 py-12">
-        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-muted-theme transition-colors hover:text-theme"
-            >
-              <i className="fas fa-arrow-left text-xs"></i>
-              Back
-            </button>
-            <div>
-              <h1 className="text-3xl font-semibold text-theme md:text-4xl">Shopping cart</h1>
-              <p className="mt-1 max-w-xl text-sm text-muted-theme md:text-base">
-                Review your items, adjust quantities, and move forward when you’re ready to check out.
-              </p>
-            </div>
-          </div>
-
-          {cartItems.length > 0 && (
-            <div className="flex flex-wrap gap-3 text-sm text-muted-theme">
-              <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
-                {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+      <div className="container-app py-10">
+        <PageHeader
+          title="Shopping Cart"
+          description="Review your items, adjust quantities, and move forward when you're ready to check out."
+          breadcrumbItems={[{ label: 'Cart' }]}
+          actions={
+            cartItems.length > 0 && (
+              <div className="flex flex-wrap gap-3 text-sm text-muted-theme">
+                <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
+                  {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
+                </div>
+                <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
+                  ${total.toFixed(2)} total
+                </div>
               </div>
-              <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
-                ${total.toFixed(2)} total
-              </div>
-            </div>
-          )}
-        </div>
+            )
+          }
+        />
 
         {cartItems.length === 0 ? (
           <div className="rounded-2xl border border-theme-strong bg-card p-12 text-center">
@@ -171,8 +162,8 @@ const Cart = () => {
             </div>
           </div>
         ) : (
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <section className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <section className="space-y-4">
               {cartItems.map((item) => {
                 const product = item.product || {};
                 const price = product.price || item.price || 0;
@@ -185,21 +176,21 @@ const Cart = () => {
                 return (
                   <div
                     key={item._id}
-                    className="rounded-2xl border border-theme-strong bg-card p-5"
+                    className="rounded-xl border border-theme-strong bg-card p-4"
                   >
-                    <div className="flex flex-col gap-5 md:flex-row md:items-center">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center">
                       <Link
                         to={`/products/${productId}`}
-                        className="h-24 w-24 overflow-hidden rounded-2xl border border-theme-strong bg-surface"
+                        className="h-20 w-20 overflow-hidden rounded-lg border border-theme-strong bg-surface"
                       >
                         <img src={image} alt={name} className="h-full w-full object-cover" />
                       </Link>
 
-                      <div className="flex-1 space-y-3">
+                      <div className="flex-1 space-y-2">
                         <div>
                           <Link
                             to={`/products/${productId}`}
-                            className="text-lg font-semibold text-theme transition-colors hover:text-muted-theme"
+                            className="text-base font-semibold text-theme transition-colors hover:text-muted-theme"
                           >
                             {name}
                           </Link>
