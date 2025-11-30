@@ -2,11 +2,12 @@
 
 > A modern, full-stack e-commerce platform for premium footwear with advanced features and beautiful UI
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19.x-blue.svg)](https://reactjs.org/)
+[![Express](https://img.shields.io/badge/Express-5.x-lightgrey.svg)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.x-green.svg)](https://www.mongodb.com/)
+[![Vite](https://img.shields.io/badge/Vite-7.x-646CFF.svg)](https://vitejs.dev/)
 
 ## 🌟 Overview
 
@@ -35,14 +36,15 @@ ShoeMarkNet is a comprehensive e-commerce platform designed specifically for foo
 - **Redux Toolkit** - State management
 - **React Router Dom v7** - Client-side routing
 - **Tailwind CSS v4** - Utility-first CSS framework
-- **Vite** - Fast build tool and development server
+- **Vite 7** - Next-generation build tool and development server
 - **Axios** - HTTP client for API calls
 - **TanStack Query** - Server state management
 - **React Hot Toast** - Beautiful notifications
 - **Framer Motion** - Animation library
 - **Chart.js** - Data visualization
-- **Lucide React** - Icon library
+- **Lucide React & Heroicons** - Icon libraries
 - **React Intersection Observer** - Intersection detection
+- **date-fns** - Date utility library
 
 ### Backend
 - **Node.js** - JavaScript runtime
@@ -53,19 +55,19 @@ ShoeMarkNet is a comprehensive e-commerce platform designed specifically for foo
 - **Bcrypt** - Password hashing
 - **Nodemailer** - Email sending
 - **Express Rate Limit** - API rate limiting
+- **Express Validator** - Input validation
 - **Helmet** - Security middleware
 - **UUID** - Unique identifier generation
 - **Slugify** - URL-friendly string generation
+- **Compression** - Response compression
+- **Morgan** - HTTP request logger
 
 ### Development Tools
-- **ESLint v9** - Code linting with modern configuration
-- **Vite** - Fast build tool with custom logging filters
+- **ESLint v9** - Code linting with modern flat config
+- **Vite 7** - Next-generation build tool with HMR
 - **Tailwind CSS v4** - Latest utility-first CSS framework
 - **Nodemon** - Development server auto-restart
-- **Morgan** - HTTP request logger
-- **Compression** - Response compression
-- **UUID** - Unique identifier generation
-- **Slugify** - URL-friendly string generation
+- **TanStack Query DevTools** - Query debugging
 
 ## 🚀 Quick Start
 
@@ -191,28 +193,29 @@ This populates featured categories, products, a `WELCOME10` coupon, a public pro
 ```
 ShoeMarkNet/
 ├── backend/                    # Backend API server
-│   ├── controllers/           # Route controllers
-│   ├── models/               # Database models
-│   ├── routes/               # API routes
-│   ├── middleware/           # Custom middleware
-│   ├── services/             # Business logic services
-│   ├── utils/                # Utility functions
-│   ├── scripts/              # Database seeding scripts
-│   ├── docs/                 # API documentation
-│   └── public/               # Static files
-├── frontend/                  # React frontend
+│   ├── controllers/           # Route controllers (15 controllers)
+│   ├── models/                # Database models (16 models)
+│   ├── routes/                # API routes (14 route files)
+│   ├── middleware/            # Custom middleware (auth, error, rate limit, validation)
+│   ├── services/              # Business logic services
+│   ├── utils/                 # Utility functions (API response, database, file upload, etc.)
+│   ├── scripts/               # Database seeding scripts
+│   ├── docs/                  # API documentation
+│   └── public/                # Static files
+├── frontend/                   # React frontend
 │   ├── src/
-│   │   ├── components/       # React components (organized by feature)
+│   │   ├── admin/            # Admin dashboard components
+│   │   ├── components/       # Reusable UI components (organized by feature)
 │   │   ├── pages/            # Page components
 │   │   ├── redux/            # Redux store & slices
 │   │   ├── services/         # API service functions
 │   │   ├── hooks/            # Custom React hooks
-│   │   ├── context/          # React context providers
 │   │   ├── routes/           # Route configurations
 │   │   ├── lib/              # Library configurations
-│   │   └── utils/            # Utility functions
-│   └── public/               # Static assets
-└── README.md                 # Project documentation
+│   │   ├── utils/            # Utility functions
+│   │   └── assets/           # Static assets
+│   └── public/               # Public static files
+└── README.md                  # Project documentation
 ```
 
 ## 🎯 Features Deep Dive
@@ -322,12 +325,12 @@ ShoeMarkNet/
 - `GET /api/admin/coupons` - Get discount coupons
 - `POST /api/admin/coupons` - Create coupon
 
-## � Environment Setup
+## 🔧 Environment Setup
 
 ### Database Setup
 1. Install MongoDB locally or use MongoDB Atlas
 2. Create a new database named `shoemarknet`
-3. Optional: Import sample data from `backend/data/` directory
+3. Update the `MONGODB_URI` in your backend `.env` file
 
 ### Email Configuration
 Configure email settings in your backend `.env` file for:
@@ -335,7 +338,7 @@ Configure email settings in your backend `.env` file for:
 - Password reset functionality
 - Order confirmation emails
 
-## �🚀 Deployment
+## 🚀 Deployment
 
 ### Backend Deployment (Heroku/Railway)
 1. Set up production environment variables
