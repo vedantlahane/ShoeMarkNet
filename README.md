@@ -374,7 +374,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Email: vedant.lahane@gmail.com
 - LinkedIn: [Vedant Lahane](https://linkedin.com/in/vedantlahane)
 
-*Last updated: October 2025*
+*Last updated: December 2025*
 
 ## 🙏 Acknowledgments
 
