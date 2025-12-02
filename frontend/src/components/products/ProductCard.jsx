@@ -49,11 +49,11 @@ const ProductCard = ({
   const productId = productData._id || productData.id;
   const productSlug = productData.slug || productId;
   const dispatch = useDispatch();
-  
+
   // Redux state
-  const { items: wishlistItems } = useSelector(state => state.wishlist || { items: [] });
+  const wishlistItems = useSelector(state => state.wishlist?.items || []);
   const { items: cartItems } = useSelector(state => state.cart || { items: [] });
-  
+
   // Local state
   const [currentImage, setCurrentImage] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -180,7 +180,7 @@ const ProductCard = ({
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!productData.inStock) {
       showErrorToast("This product is currently out of stock");
       return;
@@ -190,7 +190,7 @@ const ProductCard = ({
       showErrorToast('Please select a size first');
       return;
     }
-    
+
     let addResult;
 
     if (typeof onAddToCart === 'function') {
@@ -265,9 +265,8 @@ const ProductCard = ({
       stars.push(
         <span
           key={i}
-          className={`h-2 w-2 rounded-full ${
-            isFilled ? 'bg-yellow-400' : 'bg-slate-300 dark:bg-slate-600'
-          }`}
+          className={`h-2 w-2 rounded-full ${isFilled ? 'bg-yellow-400' : 'bg-slate-300 dark:bg-slate-600'
+            }`}
         />
       );
     }
@@ -284,22 +283,20 @@ const ProductCard = ({
         onMouseLeave={handleMouseLeave}
         onFocus={handleMouseEnter}
         onBlur={handleMouseLeave}
-        className={`card-premium p-4 flex items-center space-x-4 transition-all duration-300 ${
-          isCardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-        } ${className}`}
+        className={`card-premium p-4 flex items-center space-x-4 transition-all duration-300 ${isCardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+          } ${className}`}
         style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 60}ms` }}
       >
         <div className="flex-shrink-0">
           <img
             src={productData.images[0]}
             alt={productData.name}
-            className={`w-16 h-16 rounded-xl object-cover transition-transform duration-300 ${
-              isHovered ? 'scale-105' : 'scale-100'
-            }`}
+            className={`w-16 h-16 rounded-xl object-cover transition-transform duration-300 ${isHovered ? 'scale-105' : 'scale-100'
+              }`}
             onLoad={() => setIsImageLoaded(true)}
           />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-slate-900 dark:text-white truncate">{productData.name}</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300 truncate">{productData.brand}</p>
@@ -334,9 +331,8 @@ const ProductCard = ({
         onMouseLeave={handleMouseLeave}
         onFocus={handleMouseEnter}
         onBlur={handleMouseLeave}
-        className={`card-premium overflow-hidden relative group transition-all duration-300 ${
-          isCardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        } ${className}`}
+        className={`card-premium overflow-hidden relative group transition-all duration-300 ${isCardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          } ${className}`}
         style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 60}ms` }}
       >
         {/* Background Image */}
@@ -345,9 +341,8 @@ const ProductCard = ({
             ref={imageRef}
             src={productData.images[0]}
             alt={productData.name}
-            className={`w-full h-full object-cover transition-transform duration-500 ${
-              isHovered ? 'scale-110' : 'scale-100'
-            }`}
+            className={`w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-110' : 'scale-100'
+              }`}
             onLoad={() => setIsImageLoaded(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
@@ -355,7 +350,7 @@ const ProductCard = ({
 
         {/* Badge */}
         {getBadgeInfo() && (
-          <div 
+          <div
             ref={badgeRef}
             className={`absolute top-4 left-4 ${getBadgeInfo().color} px-3 py-1 rounded-full text-xs font-bold text-white flex items-center space-x-1`}
           >
@@ -379,11 +374,10 @@ const ProductCard = ({
                       event.preventDefault();
                       setSelectedSize(size);
                     }}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-                      selectedSize === size
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${selectedSize === size
                         ? 'bg-white text-slate-900 shadow-lg'
                         : 'bg-white/20 text-white hover:bg-white/30'
-                    }`}
+                      }`}
                     aria-label={`Select size ${size}`}
                   >
                     {size}
@@ -391,7 +385,7 @@ const ProductCard = ({
                 ))}
               </div>
             )}
-            
+
             <div className="flex items-center space-x-1 mb-4">
               {renderStars()}
               <span className="text-sm text-gray-300 ml-2">({productData.reviewCount})</span>
@@ -423,14 +417,13 @@ const ProductCard = ({
               <ShoppingCart size={20} className="mr-2" />
               {productData.inStock ? 'Add to Cart' : 'Out of Stock'}
             </button>
-            
+
             <button
               onClick={handleToggleWishlist}
-              className={`p-3 rounded-xl transition-all duration-300 ${
-                isInWishlist 
-                  ? 'bg-red-500 text-white' 
+              className={`p-3 rounded-xl transition-all duration-300 ${isInWishlist
+                  ? 'bg-red-500 text-white'
                   : 'glass text-white hover:glass'
-              }`}
+                }`}
             >
               <Heart size={20} className={isInWishlist ? 'fill-current' : ''} />
             </button>
@@ -452,11 +445,9 @@ const ProductCard = ({
         onMouseLeave={handleMouseLeave}
         onFocus={handleMouseEnter}
         onBlur={handleMouseLeave}
-        className={`group relative flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900/50 transition-all duration-300 ${
-          isCardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-3 scale-98'
-        } ${
-          isHovered ? 'shadow-lg border-slate-300/80 dark:border-slate-700/80' : 'shadow-sm'
-        } ${className}`}
+        className={`group relative flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900/50 transition-all duration-300 ${isCardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-3 scale-98'
+          } ${isHovered ? 'shadow-lg border-slate-300/80 dark:border-slate-700/80' : 'shadow-sm'
+          } ${className}`}
         style={prefersReducedMotion ? undefined : { transitionDelay: `${index * 50}ms` }}
       >
         <div className="relative aspect-[4/5] overflow-hidden bg-slate-100 dark:bg-slate-800/40">
@@ -491,15 +482,13 @@ const ProductCard = ({
           {showActionsProp && (
             <div
               ref={actionsRef}
-              className={`absolute right-2 top-10 flex flex-col gap-1.5 transition-all duration-200 ${
-                isHovered && showActions ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0 pointer-events-none'
-              }`}
+              className={`absolute right-2 top-10 flex flex-col gap-1.5 transition-all duration-200 ${isHovered && showActions ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0 pointer-events-none'
+                }`}
             >
               <button
                 onClick={handleToggleWishlist}
-                className={`flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors duration-150 ${
-                  isInWishlist ? 'bg-rose-500 hover:bg-rose-600' : 'hover:bg-slate-800'
-                }`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors duration-150 ${isInWishlist ? 'bg-rose-500 hover:bg-rose-600' : 'hover:bg-slate-800'
+                  }`}
                 aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <Heart size={14} className={isInWishlist ? 'fill-current' : ''} />

@@ -66,13 +66,13 @@ const getAllCategories = asyncHandler(async (req, res) => {
  */
 const getCategoryTree = asyncHandler(async (req, res) => {
   const { activeOnly = true, maxLevel = 3 } = req.query;
-  
+
   // Use the static method from the Category schema to build the tree
-  const tree = await Category.getCategoryTree({ 
+  const tree = await Category.getCategoryTree({
     activeOnly: activeOnly === 'true',
-    maxLevel: Number(maxLevel) 
+    maxLevel: Number(maxLevel)
   });
-  
+
   res.status(200).json(tree);
 });
 
@@ -99,12 +99,12 @@ const getCategoryById = asyncHandler(async (req, res) => {
  */
 const getCategoryBreadcrumb = asyncHandler(async (req, res) => {
   const category = await findCategoryByIdentifier(req.params.id);
-  
+
   if (!category) {
     res.status(404);
     throw new Error('Category not found');
   }
-  
+
   // Use the instance method from the Category schema to build the breadcrumb trail
   const breadcrumb = await category.getBreadcrumb();
   res.status(200).json(breadcrumb);
@@ -116,16 +116,48 @@ const getCategoryBreadcrumb = asyncHandler(async (req, res) => {
  * @access Public
  */
 const getProductsByCategory = asyncHandler(async (req, res) => {
-  const { minPrice, maxPrice, sort, page = 1, limit = 10 } = req.query;
+  const { minPrice, maxPrice, sort, page = 1, limit = 10, discount, minDiscount } = req.query;
 
-  const category = await findCategoryByIdentifier(req.params.id);
+  let category = null;
+  let filters = { isActive: true };
 
-  if (!category) {
-    res.status(404);
-    throw new Error('Category not found');
+  // Handle special "sale" category
+  if (req.params.id === 'sale') {
+    filters.discountPercentage = { $gt: 0 };
+    if (minDiscount) {
+      filters.discountPercentage.$gte = Number(minDiscount);
+    }
+
+    // Try to find an active sale campaign
+    const Campaign = require('../models/Campaign');
+    const now = new Date();
+    const activeCampaign = await Campaign.findOne({
+      type: 'sale',
+      status: 'active',
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      isActive: true
+    }).sort({ priority: -1, createdAt: -1 });
+
+    if (activeCampaign) {
+      category = {
+        name: activeCampaign.name,
+        slug: 'sale',
+        description: activeCampaign.description,
+        bannerImage: activeCampaign.bannerImage,
+        endDate: activeCampaign.endDate
+      };
+    }
+  } else {
+    category = await findCategoryByIdentifier(req.params.id);
+
+    if (!category) {
+      res.status(404);
+      throw new Error('Category not found');
+    }
+
+    filters.category = category._id;
   }
-
-  const filters = { category: category._id, isActive: true };
 
   // Price range filtering
   if (minPrice || maxPrice) {
@@ -160,6 +192,17 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
       total,
       page: Number(page),
       pages: Math.ceil(total / Number(limit))
+    },
+    categoryInfo: category ? {
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      bannerImage: category.bannerImage,
+      endDate: category.endDate
+    } : {
+      name: 'Sale',
+      slug: 'sale',
+      description: 'Special offers and discounts'
     }
   });
 });
@@ -171,30 +214,30 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
  */
 const getProductsByCategoryTree = asyncHandler(async (req, res) => {
   const category = await findCategoryByIdentifier(req.params.id);
-  
+
   if (!category) {
     res.status(404);
     throw new Error('Category not found');
   }
-  
+
   // Get all descendant categories using the instance method
   const descendants = await category.getDescendants(true);
   const categoryIds = [category._id, ...descendants.map(d => d._id)];
-  
+
   const { minPrice, maxPrice, sort, page = 1, limit = 10 } = req.query;
-  
-  const filters = { 
+
+  const filters = {
     category: { $in: categoryIds },
-    isActive: true 
+    isActive: true
   };
-  
+
   // Price range filtering
   if (minPrice || maxPrice) {
     filters.price = {};
     if (minPrice) filters.price.$gte = Number(minPrice);
     if (maxPrice) filters.price.$lte = Number(maxPrice);
   }
-  
+
   // Sorting logic
   let sortOption = {};
   if (sort) {
@@ -248,9 +291,9 @@ const createCategory = asyncHandler(async (req, res) => {
     throw new Error('Category already exists');
   }
 
-  const category = new Category({ 
-    name, 
-    description, 
+  const category = new Category({
+    name,
+    description,
     image,
     parentCategory,
     displayOrder,
@@ -259,7 +302,7 @@ const createCategory = asyncHandler(async (req, res) => {
     metaTitle,
     metaDescription
   });
-  
+
   await category.save();
 
   res.status(201).json({ message: 'Category created successfully', category });
@@ -355,9 +398,9 @@ const updateCategoryProductCount = asyncHandler(async (req, res) => {
   // Use the schema method to update the count
   await category.updateProductCount();
 
-  res.status(200).json({ 
-    message: 'Product count updated successfully', 
-    productCount: category.productCount 
+  res.status(200).json({
+    message: 'Product count updated successfully',
+    productCount: category.productCount
   });
 });
 

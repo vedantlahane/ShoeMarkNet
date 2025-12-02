@@ -5,16 +5,16 @@ import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
-import { 
-  fetchProductById, 
+import {
+  fetchProductById,
   fetchProductBySlug,
   fetchRelatedProducts,
-  clearProductError 
+  clearProductError
 } from '../redux/slices/productSlice';
 import { addToCart } from '../redux/slices/cartSlice';
-import { 
-  addToWishlist, 
-  removeFromWishlist 
+import {
+  addToWishlist,
+  removeFromWishlist
 } from '../redux/slices/wishlistSlice';
 
 // Components
@@ -24,6 +24,7 @@ import StockIndicator from '../components/product-details/StockIndicator';
 import SocialShare from '../components/common/social/SocialShare';
 import PriceDisplay from '../components/products/PriceDisplay';
 // import ProductTabs from '../components/products/ProductTabs';
+import ProductGrid from '../components/products/ProductGrid';
 import RecentlyViewed from '../components/product-details/RecentlyViewed';
 
 // Hooks
@@ -38,19 +39,19 @@ const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
+
   // Redux state
-  const { 
-    product, 
+  const {
+    product,
     relatedProducts,
     productLoading,
-    error 
+    error
   } = useSelector((state) => state.product);
-  
+
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { items: cartItems } = useSelector((state) => state.cart);
   const { items: wishlistItems } = useSelector((state) => state.wishlist);
-  
+
   // Local state
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedSize, setSelectedSize] = useState('');
@@ -62,12 +63,12 @@ const ProductDetail = () => {
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [viewStartTime] = useState(Date.now());
-  
+
   // Recently viewed products
   const [recentlyViewed, setRecentlyViewed] = useLocalStorage('recentlyViewed', []);
 
   const isSlugId = useMemo(() => /^[0-9a-fA-F]{24}$/.test(slug ?? ''), [slug]);
-  
+
   // Scroll to top on mount
   useScrollToTop();
 
@@ -136,7 +137,7 @@ const ProductDetail = () => {
   }, [product?.description]);
 
   const isInWishlist = useMemo(() => {
-    return wishlistItems?.some(item => 
+    return wishlistItems?.some(item =>
       item._id === product?._id || item.product?._id === product?._id
     );
   }, [wishlistItems, product]);
@@ -145,8 +146,8 @@ const ProductDetail = () => {
     return cartItems?.some(item => {
       const productId = item.product?._id || item.productId;
       return productId === product?._id &&
-             item.size === selectedSize &&
-             item.color === selectedColor;
+        item.size === selectedSize &&
+        item.color === selectedColor;
     });
   }, [cartItems, product, selectedSize, selectedColor]);
 
@@ -180,7 +181,7 @@ const ProductDetail = () => {
 
   // Update recently viewed
   useEffect(() => {
-  if (product && !productLoading) {
+    if (product && !productLoading) {
       const productSummary = {
         _id: product._id,
         slug: product.slug,
@@ -231,7 +232,7 @@ const ProductDetail = () => {
     setSelectedColor(variant.color);
     setSelectedSize('');
     setCurrentImageIndex(0);
-    
+
     trackEvent('product_color_selected', {
       product_id: product._id,
       color: variant.color
@@ -240,7 +241,7 @@ const ProductDetail = () => {
 
   const handleSizeSelect = useCallback((size) => {
     setSelectedSize(size.size);
-    
+
     trackEvent('product_size_selected', {
       product_id: product._id,
       size: size.size
@@ -254,7 +255,7 @@ const ProductDetail = () => {
 
   const handleImageNavigation = useCallback((direction) => {
     if (availableImages.length <= 1) return;
-    
+
     setCurrentImageIndex(prev => {
       if (direction === 'next') {
         return prev >= availableImages.length - 1 ? 0 : prev + 1;
@@ -276,12 +277,12 @@ const ProductDetail = () => {
       toast.error('Please select a color first! 🎨');
       return;
     }
-    
+
     if (availableSizes.length > 0 && !selectedSize) {
       toast.error('Please select a size first! 👟');
       return;
     }
-    
+
     if (maxStock <= 0) {
       toast.error('Sorry, this item is currently out of stock! 😔');
       return;
@@ -291,10 +292,10 @@ const ProductDetail = () => {
     const existingCartItem = cartItems.find(item => {
       const productId = item.product?._id || item.productId;
       return productId === product._id &&
-             item.size === selectedSize &&
-             item.color === selectedColor;
+        item.size === selectedSize &&
+        item.color === selectedColor;
     });
-    
+
     if (existingCartItem && (existingCartItem.quantity + quantity > maxStock)) {
       toast.warning(`You can only add ${maxStock - existingCartItem.quantity} more of this item to your cart! 🛒`);
       return;
@@ -361,7 +362,7 @@ const ProductDetail = () => {
           productId: product._id,
           productName: product.name
         })).unwrap();
-        
+
         trackEvent('remove_from_wishlist', {
           item_id: product._id,
           item_name: product.name
@@ -371,7 +372,7 @@ const ProductDetail = () => {
           productId: product._id,
           product
         })).unwrap();
-        
+
         trackEvent('add_to_wishlist', {
           item_id: product._id,
           item_name: product.name,
@@ -400,7 +401,7 @@ const ProductDetail = () => {
     // Add to cart first, then redirect to checkout
     handleAddToCart().then(() => {
       navigate('/checkout');
-      
+
       trackEvent('begin_checkout', {
         currency: 'USD',
         value: currentPrice * quantity,
@@ -416,7 +417,7 @@ const ProductDetail = () => {
 
   // SEO meta data
   const metaTitle = product ? `${product.name} | ${product.brand} | ShoeMarkNet` : 'Product Details | ShoeMarkNet';
-  const metaDescription = product ? 
+  const metaDescription = product ?
     `${product.description?.substring(0, 155)}... Shop now with free shipping and easy returns.` :
     'Discover premium footwear at ShoeMarkNet. Shop the latest styles with competitive prices and fast shipping.';
 
@@ -435,7 +436,7 @@ const ProductDetail = () => {
                 ))}
               </div>
             </div>
-            
+
             {/* Content skeleton */}
             <div className="space-y-6">
               <div className="bg-white dark:bg-slate-900 rounded-xl p-6">
@@ -559,26 +560,26 @@ const ProductDetail = () => {
           },
           aggregateRating: product.rating && product.numReviews
             ? {
-                '@type': 'AggregateRating',
-                ratingValue: product.rating,
-                reviewCount: product.numReviews,
-              }
+              '@type': 'AggregateRating',
+              ratingValue: product.rating,
+              reviewCount: product.numReviews,
+            }
             : undefined,
         }}
       />
 
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
 
-  <div className="container-app py-6 relative z-10">
+        <div className="container-app py-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
-            
+
             {/* Product Images */}
             <div className="space-y-4">
-              
+
               {/* Main Image Container */}
               <div className="relative bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group">
                 <div className="relative aspect-square overflow-hidden">
-                  
+
                   {/* Image Loading Skeleton */}
                   {imageLoading && (
                     <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 animate-pulse">
@@ -587,19 +588,18 @@ const ProductDetail = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Main Product Image */}
-                  <img 
-                    src={mainImage || '/product-placeholder.jpg'} 
-                    alt={product.name} 
-                    className={`w-full h-full object-cover transition-all duration-500 cursor-zoom-in group-hover:scale-105 ${
-                      imageLoading ? 'opacity-0' : 'opacity-100'
-                    }`}
+                  <img
+                    src={mainImage || '/product-placeholder.jpg'}
+                    alt={product.name}
+                    className={`w-full h-full object-cover transition-all duration-500 cursor-zoom-in group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'
+                      }`}
                     onClick={() => setShowImageZoom(true)}
                     onLoad={() => setImageLoading(false)}
                     loading="eager"
                   />
-                  
+
                   {/* Badges */}
                   <div className="absolute top-3 right-3 flex flex-col gap-2">
                     {product.isNewArrival && (
@@ -617,13 +617,13 @@ const ProductDetail = () => {
                   {/* Navigation Arrows */}
                   {availableImages.length > 1 && (
                     <>
-                      <button 
+                      <button
                         onClick={() => handleImageNavigation('prev')}
                         className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 dark:bg-slate-800/90 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-200 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <i className="fas fa-chevron-left text-sm"></i>
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleImageNavigation('next')}
                         className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 dark:bg-slate-800/90 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-200 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                       >
@@ -639,33 +639,31 @@ const ProductDetail = () => {
                         <button
                           key={index}
                           onClick={() => setCurrentImageIndex(index)}
-                          className={`w-2 h-2 rounded-full transition-all ${
-                            index === currentImageIndex 
-                              ? 'bg-blue-500 scale-125' 
-                              : 'bg-gray-400/60 hover:bg-gray-500'
-                          }`}
+                          className={`w-2 h-2 rounded-full transition-all ${index === currentImageIndex
+                            ? 'bg-blue-500 scale-125'
+                            : 'bg-gray-400/60 hover:bg-gray-500'
+                            }`}
                         />
                       ))}
                     </div>
                   )}
                 </div>
               </div>
-              
+
               {/* Thumbnail Gallery */}
               {availableImages.length > 1 && (
                 <div className="grid grid-cols-5 gap-2">
                   {availableImages.map((img, index) => (
                     <button
                       key={index}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        index === currentImageIndex
-                          ? 'border-blue-500 ring-1 ring-blue-500' 
-                          : 'border-transparent hover:border-gray-300 dark:hover:border-slate-600'
-                      }`}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${index === currentImageIndex
+                        ? 'border-blue-500 ring-1 ring-blue-500'
+                        : 'border-transparent hover:border-gray-300 dark:hover:border-slate-600'
+                        }`}
                       onClick={() => setCurrentImageIndex(index)}
                     >
-                      <img 
-                        src={img} 
+                      <img
+                        src={img}
                         alt={`${product.name} view ${index + 1}`}
                         className="w-full h-full object-cover"
                         loading="lazy"
@@ -678,24 +676,24 @@ const ProductDetail = () => {
 
             {/* Product Info */}
             <div className="space-y-6">
-              
+
               {/* Header */}
               <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
-                
+
                 {/* Brand */}
                 <span className="text-blue-600 dark:text-blue-400 font-medium text-sm uppercase tracking-wide">
                   {product.brand}
                 </span>
-                
+
                 {/* Product Name */}
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-3">
                   {product.name}
                 </h1>
-                
+
                 {/* Rating */}
                 <div className="flex items-center gap-4 mb-4">
-                  <Rating 
-                    value={product.rating || 4.5} 
+                  <Rating
+                    value={product.rating || 4.5}
                     size={20}
                     showValue={true}
                   />
@@ -711,16 +709,15 @@ const ProductDetail = () => {
                   discountedPrice={discountedPrice}
                   discountPercentage={product.discountPercentage || 0}
                 />
-                
+
                 {/* Wishlist & Share */}
                 <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
                   <button
                     onClick={handleToggleWishlist}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isInWishlist 
-                        ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400' 
-                        : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isInWishlist
+                      ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
+                      : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
+                      }`}
                   >
                     <i className={`fas fa-heart ${isInWishlist ? '' : 'far'}`}></i>
                     {isInWishlist ? 'Saved' : 'Save'}
@@ -733,7 +730,7 @@ const ProductDetail = () => {
                   />
                 </div>
               </div>
-              
+
               {/* Color Selection */}
               {product.variants?.length > 0 && (
                 <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
@@ -744,11 +741,10 @@ const ProductDetail = () => {
                     {product.variants.map((variant, index) => (
                       <button
                         key={index}
-                        className={`w-10 h-10 rounded-full border-2 transition-all ${
-                          selectedColor === variant.color 
-                            ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-800' 
-                            : 'border-gray-200 dark:border-slate-600 hover:border-gray-400'
-                        }`}
+                        className={`w-10 h-10 rounded-full border-2 transition-all ${selectedColor === variant.color
+                          ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-800'
+                          : 'border-gray-200 dark:border-slate-600 hover:border-gray-400'
+                          }`}
                         style={{ backgroundColor: variant.colorCode }}
                         onClick={() => handleColorSelect(variant)}
                         title={variant.color}
@@ -771,13 +767,12 @@ const ProductDetail = () => {
                         <button
                           key={index}
                           disabled={!isAvailable}
-                          className={`min-w-[48px] h-10 px-3 rounded-lg border text-sm font-medium transition-all ${
-                            selectedSize === size.size
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                              : !isAvailable
-                                ? 'border-gray-200 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-300 dark:text-slate-600 cursor-not-allowed line-through'
-                                : 'border-gray-200 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-slate-500'
-                          }`}
+                          className={`min-w-[48px] h-10 px-3 rounded-lg border text-sm font-medium transition-all ${selectedSize === size.size
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                            : !isAvailable
+                              ? 'border-gray-200 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-300 dark:text-slate-600 cursor-not-allowed line-through'
+                              : 'border-gray-200 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-slate-500'
+                            }`}
                           onClick={() => handleSizeSelect(size)}
                         >
                           {size.size}
@@ -790,10 +785,10 @@ const ProductDetail = () => {
 
               {/* Quantity & Add to Cart */}
               <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
-                
+
                 {/* Stock Indicator */}
                 <StockIndicator stock={maxStock} className="mb-4" />
-                
+
                 {/* Quantity */}
                 <div className="flex items-center gap-4 mb-4">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Qty:</span>
@@ -823,19 +818,18 @@ const ProductDetail = () => {
                   <button
                     onClick={handleAddToCart}
                     disabled={maxStock === 0 || isInCart}
-                    className={`flex-1 flex items-center justify-center py-3 px-6 rounded-lg font-semibold transition-all ${
-                      maxStock === 0
-                        ? 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
-                        : isInCart
-                          ? 'bg-green-500 text-white'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
+                    className={`flex-1 flex items-center justify-center py-3 px-6 rounded-lg font-semibold transition-all ${maxStock === 0
+                      ? 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
+                      : isInCart
+                        ? 'bg-green-500 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
                   >
                     <i className={`fas ${maxStock === 0 ? 'fa-times' : isInCart ? 'fa-check' : 'fa-shopping-cart'} mr-2`}></i>
                     {maxStock === 0 ? 'Out of Stock' : isInCart ? 'In Cart' : 'Add to Cart'}
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={handleBuyNow}
                     disabled={maxStock === 0}
                     className="px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -870,7 +864,13 @@ const ProductDetail = () => {
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
                   You May Also Like
                 </h2>
-                
+
+                <ProductGrid
+                  products={relatedProducts}
+                  onAddToCart={handleAddToCart}
+                  onToggleWishlist={handleToggleWishlist}
+                  wishlistProductIds={wishlistItems.map(item => item._id)}
+                />
               </div>
             </div>
           )}

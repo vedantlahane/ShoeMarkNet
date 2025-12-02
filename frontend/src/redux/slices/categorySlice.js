@@ -11,16 +11,18 @@ const normalizeCategories = (response) => {
 const normalizeProductsResponse = (response) => {
   const products = Array.isArray(response?.products)
     ? response.products
-    : Array.isArray(response)
-      ? response
-      : Array.isArray(response?.data)
-        ? response.data
-        : [];
+    : Array.isArray(response?.data?.products)
+      ? response.data.products
+      : Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
 
   return {
     products,
-    pagination: response?.pagination || null,
-    totalProducts: response?.totalProducts || response?.total || response?.count || products.length,
+    pagination: response?.pagination || response?.data?.pagination || null,
+    totalProducts: response?.totalProducts || response?.data?.totalProducts || response?.total || response?.count || products.length,
   };
 };
 

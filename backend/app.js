@@ -39,8 +39,10 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const campaignRoutes = require('./routes/campaignRoutes');
 const contactAdminRoutes = require('./routes/contactAdminRoutes');
 const promotionRoutes = require('./routes/promotionRoutes');
 const homeRoutes = require('./routes/homeRoutes');
@@ -84,15 +86,15 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, curl)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }
-    
+
     return callback(null, true);
   },
   credentials: true,
@@ -121,7 +123,9 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/campaigns', campaignRoutes);
 app.use('/api/admin/contacts', contactAdminRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/promotions', promotionRoutes);
@@ -129,8 +133,8 @@ app.use('/api/home', homeRoutes);
 
 // Health check route with detailed information
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
+  res.status(200).json({
+    status: 'ok',
     message: 'Server is running',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
@@ -176,14 +180,14 @@ const initializeServer = async (options = {}) => {
 // Graceful shutdown handling
 const gracefulShutdown = (signal) => {
   console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
-  
+
   if (server) {
     server.close((err) => {
       if (err) {
         console.error('❌ Error during server shutdown:', err);
         process.exit(1);
       }
-      
+
       console.log('✅ Server closed gracefully');
       process.exit(0);
     });
@@ -200,7 +204,7 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('unhandledRejection', (err, promise) => {
   console.error('❌ Unhandled Promise Rejection:', err.message);
   console.error('Promise:', promise);
-  
+
   // Close server & exit process
   if (server) {
     server.close(() => {
@@ -215,7 +219,7 @@ process.on('unhandledRejection', (err, promise) => {
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err.message);
   console.error('Stack:', err.stack);
-  
+
   // Close server & exit process
   if (server) {
     server.close(() => {

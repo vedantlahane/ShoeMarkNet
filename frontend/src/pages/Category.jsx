@@ -16,6 +16,7 @@ import {
 
 // Components
 import ProductCard from "../components/products/ProductCard";
+import ProductGrid from "../components/products/ProductGrid";
 import LoadingSpinner from "../components/common/feedback/LoadingSpinner";
 import ErrorMessage from '../components/common/feedback/ErrorMessage';
 import Pagination from '../components/common/navigation/Pagination';
@@ -86,7 +87,7 @@ const Category = () => {
   // Check if this is a sale page
   const isSalePage = useMemo(() => {
     const saleKeywords = ['sale', 'discount', 'offer', 'deals', 'clearance', 'promotion'];
-    return categoryName && saleKeywords.some(keyword => 
+    return categoryName && saleKeywords.some(keyword =>
       categoryName.toLowerCase().includes(keyword)
     );
   }, [categoryName]);
@@ -103,6 +104,9 @@ const Category = () => {
     error,
     categoryInfo,
   } = useSelector((state) => state.category);
+
+  const wishlistItems = useSelector((state) => state.wishlist?.items || []);
+  const wishlistProductIds = useMemo(() => wishlistItems.map(item => item._id), [wishlistItems]);
 
   // Local state
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name:asc");
@@ -161,7 +165,7 @@ const Category = () => {
           dispatch(fetchCategories()),
           dispatch(fetchCategoryTree()),
         ]);
-        
+
         // Fetch category details and breadcrumb only if a category is selected
         if (categoryName) {
           await Promise.all([
@@ -189,7 +193,7 @@ const Category = () => {
   useEffect(() => {
     // Don't fetch products if no category is selected
     if (!categoryName) return;
-    
+
     const filters = {
       category: categoryName,
       page: currentPage,
@@ -280,12 +284,12 @@ const Category = () => {
     const fromCategoryInfo = Array.isArray(categoryInfo?.brands)
       ? categoryInfo.brands
       : Array.isArray(categoryInfo?.availableBrands)
-      ? categoryInfo.availableBrands
-      : Array.isArray(categoryInfo?.facets?.brands)
-      ? categoryInfo.facets.brands.map((brand) =>
-          typeof brand === "string" ? brand : brand?.name
-        )
-      : [];
+        ? categoryInfo.availableBrands
+        : Array.isArray(categoryInfo?.facets?.brands)
+          ? categoryInfo.facets.brands.map((brand) =>
+            typeof brand === "string" ? brand : brand?.name
+          )
+          : [];
 
     const uniqueBrands = new Set(
       [
@@ -371,14 +375,14 @@ const Category = () => {
     if (!currentCategory) {
       return categoryInfo
         ? {
-            ...categoryInfo,
-            id:
-              categoryInfo.id ||
-              categoryInfo._id ||
-              categoryInfo.slug ||
-              categoryName,
-            slug: categoryInfo.slug || categoryInfo.handle || categoryName,
-          }
+          ...categoryInfo,
+          id:
+            categoryInfo.id ||
+            categoryInfo._id ||
+            categoryInfo.slug ||
+            categoryName,
+          slug: categoryInfo.slug || categoryInfo.handle || categoryName,
+        }
         : null;
     }
 
@@ -397,8 +401,8 @@ const Category = () => {
   const categoryStats = useMemo(() => {
     const total = pagination?.total || productsList.length;
     const onSale = productsList.filter(product => product.discount > 0 || product.onSale).length;
-    const averageRating = productsList.length > 0 
-      ? productsList.reduce((sum, product) => sum + (product.rating || 0), 0) / productsList.length 
+    const averageRating = productsList.length > 0
+      ? productsList.reduce((sum, product) => sum + (product.rating || 0), 0) / productsList.length
       : 0;
     const newArrivals = productsList.filter(product => {
       const createdDate = new Date(product.createdAt || product.dateAdded);
@@ -596,8 +600,8 @@ const Category = () => {
 
   // SEO meta data
   const metaTitle = useMemo(() => {
-    const baseTitle = isSalePage 
-      ? `Sale & Discounts | ShoeMarkNet` 
+    const baseTitle = isSalePage
+      ? `Sale & Discounts | ShoeMarkNet`
       : `${categoryName} Collection | ShoeMarkNet`;
     if (searchTerm) return `${searchTerm} in ${categoryName} | ShoeMarkNet`;
     if (selectedBrands.length > 0)
@@ -609,13 +613,12 @@ const Category = () => {
     if (isSalePage) {
       return `Discover amazing deals and discounts on premium footwear. Up to 70% off on selected items. Limited time offers on running shoes, sneakers, and more.`;
     }
-    
+
     const fallback = () => {
       const total = categoryStats.total;
       const onSale = categoryStats.onSale;
-      return `Discover ${total} premium ${categoryName?.toLowerCase()} products. ${
-        onSale > 0 ? `${onSale} items on sale.` : ""
-      } Free shipping, easy returns, and expert customer service.`;
+      return `Discover ${total} premium ${categoryName?.toLowerCase()} products. ${onSale > 0 ? `${onSale} items on sale.` : ""
+        } Free shipping, easy returns, and expert customer service.`;
     };
 
     const descriptionCandidates = [
@@ -651,7 +654,7 @@ const Category = () => {
     if (isSalePage) {
       return `Don't miss out on our amazing deals! Up to 70% off on premium footwear. Limited time offers on running shoes, sneakers, and athletic wear.`;
     }
-    
+
     const total = categoryStats.total;
     if (isLoading) {
       return `Fetching the freshest ${displayCategoryName.toLowerCase()} drops...`;
@@ -662,11 +665,10 @@ const Category = () => {
     if (total === 0) {
       return `No ${displayCategoryName.toLowerCase()} listings match your filters yet—adjust them to explore more styles.`;
     }
-    return `${total.toLocaleString()} ${displayCategoryName.toLowerCase()} items, ${
-      categoryStats.onSale
-    } on sale, averaging ${Number(categoryStats.averageRating || 0).toFixed(
-      1
-    )}★ from the community.`;
+    return `${total.toLocaleString()} ${displayCategoryName.toLowerCase()} items, ${categoryStats.onSale
+      } on sale, averaging ${Number(categoryStats.averageRating || 0).toFixed(
+        1
+      )}★ from the community.`;
   }, [categoryStats, displayCategoryName, isLoading, searchTerm, isSalePage]);
 
   const headerBreadcrumbs = useMemo(() => {
@@ -720,9 +722,8 @@ const Category = () => {
         title={metaTitle}
         description={metaDescription}
         robots="index, follow"
-        canonical={`https://shoemarknet.com/category/${categoryName}${
-          searchParams.toString() ? `?${searchParams.toString()}` : ""
-        }`}
+        canonical={`https://shoemarknet.com/category/${categoryName}${searchParams.toString() ? `?${searchParams.toString()}` : ""
+          }`}
         openGraph={{
           title: metaTitle,
           description: metaDescription,
@@ -836,7 +837,7 @@ const Category = () => {
                 ))}
               </div>
             )}
-            
+
             {(categoryTree.length === 0 && categories.length === 0 && !isLoading) && (
               <div className="rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700">
@@ -1096,13 +1097,12 @@ const Category = () => {
             {isLoading && productsList.length === 0 ? (
               <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                 <div
-                  className={`grid gap-4 ${
-                    viewMode === "grid"
-                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                      : viewMode === "list"
+                  className={`grid gap-4 ${viewMode === "grid"
+                    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    : viewMode === "list"
                       ? "grid-cols-1 max-w-4xl mx-auto"
                       : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-                  }`}
+                    }`}
                 >
                   {Array.from({ length: itemsPerPage }).map((_, index) => (
                     <div
@@ -1162,32 +1162,17 @@ const Category = () => {
                       </div>
                     )}
 
-                    <div
-                      className={`grid gap-4 ${
-                        viewMode === "grid"
-                          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                          : viewMode === "list"
-                          ? "grid-cols-1 max-w-4xl mx-auto"
-                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-                      }`}
-                    >
-                      {productsList.map((product, index) => (
-                        <div
-                          key={product._id || product.id || index}
-                          className="animate-fade-in"
-                          style={{ animationDelay: `${index * 0.05}s` }}
-                        >
-                          <ProductCard
-                            product={product}
-                            viewMode={viewMode}
-                            showCompareButton={true}
-                            onAddToCompare={() => handleAddToCompare(product)}
-                            onQuickView={() => handleQuickView(product)}
-                            categoryContext={categoryName}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                    <ProductGrid
+                      products={productsList}
+                      viewMode={viewMode}
+                      onAddToCart={handleAddProductToCart}
+                      onToggleWishlist={handleToggleProductWishlist}
+                      wishlistProductIds={wishlistProductIds}
+                      showCompareButton={true}
+                      onAddToCompare={handleAddToCompare}
+                      onQuickView={handleQuickView}
+                      categoryContext={categoryName}
+                    />
 
                     {!isLoading &&
                       !error &&
