@@ -85,6 +85,11 @@ const AppContent = () => {
             </Route>
           )}
 
+          {/* Auth routes (e.g., login/signup): standalone, no layout */}
+          {routeConfig.auth.map(({ path, component: Component }) => (
+            <Route key={path} path={path} element={<Component />} />
+          ))}
+
           {/* Public and protected routes: wrapped in MainLayout */}
           <Route path="/*" element={<MainLayout />}>
             {/* Public routes accessible to all users */}
@@ -100,11 +105,6 @@ const AppContent = () => {
             {/* Fallback route for unmatched paths (e.g., 404) */}
             {routeConfig.fallback && renderRoute(routeConfig.fallback)}
           </Route>
-
-          {/* Auth routes (e.g., login/signup): standalone, no layout */}
-          {routeConfig.auth.map(({ path, component: Component }) => (
-            <Route key={path} path={path} element={<Component />} />
-          ))}
         </Routes>
       </Suspense>
     </BrowserRouter>

@@ -5,11 +5,11 @@ import PageMeta from '../components/seo/PageMeta';
 import { toast } from 'react-toastify';
 
 // Redux actions
-import { 
-  loginUser, 
-  clearError, 
+import {
+  loginUser,
+  clearError,
   clearAllErrors,
-  resetRetryCount 
+  resetRetryCount
 } from '../redux/slices/authSlice';
 
 // Hooks
@@ -42,13 +42,13 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  const { 
-    isAuthenticated, 
+
+  const {
+    isAuthenticated,
     loginLoading,
     error,
     retryCount,
-    isInitialized 
+    isInitialized
   } = useSelector((state) => state.auth);
 
   const errorMessage = useMemo(() => {
@@ -59,18 +59,18 @@ const Login = () => {
     }
     return '';
   }, [error]);
-  
+
   // Navigation state
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const redirectPath = searchParams.get('redirect') || 
-                      location.state?.from?.pathname || 
-                      '/';
+  const redirectPath = searchParams.get('redirect') ||
+    location.state?.from?.pathname ||
+    '/';
 
   // Form validation
   const validation = useMemo(() => {
     const emailValidation = validateEmail(formData.email);
     const passwordValidation = validatePassword(formData.password);
-    
+
     return {
       email: emailValidation,
       password: passwordValidation,
@@ -85,7 +85,7 @@ const Login = () => {
       ...prev,
       [field]: value
     }));
-    
+
     // Clear errors when user starts typing
     if (error && !formTouched[field]) {
       dispatch(clearError());
@@ -107,7 +107,7 @@ const Login = () => {
     if (emailInputRef.current) {
       emailInputRef.current.focus();
     }
-    
+
     // Track page view
     trackEvent('page_view', {
       page_title: 'Login',
@@ -119,16 +119,16 @@ const Login = () => {
   useEffect(() => {
     if (isAuthenticated && isInitialized) {
       console.log('User authenticated, redirecting to:', redirectPath);
-      
+
       // Track successful login
       trackEvent('login_success', {
         method: 'email',
         redirect_path: redirectPath
       });
-      
+
       // Show success message
       toast.success('🎉 Welcome back! Redirecting...');
-      
+
       // Delayed redirect for better UX
       setTimeout(() => {
         navigate(redirectPath, { replace: true });
@@ -139,9 +139,9 @@ const Login = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validation.isValid || loginLoading) return;
-    
+
     // Mark all fields as touched
     setFormTouched({
       email: true,
@@ -257,7 +257,7 @@ const Login = () => {
         canonical="https://shoemarknet.com/login"
       />
 
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div className="min-h-screen bg-page">
         <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_480px]">
           <section className="relative hidden overflow-hidden lg:flex">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />
@@ -353,10 +353,10 @@ const Login = () => {
                   ShoeMarkNet
                 </Link>
                 <div className="space-y-1.5">
-                  <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  <h1 className="text-2xl font-semibold text-theme">
                     Welcome back
                   </h1>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-theme-secondary">
                     Sign in to manage your orders, wishlist, and personalized recommendations.
                   </p>
                 </div>
@@ -380,7 +380,7 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+              <div className="space-y-5 rounded-2xl border border-theme bg-card p-6 shadow-lg">
                 {errorMessage && (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200">
                     <div className="flex items-start gap-2.5">
@@ -411,11 +411,11 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                   <div className="space-y-1.5">
-                    <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    <label htmlFor="email" className="text-sm font-medium text-theme-secondary">
                       Email address
                     </label>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-theme-muted">
                         <i className="fas fa-envelope"></i>
                       </span>
                       <input
@@ -423,11 +423,10 @@ const Login = () => {
                         id="email"
                         name="email"
                         ref={emailInputRef}
-                        className={`w-full rounded-2xl border px-4 py-3 pl-11 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
-                          formTouched.email && !validation.email.isValid
+                        className={`w-full rounded-2xl border px-4 py-3 pl-11 text-sm font-medium text-theme placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:placeholder-slate-500 ${formTouched.email && !validation.email.isValid
                             ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
-                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
-                        } bg-white dark:bg-slate-900/70`}
+                            : 'border-theme focus:border-blue-500'
+                          } bg-input`}
                         placeholder="name@example.com"
                         value={formData.email}
                         onChange={handleInputChange('email')}
@@ -450,22 +449,21 @@ const Login = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    <label htmlFor="password" className="text-sm font-medium text-theme-secondary">
                       Password
                     </label>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-theme-muted">
                         <i className="fas fa-lock"></i>
                       </span>
                       <input
                         type={showPassword ? 'text' : 'password'}
                         id="password"
                         name="password"
-                        className={`w-full rounded-2xl border px-4 py-3 pl-11 pr-12 text-sm font-medium text-slate-900 placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100 dark:placeholder-slate-500 ${
-                          formTouched.password && !validation.password.isValid
+                        className={`w-full rounded-2xl border px-4 py-3 pl-11 pr-12 text-sm font-medium text-theme placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:placeholder-slate-500 ${formTouched.password && !validation.password.isValid
                             ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
-                            : 'border-slate-200 focus:border-blue-500 dark:border-slate-700'
-                        } bg-white dark:bg-slate-900/70`}
+                            : 'border-theme focus:border-blue-500'
+                          } bg-input`}
                         placeholder="Enter your password"
                         value={formData.password}
                         onChange={handleInputChange('password')}
@@ -477,7 +475,7 @@ const Login = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-muted transition-colors hover:text-slate-600 dark:hover:text-slate-300"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -494,12 +492,12 @@ const Login = () => {
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <label className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                    <label className="inline-flex items-center gap-2 text-theme-secondary">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+                        className="h-4 w-4 rounded border-theme-strong text-blue-600 focus:ring-blue-500"
                       />
                       Remember me
                     </label>
@@ -530,7 +528,7 @@ const Login = () => {
                     type="button"
                     onClick={handleDemoLogin}
                     disabled={loginLoading}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-80 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    className="w-full rounded-2xl border border-theme bg-card px-6 py-3 text-sm font-semibold text-theme-secondary transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-80 dark:hover:bg-slate-800"
                   >
                     <span className="flex items-center justify-center gap-2">
                       <i className="fas fa-magic"></i>
@@ -541,17 +539,17 @@ const Login = () => {
                 </form>
 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
-                    <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-theme-muted">
+                    <span className="h-px flex-1 bg-theme-secondary" />
                     Or continue with
-                    <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                    <span className="h-px flex-1 bg-theme-secondary" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <SocialLoginButton
                       provider="google"
                       onClick={handleSocialLogin}
                       disabled={loginLoading}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-theme bg-card px-3 py-2 text-sm font-semibold text-theme-secondary transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-slate-800"
                     >
                       <i className="fab fa-google text-red-500"></i>
                       Google
@@ -560,26 +558,26 @@ const Login = () => {
                       provider="facebook"
                       onClick={handleSocialLogin}
                       disabled={loginLoading}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-theme bg-card px-3 py-2 text-sm font-semibold text-theme-secondary transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-slate-800"
                     >
                       <i className="fab fa-facebook-f text-blue-600"></i>
                       Facebook
                     </SocialLoginButton>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-theme-muted">
                     By continuing you agree to our Terms of Service and Privacy Policy.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4 text-center">
-                <div className="text-sm text-slate-600 dark:text-slate-300">
+                <div className="text-sm text-theme-secondary">
                   Don&apos;t have an account?
                   <Link to="/register" className="ml-2 font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
                     Create one
                   </Link>
                 </div>
-                <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400 dark:text-slate-500">
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-theme-muted">
                   <span className="flex items-center gap-1">
                     <i className="fas fa-shield-alt text-blue-500"></i>
                     SSL secured

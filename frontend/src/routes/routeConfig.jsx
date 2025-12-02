@@ -17,6 +17,7 @@ const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
 const AccessDenied = lazy(() => import('../pages/AccessDeniedPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const Logout = lazy(() => import('../pages/Logout'));
+const About = lazy(() => import('../pages/About'));
 
 // Route configuration with metadata
 export const routeConfig = {
@@ -28,6 +29,12 @@ export const routeConfig = {
       exact: true,
       title: 'Home',
       description: 'Welcome to our store'
+    },
+    {
+      path: 'about',
+      component: About,
+      title: 'About Us',
+      description: 'Learn more about ShoeMarkNet'
     },
     {
       path: 'products',

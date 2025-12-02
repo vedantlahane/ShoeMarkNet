@@ -226,18 +226,12 @@ body {
 
 /* Page Background - Main pages should use this */
 .bg-page {
-  background-color: #f8fafc;
-}
-.dark .bg-page {
-  background-color: #0f172a;
+  background-color: var(--color-bg);
 }
 
 /* Page Background Alternative */
 .bg-page-alt {
-  background-color: #ffffff;
-}
-.dark .bg-page-alt {
-  background-color: #1e293b;
+  background-color: var(--color-bg-secondary);
 }
 
 /* Card/Panel Backgrounds */

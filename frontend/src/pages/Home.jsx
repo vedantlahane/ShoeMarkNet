@@ -56,7 +56,7 @@ const Home = () => {
         console.error('Product missing required ID field');
         return;
       }
-      
+
       dispatch(
         addToCart({
           productId: product._id || product.id,
@@ -81,12 +81,12 @@ const Home = () => {
         aria-label={`${title} loading state`}
         className="container-app section-spacing animate-pulse"
       >
-        <div className="mb-4 h-7 w-40 rounded-full bg-slate-200/60 dark:bg-slate-800/60" />
+        <div className="mb-4 h-7 w-40 rounded-full bg-theme-secondary" />
         <div className={`grid gap-4 sm:grid-cols-2 ${gridColsClass}`}>
           {Array.from({ length: rows }).map((_, index) => (
             <div
               key={index}
-              className="h-40 rounded-xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800/60 dark:bg-slate-900/40"
+              className="h-40 rounded-xl border border-theme bg-card shadow-sm"
             />
           ))}
         </div>
@@ -100,10 +100,10 @@ const Home = () => {
       className="container-app section-spacing text-center"
     >
       <div className="mb-4">
-        <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1.5">
+        <h3 className="text-base font-semibold text-theme mb-1.5">
           Unable to load {title.toLowerCase()}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+        <p className="text-sm text-theme-secondary mb-3">
           Something went wrong. Please try again.
         </p>
         <button
@@ -117,11 +117,11 @@ const Home = () => {
   );
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <main className="relative min-h-screen overflow-hidden bg-page text-theme">
       <div className="relative z-10 flex flex-col">
         {/* Hero section */}
-        <HeroSection 
-          data={heroData} 
+        <HeroSection
+          data={heroData}
           isLoading={isHomePending && !heroData}
           error={homeError}
           onRetry={refetchHome}
