@@ -138,6 +138,22 @@ The frontend uses a custom Tailwind CSS design system with:
 - Gradient accents
 - Responsive breakpoints
 
+## 👥 Demo Accounts
+
+### 🛍️ User Account
+| Field | Value |
+|-------|-------|
+| Email | `user@shoemarknet.test` |
+| Password | `User@123!` |
+| Name | Demo Shopper |
+
+### 🛡️ Admin Account
+| Field | Value |
+|-------|-------|
+| Email | `admin@shoemarknet.test` |
+| Password | `Admin@123!` |
+| Name | Demo Admin |
+
 ## 📝 License
 
 MIT License - see the main [README](../README.md) for details.

@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import {
     Settings,
@@ -10,7 +11,10 @@ import {
     ChevronRight,
     Moon,
     Sun,
-    Monitor
+    Monitor,
+    User,
+    Mail,
+    Key
 } from 'lucide-react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import './styles/admin.css';
@@ -18,17 +22,17 @@ import './styles/admin.css';
 const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
     const [activeCategory, setActiveCategory] = useState('general');
     const [isSaving, setIsSaving] = useState(false);
+    const { user } = useSelector((state) => state.auth);
 
     const [settings, setSettings] = useLocalStorage('adminSettingsMinimal', {
         general: {
             siteName: 'ShoeMarkNet',
-            timezone: 'UTC-5',
-            language: 'en',
+            siteEmail: 'admin@shoemarknet.com',
             itemsPerPage: 25,
             currency: 'USD'
         },
         appearance: {
-            theme: 'dark',
+            theme: isDarkMode ? 'dark' : 'light',
             compactMode: false,
             showAnimations: true
         },
@@ -36,7 +40,7 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
             emailNotifications: true,
             orderAlerts: true,
             lowStockAlerts: true,
-            userSignupAlerts: false
+            browserNotifications: false
         },
         security: {
             twoFactorAuth: false,
@@ -45,11 +49,18 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
         }
     });
 
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+
     const categories = [
         { id: 'general', name: 'General', icon: Settings, description: 'Basic store settings' },
         { id: 'appearance', name: 'Appearance', icon: Palette, description: 'Theme and display' },
         { id: 'notifications', name: 'Notifications', icon: Bell, description: 'Alert preferences' },
-        { id: 'security', name: 'Security', icon: Shield, description: 'Security options' }
+        { id: 'security', name: 'Security', icon: Shield, description: 'Security options' },
+        { id: 'profile', name: 'My Profile', icon: User, description: 'Account settings' }
     ];
 
     const handleChange = useCallback((category, key, value) => {
@@ -68,7 +79,6 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
             } else if (value === 'light') {
                 setIsDarkMode(false);
             } else {
-                // Auto - use system preference
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 setIsDarkMode(prefersDark);
             }
@@ -84,14 +94,29 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
 
     const handleReset = () => {
         const defaultSettings = {
-            general: { siteName: 'ShoeMarkNet', timezone: 'UTC-5', language: 'en', itemsPerPage: 25, currency: 'USD' },
+            general: { siteName: 'ShoeMarkNet', siteEmail: 'admin@shoemarknet.com', itemsPerPage: 25, currency: 'USD' },
             appearance: { theme: 'dark', compactMode: false, showAnimations: true },
-            notifications: { emailNotifications: true, orderAlerts: true, lowStockAlerts: true, userSignupAlerts: false },
+            notifications: { emailNotifications: true, orderAlerts: true, lowStockAlerts: true, browserNotifications: false },
             security: { twoFactorAuth: false, sessionTimeout: 30, requireStrongPasswords: true }
         };
         setSettings(defaultSettings);
         setIsDarkMode(true);
         toast.info('Settings reset to defaults');
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            toast.error('Passwords do not match');
+            return;
+        }
+        if (passwordForm.newPassword.length < 8) {
+            toast.error('Password must be at least 8 characters');
+            return;
+        }
+        // In a real app, this would call an API
+        toast.success('Password updated successfully');
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     };
 
     const ToggleSwitch = ({ checked, onChange }) => (
@@ -106,22 +131,7 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
     const settingsConfig = {
         general: [
             { key: 'siteName', label: 'Site Name', description: 'Your store name', type: 'text' },
-            {
-                key: 'timezone', label: 'Timezone', type: 'select', options: [
-                    { value: 'UTC-5', label: 'Eastern Time (UTC-5)' },
-                    { value: 'UTC-8', label: 'Pacific Time (UTC-8)' },
-                    { value: 'UTC+0', label: 'GMT (UTC+0)' },
-                    { value: 'UTC+5:30', label: 'IST (UTC+5:30)' }
-                ]
-            },
-            {
-                key: 'language', label: 'Language', type: 'select', options: [
-                    { value: 'en', label: 'English' },
-                    { value: 'es', label: 'Spanish' },
-                    { value: 'fr', label: 'French' },
-                    { value: 'de', label: 'German' }
-                ]
-            },
+            { key: 'siteEmail', label: 'Admin Email', description: 'Contact email for notifications', type: 'email' },
             {
                 key: 'currency', label: 'Currency', type: 'select', options: [
                     { value: 'USD', label: 'USD ($)' },
@@ -130,7 +140,7 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
                     { value: 'INR', label: 'INR (₹)' }
                 ]
             },
-            { key: 'itemsPerPage', label: 'Items Per Page', type: 'number', min: 10, max: 100 }
+            { key: 'itemsPerPage', label: 'Items Per Page', description: 'Default pagination size', type: 'number', min: 10, max: 100 }
         ],
         appearance: [
             { key: 'theme', label: 'Theme', description: 'Choose your preferred theme', type: 'theme' },
@@ -141,12 +151,12 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
             { key: 'emailNotifications', label: 'Email Notifications', description: 'Receive email updates', type: 'toggle' },
             { key: 'orderAlerts', label: 'New Order Alerts', description: 'Get notified of new orders', type: 'toggle' },
             { key: 'lowStockAlerts', label: 'Low Stock Alerts', description: 'Alert when products are low', type: 'toggle' },
-            { key: 'userSignupAlerts', label: 'New User Alerts', description: 'Notify on new registrations', type: 'toggle' }
+            { key: 'browserNotifications', label: 'Browser Notifications', description: 'Show desktop notifications', type: 'toggle' }
         ],
         security: [
-            { key: 'twoFactorAuth', label: 'Two-Factor Authentication', description: 'Add extra security', type: 'toggle' },
-            { key: 'requireStrongPasswords', label: 'Strong Passwords', description: 'Require complex passwords', type: 'toggle' },
-            { key: 'sessionTimeout', label: 'Session Timeout', description: 'Minutes before auto logout', type: 'number', min: 5, max: 480 }
+            { key: 'twoFactorAuth', label: 'Two-Factor Authentication', description: 'Add extra security to your account', type: 'toggle' },
+            { key: 'requireStrongPasswords', label: 'Strong Passwords', description: 'Require complex passwords for all users', type: 'toggle' },
+            { key: 'sessionTimeout', label: 'Session Timeout (minutes)', description: 'Auto logout after inactivity', type: 'number', min: 5, max: 480 }
         ]
     };
 
@@ -226,6 +236,18 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
             );
         }
 
+        if (field.type === 'email') {
+            return (
+                <input
+                    type="email"
+                    className="admin-input"
+                    value={value || ''}
+                    onChange={(e) => handleChange(category, field.key, e.target.value)}
+                    style={{ width: '250px' }}
+                />
+            );
+        }
+
         return (
             <input
                 type="text"
@@ -237,6 +259,119 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
         );
     };
 
+    const renderProfileSection = () => (
+        <div>
+            <h3 style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                marginBottom: '24px',
+                color: 'var(--admin-text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+            }}>
+                <User size={20} />
+                My Profile
+            </h3>
+
+            {/* Profile Info */}
+            <div className="admin-card" style={{ marginBottom: '24px', background: 'var(--admin-bg-primary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                    <div className="admin-avatar" style={{ width: '64px', height: '64px', fontSize: '24px' }}>
+                        {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                    </div>
+                    <div>
+                        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>{user?.name || 'Admin User'}</h4>
+                        <p style={{ margin: '4px 0 0', color: 'var(--admin-text-secondary)', fontSize: '14px' }}>
+                            {user?.email || 'admin@shoemarknet.com'}
+                        </p>
+                        <span className="admin-badge admin-badge-info" style={{ marginTop: '8px' }}>
+                            {user?.role || 'admin'}
+                        </span>
+                    </div>
+                </div>
+                <div style={{ borderTop: '1px solid var(--admin-border)', paddingTop: '16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                        <div>
+                            <label className="admin-form-label">Full Name</label>
+                            <input
+                                type="text"
+                                className="admin-input"
+                                defaultValue={user?.name || 'Admin User'}
+                                placeholder="Your name"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-form-label">Email Address</label>
+                            <input
+                                type="email"
+                                className="admin-input"
+                                defaultValue={user?.email || 'admin@shoemarknet.com'}
+                                placeholder="Your email"
+                            />
+                        </div>
+                    </div>
+                    <button className="admin-btn admin-btn-primary" style={{ marginTop: '16px' }}>
+                        Update Profile
+                    </button>
+                </div>
+            </div>
+
+            {/* Change Password */}
+            <div className="admin-card" style={{ background: 'var(--admin-bg-primary)' }}>
+                <h4 style={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                }}>
+                    <Key size={16} />
+                    Change Password
+                </h4>
+                <form onSubmit={handlePasswordChange}>
+                    <div className="admin-form-group">
+                        <label className="admin-form-label">Current Password</label>
+                        <input
+                            type="password"
+                            className="admin-input"
+                            value={passwordForm.currentPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                            placeholder="Enter current password"
+                            style={{ maxWidth: '300px' }}
+                        />
+                    </div>
+                    <div className="admin-grid-2" style={{ maxWidth: '620px' }}>
+                        <div className="admin-form-group">
+                            <label className="admin-form-label">New Password</label>
+                            <input
+                                type="password"
+                                className="admin-input"
+                                value={passwordForm.newPassword}
+                                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                placeholder="Enter new password"
+                            />
+                        </div>
+                        <div className="admin-form-group">
+                            <label className="admin-form-label">Confirm New Password</label>
+                            <input
+                                type="password"
+                                className="admin-input"
+                                value={passwordForm.confirmPassword}
+                                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                                placeholder="Confirm new password"
+                            />
+                        </div>
+                    </div>
+                    <button type="submit" className="admin-btn admin-btn-primary">
+                        Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+
     return (
         <div className="admin-root">
             <div className="admin-container">
@@ -246,23 +381,25 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
                         <h1 className="admin-page-title">Settings</h1>
                         <p className="admin-page-subtitle">Configure your admin preferences</p>
                     </div>
-                    <div className="admin-page-actions admin-gap-2">
-                        <button
-                            className="admin-btn admin-btn-secondary"
-                            onClick={handleReset}
-                        >
-                            <RotateCcw size={16} />
-                            Reset
-                        </button>
-                        <button
-                            className="admin-btn admin-btn-primary"
-                            onClick={handleSave}
-                            disabled={isSaving}
-                        >
-                            <Save size={16} />
-                            {isSaving ? 'Saving...' : 'Save'}
-                        </button>
-                    </div>
+                    {activeCategory !== 'profile' && (
+                        <div className="admin-page-actions admin-gap-2">
+                            <button
+                                className="admin-btn admin-btn-secondary"
+                                onClick={handleReset}
+                            >
+                                <RotateCcw size={16} />
+                                Reset
+                            </button>
+                            <button
+                                className="admin-btn admin-btn-primary"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                            >
+                                <Save size={16} />
+                                {isSaving ? 'Saving...' : 'Save'}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Settings Layout */}
@@ -311,57 +448,63 @@ const SettingsPanelMinimal = ({ isDarkMode, setIsDarkMode }) => {
 
                     {/* Settings Content */}
                     <div className="admin-card">
-                        <h3 style={{
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            marginBottom: '24px',
-                            color: 'var(--admin-text-primary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px'
-                        }}>
-                            {React.createElement(categories.find(c => c.id === activeCategory)?.icon || Settings, { size: 20 })}
-                            {categories.find(c => c.id === activeCategory)?.name} Settings
-                        </h3>
+                        {activeCategory === 'profile' ? (
+                            renderProfileSection()
+                        ) : (
+                            <>
+                                <h3 style={{
+                                    fontSize: '16px',
+                                    fontWeight: 600,
+                                    marginBottom: '24px',
+                                    color: 'var(--admin-text-primary)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    {React.createElement(categories.find(c => c.id === activeCategory)?.icon || Settings, { size: 20 })}
+                                    {categories.find(c => c.id === activeCategory)?.name} Settings
+                                </h3>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {settingsConfig[activeCategory]?.map(field => (
-                                <div
-                                    key={field.key}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '16px',
-                                        background: 'var(--admin-bg-primary)',
-                                        borderRadius: '8px',
-                                        marginBottom: '8px'
-                                    }}
-                                >
-                                    <div>
-                                        <label style={{
-                                            fontSize: '14px',
-                                            fontWeight: 500,
-                                            color: 'var(--admin-text-primary)',
-                                            display: 'block'
-                                        }}>
-                                            {field.label}
-                                        </label>
-                                        {field.description && (
-                                            <span style={{
-                                                fontSize: '12px',
-                                                color: 'var(--admin-text-secondary)',
-                                                marginTop: '2px',
-                                                display: 'block'
-                                            }}>
-                                                {field.description}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {renderField(activeCategory, field)}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {settingsConfig[activeCategory]?.map(field => (
+                                        <div
+                                            key={field.key}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '16px',
+                                                background: 'var(--admin-bg-primary)',
+                                                borderRadius: '8px',
+                                                marginBottom: '8px'
+                                            }}
+                                        >
+                                            <div>
+                                                <label style={{
+                                                    fontSize: '14px',
+                                                    fontWeight: 500,
+                                                    color: 'var(--admin-text-primary)',
+                                                    display: 'block'
+                                                }}>
+                                                    {field.label}
+                                                </label>
+                                                {field.description && (
+                                                    <span style={{
+                                                        fontSize: '12px',
+                                                        color: 'var(--admin-text-secondary)',
+                                                        marginTop: '2px',
+                                                        display: 'block'
+                                                    }}>
+                                                        {field.description}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {renderField(activeCategory, field)}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

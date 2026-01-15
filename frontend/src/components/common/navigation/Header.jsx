@@ -98,7 +98,7 @@ const Header = () => {
 
   // Theme preference
   const [preference, setPreference] = useLocalStorage('theme-preference', 'system');
-  
+
   // Track system preference changes
   const [systemPrefersDark, setSystemPrefersDark] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -280,18 +280,13 @@ const Header = () => {
             aria-label="ShoeMarkNet Home"
           >
             <div className="relative w-8 h-8">
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-xl shadow-md" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-xl shadow-md" />
               <div className="relative w-full h-full flex items-center justify-center">
-                {/* Shoe SVG */}
-                <svg viewBox="0 0 64 64" className="h-6 w-6 text-white" aria-hidden="true">
-                  <path d="M10 34c6 0 12-5 15-10l10 7c4 3 9 5 15 5v6H10z" fill="currentColor" opacity="0.95" />
-                  <path d="M24 31h4M29 33h4M19 29h4" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" />
-                  <rect x="10" y="40" width="44" height="6" rx="3" fill="rgba(255,255,255,0.9)" />
-                </svg>
+                <span className="text-lg font-bold text-white">S</span>
               </div>
             </div>
             <div className="hidden sm:block leading-none">
-              <h1 className="text-base font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
+              <h1 className="text-base font-bold text-slate-900 dark:text-white">
                 ShoeMarkNet
               </h1>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Premium Footwear</p>
@@ -489,21 +484,17 @@ const Header = () => {
                 className={"flex items-center space-x-3 group rounded-lg p-1 transition-all duration-200 " + focusRing}
                 aria-label="ShoeMarkNet Home"
               >
-                <div className="relative w-12 h-12">
-                  <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-rose-500 rounded-2xl shadow-lg" />
+                <div className="relative w-11 h-11">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-xl shadow-lg" />
                   <div className="relative w-full h-full flex items-center justify-center">
-                    <svg viewBox="0 0 64 64" className="h-9 w-9 text-white" aria-hidden="true">
-                      <path d="M10 34c6 0 12-5 15-10l10 7c4 3 9 5 15 5v6H10z" fill="currentColor" opacity="0.95" />
-                      <path d="M24 31h4M29 33h4M19 29h4" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" />
-                      <rect x="10" y="40" width="44" height="6" rx="3" fill="rgba(255,255,255,0.9)" />
-                    </svg>
+                    <span className="text-2xl font-bold text-white">S</span>
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
+                  <h1 className="text-xl font-bold text-slate-900 dark:text-white">
                     ShoeMarkNet
                   </h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium -mt-1">Premium Footwear</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium -mt-0.5">Premium Footwear</p>
                 </div>
               </Link>
             </div>
@@ -524,7 +515,7 @@ const Header = () => {
                     <Icon className="h-5 w-5" aria-hidden="true" />
                     <span className="text-base font-medium">{link.label}</span>
                     {link.badge && (
-                      <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 text-xs font-bold text-white rounded-full">
+                      <span className="ml-1.5 inline-flex items-center bg-gradient-to-r from-red-500 to-pink-500 px-1.5 py-0.5 text-[10px] font-bold text-white rounded-full">
                         {link.badge}
                       </span>
                     )}

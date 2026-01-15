@@ -375,8 +375,8 @@ const ProductCard = ({
                       setSelectedSize(size);
                     }}
                     className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${selectedSize === size
-                        ? 'bg-white text-slate-900 shadow-lg'
-                        : 'bg-white/20 text-white hover:bg-white/30'
+                      ? 'bg-white text-slate-900 shadow-lg'
+                      : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
                     aria-label={`Select size ${size}`}
                   >
@@ -421,8 +421,8 @@ const ProductCard = ({
             <button
               onClick={handleToggleWishlist}
               className={`p-3 rounded-xl transition-all duration-300 ${isInWishlist
-                  ? 'bg-red-500 text-white'
-                  : 'glass text-white hover:glass'
+                ? 'bg-red-500 text-white'
+                : 'glass text-white hover:glass'
                 }`}
             >
               <Heart size={20} className={isInWishlist ? 'fill-current' : ''} />
@@ -473,7 +473,7 @@ const ProductCard = ({
             </div>
           )}
 
-          {discountPercentage && (
+          {discountPercentage && discountPercentage > 0 && (
             <span className="absolute right-2 top-2 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-semibold text-white">
               -{discountPercentage}%
             </span>

@@ -30,7 +30,7 @@ const PriceDisplay = ({
   return (
     <div className={clsx('space-y-4', className)}>
       <div className="flex flex-wrap items-baseline gap-3">
-        <span className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <span className="text-3xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
           {formatCurrency(displayPrice)}
         </span>
         {compareAtPrice && (

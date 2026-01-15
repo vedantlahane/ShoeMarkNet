@@ -62,9 +62,27 @@ const Login = () => {
 
   // Navigation state
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const redirectPath = searchParams.get('redirect') ||
-    location.state?.from?.pathname ||
-    '/';
+
+  // Paths that should NOT be used as redirect targets (would cause loops or immediate logout)
+  const invalidRedirectPaths = ['/logout', '/login', '/register', '/forgot-password', '/reset-password'];
+
+  const redirectPath = useMemo(() => {
+    const fromUrl = searchParams.get('redirect');
+    const fromState = location.state?.from?.pathname;
+
+    // Check URL param first
+    if (fromUrl && !invalidRedirectPaths.some(p => fromUrl.startsWith(p))) {
+      return fromUrl;
+    }
+
+    // Check location state
+    if (fromState && !invalidRedirectPaths.some(p => fromState.startsWith(p))) {
+      return fromState;
+    }
+
+    // Default to home
+    return '/';
+  }, [searchParams, location.state]);
 
   // Form validation
   const validation = useMemo(() => {
@@ -148,32 +166,24 @@ const Login = () => {
       password: true
     });
 
-    try {
-      // Track login attempt
-      trackEvent('login_attempt', {
-        method: 'email'
-      });
+    // Track login attempt
+    trackEvent('login_attempt', {
+      method: 'email',
+      remembered: rememberMe
+    });
 
-      await dispatch(loginUser({
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password
-      })).unwrap();
-
-      // Store remember me preference
-      if (rememberMe) {
-        localStorage.setItem('savedEmail', formData.email);
-      } else {
-        localStorage.removeItem('savedEmail');
-      }
-
-    } catch (err) {
-      // Error handling is done in Redux slice
-      // Track failed login
-      trackEvent('login_failed', {
-        method: 'email',
-        error_message: err.message || 'Unknown error'
-      });
+    // Save email if remember me is checked
+    if (rememberMe) {
+      localStorage.setItem('savedEmail', formData.email);
+    } else {
+      localStorage.removeItem('savedEmail');
     }
+
+    // Dispatch login action
+    dispatch(loginUser({
+      email: formData.email,
+      password: formData.password
+    }));
   };
 
   // Handle demo login
@@ -233,20 +243,6 @@ const Login = () => {
     }
   }, [rememberMe]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      // Alt + D for demo login
-      if (e.altKey && e.key === 'd') {
-        e.preventDefault();
-        handleDemoLogin();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handleDemoLogin]);
-
   return (
     <>
       {/* SEO Meta Tags */}
@@ -257,343 +253,215 @@ const Login = () => {
         canonical="https://shoemarknet.com/login"
       />
 
-      <div className="min-h-screen bg-page">
-        <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_480px]">
-          <section className="relative hidden overflow-hidden lg:flex">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600" />
-            <div className="absolute -top-32 -left-24 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
-            <div className="absolute bottom-[-180px] right-[-120px] h-[420px] w-[420px] rounded-full bg-pink-400/25 blur-3xl" />
-            <div className="relative z-10 flex h-full flex-col justify-between px-12 py-16 text-white">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4 py-12">
+        {/* Background decorations */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative w-full max-w-md">
+          {/* Logo and Header */}
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-2xl font-bold text-white">S</span>
+              </div>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">ShoeMarkNet</span>
+            </Link>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              Welcome back
+            </h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              Sign in to your account to continue
+            </p>
+          </div>
+
+          {/* Login Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-8">
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="mb-6 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 p-4">
+                <div className="flex items-start gap-3">
+                  <i className="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+                  <div>
+                    <p className="text-sm font-medium text-red-700 dark:text-red-300">{errorMessage}</p>
+                    {retryCount >= 2 && (
+                      <Link to="/forgot-password" className="text-xs text-red-600 dark:text-red-400 underline mt-1 inline-block">
+                        Forgot password?
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {/* Email */}
               <div>
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-3 text-base font-semibold text-white/90 transition-colors duration-200 hover:text-white"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
-                    S
-                  </span>
-                  ShoeMarkNet
-                </Link>
-                <p className="mt-6 max-w-sm text-sm text-white/70">
-                  Discover curated drops, personalized recommendations, and faster checkout with your ShoeMarkNet account.
-                </p>
-              </div>
-
-              <div className="space-y-10">
-                <div>
-                  <h2 className="max-w-md text-4xl font-semibold leading-tight">
-                    Step back into your sneaker sanctuary.
-                  </h2>
-                  <p className="mt-4 max-w-md text-white/70">
-                    Keep track of orders, save wishlists, and unlock early access to limited releases tailored to your style.
-                  </p>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Email address
+                </label>
+                <div className="relative">
+                  <i className="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    ref={emailInputRef}
+                    className={`w-full rounded-xl border bg-slate-50 dark:bg-slate-800 pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${formTouched.email && !validation.email.isValid
+                      ? 'border-red-400 dark:border-red-500'
+                      : 'border-slate-200 dark:border-slate-700'
+                      }`}
+                    placeholder="name@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    onBlur={handleInputBlur('email')}
+                    autoComplete="email"
+                    required
+                  />
                 </div>
-
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
-                    <div className="flex items-center gap-3 text-sm font-semibold">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                        <i className="fas fa-shipping-fast"></i>
-                      </span>
-                      Priority shipping
-                    </div>
-                    <p className="mt-3 text-xs text-white/70">
-                      Members receive faster delivery windows and live tracking updates.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur">
-                    <div className="flex items-center gap-3 text-sm font-semibold">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                        <i className="fas fa-heart"></i>
-                      </span>
-                      Wishlist sync
-                    </div>
-                    <p className="mt-3 text-xs text-white/70">
-                      Save sizes, monitor restocks, and share your collections instantly.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 p-5 backdrop-blur sm:col-span-2">
-                    <div className="flex items-center gap-3 text-sm font-semibold">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                        <i className="fas fa-crown"></i>
-                      </span>
-                      Insider rewards
-                    </div>
-                    <p className="mt-3 text-xs text-white/70">
-                      Unlock member-only launches, early-bird pricing, and seasonal gifts.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-6 text-sm text-white/70">
-                  <div>
-                    <p className="text-3xl font-bold text-white">120k+</p>
-                    <p>Active members worldwide</p>
-                  </div>
-                  <div className="h-10 w-px bg-white/20" />
-                  <div>
-                    <p className="text-3xl font-bold text-white">4.9★</p>
-                    <p>Average member rating</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="flex items-center justify-center px-4 py-8 sm:px-6 lg:px-10">
-            <div className="w-full max-w-md space-y-8">
-              <div className="space-y-3">
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-2.5 text-lg font-semibold text-slate-900 transition-colors duration-200 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 lg:hidden"
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
-                    S
-                  </span>
-                  ShoeMarkNet
-                </Link>
-                <div className="space-y-1.5">
-                  <h1 className="text-2xl font-semibold text-theme">
-                    Welcome back
-                  </h1>
-                  <p className="text-sm text-theme-secondary">
-                    Sign in to manage your orders, wishlist, and personalized recommendations.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-200">
-                    <i className="fas fa-shield-alt"></i>
-                    Secure login
-                  </span>
-                  {retryCount > 0 && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 font-medium text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/30 dark:text-amber-200">
-                      <i className="fas fa-sync"></i>
-                      Attempt {retryCount + 1}
-                    </span>
-                  )}
-                  {redirectPath !== '/' && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-medium text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/30 dark:text-blue-200">
-                      <i className="fas fa-location-arrow"></i>
-                      Redirect to {redirectPath}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-5 rounded-2xl border border-theme bg-card p-6 shadow-lg">
-                {errorMessage && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200">
-                    <div className="flex items-start gap-2.5">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-200">
-                        <i className="fas fa-exclamation-triangle"></i>
-                      </span>
-                      <div className="space-y-1.5">
-                        <p className="font-semibold">We couldn't sign you in</p>
-                        <p className="text-xs leading-5 text-red-600/80 dark:text-red-300">{errorMessage}</p>
-                        {retryCount >= 2 && (
-                          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium">
-                            <Link to="/forgot-password" className="text-red-600 underline transition-colors hover:text-red-500 dark:text-red-200 dark:hover:text-red-100">
-                              Forgot password?
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={() => dispatch(clearAllErrors())}
-                              className="text-red-600 underline transition-colors hover:text-red-500 dark:text-red-200 dark:hover:text-red-100"
-                            >
-                              Clear message
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                {formTouched.email && !validation.email.isValid && (
+                  <p className="mt-1.5 text-xs text-red-500">{validation.email.message}</p>
                 )}
+              </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                  <div className="space-y-1.5">
-                    <label htmlFor="email" className="text-sm font-medium text-theme-secondary">
-                      Email address
-                    </label>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-theme-muted">
-                        <i className="fas fa-envelope"></i>
-                      </span>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        ref={emailInputRef}
-                        className={`w-full rounded-2xl border px-4 py-3 pl-11 text-sm font-medium text-theme placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:placeholder-slate-500 ${formTouched.email && !validation.email.isValid
-                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
-                            : 'border-theme focus:border-blue-500'
-                          } bg-input`}
-                        placeholder="name@example.com"
-                        value={formData.email}
-                        onChange={handleInputChange('email')}
-                        onBlur={handleInputBlur('email')}
-                        autoComplete="email"
-                        aria-describedby={formTouched.email && !validation.email.isValid ? 'email-error' : undefined}
-                        required
-                      />
-                      {formData.email && validation.email.isValid && (
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500">
-                          <i className="fas fa-check-circle"></i>
-                        </span>
-                      )}
-                    </div>
-                    {formTouched.email && !validation.email.isValid && (
-                      <p id="email-error" className="text-xs text-red-500 dark:text-red-300">
-                        {validation.email.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="password" className="text-sm font-medium text-theme-secondary">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-theme-muted">
-                        <i className="fas fa-lock"></i>
-                      </span>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        id="password"
-                        name="password"
-                        className={`w-full rounded-2xl border px-4 py-3 pl-11 pr-12 text-sm font-medium text-theme placeholder-slate-400 transition focus:outline-none focus:ring-2 focus:ring-blue-500 dark:placeholder-slate-500 ${formTouched.password && !validation.password.isValid
-                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60'
-                            : 'border-theme focus:border-blue-500'
-                          } bg-input`}
-                        placeholder="Enter your password"
-                        value={formData.password}
-                        onChange={handleInputChange('password')}
-                        onBlur={handleInputBlur('password')}
-                        autoComplete="current-password"
-                        aria-describedby={formTouched.password && !validation.password.isValid ? 'password-error' : undefined}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-muted transition-colors hover:text-slate-600 dark:hover:text-slate-300"
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      >
-                        <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                      </button>
-                    </div>
-                    {formTouched.password && !validation.password.isValid && (
-                      <p id="password-error" className="text-xs text-red-500 dark:text-red-300">
-                        {validation.password.message}
-                      </p>
-                    )}
-                    {formData.password && (
-                      <PasswordStrengthIndicator password={formData.password} className="mt-3" />
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="inline-flex items-center gap-2 text-theme-secondary">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="h-4 w-4 rounded border-theme-strong text-blue-600 focus:ring-blue-500"
-                      />
-                      Remember me
-                    </label>
-                    <Link to="/forgot-password" className="font-medium text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loginLoading || !validation.isValid}
-                    className="w-full rounded-2xl bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-50 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 dark:focus:ring-offset-slate-900 dark:hover:bg-blue-500 dark:disabled:bg-slate-600"
-                  >
-                    {loginLoading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <LoadingSpinner size="small" />
-                        Signing in...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        <i className="fas fa-sign-in-alt"></i>
-                        Sign in
-                      </span>
-                    )}
-                  </button>
-
+              {/* Password */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <i className="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    className={`w-full rounded-xl border bg-slate-50 dark:bg-slate-800 pl-11 pr-12 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${formTouched.password && !validation.password.isValid
+                      ? 'border-red-400 dark:border-red-500'
+                      : 'border-slate-200 dark:border-slate-700'
+                      }`}
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleInputChange('password')}
+                    onBlur={handleInputBlur('password')}
+                    autoComplete="current-password"
+                    required
+                  />
                   <button
                     type="button"
-                    onClick={handleDemoLogin}
-                    disabled={loginLoading}
-                    className="w-full rounded-2xl border border-theme bg-card px-6 py-3 text-sm font-semibold text-theme-secondary transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-80 dark:hover:bg-slate-800"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    <span className="flex items-center justify-center gap-2">
-                      <i className="fas fa-magic"></i>
-                      Try demo login
-                      <span className="text-xs text-slate-400 dark:text-slate-500">(Alt + D)</span>
-                    </span>
+                    <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                   </button>
-                </form>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-theme-muted">
-                    <span className="h-px flex-1 bg-theme-secondary" />
-                    Or continue with
-                    <span className="h-px flex-1 bg-theme-secondary" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <SocialLoginButton
-                      provider="google"
-                      onClick={handleSocialLogin}
-                      disabled={loginLoading}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-theme bg-card px-3 py-2 text-sm font-semibold text-theme-secondary transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-slate-800"
-                    >
-                      <i className="fab fa-google text-red-500"></i>
-                      Google
-                    </SocialLoginButton>
-                    <SocialLoginButton
-                      provider="facebook"
-                      onClick={handleSocialLogin}
-                      disabled={loginLoading}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-theme bg-card px-3 py-2 text-sm font-semibold text-theme-secondary transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-slate-800"
-                    >
-                      <i className="fab fa-facebook-f text-blue-600"></i>
-                      Facebook
-                    </SocialLoginButton>
-                  </div>
-                  <p className="text-xs text-theme-muted">
-                    By continuing you agree to our Terms of Service and Privacy Policy.
-                  </p>
                 </div>
+                {formTouched.password && !validation.password.isValid && (
+                  <p className="mt-1.5 text-xs text-red-500">{validation.password.message}</p>
+                )}
+                {formData.password && (
+                  <PasswordStrengthIndicator password={formData.password} className="mt-3" />
+                )}
               </div>
 
-              <div className="space-y-4 text-center">
-                <div className="text-sm text-theme-secondary">
-                  Don&apos;t have an account?
-                  <Link to="/register" className="ml-2 font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                    Create one
-                  </Link>
-                </div>
-                <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-theme-muted">
-                  <span className="flex items-center gap-1">
-                    <i className="fas fa-shield-alt text-blue-500"></i>
-                    SSL secured
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <i className="fas fa-lock text-emerald-500"></i>
-                    256-bit encryption
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <i className="fas fa-user-shield text-purple-500"></i>
-                    Privacy protected
-                  </span>
-                </div>
+              {/* Remember & Forgot */}
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500"
+                  />
+                  Remember me
+                </label>
+                <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                  Forgot password?
+                </Link>
               </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loginLoading || !validation.isValid}
+                className="w-full rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loginLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingSpinner size="small" />
+                    Signing in...
+                  </span>
+                ) : (
+                  'Sign in'
+                )}
+              </button>
+
+              {/* Demo Login */}
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                disabled={loginLoading}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <i className="fas fa-magic text-purple-500"></i>
+                  Try demo login
+                  <span className="text-xs text-slate-400">(Alt+D)</span>
+                </span>
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="my-6 flex items-center gap-4">
+              <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+              <span className="text-xs font-medium text-slate-400 uppercase">Or continue with</span>
+              <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
             </div>
-          </section>
+
+            {/* Social Login */}
+            <div className="grid grid-cols-2 gap-3">
+              <SocialLoginButton
+                provider="google"
+                onClick={handleSocialLogin}
+                disabled={loginLoading}
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                <i className="fab fa-google text-red-500"></i>
+                Google
+              </SocialLoginButton>
+              <SocialLoginButton
+                provider="facebook"
+                onClick={handleSocialLogin}
+                disabled={loginLoading}
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                <i className="fab fa-facebook-f text-blue-600"></i>
+                Facebook
+              </SocialLoginButton>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Don't have an account?{' '}
+              <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                Create one
+              </Link>
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-400">
+              <span className="flex items-center gap-1">
+                <i className="fas fa-shield-alt text-blue-500"></i>
+                SSL secured
+              </span>
+              <span className="flex items-center gap-1">
+                <i className="fas fa-lock text-emerald-500"></i>
+                Encrypted
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </>

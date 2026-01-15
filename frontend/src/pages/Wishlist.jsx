@@ -7,11 +7,11 @@ import { toast } from 'react-toastify';
 import PageHeader from '../components/common/layout/PageHeader';
 
 // Redux actions
-import { 
-  fetchWishlist, 
-  removeFromWishlist, 
+import {
+  fetchWishlist,
+  removeFromWishlist,
   clearWishlistAsync,
-  clearWishlistLocal 
+  clearWishlistLocal
 } from '../redux/slices/wishlistSlice';
 import { addToCart } from '../redux/slices/cartSlice';
 
@@ -60,14 +60,14 @@ const Wishlist = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Redux state
-  const { 
-    items: wishlistItems, 
+  const {
+    items: wishlistItems,
     totalItems,
     pagination,
-    loading, 
-    error 
+    loading,
+    error
   } = useSelector((state) => state.wishlist);
-  
+
   const { user, isAuthenticated, isInitialized } = useSelector((state) => state.auth);
   const { items: cartItems } = useSelector((state) => state.cart);
 
@@ -87,13 +87,13 @@ const Wishlist = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1', 10));
   const [itemsPerPage, setItemsPerPage] = useLocalStorage('wishlistItemsPerPage', 12);
-  
+
   // Modal states
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [shareItem, setShareItem] = useState(null);
   const [compareItems, setCompareItems] = useState([]);
-  
+
   // Animation and interaction states
   const [bulkLoading, setBulkLoading] = useState(false);
   const [processingItems, setProcessingItems] = useState(new Set());
@@ -121,7 +121,7 @@ const Wishlist = () => {
       };
 
       dispatch(fetchWishlist(params));
-      
+
       // Track page view
       trackEvent('page_view', {
         page_title: 'Wishlist',
@@ -130,11 +130,11 @@ const Wishlist = () => {
       });
     }
   }, [
-    dispatch, 
-    user, 
-    isAuthenticated, 
-    isInitialized, 
-    navigate, 
+    dispatch,
+    user,
+    isAuthenticated,
+    isInitialized,
+    navigate,
     currentPage,
     itemsPerPage,
     sortBy,
@@ -157,7 +157,7 @@ const Wishlist = () => {
 
     const newParamsString = params.toString();
     const currentParamsString = searchParams.toString();
-    
+
     if (newParamsString !== currentParamsString) {
       setSearchParams(params, { replace: true });
     }
@@ -166,17 +166,17 @@ const Wishlist = () => {
   // Memoized calculations
   const filteredAndSortedItems = useMemo(() => {
     if (!Array.isArray(wishlistItems)) return [];
-    
+
     let filtered = [...wishlistItems];
-    
+
     // Apply client-side filtering if needed
     if (searchTerm) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.brand?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     return filtered;
   }, [wishlistItems, searchTerm]);
 
@@ -205,16 +205,16 @@ const Wishlist = () => {
   // Enhanced handlers
   const handleRemoveFromWishlist = useCallback(async (productId, productName) => {
     setProcessingItems(prev => new Set(prev).add(productId));
-    
+
     try {
       await dispatch(removeFromWishlist(productId)).unwrap();
       setSelectedItems(prev => prev.filter(id => id !== productId));
-      
+
       trackEvent('remove_from_wishlist', {
         item_id: productId,
         item_name: productName
       });
-      
+
     } catch (err) {
       console.error('Failed to remove from wishlist:', err);
     } finally {
@@ -228,7 +228,7 @@ const Wishlist = () => {
 
   const handleAddToCart = useCallback(async (item) => {
     setProcessingItems(prev => new Set(prev).add(item._id));
-    
+
     try {
       const cartItem = {
         productId: item._id,
@@ -242,7 +242,7 @@ const Wishlist = () => {
       };
 
       await dispatch(addToCart(cartItem)).unwrap();
-      
+
       trackEvent('add_to_cart', {
         currency: 'USD',
         value: item.price,
@@ -291,7 +291,7 @@ const Wishlist = () => {
 
       setSelectedItems([]);
       toast.success(`🎉 ${availableSelectedItems.length} items added to cart!`);
-      
+
       trackEvent('bulk_add_to_cart', {
         item_count: availableSelectedItems.length,
         total_value: availableSelectedItems.reduce((sum, id) => {
@@ -343,7 +343,7 @@ const Wishlist = () => {
     try {
       await dispatch(clearWishlistAsync()).unwrap();
       setSelectedItems([]);
-      
+
       trackEvent('wishlist_cleared', {
         item_count: filteredAndSortedItems.length
       });
@@ -354,7 +354,7 @@ const Wishlist = () => {
   }, [dispatch, filteredAndSortedItems.length]);
 
   const handleItemSelect = useCallback((itemId) => {
-    setSelectedItems(prev => 
+    setSelectedItems(prev =>
       prev.includes(itemId)
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
@@ -372,7 +372,7 @@ const Wishlist = () => {
   const handleShare = useCallback((item) => {
     setShareItem(item);
     setShowShareModal(true);
-    
+
     trackEvent('wishlist_item_share_clicked', {
       item_id: item._id,
       item_name: item.name
@@ -392,7 +392,7 @@ const Wishlist = () => {
 
     setCompareItems(prev => [...prev, item]);
     toast.success(`${item.name} added to comparison`);
-    
+
     trackEvent('add_to_compare', {
       item_id: item._id,
       item_name: item.name,
@@ -403,7 +403,7 @@ const Wishlist = () => {
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     trackEvent('pagination_click', {
       page_number: page
     });
@@ -412,7 +412,7 @@ const Wishlist = () => {
   const handleSortChange = useCallback((newSort) => {
     setSortBy(newSort);
     setCurrentPage(1);
-    
+
     trackEvent('wishlist_sort_changed', {
       sort_option: newSort
     });
@@ -421,7 +421,7 @@ const Wishlist = () => {
   const handleFilterChange = useCallback((newFilter) => {
     setFilterBy(prev => ({ ...prev, ...newFilter }));
     setCurrentPage(1);
-    
+
     trackEvent('wishlist_filter_changed', {
       filter_type: Object.keys(newFilter)[0],
       filter_value: Object.values(newFilter)[0]
@@ -429,7 +429,7 @@ const Wishlist = () => {
   }, []);
 
   const isInCart = useCallback((productId) => {
-    return cartItems?.some(item => 
+    return cartItems?.some(item =>
       (item.product?._id || item.productId) === productId
     );
   }, [cartItems]);
@@ -473,54 +473,54 @@ const Wishlist = () => {
         canonical="https://shoemarknet.com/wishlist"
       />
 
-      <div className="min-h-screen bg-theme text-theme">
-  <div className="container-app py-10">
-        <PageHeader
-          title="Wishlist"
-          description="Keep the shoes you love within reach. Move them to your cart whenever you're ready."
-          breadcrumbItems={[{ label: 'Wishlist' }]}
-          actions={
-            items.length > 0 && (
-              <div className="flex flex-wrap gap-3 text-sm text-muted-theme">
-                <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
-                  {items.length} saved • {formatPrice(totalValue)}
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="container-app py-10">
+          <PageHeader
+            title="Wishlist"
+            description="Keep the shoes you love within reach. Move them to your cart whenever you're ready."
+            breadcrumbItems={[{ label: 'Wishlist' }]}
+            actions={
+              items.length > 0 && (
+                <div className="flex flex-wrap gap-3 text-sm text-muted-theme">
+                  <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
+                    {items.length} saved • {formatPrice(totalValue)}
+                  </div>
+                  <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
+                    {availableItems.length} in stock
+                  </div>
+                  {compareItems.length > 0 && (
+                    <button
+                      onClick={() => setShowCompareModal(true)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-theme-strong bg-card px-4 py-2 text-muted-strong transition-colors hover:border-primary hover:text-theme"
+                    >
+                      <i className="fas fa-balance-scale"></i>
+                      Compare ({compareItems.length})
+                    </button>
+                  )}
                 </div>
-                <div className="rounded-xl border border-theme-strong bg-card px-4 py-2">
-                  {availableItems.length} in stock
-                </div>
-                {compareItems.length > 0 && (
-                  <button
-                    onClick={() => setShowCompareModal(true)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-theme-strong bg-card px-4 py-2 text-muted-strong transition-colors hover:border-primary hover:text-theme"
-                  >
-                    <i className="fas fa-balance-scale"></i>
-                    Compare ({compareItems.length})
-                  </button>
-                )}
-              </div>
-            )
-          }
-        />
+              )
+            }
+          />
 
           {items.length === 0 ? (
-            <div className="rounded-2xl border border-theme-strong bg-card p-12 text-center">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-surface">
-                <i className="fas fa-heart text-2xl text-muted-theme"></i>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-12 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                <i className="fas fa-heart text-2xl text-slate-400 dark:text-slate-500"></i>
               </div>
-              <h2 className="mt-6 text-2xl font-semibold text-theme">Nothing saved yet</h2>
-              <p className="mt-3 text-sm text-muted-theme md:text-base">
-                Tap the heart on any product to store it here. It’s the easiest way to compare styles and come back later.
+              <h2 className="mt-6 text-2xl font-semibold text-slate-900 dark:text-white">Nothing saved yet</h2>
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 md:text-base">
+                Tap the heart on any product to store it here. It's the easiest way to compare styles and come back later.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   to="/products"
-                  className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+                  className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
                 >
                   Browse products
                 </Link>
                 <Link
                   to="/categories"
-                  className="inline-flex h-12 items-center justify-center rounded-xl border border-theme-strong px-6 text-sm font-semibold text-muted-strong transition-colors hover:border-primary hover:text-theme"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
                   View categories
                 </Link>
@@ -559,13 +559,12 @@ const Wishlist = () => {
 
               <div className="mb-10">
                 <div
-                  className={`grid gap-6 ${
-                    viewMode === VIEW_MODES.GRID
-                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                      : viewMode === VIEW_MODES.LIST
+                  className={`grid gap-6 ${viewMode === VIEW_MODES.GRID
+                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                    : viewMode === VIEW_MODES.LIST
                       ? 'grid-cols-1'
                       : 'grid-cols-2 lg:grid-cols-4'
-                  }`}
+                    }`}
                 >
                   {filteredAndSortedItems.map((item) => (
                     <WishlistItem

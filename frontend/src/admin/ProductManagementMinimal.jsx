@@ -13,7 +13,8 @@ import {
     Check,
     ChevronLeft,
     ChevronRight,
-    Image
+    Image,
+    Palette
 } from 'lucide-react';
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from '../redux/slices/productSlice';
 import { formatCurrency } from '../utils/helpers';
@@ -33,6 +34,9 @@ const ProductManagementMinimal = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
 
+    // Common shoe sizes
+    const SHOE_SIZES = ['US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11', 'US 12', 'US 13'];
+
     const [formData, setFormData] = useState({
         name: '',
         brand: '',
@@ -49,7 +53,9 @@ const ProductManagementMinimal = () => {
         isFeatured: false,
         tags: '',
         weight: '',
-        dimensions: { length: '', width: '', height: '' }
+        dimensions: { length: '', width: '', height: '' },
+        gender: 'unisex',
+        variants: []
     });
 
     useEffect(() => {
@@ -129,7 +135,9 @@ const ProductManagementMinimal = () => {
                 isFeatured: product.isFeatured || false,
                 tags: Array.isArray(product.tags) ? product.tags.join(', ') : '',
                 weight: product.weight || '',
-                dimensions: product.dimensions || { length: '', width: '', height: '' }
+                dimensions: product.dimensions || { length: '', width: '', height: '' },
+                gender: product.gender || 'unisex',
+                variants: product.variants?.length ? product.variants : []
             });
         } else {
             setEditingProduct(null);
@@ -149,7 +157,9 @@ const ProductManagementMinimal = () => {
                 isFeatured: false,
                 tags: '',
                 weight: '',
-                dimensions: { length: '', width: '', height: '' }
+                dimensions: { length: '', width: '', height: '' },
+                gender: 'unisex',
+                variants: []
             });
         }
         setShowModal(true);
@@ -181,6 +191,39 @@ const ProductManagementMinimal = () => {
         }));
     };
 
+    // Variant handlers
+    const handleAddVariant = () => {
+        setFormData(prev => ({
+            ...prev,
+            variants: [...prev.variants, { color: '', colorCode: '#000000', sizes: SHOE_SIZES.map(s => ({ size: s, countInStock: 0 })) }]
+        }));
+    };
+
+    const handleRemoveVariant = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            variants: prev.variants.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleVariantChange = (vIndex, field, value) => {
+        setFormData(prev => {
+            const newVariants = [...prev.variants];
+            newVariants[vIndex] = { ...newVariants[vIndex], [field]: value };
+            return { ...prev, variants: newVariants };
+        });
+    };
+
+    const handleSizeStockChange = (vIndex, sIndex, stock) => {
+        setFormData(prev => {
+            const newVariants = [...prev.variants];
+            const newSizes = [...newVariants[vIndex].sizes];
+            newSizes[sIndex] = { ...newSizes[sIndex], countInStock: parseInt(stock) || 0 };
+            newVariants[vIndex] = { ...newVariants[vIndex], sizes: newSizes };
+            return { ...prev, variants: newVariants };
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -206,7 +249,9 @@ const ProductManagementMinimal = () => {
                 isFeatured: formData.isFeatured,
                 tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
                 weight: formData.weight ? parseFloat(formData.weight) : undefined,
-                dimensions: formData.dimensions
+                dimensions: formData.dimensions,
+                gender: formData.gender,
+                variants: formData.variants.filter(v => v.color.trim())
             };
 
             if (editingProduct) {
@@ -733,6 +778,133 @@ const ProductManagementMinimal = () => {
                                     style={{ marginTop: '8px' }}
                                 >
                                     <Image size={14} /> Add Image URL
+                                </button>
+
+                                {/* Gender */}
+                                <div className="admin-form-group" style={{ marginTop: '24px' }}>
+                                    <label className="admin-form-label">Gender</label>
+                                    <select
+                                        className="admin-input admin-select"
+                                        value={formData.gender}
+                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                    >
+                                        <option value="unisex">Unisex</option>
+                                        <option value="men">Men</option>
+                                        <option value="women">Women</option>
+                                    </select>
+                                </div>
+
+                                {/* Variants (Sizes) */}
+                                <h4 style={{ fontSize: '13px', fontWeight: 600, margin: '24px 0 12px', color: 'var(--admin-text-secondary)' }}>
+                                    SIZES & COLOR VARIANTS
+                                </h4>
+                                <p className="admin-form-hint" style={{ marginBottom: '12px' }}>
+                                    Add color variants with shoe size stock. Each variant gets its own size inventory.
+                                </p>
+
+                                {formData.variants.map((variant, vIndex) => (
+                                    <div key={vIndex} style={{
+                                        border: '1px solid var(--admin-border)',
+                                        borderRadius: '8px',
+                                        padding: '12px',
+                                        marginBottom: '12px',
+                                        background: 'var(--admin-bg-primary)'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{
+                                                    width: '24px',
+                                                    height: '24px',
+                                                    borderRadius: '6px',
+                                                    background: variant.colorCode || '#000',
+                                                    border: '2px solid var(--admin-border)'
+                                                }} />
+                                                <span style={{ fontWeight: 500 }}>
+                                                    {variant.color || `Variant ${vIndex + 1}`}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="admin-btn admin-btn-ghost admin-btn-icon"
+                                                onClick={() => handleRemoveVariant(vIndex)}
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+
+                                        <div className="admin-grid-2" style={{ marginBottom: '12px' }}>
+                                            <div className="admin-form-group">
+                                                <label className="admin-form-label">Color Name</label>
+                                                <input
+                                                    type="text"
+                                                    className="admin-input"
+                                                    value={variant.color}
+                                                    onChange={(e) => handleVariantChange(vIndex, 'color', e.target.value)}
+                                                    placeholder="e.g., Black, Red, Blue"
+                                                />
+                                            </div>
+                                            <div className="admin-form-group">
+                                                <label className="admin-form-label">Color Code</label>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <input
+                                                        type="color"
+                                                        value={variant.colorCode}
+                                                        onChange={(e) => handleVariantChange(vIndex, 'colorCode', e.target.value)}
+                                                        style={{ width: '40px', height: '36px', padding: '2px', border: '1px solid var(--admin-border)', borderRadius: '6px' }}
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        className="admin-input"
+                                                        value={variant.colorCode}
+                                                        onChange={(e) => handleVariantChange(vIndex, 'colorCode', e.target.value)}
+                                                        placeholder="#000000"
+                                                        style={{ flex: 1 }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <label className="admin-form-label">Stock by Size</label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                                            {variant.sizes.map((size, sIndex) => (
+                                                <div key={sIndex} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    background: 'var(--admin-bg-secondary)',
+                                                    padding: '6px 8px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid var(--admin-border)'
+                                                }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, minWidth: '45px' }}>{size.size}</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={size.countInStock}
+                                                        onChange={(e) => handleSizeStockChange(vIndex, sIndex, e.target.value)}
+                                                        style={{
+                                                            width: '50px',
+                                                            padding: '4px 6px',
+                                                            fontSize: '12px',
+                                                            border: '1px solid var(--admin-border)',
+                                                            borderRadius: '4px',
+                                                            textAlign: 'center',
+                                                            background: 'var(--admin-bg-primary)'
+                                                        }}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    className="admin-btn admin-btn-secondary"
+                                    onClick={handleAddVariant}
+                                    style={{ marginTop: '8px' }}
+                                >
+                                    <Palette size={14} /> Add Color Variant
                                 </button>
 
                                 {/* Options */}

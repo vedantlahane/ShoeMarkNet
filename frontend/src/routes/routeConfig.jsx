@@ -18,6 +18,7 @@ const AccessDenied = lazy(() => import('../pages/AccessDeniedPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const Logout = lazy(() => import('../pages/Logout'));
 const About = lazy(() => import('../pages/About'));
+const Search = lazy(() => import('../pages/Search'));
 
 // Route configuration with metadata
 export const routeConfig = {
@@ -83,6 +84,12 @@ export const routeConfig = {
       component: AccessDenied,
       title: 'Access Restricted',
       description: 'You do not have permission to view this page'
+    },
+    {
+      path: 'search',
+      component: Search,
+      title: 'Search',
+      description: 'Search for products'
     }
   ],
 
@@ -210,6 +217,24 @@ export const routeConfig = {
       requiredRole: 'admin',
       section: 'analytics',
       componentProps: { section: 'analytics' }
+    },
+    {
+      path: 'categories',
+      component: AdminDashboard,
+      title: 'Manage Categories',
+      description: 'Category management',
+      requiredRole: 'admin',
+      section: 'categories',
+      componentProps: { section: 'categories' }
+    },
+    {
+      path: 'campaigns',
+      component: AdminDashboard,
+      title: 'Manage Campaigns',
+      description: 'Campaign and promotion management',
+      requiredRole: 'admin',
+      section: 'campaigns',
+      componentProps: { section: 'campaigns' }
     },
     {
       path: 'settings',

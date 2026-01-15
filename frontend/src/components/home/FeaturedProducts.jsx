@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { 
-  Star, 
-  Truck, 
-  ShoppingCart, 
-  Percent 
+import {
+  Star,
+  Truck,
+  ShoppingCart,
+  Percent
 } from 'lucide-react';
 import usePrefersReducedMotion from '../../hooks/usePrefersReducedMotion';
 
@@ -24,9 +24,9 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   const lastTimeRef = useRef(null);
   const isPausedRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
-  
+
   const displayProducts = useMemo(() => products || [], [products]);
-  
+
   // Triple the products array for seamless scrolling
   const scrollProducts = useMemo(() => {
     if (displayProducts.length === 0) return [];
@@ -42,24 +42,24 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   // Calculate scale based on card position
   const updateCardScales = useCallback(() => {
     if (!containerRef.current || !scrollRef.current) return;
-    
+
     const container = containerRef.current;
     const cards = scrollRef.current.querySelectorAll('.carousel-card');
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.left + containerRect.width / 2;
-    
+
     cards.forEach((card) => {
       const cardRect = card.getBoundingClientRect();
       const cardCenter = cardRect.left + cardRect.width / 2;
       const distance = Math.abs(containerCenter - cardCenter);
       const maxDistance = containerRect.width / 2;
-      
+
       // Calculate scale (1 at center, 0.8 at edges)
       const scale = Math.max(0.8, 1 - (distance / maxDistance) * 0.2);
-      
+
       // Calculate opacity (1 at center, 0.3 at edges)
       const opacity = Math.max(0.3, 1 - (distance / maxDistance) * 0.7);
-      
+
       card.style.transform = `scale(${scale})`;
       card.style.opacity = opacity;
     });
@@ -116,7 +116,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
 
   const handleCardPointerMove = useCallback((event, productId) => {
     if (!enableAnimations) return;
-    
+
     setHoveredProduct(productId);
     const card = event.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -140,7 +140,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
   if (loading) {
     return (
       <section className="py-12 bg-slate-50 dark:bg-slate-900/50">
-        
+
         <div className="container-app">
           <div className="mb-10 text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
@@ -173,8 +173,8 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
       className="relative overflow-hidden bg-gradient-to-b from-white/50 to-transparent dark:from-slate-950/70 dark:to-transparent py-12 md:py-16"
       aria-label="Featured products"
     >
-      
-            {/* Background effects */}
+
+      {/* Background effects */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <div className={`absolute -top-24 left-1/4 h-64 w-64 rotate-12 rounded-full bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 blur-3xl ${enableAnimations ? 'animate-pulse' : ''}`}></div>
         <div className={`absolute bottom-[-6rem] right-1/5 h-72 w-72 rounded-full bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-rose-500/10 blur-3xl ${enableAnimations ? 'animate-pulse' : ''}`}></div>
@@ -210,7 +210,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
       </div>
 
       {/* Continuous Carousel */}
-      <div 
+      <div
         ref={containerRef}
         className="relative"
         onMouseEnter={() => setIsPaused(true)}
@@ -228,11 +228,11 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
             style={{ width: 'max-content', willChange: 'transform' }}
           >
             {scrollProducts.map((product, index) => {
-              const discountValue = typeof product.discountPercentage === 'number'
+              const discountValue = typeof product.discountPercentage === 'number' && product.discountPercentage > 0
                 ? `${Math.round(product.discountPercentage)}% off`
-                : typeof product.discount === 'number'
+                : typeof product.discount === 'number' && product.discount > 0
                   ? `${Math.round(product.discount)}% off`
-                  : product.discount || null;
+                  : null;
               const currentPrice = formatCurrency(product.price ?? product.currentPrice);
               const originalPrice = formatCurrency(product.originalPrice);
               const productId = `${product._id || product.id || index}-${index}`;
@@ -245,9 +245,8 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                   style={{ width: `${CARD_WIDTH}px` }}
                 >
                   <div
-                    className={`group relative flex h-full flex-col overflow-hidden rounded-xl border ${
-                      isActiveCard ? 'border-blue-500/60 shadow-xl' : 'border-slate-200 dark:border-slate-700 shadow-sm'
-                    } bg-white dark:bg-slate-800 transform-gpu transition-all duration-300`}
+                    className={`group relative flex h-full flex-col overflow-hidden rounded-xl border ${isActiveCard ? 'border-blue-500/60 shadow-xl' : 'border-slate-200 dark:border-slate-700 shadow-sm'
+                      } bg-white dark:bg-slate-800 transform-gpu transition-all duration-300`}
                     onPointerMove={(event) => handleCardPointerMove(event, productId)}
                     onPointerLeave={handleCardLeave}
                     onFocus={(event) => handleCardPointerMove(event, productId)}
@@ -299,7 +298,7 @@ const FeaturedProducts = ({ products, onAddToCart }) => {
                         <span className="text-xl font-semibold text-gray-900 dark:text-white">
                           {currentPrice ? `$${currentPrice}` : '—'}
                         </span>
-                        {originalPrice && (
+                        {originalPrice && currentPrice && originalPrice !== currentPrice && parseFloat(originalPrice) > parseFloat(currentPrice) && (
                           <span className="text-xs text-gray-500 dark:text-gray-500 line-through">
                             ${originalPrice}
                           </span>

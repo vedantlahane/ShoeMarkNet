@@ -7,9 +7,9 @@ import { toast } from 'react-toastify';
 import PageHeader from '../components/common/layout/PageHeader';
 
 // Redux actions
-import { 
-  fetchOrders, 
-  cancelOrder, 
+import {
+  fetchOrders,
+  cancelOrder,
   clearOrderError,
   resetOrderSuccess
 } from '../redux/slices/orderSlice';
@@ -62,17 +62,17 @@ const Orders = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Redux state
-  const { 
-    orders, 
-    loading, 
-    error, 
-    success: orderSuccess 
+  const {
+    orders,
+    loading,
+    error,
+    success: orderSuccess
   } = useSelector((state) => state.order);
-  
-  const { 
-    user, 
-    isAuthenticated, 
-    isInitialized 
+
+  const {
+    user,
+    isAuthenticated,
+    isInitialized
   } = useSelector((state) => state.auth);
 
   // Local state
@@ -118,7 +118,7 @@ const Orders = () => {
       };
 
       dispatch(fetchOrders(params));
-      
+
       // Track page view
       trackEvent('page_view', {
         page_title: 'Orders',
@@ -127,12 +127,12 @@ const Orders = () => {
       });
     }
   }, [
-    dispatch, 
-    isAuthenticated, 
-    currentPage, 
-    itemsPerPage, 
-    sortBy, 
-    filterStatus, 
+    dispatch,
+    isAuthenticated,
+    currentPage,
+    itemsPerPage,
+    sortBy,
+    filterStatus,
     searchTerm,
     dateRange
   ]);
@@ -150,18 +150,18 @@ const Orders = () => {
 
     const newParamsString = params.toString();
     const currentParamsString = searchParams.toString();
-    
+
     if (newParamsString !== currentParamsString) {
       setSearchParams(params, { replace: true });
     }
   }, [
-    currentPage, 
-    itemsPerPage, 
-    sortBy, 
-    filterStatus, 
-    searchTerm, 
-    dateRange, 
-    setSearchParams, 
+    currentPage,
+    itemsPerPage,
+    sortBy,
+    filterStatus,
+    searchTerm,
+    dateRange,
+    setSearchParams,
     searchParams
   ]);
 
@@ -210,14 +210,14 @@ const Orders = () => {
     if (!orders || !Array.isArray(orders)) return [];
 
     return orders.filter(order => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.shippingAddress?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.orderItems?.some(item => 
+        order.orderItems?.some(item =>
           item.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-      const matchesStatus = filterStatus === 'all' || 
+      const matchesStatus = filterStatus === 'all' ||
         order.status?.toLowerCase() === filterStatus.toLowerCase();
 
       const matchesDateRange = (!dateRange.startDate || new Date(order.createdAt) >= new Date(dateRange.startDate)) &&
@@ -232,7 +232,7 @@ const Orders = () => {
     return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredOrders, currentPage, itemsPerPage]);
 
-  const totalPages = useMemo(() => 
+  const totalPages = useMemo(() =>
     Math.ceil(filteredOrders.length / itemsPerPage),
     [filteredOrders.length, itemsPerPage]
   );
@@ -241,7 +241,7 @@ const Orders = () => {
   const handleSearchChange = useCallback((newSearch) => {
     setSearchTerm(newSearch);
     setCurrentPage(1);
-    
+
     trackEvent('order_search', {
       search_term: newSearch
     });
@@ -250,7 +250,7 @@ const Orders = () => {
   const handleFilterChange = useCallback((newFilter) => {
     setFilterStatus(newFilter);
     setCurrentPage(1);
-    
+
     trackEvent('order_filter', {
       filter_type: 'status',
       filter_value: newFilter
@@ -260,7 +260,7 @@ const Orders = () => {
   const handleSortChange = useCallback((newSort) => {
     setSortBy(newSort);
     setCurrentPage(1);
-    
+
     trackEvent('order_sort', {
       sort_option: newSort
     });
@@ -269,7 +269,7 @@ const Orders = () => {
   const handleDateRangeChange = useCallback((newDateRange) => {
     setDateRange(newDateRange);
     setCurrentPage(1);
-    
+
     trackEvent('order_date_filter', {
       start_date: newDateRange.startDate,
       end_date: newDateRange.endDate
@@ -279,7 +279,7 @@ const Orders = () => {
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     trackEvent('pagination_click', {
       page_number: page,
       total_pages: totalPages
@@ -289,7 +289,7 @@ const Orders = () => {
   const handleItemsPerPageChange = useCallback((newLimit) => {
     setItemsPerPage(newLimit);
     setCurrentPage(1);
-    
+
     trackEvent('items_per_page_changed', {
       items_per_page: newLimit
     });
@@ -297,7 +297,7 @@ const Orders = () => {
 
   const handleViewModeChange = useCallback((mode) => {
     setViewMode(mode);
-    
+
     trackEvent('view_mode_changed', {
       view_mode: mode
     });
@@ -310,7 +310,7 @@ const Orders = () => {
 
     try {
       await dispatch(cancelOrder(orderId)).unwrap();
-      
+
       trackEvent('order_cancelled', {
         order_id: orderId
       });
@@ -322,11 +322,11 @@ const Orders = () => {
   const handleDownloadInvoice = useCallback((orderId) => {
     // Simulate invoice download
     toast.info(`📄 Preparing invoice for order ${orderId}...`);
-    
+
     trackEvent('invoice_download', {
       order_id: orderId
     });
-    
+
     // In a real app, this would trigger an actual download
     setTimeout(() => {
       toast.success('📥 Invoice download started!');
@@ -340,7 +340,7 @@ const Orders = () => {
     }
 
     setBulkActionLoading(true);
-    
+
     try {
       switch (action) {
         case 'cancel':
@@ -358,7 +358,7 @@ const Orders = () => {
         default:
           break;
       }
-      
+
       trackEvent('bulk_action', {
         action,
         order_count: selectedOrders.length
@@ -371,7 +371,7 @@ const Orders = () => {
   }, [selectedOrders, dispatch]);
 
   const handleOrderSelect = useCallback((orderId) => {
-    setSelectedOrders(prev => 
+    setSelectedOrders(prev =>
       prev.includes(orderId)
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId]
@@ -431,8 +431,8 @@ const Orders = () => {
         canonical="https://shoemarknet.com/orders"
       />
 
-      <div className="min-h-screen bg-theme">
-        
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+
         {/* Animated Background Elements */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           {[...Array(10)].map((_, i) => (
@@ -481,7 +481,7 @@ const Orders = () => {
                   No Orders Yet
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg leading-relaxed">
-                  You haven't placed any orders yet. Start exploring our amazing collection of shoes 
+                  You haven't placed any orders yet. Start exploring our amazing collection of shoes
                   and find your perfect pair today!
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -504,7 +504,7 @@ const Orders = () => {
           ) : (
             <>
               {/* Enhanced Statistics Cards */}
-              <OrderStats 
+              <OrderStats
                 stats={orderStats}
                 className={`mb-8 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}
                 style={{ animationDelay: '0.2s' }}

@@ -21,9 +21,9 @@ const Cart = () => {
   // Calculate cart totals with enhanced logic
   const subtotal = Array.isArray(items)
     ? items.reduce((sum, item) => {
-        const price = item.product?.price || item.price || 0;
-        return sum + (price * item.quantity);
-      }, 0)
+      const price = item.product?.price || item.price || 0;
+      return sum + (price * item.quantity);
+    }, 0)
     : 0;
 
   const promoDiscount = promoApplied ? subtotal * 0.1 : 0; // 10% discount
@@ -149,13 +149,13 @@ const Cart = () => {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 to="/products"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
               >
                 Browse products
               </Link>
               <Link
                 to="/categories"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-theme-strong px-6 text-sm font-semibold text-muted-strong transition-colors hover:border-primary hover:text-theme"
+                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 View categories
               </Link>

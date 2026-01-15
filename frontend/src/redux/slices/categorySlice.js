@@ -112,9 +112,9 @@ export const createCategory = createAsyncThunk(
 
 export const updateCategory = createAsyncThunk(
   'category/updateCategory',
-  async ({ categoryId, categoryData }, { rejectWithValue }) => {
+  async ({ id, categoryData }, { rejectWithValue }) => {
     try {
-      return await categoryService.updateCategory(categoryId, categoryData);
+      return await categoryService.updateCategory(id, categoryData);
     } catch (error) {
       const message = error?.response?.data?.message || error.message || 'Failed to update category';
       return rejectWithValue(message);
