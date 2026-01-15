@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
 import PageMeta from '../components/seo/PageMeta';
-import PageLayout from '../components/common/layout/PageLayout';
+
 import { toast } from 'react-toastify';
 import PageHeader from '../components/common/layout/PageHeader';
 
@@ -777,15 +776,15 @@ const Profile = () => {
                     <div className="p-6">
                       <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
-                          <dt className="text-sm font-medium text-gray-500 mb-1">Full Name</dt>
-                          <dd className="text-sm text-gray-900">{user.name || 'Not provided'}</dd>
+                          <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Full Name</dt>
+                          <dd className="text-sm text-slate-900 dark:text-slate-100">{user.name || 'Not provided'}</dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500 mb-1">Email Address</dt>
-                          <dd className="text-sm text-gray-900 flex items-center">
+                          <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Email Address</dt>
+                          <dd className="text-sm text-slate-900 dark:text-slate-100 flex items-center">
                             {user.email}
                             {user.isEmailVerified && (
-                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
                                 <i className="fas fa-check-circle mr-1"></i>
                                 Verified
                               </span>
@@ -793,20 +792,20 @@ const Profile = () => {
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500 mb-1">Phone Number</dt>
-                          <dd className="text-sm text-gray-900">{user.phone || 'Not provided'}</dd>
+                          <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Phone Number</dt>
+                          <dd className="text-sm text-slate-900 dark:text-slate-100">{user.phone || 'Not provided'}</dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500 mb-1">Address</dt>
-                          <dd className="text-sm text-gray-900">{user.address || 'Not provided'}</dd>
+                          <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Address</dt>
+                          <dd className="text-sm text-slate-900 dark:text-slate-100">{user.address || 'Not provided'}</dd>
                         </div>
                         <div className="sm:col-span-2">
-                          <dt className="text-sm font-medium text-gray-500 mb-1">Bio</dt>
-                          <dd className="text-sm text-gray-900">{user.bio || 'Not provided'}</dd>
+                          <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Bio</dt>
+                          <dd className="text-sm text-slate-900 dark:text-slate-100">{user.bio || 'Not provided'}</dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500 mb-1">Member Since</dt>
-                          <dd className="text-sm text-gray-900">
+                          <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Member Since</dt>
+                          <dd className="text-sm text-slate-900 dark:text-slate-100">
                             {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'long',

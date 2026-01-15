@@ -6,15 +6,15 @@ import PageHeader from '../components/common/layout/PageHeader';
 import { toast } from 'react-toastify';
 
 // Redux actions
-import { 
-  clearCart, 
-  updateCartItem as updateCartItemQuantity, 
-  removeFromCart 
+import {
+  clearCart,
+  updateCartItem as updateCartItemQuantity,
+  removeFromCart
 } from '../redux/slices/cartSlice';
-import { 
-  createOrder, 
+import {
+  createOrder,
   validateCoupon,
-  clearOrderError 
+  clearOrderError
 } from '../redux/slices/orderSlice';
 import { updateLastActivity } from '../redux/slices/authSlice';
 
@@ -37,11 +37,11 @@ import useWebSocket from '../hooks/useWebSocket';
 // Utils
 import { trackEvent } from '../utils/analytics';
 import { formatCurrency, calculateTax } from '../utils/helpers';
-import { 
-  validateEmail, 
-  validatePhone, 
+import {
+  validateEmail,
+  validatePhone,
   validateAddress,
-  validateCreditCard 
+  validateCreditCard
 } from '../utils/validation';
 import { encryptSensitiveData } from '../utils/encryption';
 
@@ -54,31 +54,31 @@ const CHECKOUT_STEPS = [
 ];
 
 const SHIPPING_OPTIONS = [
-  { 
-    id: 'standard', 
-    name: 'Standard Shipping', 
-    description: '5-7 business days', 
+  {
+    id: 'standard',
+    name: 'Standard Shipping',
+    description: '5-7 business days',
     price: 5.99,
     icon: 'fas fa-truck'
   },
-  { 
-    id: 'express', 
-    name: 'Express Shipping', 
-    description: '2-3 business days', 
+  {
+    id: 'express',
+    name: 'Express Shipping',
+    description: '2-3 business days',
     price: 12.99,
     icon: 'fas fa-shipping-fast'
   },
-  { 
-    id: 'overnight', 
-    name: 'Overnight Shipping', 
-    description: 'Next business day', 
+  {
+    id: 'overnight',
+    name: 'Overnight Shipping',
+    description: 'Next business day',
     price: 24.99,
     icon: 'fas fa-clock'
   },
-  { 
-    id: 'pickup', 
-    name: 'Store Pickup', 
-    description: 'Free - Ready in 2 hours', 
+  {
+    id: 'pickup',
+    name: 'Store Pickup',
+    description: 'Free - Ready in 2 hours',
     price: 0,
     icon: 'fas fa-store'
   }
@@ -115,7 +115,7 @@ const Checkout = () => {
   const [paymentInfo, setPaymentInfo] = useState({});
   const [selectedShipping, setSelectedShipping] = useLocalStorage('selectedShipping', 'standard');
   const [selectedPayment, setSelectedPayment] = useLocalStorage('selectedPayment', 'credit_card');
-  
+
   // UI state
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -131,16 +131,6 @@ const Checkout = () => {
   // Refs
   const formRef = useRef(null);
   const paymentRef = useRef(null);
-
-  // Enhanced keyboard shortcuts
-  useKeyboardShortcuts({
-    'ctrl+enter': handlePlaceOrder,
-    'ctrl+b': () => setCurrentStep('cart'),
-    'ctrl+s': () => setCurrentStep('shipping'),
-    'ctrl+p': () => setCurrentStep('payment'),
-    'escape': () => navigate('/cart'),
-    'ctrl+g': () => setIsGuestCheckout(!isGuestCheckout)
-  });
 
   // Initialize checkout
   useEffect(() => {
@@ -172,19 +162,19 @@ const Checkout = () => {
 
   // Calculate totals
   const calculations = useMemo(() => {
-    const subtotal = cartItems?.reduce((sum, item) => 
+    const subtotal = cartItems?.reduce((sum, item) =>
       sum + (item.price * item.quantity), 0) || 0;
-    
+
     const shippingCost = SHIPPING_OPTIONS.find(
       option => option.id === selectedShipping
     )?.price || 0;
-    
-    const discountAmount = appliedCoupon ? 
+
+    const discountAmount = appliedCoupon ?
       (subtotal * (appliedCoupon.percentage / 100)) : 0;
-    
+
     const taxableAmount = subtotal - discountAmount;
     const taxAmount = taxableAmount * TAX_RATE;
-    
+
     const total = subtotal + shippingCost + taxAmount - discountAmount;
 
     return {
@@ -251,7 +241,7 @@ const Checkout = () => {
     }
 
     setCurrentStep(newStep);
-    
+
     trackEvent('checkout_step_changed', {
       from_step: currentStep,
       to_step: newStep,
@@ -265,7 +255,7 @@ const Checkout = () => {
       const result = await dispatch(validateCoupon(code)).unwrap();
       setAppliedCoupon(result);
       toast.success(`Coupon applied! ${result.percentage}% discount`);
-      
+
       trackEvent('coupon_applied', {
         coupon_code: code,
         discount_percentage: result.percentage,
@@ -298,7 +288,7 @@ const Checkout = () => {
         },
         billingInfo: billingAddressSame ? shippingInfo : billingInfo,
         paymentMethod: selectedPayment,
-        paymentInfo: selectedPayment === 'credit_card' ? 
+        paymentInfo: selectedPayment === 'credit_card' ?
           encryptSensitiveData(paymentInfo) : null,
         shippingMethod: selectedShipping,
         couponCode: appliedCoupon?.code || null,
@@ -325,9 +315,9 @@ const Checkout = () => {
       localStorage.removeItem('selectedPayment');
 
       setOrderCompleted(true);
-      
+
       toast.success('🎉 Order placed successfully!');
-      
+
       trackEvent('order_completed', {
         order_id: order.id,
         order_value: calculations.total,
@@ -344,7 +334,7 @@ const Checkout = () => {
 
     } catch (error) {
       toast.error(error.message || 'Failed to place order. Please try again.');
-      
+
       trackEvent('order_failed', {
         error: error.message,
         cart_value: calculations.total,
@@ -380,13 +370,23 @@ const Checkout = () => {
     } else {
       dispatch(updateCartItemQuantity({ id: itemId, quantity: newQuantity }));
     }
-    
+
     trackEvent('checkout_cart_updated', {
       item_id: itemId,
       new_quantity: newQuantity,
       action: newQuantity <= 0 ? 'removed' : 'updated'
     });
   }, [dispatch]);
+
+  // Enhanced keyboard shortcuts (defined after handlePlaceOrder to avoid TDZ)
+  useKeyboardShortcuts({
+    'ctrl+enter': handlePlaceOrder,
+    'ctrl+b': () => setCurrentStep('cart'),
+    'ctrl+s': () => setCurrentStep('shipping'),
+    'ctrl+p': () => setCurrentStep('payment'),
+    'escape': () => navigate('/cart'),
+    'ctrl+g': () => setIsGuestCheckout(!isGuestCheckout)
+  });
 
   // Render current step content
   const renderStepContent = useCallback(() => {
@@ -399,12 +399,12 @@ const Checkout = () => {
                 <i className="fas fa-shopping-cart mr-3 text-blue-500"></i>
                 Review Your Order
               </h3>
-              
+
               <div className="space-y-4">
                 {cartItems.map((item) => (
                   <div key={item._id} className="flex items-center space-x-4 p-4 bg-white/5 rounded-xl">
-                    <img 
-                      src={item.image} 
+                    <img
+                      src={item.image}
                       alt={item.name}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
@@ -454,7 +454,7 @@ const Checkout = () => {
                 onToggle={setIsGuestCheckout}
               />
             )}
-            
+
             <ShippingForm
               shippingInfo={shippingInfo}
               onShippingInfoChange={setShippingInfo}
@@ -477,7 +477,7 @@ const Checkout = () => {
               shippingInfo={shippingInfo}
               errors={errors}
             />
-            
+
             <PaymentForm
               ref={paymentRef}
               paymentInfo={paymentInfo}
@@ -584,7 +584,7 @@ const Checkout = () => {
       />
 
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-        
+
         {/* Checkout Header */}
         <div className="container-app py-6">
           <PageHeader
@@ -610,10 +610,10 @@ const Checkout = () => {
         <div className="container-app pb-6">
           <div className="mx-auto max-w-6xl">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
+
               {/* Main Checkout Form */}
               <div className="lg:col-span-2 space-y-6">
-                
+
                 {/* Checkout Steps */}
                 <CheckoutSteps
                   steps={CHECKOUT_STEPS}
