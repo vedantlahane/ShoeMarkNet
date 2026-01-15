@@ -68,26 +68,20 @@ const SettingsPanel = ({
     setTimeout(() => setAnimateElements(true), 100);
   }, []);
 
+  // Apply theme changes to document when settings change
   useEffect(() => {
-    if (hasChanges) {
-      return;
-    }
-
-    setSettings(prev => {
-      const normalizedTheme = preference === 'system' ? 'auto' : preference;
-      if (prev?.appearance?.theme === normalizedTheme) {
-        return prev;
+    const applyTheme = (themeSetting) => {
+      const root = document.documentElement;
+      if (themeSetting === 'dark' || (themeSetting === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
       }
-
-      return {
-        ...prev,
-        appearance: {
-          ...prev.appearance,
-          theme: normalizedTheme
-        }
-      };
-    });
-  }, [preference, hasChanges, setSettings]);
+    };
+    if (settings?.appearance?.theme) {
+      applyTheme(settings.appearance.theme);
+    }
+  }, [settings?.appearance?.theme]);
 
   // Settings categories
   const categories = [
@@ -153,14 +147,6 @@ const SettingsPanel = ({
     try {
       // Simulate API call to save settings
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const requestedPreference = settings.appearance.theme === 'auto'
-        ? 'system'
-        : settings.appearance.theme;
-
-      if (requestedPreference && requestedPreference !== preference) {
-        setGlobalTheme(requestedPreference);
-      }
 
       setHasChanges(false);
       toast.success('Settings saved successfully!');
@@ -176,7 +162,7 @@ const SettingsPanel = ({
     } finally {
       setIsSaving(false);
     }
-  }, [settings, preference, setGlobalTheme, user.id]);
+  }, [settings, user.id]);
 
   // Handle reset settings
   const handleResetSettings = useCallback(() => {
@@ -220,14 +206,13 @@ const SettingsPanel = ({
       });
 
       setHasChanges(true);
-      setGlobalTheme('system');
       toast.info('Settings reset to default values');
 
       trackEvent('admin_settings_reset', {
         user_id: user.id
       });
     }
-  }, [setSettings, setGlobalTheme, user.id]);
+  }, [setSettings, user.id]);
 
   // Render form field
   const renderField = useCallback((category, key, config) => {
@@ -403,7 +388,7 @@ const SettingsPanel = ({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      
+
       {/* Header */}
       <div className={`${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`}>
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-6 shadow-2xl">
@@ -417,14 +402,14 @@ const SettingsPanel = ({
                 Configure your admin dashboard preferences and system settings
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {hasChanges && (
                 <span className="bg-orange-500/20 border border-orange-300 text-orange-700 dark:text-orange-400 px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
                   Unsaved Changes
                 </span>
               )}
-              
+
               <button
                 onClick={handleResetSettings}
                 className="bg-white/20 backdrop-blur-lg border border-white/30 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-2xl hover:bg-white/30 transition-all duration-200"
@@ -432,7 +417,7 @@ const SettingsPanel = ({
                 <i className="fas fa-undo mr-2"></i>
                 Reset
               </button>
-              
+
               <button
                 onClick={handleSaveSettings}
                 disabled={!hasChanges || isSaving}
@@ -457,7 +442,7 @@ const SettingsPanel = ({
 
       {/* Settings Content */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
+
         {/* Categories Sidebar */}
         {showCategories && (
           <div className={`lg:col-span-1 ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
@@ -468,11 +453,10 @@ const SettingsPanel = ({
                   <button
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
-                    className={`w-full flex items-center p-4 rounded-2xl transition-all duration-200 hover:scale-105 ${
-                      activeCategory === category.id
+                    className={`w-full flex items-center p-4 rounded-2xl transition-all duration-200 hover:scale-105 ${activeCategory === category.id
                         ? `bg-gradient-to-r ${category.color} text-white shadow-lg`
                         : 'bg-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/30'
-                    }`}
+                      }`}
                   >
                     <i className={`${category.icon} mr-3 text-lg`}></i>
                     <div className="text-left">
@@ -491,7 +475,7 @@ const SettingsPanel = ({
         {/* Settings Form */}
         <div className={`${showCategories ? 'lg:col-span-3' : 'lg:col-span-4'} ${animateElements ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 rounded-3xl p-8 shadow-2xl">
-            
+
             {/* Category Header */}
             <div className="mb-8">
               <div className="flex items-center mb-4">

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Sparkles, ArrowRight, MousePointer } from "lucide-react";
 import sneakerImage from "../../assets/sneaker.png";
 
@@ -78,7 +79,7 @@ const HeroSection = () => {
 
             {/* CTA Button */}
             <div className="pt-3 lg:pt-5">
-              <button className="relative group">
+              <Link to="/products" className="relative group inline-block">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-600 via-indigo-600 to-rose-600 rounded-xl blur-md opacity-60 group-hover:opacity-90 transition duration-300"></div>
                 <div className="relative px-6 sm:px-8 lg:px-10 py-3 lg:py-4 bg-white dark:bg-slate-950 rounded-xl leading-none flex items-center justify-center gap-2">
                   <span className="text-sm lg:text-base font-semibold text-slate-900 dark:text-slate-100 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-sky-500 group-hover:via-indigo-500 group-hover:to-rose-500 transition duration-300">
@@ -86,7 +87,7 @@ const HeroSection = () => {
                   </span>
                   <ArrowRight className="h-4 w-4 text-slate-900 dark:text-slate-100 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all duration-300" />
                 </div>
-              </button>
+              </Link>
             </div>
           </div>
 

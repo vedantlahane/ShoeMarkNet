@@ -13,7 +13,7 @@ const Orders = lazy(() => import('../pages/Orders'));
 const Cart = lazy(() => import('../pages/Cart'));
 const Checkout = lazy(() => import('../pages/Checkout'));
 const Wishlist = lazy(() => import('../pages/Wishlist'));
-const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
+const AdminDashboard = lazy(() => import('../pages/AdminDashboardMinimal'));
 const AccessDenied = lazy(() => import('../pages/AccessDeniedPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const Logout = lazy(() => import('../pages/Logout'));

@@ -7,6 +7,7 @@ import { initAuth } from "./redux/slices/authSlice";
 import MainLayout from "./components/layouts/MainLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 import LoadingSpinner from "./components/common/feedback/LoadingSpinner";
+import ErrorBoundary from "./components/common/feedback/ErrorBoundary";
 
 import routeConfig from "./routes/routeConfig";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -113,7 +114,9 @@ const AppContent = () => {
 
 const App = () => (
   <Provider store={store}>
-    <AppContent />
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   </Provider>
 );
 

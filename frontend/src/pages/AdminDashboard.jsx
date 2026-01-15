@@ -116,16 +116,16 @@ const AdminDashboard = ({ section = "overview" }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Hooks
   const { hasPermission, userRole } = usePermissions();
   const { isConnected, connectionStatus } = useWebSocket('/admin');
-  
+
   // Redux state
   const { user, isAuthenticated, users } = useSelector((state) => state.auth);
   const { products } = useSelector((state) => state.product);
   const { adminOrders } = useSelector((state) => state.order);
-  
+
   // Local state
   const [activeSection, setActiveSection] = useLocalStorage('adminActiveSection', section);
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -145,6 +145,23 @@ const AdminDashboard = ({ section = "overview" }) => {
     analytics: false,
     settings: false
   });
+
+  // Theme state
+  const [isDarkMode, setIsDarkMode] = useLocalStorage('adminDarkMode', true);
+
+  // Toggle theme function
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, [setIsDarkMode]);
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const unreadNotifications = useMemo(
     () => notifications.filter(notification => !notification.read),
@@ -179,7 +196,7 @@ const AdminDashboard = ({ section = "overview" }) => {
 
   // Filtered sections based on permissions
   const availableSections = useMemo(() => {
-    return Object.values(ADMIN_SECTIONS).filter(section => 
+    return Object.values(ADMIN_SECTIONS).filter(section =>
       hasPermission(section.requiredPermission)
     );
   }, [hasPermission]);
@@ -219,12 +236,12 @@ const AdminDashboard = ({ section = "overview" }) => {
   // Initialize dashboard data
   const initializeDashboard = useCallback(async () => {
     setIsInitializing(true);
-    
+
     try {
       // Load dashboard statistics
-  const statsData = await adminService.getDashboardStats();
-  setDashboardStats(statsData);
-  setDataLoadingStatus(prev => ({ ...prev, overview: true, dashboard: true }));
+      const statsData = await adminService.getDashboardStats();
+      setDashboardStats(statsData);
+      setDataLoadingStatus(prev => ({ ...prev, overview: true, dashboard: true }));
 
       // Load initial notifications
       const initialNotifications = await loadNotifications();
@@ -236,7 +253,7 @@ const AdminDashboard = ({ section = "overview" }) => {
       initializeWebSocket();
 
       toast.success('🚀 Admin dashboard initialized successfully!');
-      
+
     } catch (error) {
       console.error('Dashboard initialization error:', error);
       toast.error('⚠️ Failed to initialize dashboard. Some features may be limited.');
@@ -293,7 +310,7 @@ const AdminDashboard = ({ section = "overview" }) => {
           data: { userCount: 5 }
         }
       ];
-      
+
       return mockNotifications;
     } catch (error) {
       console.error('Error loading notifications:', error);
@@ -337,7 +354,7 @@ const AdminDashboard = ({ section = "overview" }) => {
     }
 
     setActiveSection(newSection);
-    
+
     // Update URL
     const params = new URLSearchParams(searchParams);
     if (newSection === 'overview') {
@@ -367,21 +384,21 @@ const AdminDashboard = ({ section = "overview" }) => {
             setDataLoadingStatus(prev => ({ ...prev, products: true }));
           }
           break;
-        
+
         case 'orders':
           if (!dataLoadingStatus.orders) {
             await dispatch(fetchAllOrders()).unwrap();
             setDataLoadingStatus(prev => ({ ...prev, orders: true }));
           }
           break;
-        
+
         case 'users':
           if (!dataLoadingStatus.users) {
             await dispatch(fetchUsers()).unwrap();
             setDataLoadingStatus(prev => ({ ...prev, users: true }));
           }
           break;
-        
+
         default:
           setDataLoadingStatus(prev => ({ ...prev, [sectionId]: true }));
           break;
@@ -418,8 +435,8 @@ const AdminDashboard = ({ section = "overview" }) => {
   // Handle notification click
   const handleNotificationClick = useCallback((notification) => {
     // Mark as read
-    setNotifications(prev => 
-      prev.map(n => n.id === notification.id 
+    setNotifications(prev =>
+      prev.map(n => n.id === notification.id
         ? normalizeDashboardNotification({ ...n, unread: false, read: true })
         : n
       )
@@ -751,7 +768,7 @@ const AdminDashboard = ({ section = "overview" }) => {
     }
 
     setSearchQuery(trimmedQuery);
-    
+
     try {
       const searchResults = await performAdminSearch(trimmedQuery);
 
@@ -784,7 +801,7 @@ const AdminDashboard = ({ section = "overview" }) => {
       const targetSection = result.section
         || (result.type === 'order' ? 'orders'
           : result.type === 'user' ? 'users'
-          : 'products');
+            : 'products');
 
       if (targetSection && targetSection !== activeSection) {
         await handleSectionChange(targetSection);

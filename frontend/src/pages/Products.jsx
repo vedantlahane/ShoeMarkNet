@@ -629,11 +629,10 @@ const Products = () => {
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg border px-3 text-sm transition-colors ${
-                currentPage === page
+              className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg border px-3 text-sm transition-colors ${currentPage === page
                   ? "border-blue-600 bg-blue-600 text-white"
                   : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-              }`}
+                }`}
             >
               {page}
             </button>
@@ -791,7 +790,7 @@ const Products = () => {
           {/* Error State */}
           {error && (
             <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-800">
-              <ErrorMessage message={error} onRetry={handleRetry} />
+              <ErrorMessage message={typeof error === 'string' ? error : error?.message || 'Something went wrong'} onRetry={handleRetry} />
             </div>
           )}
 
